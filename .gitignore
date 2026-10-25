@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-artifact
+dist-standalone
+data/
+__pycache__/
+.DS_Store
+.env*
+# Kept only in the project's shared folder (over GitHub's 100 MB limit, too big, or regenerated):
+/previews/
+/JongClub-standalone.html
+/brand/jongclub-logo-transparent.zip
+/desk.png
+/phone.png
+/src/audio/narration.gen.ts

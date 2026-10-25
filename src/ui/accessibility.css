@@ -1,0 +1,16 @@
+/* Accessibility (src/ui/accessibility.ts) and the Install app row (src/pwa/installField.ts). */
+
+/* A group heading inside Settings. */
+.settings .settings-group { margin: 8px 0 -8px; padding-top: 14px; border-top: 1px solid var(--line-soft); font: 500 12px/1.2 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); }
+
+/* Large tiles: the phone tray's tiles grow by --hand-tile-scale (the tray sets --tw per row). */
+.a11y-large-tiles .tray-tile { flex-basis: calc(var(--tw) * var(--hand-tile-scale, 1)); }
+.a11y-large-tiles .tray { row-gap: 12px; }
+
+/* Reduce motion, chosen in Settings: the same calm as the device setting. */
+.a11y-reduce-motion *, .a11y-reduce-motion *::before, .a11y-reduce-motion *::after {
+  transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important;
+}
+
+.install-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.install-row small { flex: 1 1 200px; color: var(--muted); line-height: 1.45; }

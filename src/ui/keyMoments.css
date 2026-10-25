@@ -1,0 +1,37 @@
+/* Three key moments on the match results (keyMoments.ts). */
+.key-moments { margin-top: var(--s5); }
+.key-moments .eyebrow { margin-bottom: var(--s3); }
+.km-wait { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--faint); font-size: 13.5px; }
+.km-dots { display: inline-flex; gap: 4px; }
+.km-dots b { width: 5px; height: 5px; background: var(--brass); transform: rotate(45deg); opacity: 0.25; animation: km-dot 1.2s ease-in-out infinite; }
+.km-dots b:nth-child(2) { animation-delay: 0.15s; }
+.km-dots b:nth-child(3) { animation-delay: 0.3s; }
+@keyframes km-dot { 40% { opacity: 0.9; } }
+.km-list { display: grid; gap: var(--s2); }
+.km-card {
+  display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--r-sm);
+  border: 1px solid var(--line-soft); border-left: 2px solid var(--brass);
+  background: rgba(242, 234, 217, 0.025);
+  animation: km-in 0.4s var(--ease) both;
+}
+.km-card:nth-child(2) { animation-delay: 0.08s; }
+.km-card:nth-child(3) { animation-delay: 0.16s; }
+@keyframes km-in { from { opacity: 0; transform: translateY(6px); } }
+.km-card.km-bad { border-left-color: var(--down); }
+.km-card.km-soft { border-left-color: var(--warn); }
+.km-card.km-good { border-left-color: var(--jade-hi); }
+.km-head { display: flex; align-items: center; gap: 10px; }
+.km-head h4 { flex: 1; font: 500 15px/1.25 var(--display); color: var(--ivory); }
+.km-mark { flex: none; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; border: 1px solid currentColor; font: 600 12px/1 var(--ui); color: var(--brass-hi); }
+.km-bad .km-mark { color: var(--down); }
+.km-soft .km-mark { color: var(--warn); }
+.km-good .km-mark { color: var(--jade-hi); }
+.km-where { font: 500 var(--fs-2xs)/1 var(--ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+.km-body { display: flex; align-items: flex-start; gap: 8px; }
+.km-body .tile2d.mini { flex: none; width: 26px; height: auto; }
+.km-better { display: inline-flex; align-items: center; gap: 4px; color: var(--jade-hi); flex: none; }
+.km-body p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.km-go { justify-self: start; }
+@media (prefers-reduced-motion: reduce) {
+  .km-card, .km-dots b { animation: none; }
+}

@@ -1,0 +1,21 @@
+/* Developer mode: the version line in Settings and the developer panel. */
+.dev-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.dev-version { padding: 6px 0; border: 0; background: none; font-size: 12px; color: var(--faint); cursor: default; user-select: none; -webkit-tap-highlight-color: transparent; }
+.dev-hint { font-size: 12px; color: var(--muted); }
+.dev-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; text-transform: none; letter-spacing: 0; }
+.dev-card { width: min(600px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+.dev-card .field { margin-top: 10px; }
+.dev-h { margin: 18px 0 8px; font: 600 11px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); }
+.dev-stats { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #0f1512; font-size: 13px; color: var(--muted); }
+.dev-stats b { color: var(--ivory); font-variant-numeric: tabular-nums; }
+.dev-inline { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.dev-input { width: 96px; min-height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: #0f1512; color: var(--ivory); font: 14px var(--ui); }
+.dev-danger { border-color: rgba(224, 135, 111, 0.5); color: var(--down); }
+.dev-note { min-height: 1.2em; margin: 14px 0 0; font-size: 13px; color: var(--up); }
+.dev-field .dev-row { margin-top: 2px; }
+.dev-big { margin: 14px 0 4px; }
+.dev-big .btn { flex: 1 1 220px; }
+.labs-btn { font-size: 17px; }
+/* The top bar's Labs and Settings pair (app.ts). */
+.topbar-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: none; }
+.topbar .topbar-tools .icon-btn { margin-left: 0; }

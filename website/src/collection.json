@@ -1,0 +1,925 @@
+{
+ "tiles": [
+  {
+   "id": "classic-ivory",
+   "name": "Classic Ivory",
+   "blurb": "Warm ivory on a jade-green lacquer back. The set every club starts with.",
+   "price": 0
+  },
+  {
+   "id": "jade",
+   "name": "Imperial Jade",
+   "blurb": "Solid mottled jade, glyphs carved by brush and a cloud engraved on every back.",
+   "price": 2400
+  },
+  {
+   "id": "obsidian",
+   "name": "Obsidian & Gold",
+   "blurb": "Black volcanic glass with gold-leaf glyphs and kintsugi veins across the backs.",
+   "price": 3200
+  },
+  {
+   "id": "pearl",
+   "name": "Mother of Pearl",
+   "blurb": "Iridescent shell faces that shift colour as they turn, on lilac scallop backs.",
+   "price": 3000
+  },
+  {
+   "id": "crystal",
+   "name": "Ice Crystal",
+   "blurb": "Clear faceted glass. Gem-coloured glyphs glow from inside. A bright glass click.",
+   "price": 4800
+  },
+  {
+   "id": "black-marble",
+   "name": "Carrara & Nero",
+   "blurb": "White Carrara faces carved like a monument, backed in veined black stone.",
+   "price": 3600
+  },
+  {
+   "id": "royal-gold",
+   "name": "Imperial Gold",
+   "blurb": "Solid gilded tiles, filigree corners and an embossed dragon seal on every back.",
+   "price": 6000
+  },
+  {
+   "id": "champagne",
+   "name": "Rose Champagne",
+   "blurb": "Blush faces, rose-gold backs with an Art Deco fan, and fine Song calligraphy.",
+   "price": 2800
+  },
+  {
+   "id": "sapphire",
+   "name": "Blue & White Porcelain",
+   "blurb": "Ming porcelain: cobalt brushwork on white glaze, with waves painted on the backs.",
+   "price": 4000
+  },
+  {
+   "id": "emerald",
+   "name": "Malachite & Gold",
+   "blurb": "Banded malachite bodies with white faces framed in gold.",
+   "price": 4000
+  },
+  {
+   "id": "cinnabar",
+   "name": "Cinnabar Lacquer",
+   "blurb": "Carved red lacquer faces with gold brushwork, on black lacquer bodies.",
+   "price": 4400
+  },
+  {
+   "id": "walnut",
+   "name": "Walnut & Brass",
+   "blurb": "Oiled walnut faces inlaid with bone and brass. A hollow wooden click.",
+   "price": 3800
+  },
+  {
+   "id": "noyer",
+   "name": "Noyer & Ivoire",
+   "blurb": "The grand-maison set: ivory resin faces fused to solid walnut backs, each stamped with a gilt sparrow seal.",
+   "price": 8000
+  },
+  {
+   "id": "amethyst",
+   "name": "Amethyst Regalia",
+   "blurb": "Polished amethyst in a gold bezel, gilt symbols and ruby cabochons set into every face.",
+   "price": 7200
+  },
+  {
+   "id": "gilt-porcelain",
+   "name": "Gilded Porcelain",
+   "blurb": "White porcelain with a beaded gilt frame, on blush backs with a layered resin edge.",
+   "price": 5400
+  },
+  {
+   "id": "bone-bamboo",
+   "name": "Bone & Bamboo",
+   "blurb": "The antique way: hand-carved bone faces dovetailed into bamboo backs.",
+   "price": 3400
+  },
+  {
+   "id": "season-hongkong",
+   "name": "Harbour Lights Tiles",
+   "blurb": "The Hong Kong season’s own set. Earned on the reward track, never sold.",
+   "price": 0,
+   "earnedBy": "Harbour Lights season (Hong Kong) reward track"
+  },
+  {
+   "id": "season-tokyo",
+   "name": "Maple Night Tiles",
+   "blurb": "The Tokyo season’s own set. Earned on the reward track, never sold.",
+   "price": 0,
+   "earnedBy": "Maple Night season (Tokyo) reward track"
+  },
+  {
+   "id": "season-dubai",
+   "name": "Desert Rose Tiles",
+   "blurb": "The Dubai season’s own set. Earned on the reward track, never sold.",
+   "price": 0,
+   "earnedBy": "Desert Rose season (Dubai) reward track"
+  },
+  {
+   "id": "season-taipei",
+   "name": "Lantern Market Tiles",
+   "blurb": "The Taipei season’s own set. Earned on the reward track, never sold.",
+   "price": 0,
+   "earnedBy": "Lantern Market season (Taipei) reward track"
+  },
+  {
+   "id": "season-singapore",
+   "name": "Garden City Tiles",
+   "blurb": "The Singapore season’s own set. Earned on the reward track, never sold.",
+   "price": 0,
+   "earnedBy": "Garden City season (Singapore) reward track"
+  },
+  {
+   "id": "season-hanoi",
+   "name": "Lotus Lacquer Tiles",
+   "blurb": "The Hanoi season’s own set. Earned on the reward track, never sold.",
+   "price": 0,
+   "earnedBy": "Lotus Lacquer season (Hanoi) reward track"
+  }
+ ],
+ "racks": [
+  {
+   "id": "rack-table",
+   "name": "Matched to the Table",
+   "blurb": "Racks cut from the table’s own wood, with a brass line along the lip.",
+   "price": 0
+  },
+  {
+   "id": "rack-walnut",
+   "name": "Club Walnut",
+   "blurb": "Oiled walnut with chamfered edges, green baize ledges and brass end caps.",
+   "price": 1800
+  },
+  {
+   "id": "rack-rosewood",
+   "name": "Rosewood & Brass",
+   "blurb": "Polished rosewood strung with twin brass lines, its ledges lined in oxblood leather.",
+   "price": 2800
+  },
+  {
+   "id": "rack-trunk",
+   "name": "Trunk Maker",
+   "blurb": "Walnut and pale beech, forest-green suede and a row of brass rivets, like a travelling games trunk.",
+   "price": 3600
+  },
+  {
+   "id": "rack-lacquer",
+   "name": "Black Lacquer & Gold",
+   "blurb": "Mirror-black lacquer edged in engraved gold, with cinnabar velvet ledges.",
+   "price": 4200
+  },
+  {
+   "id": "rack-pearl",
+   "name": "Ebony & Mother of Pearl",
+   "blurb": "Gloss ebony inlaid with mother-of-pearl panels, set in silver on midnight velvet.",
+   "price": 4800
+  },
+  {
+   "id": "rack-jade",
+   "name": "Zitan & Jade",
+   "blurb": "Dark zitan wood with carved jade cartouches framed in gold, and jade cabochons on the caps.",
+   "price": 5600
+  },
+  {
+   "id": "rack-gilt",
+   "name": "Imperial Gilt",
+   "blurb": "Solid gilt engraved with clouds, jade inlays, ruby cabochons and crimson velvet. The emperor’s own.",
+   "price": 7500
+  }
+ ],
+ "envs": [
+  {
+   "id": "private-club",
+   "name": "The Private Club",
+   "blurb": "Walnut panelling, porcelain shelves and a lacquer pendant. Low light, leather and brass.",
+   "price": 0
+  },
+  {
+   "id": "tokyo",
+   "name": "Tokyo Neon",
+   "blurb": "A tatami room behind shoji screens, neon and rain beyond the glass.",
+   "price": 3500
+  },
+  {
+   "id": "taipei",
+   "name": "Taipei Night Market",
+   "blurb": "Red lacquer columns, a moon gate and strings of lanterns over the street.",
+   "price": 3500
+  },
+  {
+   "id": "dubai",
+   "name": "Dubai Majlis",
+   "blurb": "Mashrabiya arches, zellige floor and a pierced brass lantern at desert sunset.",
+   "price": 3500
+  },
+  {
+   "id": "new-york",
+   "name": "Manhattan Loft",
+   "blurb": "Brick, steel-framed windows and Edison bulbs above a midnight skyline.",
+   "price": 3500
+  },
+  {
+   "id": "shanghai",
+   "name": "Shanghai 1930s",
+   "blurb": "A jazz-age lounge in black lacquer and gold, the Bund lit up across the river.",
+   "price": 3500
+  },
+  {
+   "id": "modern-luxury",
+   "name": "Sky Penthouse",
+   "blurb": "Daylight, white marble and glass, high over a calm sea.",
+   "price": 5000
+  },
+  {
+   "id": "kyoto",
+   "name": "Kyoto Garden",
+   "blurb": "An open tea pavilion over a bamboo grove and maple garden, in soft afternoon light.",
+   "price": 4500
+  },
+  {
+   "id": "imperial",
+   "name": "Forbidden City",
+   "blurb": "Vermilion columns, painted beams and gold. The emperor’s own hall.",
+   "price": 6000
+  },
+  {
+   "id": "hk-teahouse",
+   "name": "Hong Kong Tea House",
+   "blurb": "Teak booths, green-tiled walls, birdcages and a slow ceiling fan above a busy street. Or open it free with the World Tour stamp: win a game of hong kong mahjong.",
+   "price": 4000
+  },
+  {
+   "id": "tokyo-janso",
+   "name": "Tokyo Jansō",
+   "blurb": "A Shōwa-era mahjong parlour: square table lamps, rule boards, quiet tables and rain on the window. Or open it free with the World Tour stamp: win a game of japanese riichi.",
+   "price": 4000
+  },
+  {
+   "id": "al-fahidi-majlis",
+   "name": "Al Fahidi Majlis",
+   "blurb": "Coral-stone walls, a palm-frond ceiling, sadu cushions and the scent of cardamom coffee. Or open it free with the World Tour stamp: win a game at a dubai club table.",
+   "price": 4000
+  }
+ ],
+ "rest": [
+  {
+   "id": "classic-green",
+   "cat": "table",
+   "name": "Classic Green",
+   "blurb": "Green baize and dark walnut.",
+   "price": 0,
+   "swatch": [
+    "#17402f",
+    "#3b2416",
+    "#e8cb92"
+   ]
+  },
+  {
+   "id": "black-marble",
+   "cat": "table",
+   "name": "Black Marble",
+   "blurb": "Charcoal felt in a marble frame.",
+   "price": 3000,
+   "swatch": [
+    "#1d1f22",
+    "#d9d6cf",
+    "#c8a46a"
+   ]
+  },
+  {
+   "id": "jade-palace",
+   "cat": "table",
+   "name": "Jade Palace",
+   "blurb": "Taipei teal with lacquered red.",
+   "price": 0,
+   "earnedBy": "Play a Taiwanese game",
+   "swatch": [
+    "#0f4a46",
+    "#7a1f1b",
+    "#e8cb92"
+   ]
+  },
+  {
+   "id": "tokyo-night",
+   "cat": "table",
+   "name": "Tokyo Night",
+   "blurb": "Indigo felt, black lacquer.",
+   "price": 0,
+   "earnedBy": "Play a Riichi game",
+   "swatch": [
+    "#1a2440",
+    "#141414",
+    "#ff5fa2"
+   ]
+  },
+  {
+   "id": "dubai-gold",
+   "cat": "table",
+   "name": "Dubai Gold",
+   "blurb": "Sand-gold felt in a gilded rim.",
+   "price": 0,
+   "earnedBy": "Play a Dubai club game",
+   "swatch": [
+    "#5a4321",
+    "#c9a24a",
+    "#fff1c9"
+   ]
+  },
+  {
+   "id": "manhattan",
+   "cat": "table",
+   "name": "Manhattan",
+   "blurb": "Card-room brown and leather.",
+   "price": 0,
+   "earnedBy": "Play an American game",
+   "swatch": [
+    "#3a2a1c",
+    "#1a1410",
+    "#ffd27a"
+   ]
+  },
+  {
+   "id": "ocean",
+   "cat": "table",
+   "name": "Ocean",
+   "blurb": "Deep sea blue and driftwood.",
+   "price": 2600,
+   "swatch": [
+    "#0f3d55",
+    "#d8cbb0",
+    "#7fd0e8"
+   ]
+  },
+  {
+   "id": "art-deco",
+   "cat": "table",
+   "name": "Art Deco",
+   "blurb": "Dark green with brass inlay.",
+   "price": 3400,
+   "swatch": [
+    "#202a26",
+    "#b8954a",
+    "#f0dca8"
+   ]
+  },
+  {
+   "id": "midnight-club",
+   "cat": "table",
+   "name": "Midnight Club",
+   "blurb": "Plum velvet, black rim.",
+   "price": 3400,
+   "swatch": [
+    "#2a1530",
+    "#0e0e10",
+    "#d8a6ff"
+   ]
+  },
+  {
+   "id": "saigon-lacquer",
+   "cat": "table",
+   "name": "Saigon Lacquer",
+   "blurb": "Cinnabar felt in black lacquer.",
+   "price": 0,
+   "earnedBy": "Play a Vietnamese game",
+   "swatch": [
+    "#7a2a1e",
+    "#1c1410",
+    "#f2c46b"
+   ]
+  },
+  {
+   "id": "calcutta-club",
+   "cat": "table",
+   "name": "Calcutta Club",
+   "blurb": "Maroon baize and old brass.",
+   "price": 0,
+   "earnedBy": "Play an Indian club game",
+   "swatch": [
+    "#4f1d2c",
+    "#b08a4a",
+    "#f4dca0"
+   ]
+  },
+  {
+   "id": "marina-teal",
+   "cat": "table",
+   "name": "Marina Teal",
+   "blurb": "Harbour teal in a white stone rim.",
+   "price": 0,
+   "earnedBy": "Play a Singapore game",
+   "swatch": [
+    "#0d3b4f",
+    "#e3dccb",
+    "#7fd8e0"
+   ]
+  },
+  {
+   "id": "outfit-blazer",
+   "cat": "avatar",
+   "name": "Club Blazer",
+   "blurb": "The house look.",
+   "price": 0,
+   "swatch": [
+    "#1f3b33",
+    "#e8cb92",
+    "#111"
+   ]
+  },
+  {
+   "id": "outfit-suit",
+   "cat": "avatar",
+   "name": "Evening Suit",
+   "blurb": "Black tie for the big table.",
+   "price": 1200,
+   "swatch": [
+    "#141414",
+    "#f3ead6",
+    "#c8a46a"
+   ]
+  },
+  {
+   "id": "outfit-qipao",
+   "cat": "avatar",
+   "name": "Silk Qipao",
+   "blurb": "Embroidered silk.",
+   "price": 1600,
+   "swatch": [
+    "#7a1f1b",
+    "#e8cb92",
+    "#2f7a5c"
+   ]
+  },
+  {
+   "id": "outfit-kimono",
+   "cat": "avatar",
+   "name": "Kimono",
+   "blurb": "Indigo with a gold obi.",
+   "price": 1600,
+   "swatch": [
+    "#1a2440",
+    "#c9a24a",
+    "#f3ead6"
+   ]
+  },
+  {
+   "id": "outfit-kandura",
+   "cat": "avatar",
+   "name": "Kandura",
+   "blurb": "Crisp and white.",
+   "price": 1600,
+   "swatch": [
+    "#f5f3ee",
+    "#c9a24a",
+    "#5a4321"
+   ]
+  },
+  {
+   "id": "outfit-sweater",
+   "cat": "avatar",
+   "name": "Cashmere Sweater",
+   "blurb": "Relaxed Sunday games.",
+   "price": 800,
+   "swatch": [
+    "#8a6a4a",
+    "#f3ead6",
+    "#3b2416"
+   ]
+  },
+  {
+   "id": "none",
+   "cat": "accessory",
+   "name": "No accessory",
+   "blurb": "",
+   "price": 0,
+   "swatch": [
+    "#333",
+    "#333",
+    "#333"
+   ]
+  },
+  {
+   "id": "glasses",
+   "cat": "accessory",
+   "name": "Gold Glasses",
+   "blurb": "For reading the table.",
+   "price": 600,
+   "swatch": [
+    "#c8a46a",
+    "#111",
+    "#fff"
+   ]
+  },
+  {
+   "id": "earrings",
+   "cat": "accessory",
+   "name": "Jade Earrings",
+   "blurb": "A quiet flourish.",
+   "price": 900,
+   "swatch": [
+    "#2f7a5c",
+    "#c8a46a",
+    "#fff"
+   ]
+  },
+  {
+   "id": "hat",
+   "cat": "accessory",
+   "name": "Fedora",
+   "blurb": "Manhattan card-room classic.",
+   "price": 900,
+   "swatch": [
+    "#2a2520",
+    "#c8a46a",
+    "#111"
+   ]
+  },
+  {
+   "id": "fan",
+   "cat": "accessory",
+   "name": "Silk Fan",
+   "blurb": "Cool under pressure.",
+   "price": 1100,
+   "swatch": [
+    "#b3352a",
+    "#e8cb92",
+    "#111"
+   ]
+  },
+  {
+   "id": "pearls",
+   "cat": "accessory",
+   "name": "Pearl Necklace",
+   "blurb": "Elegant and timeless.",
+   "price": 1400,
+   "swatch": [
+    "#f6f2ee",
+    "#d9cfe0",
+    "#c8a46a"
+   ]
+  },
+  {
+   "id": "win-classic",
+   "cat": "winAnimation",
+   "name": "Classic Reveal",
+   "blurb": "Tiles rise, the camera leans in.",
+   "price": 0,
+   "swatch": [
+    "#e8cb92",
+    "#17402f",
+    "#fff"
+   ]
+  },
+  {
+   "id": "win-lanterns",
+   "cat": "winAnimation",
+   "name": "Lanterns",
+   "blurb": "Paper lanterns drift up from the table.",
+   "price": 2200,
+   "swatch": [
+    "#ff4d3a",
+    "#ffb45f",
+    "#120c0a"
+   ]
+  },
+  {
+   "id": "win-gold-dust",
+   "cat": "winAnimation",
+   "name": "Gold Dust",
+   "blurb": "A shimmer of gold across the felt.",
+   "price": 2600,
+   "swatch": [
+    "#ffd27a",
+    "#fff1c9",
+    "#140f08"
+   ]
+  },
+  {
+   "id": "win-sakura",
+   "cat": "winAnimation",
+   "name": "Sakura",
+   "blurb": "Petals fall over the winning hand.",
+   "price": 2600,
+   "swatch": [
+    "#ffb7c5",
+    "#fff",
+    "#1a2440"
+   ]
+  },
+  {
+   "id": "fx-none",
+   "cat": "tableEffect",
+   "name": "No effect",
+   "blurb": "Just the table.",
+   "price": 0,
+   "swatch": [
+    "#333",
+    "#333",
+    "#333"
+   ]
+  },
+  {
+   "id": "fx-candle",
+   "cat": "tableEffect",
+   "name": "Candlelight",
+   "blurb": "A warm flicker at the table edge.",
+   "price": 1500,
+   "swatch": [
+    "#ffb45f",
+    "#3b2416",
+    "#fff"
+   ]
+  },
+  {
+   "id": "fx-mist",
+   "cat": "tableEffect",
+   "name": "Evening Mist",
+   "blurb": "A low haze over the felt.",
+   "price": 1500,
+   "swatch": [
+    "#cfd8dc",
+    "#17402f",
+    "#fff"
+   ]
+  },
+  {
+   "id": "fx-fireflies",
+   "cat": "tableEffect",
+   "name": "Fireflies",
+   "blurb": "Tiny lights drifting around the room.",
+   "price": 2000,
+   "swatch": [
+    "#e6ff8a",
+    "#0b0f0d",
+    "#fff"
+   ]
+  },
+  {
+   "id": "sound-auto",
+   "cat": "sound",
+   "name": "Matched to tiles",
+   "blurb": "Each tile set has its own click.",
+   "price": 0,
+   "swatch": [
+    "#e8cb92",
+    "#17402f",
+    "#fff"
+   ]
+  },
+  {
+   "id": "sound-bamboo",
+   "cat": "sound",
+   "name": "Bamboo Hall",
+   "blurb": "Hollow wooden clicks.",
+   "price": 1000,
+   "swatch": [
+    "#b08a4a",
+    "#3b2416",
+    "#fff"
+   ]
+  },
+  {
+   "id": "sound-glass",
+   "cat": "sound",
+   "name": "Glass House",
+   "blurb": "Bright glass on stone.",
+   "price": 1200,
+   "swatch": [
+    "#9fd0ea",
+    "#fff",
+    "#1c2c3a"
+   ]
+  },
+  {
+   "id": "none",
+   "cat": "frame",
+   "name": "No frame",
+   "blurb": "",
+   "price": 0,
+   "swatch": [
+    "#333",
+    "#333",
+    "#333"
+   ]
+  },
+  {
+   "id": "frame-brass",
+   "cat": "frame",
+   "name": "Brass Ring",
+   "blurb": "A polished brass ring.",
+   "price": 500,
+   "swatch": [
+    "#c8a46a",
+    "#e8cb92",
+    "#3b2416"
+   ]
+  },
+  {
+   "id": "frame-jade",
+   "cat": "frame",
+   "name": "Jade Ring",
+   "blurb": "Carved jade.",
+   "price": 900,
+   "swatch": [
+    "#2f7a5c",
+    "#bfe3cf",
+    "#173126"
+   ]
+  },
+  {
+   "id": "frame-lacquer",
+   "cat": "frame",
+   "name": "Red Lacquer",
+   "blurb": "Lacquered red with gold.",
+   "price": 900,
+   "swatch": [
+    "#7a1f1b",
+    "#c9a24a",
+    "#2a0e0c"
+   ]
+  },
+  {
+   "id": "frame-master",
+   "cat": "frame",
+   "name": "Master’s Crown",
+   "blurb": "For players who reach Master.",
+   "price": 0,
+   "earnedBy": "Reach Master league",
+   "swatch": [
+    "#ffd27a",
+    "#7a1f1b",
+    "#111"
+   ]
+  },
+  {
+   "id": "frame-champion",
+   "cat": "frame",
+   "name": "Champion’s Laurel",
+   "blurb": "Win a tournament.",
+   "price": 0,
+   "earnedBy": "Win a tournament",
+   "swatch": [
+    "#e8cb92",
+    "#2f7a5c",
+    "#111"
+   ]
+  },
+  {
+   "id": "season-hongkong",
+   "cat": "table",
+   "name": "Harbour Lights Cloth",
+   "blurb": "A table cloth from the Hong Kong season.",
+   "price": 0,
+   "earnedBy": "Harbour Lights season (Hong Kong) reward track",
+   "swatch": [
+    "#123a3a",
+    "#4a2a18",
+    "#d9b45c"
+   ]
+  },
+  {
+   "id": "frame-season-hongkong",
+   "cat": "frame",
+   "name": "Harbour Lights Frame",
+   "blurb": "Worn by those who played the Hong Kong season.",
+   "price": 0,
+   "earnedBy": "Harbour Lights season (Hong Kong) reward track",
+   "swatch": [
+    "#d9b45c",
+    "#e9f2ee",
+    "#0d2b2e"
+   ]
+  },
+  {
+   "id": "season-tokyo",
+   "cat": "table",
+   "name": "Maple Night Cloth",
+   "blurb": "A table cloth from the Tokyo season.",
+   "price": 0,
+   "earnedBy": "Maple Night season (Tokyo) reward track",
+   "swatch": [
+    "#232a4a",
+    "#5a1a14",
+    "#c8452c"
+   ]
+  },
+  {
+   "id": "frame-season-tokyo",
+   "cat": "frame",
+   "name": "Maple Night Frame",
+   "blurb": "Worn by those who played the Tokyo season.",
+   "price": 0,
+   "earnedBy": "Maple Night season (Tokyo) reward track",
+   "swatch": [
+    "#c8452c",
+    "#efe7da",
+    "#141a33"
+   ]
+  },
+  {
+   "id": "season-dubai",
+   "cat": "table",
+   "name": "Desert Rose Cloth",
+   "blurb": "A table cloth from the Dubai season.",
+   "price": 0,
+   "earnedBy": "Desert Rose season (Dubai) reward track",
+   "swatch": [
+    "#6a3a2a",
+    "#c9a24a",
+    "#d8a25a"
+   ]
+  },
+  {
+   "id": "frame-season-dubai",
+   "cat": "frame",
+   "name": "Desert Rose Frame",
+   "blurb": "Worn by those who played the Dubai season.",
+   "price": 0,
+   "earnedBy": "Desert Rose season (Dubai) reward track",
+   "swatch": [
+    "#d8a25a",
+    "#f6e6d2",
+    "#2e1a14"
+   ]
+  },
+  {
+   "id": "season-taipei",
+   "cat": "table",
+   "name": "Lantern Market Cloth",
+   "blurb": "A table cloth from the Taipei season.",
+   "price": 0,
+   "earnedBy": "Lantern Market season (Taipei) reward track",
+   "swatch": [
+    "#5a1610",
+    "#1a0e08",
+    "#e2683a"
+   ]
+  },
+  {
+   "id": "frame-season-taipei",
+   "cat": "frame",
+   "name": "Lantern Market Frame",
+   "blurb": "Worn by those who played the Taipei season.",
+   "price": 0,
+   "earnedBy": "Lantern Market season (Taipei) reward track",
+   "swatch": [
+    "#e2683a",
+    "#f8e2c4",
+    "#2a0c08"
+   ]
+  },
+  {
+   "id": "season-singapore",
+   "cat": "table",
+   "name": "Garden City Cloth",
+   "blurb": "A table cloth from the Singapore season.",
+   "price": 0,
+   "earnedBy": "Garden City season (Singapore) reward track",
+   "swatch": [
+    "#2e2245",
+    "#e3dccb",
+    "#b98ad6"
+   ]
+  },
+  {
+   "id": "frame-season-singapore",
+   "cat": "frame",
+   "name": "Garden City Frame",
+   "blurb": "Worn by those who played the Singapore season.",
+   "price": 0,
+   "earnedBy": "Garden City season (Singapore) reward track",
+   "swatch": [
+    "#b98ad6",
+    "#efe6f6",
+    "#1d1630"
+   ]
+  },
+  {
+   "id": "season-hanoi",
+   "cat": "table",
+   "name": "Lotus Lacquer Cloth",
+   "blurb": "A table cloth from the Hanoi season.",
+   "price": 0,
+   "earnedBy": "Lotus Lacquer season (Hanoi) reward track",
+   "swatch": [
+    "#1f2a22",
+    "#120c08",
+    "#d6a23e"
+   ]
+  },
+  {
+   "id": "frame-season-hanoi",
+   "cat": "frame",
+   "name": "Lotus Lacquer Frame",
+   "blurb": "Worn by those who played the Hanoi season.",
+   "price": 0,
+   "earnedBy": "Lotus Lacquer season (Hanoi) reward track",
+   "swatch": [
+    "#d6a23e",
+    "#f4ead6",
+    "#120d0a"
+   ]
+  }
+ ]
+}

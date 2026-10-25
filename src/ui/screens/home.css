@@ -1,0 +1,57 @@
+/* Home: a compact hero, the five premium cards (luxCard), the club strip and the season card,
+   all in the same glassy jade-black panel with a fine gold edge. */
+
+.home { gap: var(--s4); padding-top: 3vh; }
+.home .hero-mark { width: clamp(76px, 9vw, 112px); margin-bottom: 6px; }
+.home .wordmark { font-size: clamp(42px, 7vw, 88px); }
+.home .tagline { margin-top: 8px; }
+.home .subline { margin-top: 10px; }
+
+.hx-actions { display: flex; flex-direction: column; align-items: center; width: min(1320px, 100%); animation: rise 1.4s 1.2s var(--ease) both; }
+.hx-last { display: block; margin-top: 4px; color: var(--brass-hi); font-size: 12.5px; }
+.hx-info {
+  display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 50%;
+  background: rgba(9, 13, 11, 0.6); color: var(--brass-hi); cursor: pointer;
+}
+.hx-info .ico { width: 16px; height: 16px; }
+.hx-info:hover { border-color: var(--brass-hi); }
+.hx-info:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+
+/* the strip and the season share the cards' panel */
+.hx-strip, .season-card.hx-season {
+  border-radius: 18px; border: 1px solid rgba(201, 165, 107, 0.42); color: var(--ivory);
+  background: linear-gradient(180deg, rgba(255, 240, 210, 0.06), rgba(255, 240, 210, 0) 40%), linear-gradient(180deg, rgba(16, 34, 28, 0.86), rgba(6, 12, 10, 0.9));
+  box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.1), 0 14px 34px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+
+/* the club strip */
+.hx-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; width: min(900px, 100%); padding: 6px 8px; overflow: visible; }
+.hx-strip .stat { flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; background: none; border-right: 1px solid var(--line-soft); }
+.hx-strip .stat:last-of-type { border-right: 0; }
+.stat-ico { flex: none; display: grid; color: var(--brass-hi); }
+.stat-ico .ico { width: 26px; height: 26px; stroke-width: 1.5; }
+.stat-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hx-strip .stat .v { font-size: 22px; }
+.hx-strip .stat .v.sm { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
+.hx-chev .ico { width: 15px; height: 15px; }
+
+/* the season card */
+.season-card.hx-season { display: flex; flex-direction: row; align-items: center; gap: var(--s4); width: min(900px, 100%); padding: 14px 22px; text-align: left; cursor: pointer; }
+.hx-season-art { flex: none; width: 82px; height: 82px; border-radius: 50%; box-shadow: 0 0 0 2px #c9a56b, 0 0 0 4px rgba(9, 13, 11, 0.9), 0 0 0 5px rgba(201, 165, 107, 0.5), 0 6px 18px rgba(0, 0, 0, 0.5); overflow: hidden; }
+.hx-season-art svg { display: block; width: 100%; height: 100%; }
+.hx-season-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.hx-season .sc-name { font-size: 24px; }
+.hx-season:hover { filter: brightness(1.06); }
+
+@media (max-width: 900px) {
+  .hx-strip { grid-template-columns: 1fr 1fr; }
+  .hx-strip .stat:nth-of-type(2) { border-right: 0; }
+}
+@media (max-width: 600px) {
+  .home { gap: var(--s3); }
+  .hx-strip .stat { padding: 10px; gap: 8px; }
+  .stat-ico .ico { width: 22px; height: 22px; }
+  .season-card.hx-season { padding: 12px 16px; gap: var(--s3); }
+  .hx-season-art { width: 62px; height: 62px; }
+}

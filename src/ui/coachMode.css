@@ -1,0 +1,3 @@
+/* Coach mode (coachMode.ts): Mei's note on the hand result card. */
+.coach-note { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0 0; padding: 10px 12px; border-radius: var(--r-sm); border: 1px solid var(--line-soft); background: rgba(242, 234, 217, 0.03); font-size: 14px; line-height: 1.45; color: var(--muted); }
+.coach-note .narrator { flex: none; width: 26px; height: 26px; font-size: 13px; }

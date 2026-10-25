@@ -1,0 +1,43 @@
+/* The hand-score card: your hand now (calculator, your plate) and what another player has on show. */
+.hs-now { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ivory, #f2ead9); }
+.hs-head { font: 600 13px var(--ui); color: #fff6e2; }
+.hs-now.compact .hs-head { font: 500 10.5px var(--ui); letter-spacing: var(--track-caps, 0.14em); text-transform: uppercase; color: var(--brass, #c9a56b); }
+.hs-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 8px 10px; border-radius: 10px;
+  background: linear-gradient(180deg, rgba(232, 203, 146, 0.16), rgba(232, 203, 146, 0.06)); border: 1px solid rgba(232, 203, 146, 0.35); }
+.hs-val { font-weight: 600; color: #fff6e2; }
+.hs-pts { font-family: var(--display, 'Cinzel', serif); font-variant-numeric: lining-nums tabular-nums; color: var(--brass-hi, #ead09a); font-size: 15px; }
+.hs-pay, .hs-how { font-size: 12px; color: var(--muted, #b0a792); }
+.hs-how { flex-basis: 100%; }
+.hs-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.hs-lines li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 2px; border-bottom: 1px solid rgba(232, 203, 146, 0.08); font-size: 12.5px; }
+.hs-lines li em { color: var(--muted, #b0a792); font-style: normal; font-size: 11.5px; }
+.hs-lines .num { flex: none; color: var(--brass-hi, #ead09a); font-variant-numeric: lining-nums tabular-nums; }
+.hs-lines .hs-more { color: var(--muted, #b0a792); justify-content: flex-start; }
+.hs-note { margin: 2px 0 0; font-size: 12px; color: var(--muted, #b0a792); line-height: 1.4; }
+.hs-tiles { display: inline-flex; flex-wrap: wrap; gap: 2px; }
+.hs-now .tile2d.mini { width: 22px; border-radius: 3px; box-shadow: 0 1px 0 #c9b893, 0 2px 0 #1f5a46, 0 3px 6px rgba(0, 0, 0, 0.35); }
+.hs-now.compact .tile2d.mini { width: 20px; }
+/* One row per tile you wait on: the tile, what it pays each way, how many are left. */
+.hs-wait { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); }
+.hs-ways { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.hs-way { font-size: 12px; overflow-wrap: anywhere; }
+.hs-way small { display: inline-block; min-width: 82px; margin-inline-end: 6px; color: var(--muted, #b0a792); font-size: 11px; }
+.hs-way.off { color: var(--muted, #b0a792); }
+.hs-left { font-size: 11px; color: #9fd8ad; white-space: nowrap; }
+.hs-left.none { color: #e39a8a; }
+.hs-opt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 6px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); }
+.hs-throw, .hs-wins { display: inline-flex; align-items: center; gap: 6px; }
+.hs-throw small, .hs-wins small, .hs-reach small { font-size: 11px; color: var(--muted, #b0a792); }
+.hs-best { margin-inline-start: auto; font-size: 12px; color: var(--brass-hi, #ead09a); }
+.hs-reach { display: flex; flex-direction: column; gap: 6px; }
+.hs-path { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; }
+.hs-kv { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+.hs-kv strong { color: var(--brass-hi, #ead09a); font-variant-numeric: lining-nums tabular-nums; }
+/* On a plate's card: the score sits above the discards, split by a single gold rule. */
+.seat-river .hs-now { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line, rgba(201, 165, 107, 0.24)); }
+.seat-river.with-score { max-width: min(320px, calc(100vw - 2 * var(--gutter, 12px))); }
+/* An open plate card sits above the neighbouring plates. */
+.hud .seat:has(> .seat-river.with-score) { z-index: calc(var(--z-seat, 5) + 6); }
+/* Your hand's status line opens the calculator on what the hand is worth now. */
+.hud .hand-status[role='button'] { cursor: pointer; text-decoration: underline dotted rgba(234, 208, 154, 0.55); text-underline-offset: 3px; }
+.hud .hand-status[role='button']:focus-visible { outline: 2px solid var(--brass-hi, #ead09a); outline-offset: 2px; }

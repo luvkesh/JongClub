@@ -1,0 +1,90 @@
+/* Scoring guide: a panel over the middle of the table, clear of the HUD bar
+   above and of your hand and the action row below. */
+.hud .guide-btn svg { display: block; margin: auto; }
+.hud .guide-btn.on { border-color: var(--brass-hi, #e8cb92); color: var(--brass-hi, #e8cb92); }
+.sg-panel {
+  position: absolute; z-index: 30;
+  top: calc(var(--hud-top, 64px) + 8px); left: 50%; transform: translateX(-50%);
+  width: min(500px, calc(100% - 2 * var(--side, 16px)));
+  max-height: 60%; min-height: 160px;
+  display: flex; flex-direction: column; box-sizing: border-box;
+  background: rgba(14, 18, 16, 0.95); color: #efe6d2;
+  border: 1px solid var(--line-strong, rgba(232, 203, 146, 0.3)); border-radius: var(--r-md, 12px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); backdrop-filter: blur(6px);
+}
+.sg-panel[hidden] { display: none; }
+.sg-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px 8px; border-bottom: 1px solid rgba(232, 203, 146, 0.14); }
+.sg-head h3 { margin: 2px 0 0; font-size: 18px; color: #fff6e2; }
+.sg-head .eyebrow { margin: 0; }
+.sg-close { flex: none; }
+.sg-body { overflow-y: auto; padding: 4px 14px 14px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.sg-sec { border-bottom: 1px solid rgba(232, 203, 146, 0.1); }
+.sg-sec > summary { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 0; box-sizing: border-box; font-size: 14px; font-weight: 600; letter-spacing: 0.02em; color: #fff6e2; }
+.sg-title { flex: 1; }
+.sg-count { flex: none; min-width: 20px; padding: 1px 7px; border-radius: 999px; background: rgba(232, 203, 146, 0.14); color: var(--brass-hi, #e8cb92); font-size: 11px; text-align: center; font-variant-numeric: tabular-nums; }
+.sg-cards { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; }
+
+/* Tile pictures: sets sit apart, tiles in a set touch. */
+.sg-tiles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 7px; margin-top: 6px; }
+.sg-set { display: inline-flex; gap: 1px; }
+/* Tiles always read left to right; in Arabic the row still starts on the reading side. */
+[dir='rtl'] .sg-name .sg-tiles, [dir='rtl'] .sg-special .sg-tiles { justify-content: flex-end; }
+.sg-tiles .tile2d.mini { width: 22px; border-radius: 3px; box-shadow: 0 1px 0 #c9b893, 0 2px 0 #1f5a46, 0 3px 6px rgba(0, 0, 0, 0.35); }
+
+/* The anatomy of a win: four sets and a pair on a strip of felt. */
+.sg-hero { margin: 2px 0 10px; padding: 10px 12px 12px; border-radius: 12px; border: 1px solid rgba(232, 203, 146, 0.28);
+  background: radial-gradient(120% 140% at 50% 0%, rgba(46, 110, 82, 0.55), rgba(16, 48, 36, 0.75)); }
+.sg-hero figcaption { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass-hi, #e8cb92); margin-bottom: 8px; text-align: center; }
+.sg-parts { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 12px; }
+.sg-part { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sg-part .sg-tiles { margin: 0; }
+.sg-part > span { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.3); border-top: 2px solid var(--part, #e8cb92); }
+.sg-part.chow { --part: #7fc8b3; }
+.sg-part.pung { --part: #e8cb92; }
+.sg-part.kong { --part: #c6a3e6; }
+.sg-part.pair { --part: #ee8f7d; }
+
+.sg-win { margin: 0 0 10px; padding-inline-start: 18px; font-size: 13px; line-height: 1.5; }
+.sg-win li { margin: 3px 0; }
+.sg-win li::marker { color: var(--brass-hi, #e8cb92); }
+.sg-pay { margin: 0 0 4px; font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); }
+.sg-specials { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.sg-special { padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(232, 203, 146, 0.1); font-size: 13px; }
+.sg-special strong { color: #fff6e2; }
+
+/* A scoring line: value badge, name, how, and a picture where one helps. */
+.sg-line { display: grid; grid-template-columns: 50px 1fr; gap: 10px; align-items: start; padding: 8px 10px; font-size: 13px; line-height: 1.35;
+  border-radius: 10px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(232, 203, 146, 0.08); }
+.sg-line.has-pic { background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025)); }
+.sg-line.hit { background: rgba(232, 203, 146, 0.16); border-color: rgba(232, 203, 146, 0.55); box-shadow: 0 0 0 1px rgba(232, 203, 146, 0.25), 0 6px 18px rgba(232, 203, 146, 0.12); }
+.sg-val { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 40px; padding: 3px 2px; box-sizing: border-box; border-radius: 9px;
+  background: linear-gradient(160deg, #f1d9a4, #b88d4a); color: #2a1d0b; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35); text-align: center; }
+.sg-val b { font-size: 17px; line-height: 1; font-variant-numeric: tabular-nums; }
+.sg-val small { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; opacity: 0.8; }
+.sg-val.word b { font-size: 10px; line-height: 1.2; font-weight: 700; }
+.sg-name { min-width: 0; }
+.sg-name strong { display: block; color: #fff6e2; font-weight: 600; }
+.sg-how { display: block; font-size: 12px; color: #b9b09c; margin-top: 1px; }
+
+.sg-live { margin: 4px 0 10px; }
+.sg-sub { margin: 6px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass-hi, #e8cb92); }
+.sg-road { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 5px 8px; border-radius: 8px; }
+.sg-road.best { background: rgba(120, 190, 140, 0.14); }
+.sg-away { color: #b9b09c; text-align: end; }
+.sg-road.best .sg-away { color: #9fd8ad; }
+.sg-note { margin: 6px 0 0; font-size: 12px; color: #b9b09c; }
+/* Phones held upright: the panel takes the table area, still above your hand. */
+@media (max-width: 640px) {
+  .sg-panel { width: calc(100% - 2 * var(--side, 12px)); }
+  .sg-body { padding-inline: 10px; }
+  .sg-tiles .tile2d.mini { width: 19px; }
+  .sg-tiles { gap: 5px; }
+  .sg-line { grid-template-columns: 44px 1fr; gap: 8px; padding: 7px 8px; }
+  .sg-hero { padding-inline: 6px; }
+  .sg-parts { gap: 8px; }
+}
+/* Short landscape screens (phones): narrower, still between the HUD bar and the tray hand. */
+@media (max-height: 500px) {
+  .sg-panel { width: min(460px, 62vw); }
+  .sg-tiles .tile2d.mini { width: 19px; }
+}

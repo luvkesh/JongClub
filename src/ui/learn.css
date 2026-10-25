@@ -1,0 +1,4 @@
+
+/* The top row of premium cards (luxCard), and room under the header when a card scrolls to the list. */
+.lx-choices { margin: 4px 0 26px; }
+.lx-path { scroll-margin-top: 92px; }

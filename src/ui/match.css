@@ -1,0 +1,590 @@
+/* Match table extras: the countdown ring, the win moment, and the table helpers
+   (matching tiles, waits, seat rivers, keyboard list). Layers use the HUD
+   tokens in style.css: the ring and waits live in the bottom panel (--z-panel),
+   the win banner with the call announcements (--z-toast), sheets in the overlay. */
+
+/* ------------------------------------------------------------ countdown ring */
+.hud .timer {
+  position: relative; width: 46px; height: 46px; flex: 0 0 46px; border: 0; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(9, 13, 11, 0.82); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.hud .timer[hidden] { display: none; }
+.hud .timer svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.hud .timer .t-track { fill: none; stroke: rgba(201, 165, 107, 0.16); stroke-width: 1.5; }
+.hud .timer .t-arc { fill: none; stroke: var(--brass-hi); stroke-width: 2; stroke-linecap: round; transition: stroke 0.6s ease; }
+.hud .timer .t-num { position: relative; font: 500 15px/1 var(--ui); font-variant-numeric: tabular-nums lining-nums; color: var(--ivory); letter-spacing: 0.02em; }
+/* The last seconds warm to a soft amber, never a flashing red. */
+.hud .timer.low .t-arc { stroke: var(--warn); }
+.hud .timer.low .t-num { color: var(--warn); }
+.hud .timer.low { border: 0; color: inherit; }
+@media (max-width: 640px) {
+  .hud .timer { width: 40px; height: 40px; flex-basis: 40px; }
+  .hud .timer .t-num { font-size: 13px; }
+}
+
+/* ------------------------------------------------------------ win banner */
+.win-banner {
+  position: absolute; z-index: var(--z-toast); left: 50%; top: 30%; transform: translate(-50%, -50%);
+  width: min(720px, calc(100vw - 2 * var(--gutter))); text-align: center; pointer-events: none;
+}
+.win-banner[hidden] { display: none; }
+.wb-inner { position: relative; padding: 26px 18px 18px; }
+.wb-stroke { position: absolute; left: 4%; right: 4%; top: 22px; height: 96px; opacity: 0; }
+.wb-stroke svg { width: 100%; height: 100%; display: block; }
+.wb-stroke path { fill: rgba(12, 10, 7, 0.78); }
+.wb-stroke path.dry { fill: none; stroke: rgba(201, 165, 107, 0.22); stroke-width: 1.2; }
+.wb-word {
+  position: relative; display: inline-flex; align-items: flex-start; gap: 14px;
+  font: italic 500 clamp(52px, 9vw, 92px)/1.05 var(--display); letter-spacing: 0.01em;
+  background: linear-gradient(180deg, #fff6df 18%, #e9cd93 58%, #b48a4e); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 6px 24px rgba(0, 0, 0, 0.9));
+  clip-path: inset(0 100% 0 0);
+}
+.wb-seal {
+  -webkit-text-fill-color: #fbe9dd; color: #fbe9dd; background: #9e2f22; font: 400 22px/1 'Ma Shan Zheng', 'Noto Serif SC', 'Songti SC', serif;
+  font-style: normal; padding: 6px 5px; border-radius: 4px; writing-mode: vertical-rl; letter-spacing: 0.06em;
+  box-shadow: inset 0 0 0 2px rgba(251, 233, 221, 0.35), 0 4px 14px rgba(0, 0, 0, 0.5); margin-top: 14px; opacity: 0;
+}
+.wb-sub { margin-top: 8px; font: italic 400 17px var(--display); color: var(--ivory); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95); opacity: 0; }
+.wb-hand { margin-top: 10px; display: inline-flex; gap: 14px; align-items: baseline; padding: 6px 16px; border-radius: 999px; background: rgba(9, 13, 11, 0.72); border: 1px solid var(--line); opacity: 0; }
+.wb-name { font: 500 13px var(--ui); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--brass-hi); }
+.wb-pts { font: 600 16px var(--ui); font-variant-numeric: tabular-nums lining-nums; color: var(--ivory); }
+
+.win-banner.on .wb-stroke { animation: wb-fade 0.7s 0.15s ease-out forwards; }
+.win-banner.on .wb-word { animation: wb-brush 1.1s 0.25s cubic-bezier(0.45, 0.05, 0.25, 1) forwards; }
+.win-banner.on .wb-seal { animation: wb-seal 0.45s 1.2s ease-out forwards; }
+.win-banner.on .wb-sub { animation: wb-fade 0.6s 1.0s ease-out forwards; }
+.win-banner.on .wb-hand { animation: wb-fade 0.6s 1.35s ease-out forwards; }
+/* A self-drawn win's word brushes on a touch slower, from above. */
+.win-banner.self.on .wb-word { animation-duration: 1.35s; }
+.win-banner.self .wb-inner { padding-top: 34px; }
+.win-banner.speed-minimal.on * { animation-duration: 0.3s !important; animation-delay: 0s !important; }
+.win-banner.off { opacity: 0; transition: opacity 0.35s ease; }
+@keyframes wb-brush { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 -10% 0 0); } }
+@keyframes wb-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes wb-seal { 0% { opacity: 0; transform: scale(1.35) rotate(-6deg); } 70% { opacity: 1; transform: scale(0.96) rotate(-2deg); } 100% { opacity: 1; transform: scale(1) rotate(-2deg); } }
+@media (max-width: 640px) {
+  /* Portrait phones: the banner takes the space your tiles leave during the win, below the table. */
+  .win-banner { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%); }
+  .wb-stroke { height: 70px; top: 18px; }
+  .wb-sub { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .win-banner.on .wb-stroke, .win-banner.on .wb-word, .win-banner.on .wb-seal, .win-banner.on .wb-sub, .win-banner.on .wb-hand {
+    animation: none !important; opacity: 1; clip-path: none; transform: none;
+  }
+  .win-banner.on .wb-seal { transform: rotate(-2deg); }
+}
+
+/* ------------------------------------------------------------ table helpers */
+/* Tiles in your tray that match the latest discard: a quiet jade underline. */
+.tray-tile.match { box-shadow: 0 0 0 2px rgba(124, 199, 160, 0.75), 0 4px 10px rgba(0, 0, 0, 0.4); border-radius: 6px; }
+
+/* Waiting on: the tiles that complete your hand, with copies left. */
+.waits {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 12px; border-radius: 999px;
+  background: rgba(9, 13, 11, 0.8); border: 1px solid rgba(124, 199, 160, 0.45); pointer-events: auto;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.waits[hidden] { display: none; }
+.waits .w-label { font: 500 10.5px var(--ui); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--jade-hi); }
+.waits .w-tile { display: inline-flex; align-items: center; gap: 3px; }
+.waits .w-tile .tile2d.mini { width: 22px; }
+.waits .w-tile b { font: 600 12px var(--ui); font-variant-numeric: tabular-nums; color: var(--ivory); }
+.waits .w-tile.dead { opacity: 0.45; }
+.waits .w-tile.dead b { color: var(--down); }
+
+/* A player's discards, on hovering or tapping their plate. */
+.seat { cursor: default; }
+.seat-river {
+  position: absolute; z-index: 3; left: 0; top: calc(100% + 8px); min-width: 180px; max-width: 280px;
+  padding: 10px 12px; border-radius: var(--r); background: var(--surface-solid); border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-1); pointer-events: none;
+}
+.seat-0 .seat-river { top: auto; bottom: calc(100% + 8px); }
+.seat-1 .seat-river { left: auto; right: 0; }
+.sr-head { font: 500 10.5px var(--ui); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--brass); margin-bottom: 8px; }
+.sr-tiles { display: flex; flex-wrap: wrap; gap: 3px; }
+.sr-tiles .tile2d.mini { width: 24px; }
+.sr-empty { color: var(--muted); font-size: 13px; }
+
+/* Keyboard shortcut list. */
+.keys-sheet { width: min(460px, 100%); }
+.keys-table { width: 100%; border-collapse: collapse; margin: 8px 0 4px; }
+.keys-table td { padding: 8px 6px; border-top: 1px solid var(--line-soft); font-size: 14px; color: var(--ivory); }
+.keys-table td:first-child { white-space: nowrap; width: 1%; padding-right: 16px; }
+.keys-table kbd {
+  display: inline-block; min-width: 24px; padding: 3px 7px; margin-right: 4px; text-align: center;
+  font: 500 12px var(--ui); color: var(--brass-hi); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; background: var(--sunken);
+}
+/* No keyboard on touch screens: the shortcuts button stays out of the way. */
+@media (pointer: coarse) { .hud .keys-btn { display: none; } }
+
+/* ------------------------------------------------------------ tidy HUD (phones first) */
+/* Hand status is a quiet line, not another pill. */
+.hud .hand-status {
+  background: none; border: 0; padding: 0 4px; border-radius: 0;
+  font-size: 12px; letter-spacing: 0.02em; color: var(--ivory); opacity: 0.86;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8);
+}
+/* The latest-discard callout always fits its box. */
+.hud .last-discard { max-width: calc(100vw - 2 * var(--gutter)); box-sizing: border-box; }
+.hud .last-discard .ld-text { min-width: 0; white-space: normal; }
+.hud .last-discard .ld-who, .hud .last-discard .ld-tile { overflow-wrap: anywhere; }
+/* One voice at a time: while Mei is coaching, JongBot's panel steps aside (she already passes on its advice). */
+.hud:has(> .coach:not([hidden]):not(.tucked)) .jongbot { display: none !important; }
+
+/* The table menu: on phones it holds view controls, sorting, reactions and settings. */
+.hud .more-btn { display: none; }
+.hud-drawer {
+  position: absolute; z-index: calc(var(--z-panel) + 2); right: var(--gutter); top: calc(env(safe-area-inset-top, 0px) + 58px);
+  width: min(300px, calc(100vw - 2 * var(--gutter))); box-sizing: border-box; padding: 12px;
+  background: var(--surface-solid); border: 1px solid var(--line-strong); border-radius: var(--r-lg); box-shadow: var(--shadow-2);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.hud-drawer .drawer-sec { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hud-drawer .drawer-cap { font: 500 10.5px var(--ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+.hud-drawer .view-controls, .hud-drawer > .drawer-sec > :not(.drawer-cap) { flex-direction: row; position: static; }
+.hud-drawer .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hud-drawer .drawer-item {
+  min-height: 40px; padding: 0 10px; border-radius: var(--r); border: 1px solid var(--line); background: rgba(9, 13, 11, 0.6);
+  color: var(--ivory); font: 500 13px var(--ui); text-align: left; cursor: pointer; overflow-wrap: anywhere;
+}
+.hud-drawer .drawer-item.on { border-color: var(--brass); color: var(--brass-hi); }
+.hud-drawer .drawer-item:hover { border-color: var(--brass-hi); }
+
+@media (max-width: 700px), (max-height: 500px) {
+  .hud .more-btn { display: grid; }
+  .hud > .hud-views, .hud .react-toggle, .hud .settings-btn, .hud .keys-btn, .hud .status-row .sort-btn { display: none !important; }
+  .hud .last-discard .ld-who { letter-spacing: 0.06em; font-size: 10px; }
+  .hud .waits { padding: 3px 8px; gap: 6px; }
+  .hud .waits .w-label { letter-spacing: 0.08em; }
+  .seat-river { max-width: min(260px, calc(100vw - 2 * var(--gutter))); }
+}
+.hud-drawer .vc-gauge, .hud-drawer .vc-sep { display: none; }
+/* Wide screens: hand status, waits and sort sit in one quiet row beside your seat plate, clear of the left player's plate and the rack. */
+@media (min-aspect-ratio: 85/100) and (min-width: 701px) and (min-height: 501px) {
+  .hud .bottom > .status-row { left: calc(var(--gutter) + 248px); bottom: calc(env(safe-area-inset-bottom, 0px) + 25vh + 12px); max-width: min(560px, calc(100vw - 2 * var(--gutter) - 500px)); flex-wrap: wrap; }
+}
+/* Landscape phones: little height, so Mei's caption takes the top strip between the round badge and the menu,
+   the top player's plate steps aside while she speaks, and the side plates clear your own. */
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .hud > .coach { padding: 6px 10px; }
+  .hud > .coach .coach-text { font-size: 12.5px; line-height: 1.35; }
+  /* JongBot: a small card low on the right, clear of the rivers and the callout. */
+  .hud .jongbot:not(.collapsed) { position: fixed; top: auto; right: var(--gutter); bottom: calc(env(safe-area-inset-bottom, 0px) + 108px); width: min(250px, 34vw); max-height: 30vh; padding: 8px 12px; box-sizing: border-box; }
+  .hud .jongbot .bot-line { font-size: 15px; margin-top: 4px; }
+  .hud .jongbot .bot-why, .hud .jongbot .bot-table-wrap, .hud .jongbot .bot-depth { display: none; }
+  .hud .seat-1, .hud .seat-3 { top: 34%; }
+  .hud .bottom > .status-row { left: auto; right: var(--gutter); bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); max-width: 280px; justify-content: flex-end; }
+  .win-banner { top: 34%; }
+  .wb-word { font-size: 48px; }
+}
+/* Wide screens: the latest-discard callout sits up by the far right corner, over the wall, never over a river. */
+@media (min-aspect-ratio: 85/100) and (min-width: 701px) and (min-height: 501px) {
+  .hud .last-discard { left: auto; right: calc(var(--gutter) + 118px); transform: none; }
+  .hud .last-discard.pop { animation: ld-pop-side 0.35s ease-out; }
+}
+@keyframes ld-pop-side { from { transform: scale(0.92); } to { transform: none; } }
+/* During the win moment the plates and controls fade back, so the lifted hand and the banner have the table. */
+.hud .seat, .hud .bottom, .hud > .hud-views { transition: opacity 0.4s ease; }
+.hud.winning .seat, .hud.winning .bottom, .hud.winning > .hud-views, .hud.winning .last-discard, .hud.winning > .coach { opacity: 0; pointer-events: none; }
+
+/* Phones: announcements and the discard callout always fit inside the screen, in one compact size. */
+@media (max-width: 700px), (max-height: 500px) {
+  .hud .toast { width: calc(100vw - 2 * var(--gutter)); top: 46%; }
+  .hud .toast-main { font-size: 30px; letter-spacing: 0.1em; margin-right: -0.1em; overflow-wrap: anywhere; line-height: 1.1; }
+  .hud .toast-sub { font-size: 14px; overflow-wrap: anywhere; }
+  .hud .last-discard { padding: 5px 12px 5px 5px; gap: 10px; max-width: min(320px, calc(100vw - 2 * var(--gutter))); }
+  .hud .last-discard .tile2d { width: 34px; }
+  .hud .last-discard .ld-tile { font-size: 15px; }
+  /* While Mei speaks, the callout is the one discard cue: call toasts drop below it, never over her caption. */
+  .hud:has(> .coach:not([hidden])) .toast { top: 58%; }
+}
+
+/* Three-seat tables (Korean): nobody sits across, so the top plate is never shown. */
+.hud .seat[hidden], .hud.three-seats .seat-2 { display: none; }
+/* Portrait phones: the two side plates share one band at a three-seat table, so stagger them
+   (left a little higher, right a little lower) instead of letting them meet in the middle. */
+@media (max-aspect-ratio: 85/100) {
+  .hud.three-seats .seat-3 { top: 37%; }
+  .hud.three-seats .seat-1 { top: 45%; }
+}
+
+/* Landscape phones: the status line sits right over your exposed sets, so it gets a dark backing to stay readable. */
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .hud .hand-status { background: rgba(9, 13, 11, 0.8); border-radius: 8px; padding: 3px 8px; opacity: 1; }
+}
+
+/* ------------------------------------------------------------ landscape phones (iPhone and Android held sideways)
+   Little height: your hand moves off the small 3D rack into one row of 2D tiles along the bottom, and every
+   panel shrinks so the table stays in view. Insets keep clear of the notch and the home bar. */
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  /* One row of up to 14 tiles plus the suit gaps, as large as the width (and height) allows. */
+  .hud { --side: max(var(--gutter), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); --tw: clamp(30px, min(calc((100vw - 2 * var(--side) - 60px) / 14.5), 15vh), 54px); }
+  .tray { display: flex; flex-wrap: nowrap; justify-content: center; align-items: flex-end; gap: 3px; width: 100%; padding-top: 4px; }
+  .tray-tile.gap-suit { margin-left: 6px; }
+  .tray-tile.gap-set { margin-left: 10px; }
+  .tray-tile.selected { transform: translateY(-8px); }
+  .tray-tile img { border-radius: 4px; }
+  .new-mark { top: -9px; font-size: 7.5px; padding: 0 4px; }
+  .tray-extras { flex: 0 0 auto; flex-wrap: nowrap; align-items: flex-end; gap: 8px; margin-left: 8px; }
+  .tray-bonus { flex: 0 0 auto; flex-direction: column; gap: 2px; font-size: 8.5px; }
+  .tray-bonus span { margin: 0; }
+  .tray-bonus .tile2d.mini { width: 18px; }
+  .hud .bottom { padding: 0 var(--side) calc(env(safe-area-inset-bottom, 0px) + 6px); gap: 6px; }
+  .hud .actions .btn { min-height: 36px; padding: 0 14px; min-width: 0; font-size: 11.5px; }
+  .hud .timer { width: 36px; height: 36px; font-size: 13px; }
+  /* Plates: one line, small avatar. */
+  .hud .seat { padding: 3px 9px 3px 3px; gap: 6px; }
+  .hud .seat .avatar { width: 26px; height: 26px; font-size: 13px; }
+  .hud .seat-sub { display: none; }
+  .hud .seat-name { font-size: 12px; }
+  .hud .seat-score .pts-cap { display: none; }
+  .hud .seat-score .pts-num { font-size: 13px; }
+  .hud .seat-1 { right: var(--side); top: 24%; }
+  .hud .seat-3 { left: var(--side); top: 24%; }
+  .hud .seat-2 { top: calc(env(safe-area-inset-top, 0px) + 8px); }
+  /* Your own plate sits on the left just above the tray. */
+  .hud .seat-0 { left: var(--side); top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tw) * 1.34 + 56px); }
+  .hud-top { top: calc(env(safe-area-inset-top, 0px) + 8px); left: var(--side); right: var(--side); }
+  /* Narrow enough to leave the top player's plate clear; extra rows (bank, jokers, your card) wrap. */
+  .round-badge { padding: 5px 10px; max-width: min(40vw, 360px); }
+  .round-name { font-size: 14px; }
+  .round-meta { font-size: 10.5px; margin-top: 1px; }
+  .hud-tools .icon-btn { width: 36px; height: 36px; }
+  .hud-tools .icon-btn.card-btn { width: auto; padding: 0 12px; letter-spacing: 0.1em; font-size: 11px; }
+  /* JongBot: a slim card on the right, just above the tray. */
+  .hud .jongbot:not(.collapsed) { right: var(--side); bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tw) * 1.34 + 56px); width: min(230px, 30vw); max-height: 28vh; padding: 6px 10px; }
+  .hud .jongbot .bot-warn { font-size: 11.5px; margin-top: 3px; }
+  .hud .jongbot.collapsed { position: fixed; top: auto; right: var(--side); bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tw) * 1.34 + 56px); }
+  .hud .jongbot .bot-line { font-size: 13.5px; }
+  .hud .jongbot .bot-btns { margin-top: 2px; font-size: 11.5px; }
+  .hud .bot-open { min-height: 32px; padding: 0 12px; font-size: 11px; }
+  /* Hand status and waits sit above your plate. */
+  .hud .bottom > .status-row { left: var(--side); right: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tw) * 1.34 + 96px); max-width: 45vw; justify-content: flex-start; }
+  /* The latest-discard callout waits on the left, off the rivers. */
+  .hud .last-discard { left: var(--side); right: auto; top: calc(24% + 44px); transform: none; }
+  .hud .last-discard.pop { animation: ld-pop-side 0.35s ease-out; }
+  /* A tall round title (dora, bank, jokers, your card) would cover the left plate: both step below it. */
+  .hud .seat-3 { top: max(24%, calc(var(--badge-end, 0px) + 6px)); }
+  .hud .last-discard { top: calc(max(24%, calc(var(--badge-end, 0px) + 6px)) + 42px); }
+  .hud:has(.round-extra:not(:empty)) .last-discard { padding-top: 3px; padding-bottom: 3px; }
+  .hud:has(.round-extra:not(:empty)) .last-discard .tile2d { width: 28px; }
+}
+/* Very short landscape (iPhone with Safari bars): the discard callout and the
+   hand status would stack on the left edge, so the status sits beside the plate. */
+@media (max-height: 360px) and (min-aspect-ratio: 85/100) {
+  .hud .bottom > .status-row { left: calc(var(--side) + 204px); bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tw) * 1.34 + 61px); max-width: calc(100vw - 2 * var(--side) - 450px); }
+}
+
+/* JongBot's three views: What should I do? / Why? / Analyse my hand, switched in place (match.ts hintTabs). */
+.bot-tabs { display: flex; align-items: stretch; gap: 2px; margin-top: 8px; padding: 2px; border-radius: 999px; border: 1px solid var(--line); background: var(--sunken); }
+.bot-tabs button { border: 1px solid transparent; background: none; color: var(--muted); cursor: pointer; font: 500 12px/1.2 var(--ui); letter-spacing: 0.01em; border-radius: 999px; min-height: 30px; }
+.bot-tab { flex: 1 1 auto; padding: 4px 8px; white-space: nowrap; }
+.bot-tab:hover, .bot-step:hover { color: var(--ivory); }
+.bot-tab.on { color: var(--brass-hi); border-color: rgba(201, 165, 107, 0.4); background: linear-gradient(180deg, rgba(234, 208, 154, 0.18), rgba(201, 165, 107, 0.1)); }
+.bot-step { flex: none; width: 28px; font-size: 16px !important; }
+.bot-tab-s { display: none; }
+/* Narrow panels use the short names: Do, Why?, Analyse. */
+@media (max-aspect-ratio: 85/100), (max-width: 560px), (max-height: 500px) {
+  .bot-tab-l { display: none; }
+  .bot-tab-s { display: inline; }
+  .bot-tabs { margin-top: 6px; }
+  .bot-tabs button { min-height: 28px; }
+}
+/* Phones hide the reasons to keep the table clear, until you pick Why? or Analyse. */
+@media (max-aspect-ratio: 85/100) {
+  .jongbot.deep { max-height: 40vh; }
+  .jongbot.deep .bot-why, .jongbot.deep .bot-table-wrap { display: block; }
+}
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .hud .jongbot.deep:not(.collapsed) { max-height: 52vh; width: min(320px, 44vw); }
+  .hud .jongbot.deep .bot-why, .hud .jongbot.deep .bot-table-wrap { display: block; }
+}
+/* Wide tables: room for the three full tab names. */
+@media (min-height: 501px) and (min-aspect-ratio: 85/100) and (min-width: 561px) {
+  .hud .jongbot:not(.collapsed) { width: min(396px, calc(100vw - 32px)); }
+}
+.bot-tab { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Last discard: labelled as the previous player's throw, with who and where they sit (match.ts showLastDiscard). */
+.ld-from { font: 400 12px/1.25 var(--ui); color: var(--muted); letter-spacing: 0.01em; }
+/* Wide tables: the card sits in the top-left corner under the round title, off the table and everyone's sets;
+   the view buttons step down below it while it shows. */
+@media (min-height: 501px) and (min-aspect-ratio: 85/100) {
+  .hud .last-discard { left: var(--gutter); right: auto; top: calc(env(safe-area-inset-top, 0px) + 92px); transform: none; max-width: min(300px, 40vw); }
+  .hud .last-discard.pop { animation: ld-pop-side 0.35s ease-out; }
+  .hud:has(.last-discard:not([hidden])) > .hud-views { top: var(--ld-end, calc(env(safe-area-inset-top, 0px) + 196px)); }
+}
+/* The variation's name above the round (match.ts). */
+.round-var { font: 600 10px/1.2 var(--ui); letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+@media (max-aspect-ratio: 85/100), (max-height: 500px) { .round-var { font-size: 9px; letter-spacing: 0.14em; margin-bottom: 1px; } }
+/* Phones upright: a small chip pinned to the right edge under the menu, off the rivers: the tile and its name.
+   The rest of the line stays for screen readers. */
+@media (max-aspect-ratio: 85/100) {
+  .hud .last-discard { left: auto; right: var(--gutter); top: calc(env(safe-area-inset-top, 0px) + 60px); transform: none; flex-direction: column; gap: 3px; padding: 4px 4px 3px; max-width: 64px; border-radius: 9px; box-shadow: var(--hi), 0 4px 14px rgba(0, 0, 0, 0.45); }
+  .hud:has(.round-extra:not(:empty)) .last-discard { top: calc(env(safe-area-inset-top, 0px) + 60px); }
+  .hud .last-discard .tile2d { width: 28px; }
+  .hud .last-discard .ld-text { align-items: center; gap: 0; }
+  .hud .last-discard .ld-tile { font-size: 10.5px; line-height: 1.15; text-align: center; white-space: normal; }
+  .hud .last-discard .ld-who, .hud .last-discard .ld-from { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .hud .last-discard.pop { animation: ld-pop-side 0.35s ease-out; }
+}
+
+/* The 2D hand tray (phones) reads as your tile rack: the tiles stand on a wooden ledge with a brass edge. */
+.tray { padding-bottom: 14px !important; border-radius: 10px 10px 6px 6px; background: linear-gradient(to bottom, transparent calc(100% - 16px), #6b4528 calc(100% - 16px), #3b2416 calc(100% - 5px), #21140a 100%); box-shadow: inset 0 -12px 0 -11px rgba(201, 164, 106, 0.6); }
+
+/* ------------------------------------------------------------ performance */
+/* Nothing over the live table blurs what is behind it. The table is redrawn every frame, so a
+   backdrop blur is recomputed every frame too: a dozen of them (plates, buttons, JongBot, coach,
+   view controls) cost some laptops and tablets more GPU time than the tiles themselves, and the
+   hitch landed on every discard as the callout and toasts appeared. The panels are near-opaque already. */
+#hud, #hud * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+/* Icons on every table control (icons.ts), after the premium-table reference. */
+.ico { width: 18px; height: 18px; flex: none; display: block; }
+.icon-btn .ico { width: 22px; height: 22px; }
+/* The round menu: every button the same size, every icon the same size and stroke, the scoring guide's included. */
+.hud-tools .icon-btn { width: 44px; height: 44px; }
+.hud-tools .icon-btn svg { width: 23px; height: 23px; stroke-width: 1.8; display: block; margin: auto; }
+.hud-tools .icon-btn svg * { stroke-width: 1.8; }
+.hud-tools .icon-btn.card-btn { width: auto; padding: 0 14px; }
+.sort-btn { display: inline-flex; align-items: center; gap: 7px; }
+.sort-btn .ico { width: 16px; height: 16px; opacity: 0.9; }
+.draw-btn { display: inline-flex; align-items: center; gap: 10px; }
+.draw-btn .ico { width: 18px; height: 18px; }
+/* The title: an emblem beside the variation and round. */
+.round-badge:has(.round-emblem) { display: flex; align-items: center; gap: 12px; }
+.round-emblem { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 50%; border: 1px solid var(--line-strong); color: var(--brass-hi); background: radial-gradient(circle at 50% 35%, rgba(234, 208, 154, 0.14), transparent 70%); }
+.round-emblem .ico { width: 17px; height: 17px; }
+.round-text { min-width: 0; }
+/* Your turn: one strip, emblem, "Your turn · Tap a tile to discard". */
+.btn.turn-strip { display: inline-flex; align-items: center; gap: 10px; opacity: 1; border-color: var(--line-strong); background: rgba(9, 13, 11, 0.86); color: var(--ivory); letter-spacing: 0.08em; }
+.btn.turn-strip .ico { width: 17px; height: 17px; color: var(--brass-hi); }
+.btn.turn-strip b { color: var(--brass-hi); font-weight: 600; letter-spacing: 0.16em; }
+.btn.turn-strip .ts-dot { color: var(--brass-lo); }
+@media (max-aspect-ratio: 85/100), (max-height: 500px) {
+  .hud-tools .icon-btn { width: 40px; height: 40px; }
+  .hud-tools .icon-btn svg { width: 21px; height: 21px; }
+  .round-emblem { display: none; }
+  .round-badge:has(.round-emblem) { gap: 0; }
+  .btn.turn-strip { gap: 7px; letter-spacing: 0.04em; }
+  .btn.turn-strip .ico { display: none; }
+}
+@media (min-height: 501px) and (min-aspect-ratio: 85/100) {
+  .hud.views-tucked:has(.last-discard:not([hidden])) > .hud-views { opacity: 0; pointer-events: none; }
+  /* Wide tables: the hand status and its buttons stay between your plate and the right edge, wrapping rather than sliding under the plate. */
+  .hud .bottom > .status-row { max-width: max(320px, calc(100vw - 2 * (var(--gutter) + 290px))); flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+}
+
+/* The dock: Mei's caption and JongBot share the bottom-right corner, below the right player's plate and above your hand
+   (match.ts placeDock sets the size), so neither covers the rivers, the walls or the call buttons. */
+.hud > .coach {
+  position: fixed; left: auto; top: auto; transform: none;
+  right: calc(var(--gutter) + env(safe-area-inset-right, 0px)); bottom: var(--dock-bottom, 30vh);
+  width: var(--dock-w, min(360px, calc(100vw - 32px))); max-height: var(--dock-h, 30vh); overflow-y: auto; box-sizing: border-box;
+  grid-template-columns: 26px 1fr; gap: 8px; padding: 8px 10px 9px; overscroll-behavior: contain;
+}
+.hud > .coach .narrator { width: 26px; height: 26px; font-size: 13px; }
+.hud > .coach .coach-text { font-size: 13.5px; line-height: 1.4; }
+.hud > .coach .coach-extra { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }
+.hud > .coach.pop { animation: dock-pop 0.3s ease-out; }
+@keyframes dock-pop { from { opacity: 0.4; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .hud > .coach.pop { animation: none; } }
+@media (min-aspect-ratio: 85/100) {
+  .hud .jongbot:not(.collapsed), .hud .jongbot.collapsed {
+    position: fixed; left: auto; top: auto; right: calc(var(--gutter) + env(safe-area-inset-right, 0px)); bottom: var(--dock-bottom, 30vh);
+    width: var(--dock-w, min(360px, 30vw)); max-height: var(--dock-h, 30vh); box-sizing: border-box; overscroll-behavior: contain;
+  }
+  .hud .jongbot.collapsed { width: auto; }
+  /* When it needs the room (Why?, Analyse, a short screen) it may rise over the right player's plate, never over the table. */
+  .hud .jongbot:not(.collapsed), .hud .jongbot.deep:not(.collapsed) { max-height: var(--dock-tall, 52vh); padding: 10px 14px 11px; }
+  /* The dock is narrow: the short tab names (Do, Why?, Analyse) always fit. */
+  .hud .jongbot .bot-tab-l { display: none; }
+  .hud .jongbot .bot-tab-s { display: inline; }
+}
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .hud > .coach .coach-text { font-size: 12.5px; }
+}
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  /* Short screens: the tabs themselves switch the view; the step arrows give their room to the names. */
+  .hud .jongbot .bot-step { display: none; }
+  .hud .jongbot .bot-tab { padding: 4px 6px; }
+}
+
+/* Your revealed sets in the tile tray (short screens), one group per set. */
+.tray-sets .tray-set { display: inline-flex; gap: 1px; margin: 0 4px 0 0; }
+
+/* JongBot, compact by default: one line (mark, advice, speaker) in the dock; tap it for the tabs, reasons and Hide hints. */
+.hud .jongbot.compact:not(.collapsed) { padding: 0; width: auto; max-width: var(--dock-w, min(360px, calc(100vw - 32px))); overflow: visible; border-radius: 999px; }
+.jongbot.compact .bot-row { display: flex; align-items: center; min-width: 0; }
+.jongbot.compact .bot-more {
+  display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 40px; padding: 0 6px 0 14px; flex: 1 1 auto;
+  background: none; border: 0; color: var(--ivory); cursor: pointer; text-align: start; font: inherit;
+}
+.jongbot.compact .bot-mark { color: var(--brass-hi); font-size: 11px; flex: none; }
+.jongbot.compact .bot-line { margin: 0; font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.jongbot.compact .bot-warn-dot { flex: none; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--down, #e0876f); color: #1a0f0b; font: 700 12px/1 var(--ui); }
+.jongbot.compact .bot-say { flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin-inline-end: 1px; border: 0; border-radius: 50%; background: none; color: var(--brass-hi); cursor: pointer; }
+.jongbot.compact .bot-say:hover, .jongbot.compact .bot-more:hover .bot-line { color: #fff6e0; }
+.jongbot.compact .bot-say .ico { width: 19px; height: 19px; }
+.jongbot .bot-head { display: flex; align-items: center; gap: 8px; }
+.jongbot .bot-less { margin-inline-start: auto; width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: none; color: var(--brass-hi); cursor: pointer; font-size: 15px; line-height: 1; }
+.jongbot .bot-less:hover { border-color: var(--brass); }
+/* Upright phones keep JongBot in the stack above your tiles: the one line spans it. */
+@media (max-aspect-ratio: 85/100) {
+  .jongbot.compact:not(.collapsed) { padding: 0; max-height: none; }
+  .jongbot.compact .bot-line { font-size: 14px; }
+  /* A slim pill at the left edge, clear of the middle of the table. */
+  .hud .jongbot.compact:not(.collapsed) { align-self: flex-start; margin-inline: 0 auto; max-width: min(300px, 78vw); }
+  .jongbot.compact .bot-more { min-height: 32px; gap: 7px; padding: 0 2px 0 11px; }
+  .jongbot.compact .bot-line { font-size: 13px; }
+  .jongbot.compact .bot-say { width: 32px; height: 32px; }
+  .jongbot.compact .bot-say .ico { width: 16px; height: 16px; }
+}
+/* Where the dock is narrow, a long tip wraps to a second line rather than losing its last word ("Discard the South Wi…"). */
+.jongbot.compact .bot-line { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .jongbot.compact .bot-line { font-size: 13.5px; }
+}
+/* Mei's caption in the dock: compact, five lines at a time so an instruction reads to its end (tap for the rest), JongBot's line on one row. */
+.hud > .coach { gap: 8px; padding: 7px 10px 8px; }
+.hud > .coach .coach-head { margin-bottom: 1px; }
+.hud > .coach .eyebrow { font-size: 10px; letter-spacing: 0.14em; }
+.hud > .coach .coach-text { display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+.hud > .coach.open .coach-text { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }
+.hud > .coach .coach-extra { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud > .coach.open .coach-extra { white-space: normal; }
+/* The music button: a slash through the note while the music is off. */
+.icon-btn.music-btn.off { color: var(--muted); }
+/* Round icon buttons in the dock: SVG icons centred in their circles (text glyphs sat low on their baselines). */
+.jongbot .bot-less { padding: 0; flex: none; }
+.jongbot .bot-less .ico { width: 16px; height: 16px; }
+.hud > .coach .coach-btn { padding: 0; line-height: 0; }
+.hud > .coach .coach-btn .ico { width: 14px; height: 14px; }
+
+/* ------------------------------------------------------------ no text selection at the table
+   Taps, double taps and long presses on the table or its HUD (discarding on iPad) never select page text
+   or raise the iOS callout; only fields you type in keep normal selection. */
+#stage, #hud { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#hud input, #hud textarea, #hud [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+
+/* Side players' claimed sets on their plates: only on narrow upright screens, where their racks run off the edges. */
+.seat-sets { display: none; }
+@media (max-aspect-ratio: 85/100) and (max-width: 600px) {
+  .hud .seat-1 > .seat-sets, .hud .seat-3 > .seat-sets { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 3px 4px; margin: 3px 0 2px; contain: inline-size; /* wraps within the plate rather than widening it */ }
+  .hud .seat-1:has(> .seat-sets), .hud .seat-3:has(> .seat-sets) { border-radius: 16px; min-width: 112px; }
+  .seat-set { display: inline-flex; gap: 1px; }
+  .seat-sets .tile2d.mini, .seat-back { width: 13px; border-radius: 2px; }
+  .seat-back { display: block; aspect-ratio: 3 / 4; background: linear-gradient(180deg, #3f8a6c, #1f5a46); box-shadow: inset 0 0 0 1px rgba(232, 203, 146, 0.35); }
+}
+/* Landscape phones too: while JongBot's card names your discard, the plain "Your turn" bar over the middle of the table steps aside. */
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .hud:has(.jongbot:not([hidden])) .action-row .turn-strip:disabled { display: none; }
+}
+
+/* Table sheets (leave question, shortcuts, cards) sit above a hand result instead of replacing it. */
+.overlay.table-sheet { z-index: calc(var(--z-overlay) + 1); }
+
+/* Touch screens: the small table controls (round pill, Sort / Group / Auto-draw, the compact Draw and claim
+   buttons on landscape phones) keep their look but get a hit area of about 44 px. */
+@media (pointer: coarse) {
+  .hud .goulash-pill, .hud .status-row .sort-btn, .hud .actions .btn { position: relative; }
+  .hud .goulash-pill::after { content: ''; position: absolute; inset: -13px -4px; }
+  .hud .status-row .sort-btn::after, .hud .actions .btn::after { content: ''; position: absolute; inset: -4px -2px; }
+}
+/* Landscape phones: the one-row tray leaves room for its suit gaps and the set-aside column, so the
+   first tile and the "Set aside" label stay on screen; if it still runs over, it starts at the left edge. */
+@media (max-height: 500px) and (min-aspect-ratio: 85/100) {
+  .hud { --tw: clamp(28px, min(calc((100vw - 2 * var(--side) - 110px) / 15), 15vh), 54px); }
+  .tray { justify-content: safe center; }
+  .hud .jongbot:not(.collapsed), .hud .jongbot.collapsed { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tw) * 1.34 + 74px); }
+}
+
+/* Upright phones: the side players are slim columns on the screen's edges, over their walls, so no plate sits on a river.
+   Name over score, then their claimed sets down the column. */
+@media (max-aspect-ratio: 85/100) and (max-width: 600px) {
+  .hud .seat-1, .hud .seat-3 { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 50px; min-width: 0 !important; max-width: none; padding: 4px 2px 5px; border-radius: 14px; box-sizing: border-box; }
+  /* High on the edges, beside the top player and under the last-discard chip, above where the side rivers grow. */
+  .hud .seat-3 { left: 6px; top: calc(env(safe-area-inset-top, 0px) + 80px); }
+  .hud .seat-1 { right: 6px; top: calc(env(safe-area-inset-top, 0px) + 132px); }
+  .hud:has(.round-extra:not(:empty)) .seat-3 { top: calc(env(safe-area-inset-top, 0px) + 108px); }
+  .hud .seat-1 > .avatar, .hud .seat-3 > .avatar { width: 24px; height: 24px; font-size: 12px; }
+  .hud .seat-1 .seat-name, .hud .seat-3 .seat-name { font-size: 10px; max-width: 46px; text-align: center; position: relative; }
+  .hud .seat-1 .seat-nm, .hud .seat-3 .seat-nm { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud .seat-1 .pts-num, .hud .seat-3 .pts-num { font-size: 10.5px; }
+  .hud .seat-1 > .seat-score, .hud .seat-3 > .seat-score { align-items: center; }
+  /* Their sets run down the column, each tile turned toward the table at the legible floor size (style.css --tile-min),
+     one gap between sets, the way a player's sets lie along their side of the table. */
+  .hud .seat-1 > .seat-sets, .hud .seat-3 > .seat-sets { flex-direction: column; align-items: center; align-self: stretch; gap: 5px; margin: 3px 0 0; }
+  .hud .seat-1 .seat-set, .hud .seat-3 .seat-set { flex-direction: column; align-items: center; gap: 1px; }
+  .hud .seat-1 .seat-sets .tile2d.mini, .hud .seat-3 .seat-sets .tile2d.mini, .hud .seat-1 .seat-back, .hud .seat-3 .seat-back { width: var(--tile-min); margin: calc(var(--tile-min) / -6) calc(var(--tile-min) / 6); }
+  .hud .seat-3 .seat-sets .tile2d.mini, .hud .seat-3 .seat-back { transform: rotate(90deg); }
+  .hud .seat-1 .seat-sets .tile2d.mini, .hud .seat-1 .seat-back { transform: rotate(-90deg); }
+  .hud .seat.seat-1:has(> .seat-sets), .hud .seat.seat-3:has(> .seat-sets) { min-width: 0; width: calc(var(--tile-min) * 4 / 3 + 10px); }
+}
+
+/* The table's face-up tiles: flat pictures mapped onto their 3D faces (TableRenderer.updateRiver2d), as clear as your hand. */
+.river-2d { position: absolute; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 1; }
+.river-2d[hidden] { display: none; }
+.river-2d img { position: absolute; left: 0; top: 0; width: 60px; height: 80px; display: block; border-radius: 6px / 6px; background: #f6efdf; transform-origin: 0 0; backface-visibility: hidden; box-shadow: inset 0 0 0 0.5px rgba(80, 60, 30, 0.25); }
+.river-2d img.last { box-shadow: 0 0 0 2px var(--brass-hi, #e8cb92), 0 0 10px 2px rgba(232, 203, 146, 0.55); }
+
+/* Mei's guide can fold into her portrait (coach.ts Hide); tapping the portrait opens it again. */
+.coach button.narrator { border: 0; padding: 0; cursor: default; }
+.hud > .coach.tucked { width: auto !important; max-height: none; padding: 0; background: none; border: 0; box-shadow: none; overflow: visible; display: block; }
+.hud > .coach.tucked .coach-body { display: none; }
+.hud > .coach.tucked button.narrator { width: 40px; height: 40px; flex-basis: 40px; cursor: pointer; font-size: 17px; }
+/* Upright phones: the guide sits under your tiles, off the table; your hand and the table move up to make room. */
+@media (max-aspect-ratio: 85/100) {
+  .hud > .coach:not(.tucked) { left: var(--gutter); right: var(--gutter); bottom: calc(env(safe-area-inset-bottom, 0px) + 4px); width: auto; max-height: 26vh; }
+  .hud .bottom { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px + var(--coach-space, 0px)); }
+  .hud > .coach.tucked { left: auto; right: var(--gutter); bottom: var(--dock-bottom, 30vh); }
+}
+/* Upright screens: players' remarks in one strip under the top player's plate, over the far wall, never on the rivers (match.ts gatherTalk). */
+.table-talk { display: none; }
+@media (max-aspect-ratio: 85/100) {
+  .hud .table-talk { position: absolute; z-index: var(--z-toast); left: 60px; right: 60px; top: var(--talk-top, 120px); display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
+  .hud .table-talk > .bubble, .hud .table-talk > .phrase-bubble { position: static; max-width: 100%; width: max-content; box-sizing: border-box; padding: 5px 11px; font-size: 12.5px; line-height: 1.3; border-radius: 12px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hud .table-talk > .phrase-bubble { display: flex; }
+  .hud .table-talk .tt-who { font-weight: 600; margin-inline-end: 5px; }
+  .hud .table-talk .tt-who::after { content: ':'; }
+  /* Announcements (calls, Mahjong) show small over the top player's plate, instead of across the middle of the table. */
+  .hud .toast { top: calc(var(--talk-top, 120px) - 22px); }
+  .hud .toast-main { font-size: 22px; }
+  .hud .toast-sub { font-size: 13px; margin-top: 4px; }
+  .hud:has(> .coach:not([hidden])) .toast { top: calc(var(--talk-top, 120px) - 22px); }
+}
+/* JongBot passport planner (India Rules passport rounds). */
+.jongbot .bot-pp { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(201, 162, 74, 0.35); }
+.jongbot .bot-pp-title { font: 600 12px/1.2 var(--ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--brass-hi); margin-bottom: 4px; }
+.jongbot .bot-pp-row { margin: 6px 0; }
+.jongbot .bot-pp-name { font-size: 13px; line-height: 1.3; }
+.jongbot .bot-pp-away { margin-inline-start: 8px; font-size: 11.5px; color: #cbbd9c; }
+.jongbot .bot-pp-tiles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.jongbot .bot-pp-piece { display: inline-flex; gap: 1px; }
+.jongbot .bot-pp-piece img { width: 20px; height: auto; }
+.jongbot .bot-pp-piece img.need { opacity: 0.35; outline: 1px dashed rgba(243, 230, 196, 0.7); outline-offset: -1px; border-radius: 2px; }
+.jongbot .bot-pp-left { font-size: 11.5px; color: #cbbd9c; margin-top: 2px; }
+.jongbot .bot-keep .bot-why { display: block; }
+/* Passport rounds: the passports you can make; tap one to set it aside on your rack. */
+.pp-pick { flex-basis: 100%; min-width: 0; max-width: 100%; display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; margin-top: 4px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.pp-pick::-webkit-scrollbar { display: none; }
+.pp-pick[hidden] { display: none; }
+.pp-pick .pp-label { font: 600 11px/1 var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass-hi); }
+.pp-pick .pp-chip { display: inline-flex; align-items: baseline; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 16px; border: 1px solid rgba(201, 162, 74, 0.45); background: rgba(10, 14, 12, 0.72); color: #f3e6c4; font: 500 12.5px/1.2 var(--ui); cursor: pointer; flex: none; max-width: 260px; white-space: nowrap; }
+.pp-pick .pp-chip .pp-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pp-pick .pp-label { flex: none; }
+.pp-pick .pp-chip.on { background: linear-gradient(180deg, #e3c37a, #b88c3c); color: #1a130a; border-color: #f0d79a; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
+.pp-pick .pp-away { font-size: 11px; opacity: 0.8; }
+
+/* India Rules passport rounds: gold edge on your passport tiles, red edge on tiles that feed a shown passport. */
+.tray-tile.pp img { box-shadow: 0 0 0 2px rgba(232, 168, 48, 0.9), 0 4px 10px rgba(0, 0, 0, 0.4); border-radius: 6px; }
+.tray-tile.risk img { box-shadow: 0 0 0 2px rgba(212, 85, 63, 0.9), 0 4px 10px rgba(0, 0, 0, 0.4); border-radius: 6px; }
+.seat-pp { display: flex; align-items: center; gap: 5px; max-width: 190px; margin-top: 2px; font: 600 11px/1.25 var(--ui); color: #f0c9a0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat-pp-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.seat-pp-tag { flex: none; padding: 1px 5px; border-radius: 4px; background: rgba(212, 85, 63, 0.28); border: 1px solid rgba(212, 85, 63, 0.6); color: #ffd9c9; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+@media (max-width: 600px) { .seat-pp { max-width: 120px; font-size: 10px; } }
+.jongbot .bot-call { margin-top: 6px; padding: 5px 8px; border-inline-start: 3px solid var(--brass-hi); background: rgba(201, 162, 74, 0.12); border-radius: 4px; font-size: 12.5px; line-height: 1.35; }

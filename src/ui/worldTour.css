@@ -1,0 +1,69 @@
+/* World Tour: destinations by region, with filters and "More destinations". */
+
+.wt-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: var(--s4); }
+.wt-head::after { flex-basis: 100%; max-width: none; }
+.wt-head-text { flex: 1 1 460px; min-width: 0; }
+.wt-head h2 { font-size: clamp(36px, 5vw, 56px); line-height: 1.05; }
+.wt-head .lede { margin-top: var(--s2); }
+.wt-progress {
+  flex: 0 1 380px; display: flex; align-items: center; gap: var(--s3); min-height: 46px; padding: 0 var(--s4);
+  border: 1px solid var(--line-strong); border-radius: 999px; font-size: 13.5px; color: var(--ivory); white-space: nowrap;
+}
+.wt-progress .bar { flex: 1; height: 5px; }
+
+.wt-bar { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.wt-search, .wt-select {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; min-width: 0;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: rgba(9, 13, 11, 0.55); color: var(--brass-hi);
+}
+.wt-search:focus-within, .wt-select:focus-within { border-color: var(--brass); }
+.wt-search .ico, .wt-select .ico { width: 18px; height: 18px; flex: none; }
+.wt-search-in { flex: 1; min-width: 0; height: 42px; border: 0; background: none; outline: none; color: var(--ivory); font: 400 14px var(--ui); padding: 0; }
+.wt-select { padding-right: 0; }
+.wt-select select { flex: 1; min-width: 0; border: 0; background-color: transparent; box-shadow: none; padding-left: 0; min-height: 42px; }
+
+.wt-results { display: flex; flex-direction: column; gap: var(--s5); }
+.wt-region { display: flex; flex-direction: column; gap: var(--s3); }
+.wt-region-head { display: flex; align-items: center; gap: 10px; }
+.wt-region-head::before { content: ''; flex: none; width: 8px; height: 8px; background: var(--brass-hi); transform: rotate(45deg); }
+.wt-region-head h3 { font: 500 14px/1.2 var(--ui); letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass-hi); }
+.wt-count { font-size: 13px; color: var(--muted); }
+.wt-rule { flex: 1; height: 0; border-top: 1px solid var(--line); }
+.wt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--s3); }
+.wt-empty { color: var(--muted); }
+
+.wt-card {
+  position: relative; display: flex; flex-direction: column; gap: 8px; padding: 18px 18px 12px; min-width: 0;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); box-shadow: var(--hi);
+}
+/* a fine dashed inner frame, like a passport page */
+.wt-card::before { content: ''; position: absolute; inset: 5px; border: 1px dashed rgba(201, 165, 107, 0.22); border-radius: calc(var(--r) - 3px); pointer-events: none; }
+.wt-card.complete { border-color: var(--jade-hi); }
+.wt-place { display: flex; align-items: center; gap: 10px; margin: 0; font: 500 11.5px/1.2 var(--ui); letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass-hi); }
+.wt-flag { font-size: 28px; letter-spacing: 0; line-height: 1; }
+.wt-name { margin: 0; font: 600 22px/1.15 var(--display); color: var(--ivory); }
+.wt-ruleset { margin: -4px 0 0; font-size: 12.5px; color: var(--brass-hi); }
+.wt-blurb { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.wt-explored { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 4px; font-size: 12.5px; color: var(--ivory); white-space: nowrap; }
+.wt-explored .bar { flex: 1; height: 4px; }
+.wt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); position: relative; }
+.wt-actions .btn { gap: 6px; justify-content: center; padding: 0 10px; }
+.wt-actions .ico { width: 13px; height: 13px; fill: currentColor; }
+.wt-links { display: flex; gap: var(--s4); padding-top: 8px; border-top: 1px solid var(--line-soft); position: relative; }
+.wt-link { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 2px 0; color: var(--ivory); font: 500 13px var(--ui); cursor: pointer; }
+.wt-link .ico { width: 14px; height: 14px; color: var(--brass-hi); }
+.wt-link:hover { color: var(--brass-hi); }
+.wt-more { display: flex; justify-content: center; }
+.wt-more .btn { gap: 8px; }
+.wt-more .ico { width: 15px; height: 15px; }
+
+@media (max-width: 860px) {
+  .wt-bar { grid-template-columns: 1fr 1fr; }
+  .wt-search, .wt-select:last-child { grid-column: 1 / -1; }
+  .wt-progress { flex-basis: 100%; }
+}
+@media (max-width: 560px) {
+  .wt-bar { gap: var(--s2); }
+  .wt-select { padding: 0 0 0 10px; gap: 6px; }
+  .wt-grid { grid-template-columns: 1fr; }
+}

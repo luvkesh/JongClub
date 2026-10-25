@@ -1,0 +1,79 @@
+/* Daily drills (drills.ts): the Learn card and the drill dialog. */
+.drills-entry {
+  display: flex; align-items: center; gap: var(--s5); margin-bottom: var(--s5);
+  padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--line-strong);
+  background: linear-gradient(100deg, rgba(63, 138, 109, 0.12), rgba(201, 165, 107, 0.05) 60%, transparent), var(--surface);
+  box-shadow: var(--hi);
+}
+.drills-entry.done { border-color: var(--line); }
+.de-main { flex: 1; min-width: 0; }
+.de-main .eyebrow { margin-bottom: 6px; color: var(--jade-hi); }
+.de-main h3 { margin-bottom: 4px; }
+.de-main p.muted { margin: 0; font-size: 14px; max-width: 62ch; }
+.de-stats { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 10px 0 0; font: 500 12px/1.3 var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brass-hi); }
+.de-stats .de-tick { color: var(--jade-hi); }
+@media (max-width: 640px) {
+  .drills-entry { flex-direction: column; align-items: stretch; gap: var(--s3); }
+}
+
+.card.drills { width: min(820px, 100%); }
+.dr-top { display: flex; align-items: center; gap: 12px; margin-bottom: var(--s4); }
+.dr-top .lesson-progress { flex: 1; margin: 0; }
+.dr-dots i { height: 4px; }
+.dr-dots i.right { background: var(--jade-hi); }
+.dr-dots i.wrong { background: var(--down); }
+.dr-dots i.now { background: var(--brass); opacity: 0.6; }
+.card.drills .dr-q { font-size: 22px; margin-bottom: 4px; }
+.dr-context { margin: 0 0 4px; }
+.dr-wait { display: flex; align-items: center; gap: 10px; min-height: 160px; justify-content: center; }
+.dr-spin { display: inline-flex; gap: 4px; }
+.dr-spin b { width: 5px; height: 5px; background: var(--brass); transform: rotate(45deg); opacity: 0.25; animation: dr-dot 1.2s ease-in-out infinite; }
+.dr-spin b:nth-child(2) { animation-delay: 0.15s; }
+.dr-spin b:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dr-dot { 40% { opacity: 0.9; } }
+.dr-board { margin: 14px 0 4px; }
+.dr-row { display: flex; flex-wrap: wrap; gap: 3px; }
+.dr-hand .tile2d { width: clamp(28px, calc((min(100vw, 820px) - 120px) / 14 - 3px), 52px); }
+.dr-hand.pick { gap: 0; }
+.dr-hand.pick .pz-tile { border-width: 1px; }
+.dr-hand.pick .pz-tile .tile2d { width: clamp(28px, calc((min(100vw, 820px) - 130px) / 14 - 3px), 50px); }
+.dr-pool .tile2d.mini, .dr-row .tile2d.mini { width: 46px; }
+.dr-riichi { transform: rotate(90deg); margin: 0 10px; }
+.dr-single { display: flex; justify-content: center; padding: 6px 0; }
+.tile2d.dr-big { width: 104px; }
+.tile2d.dr-mid { width: 72px; }
+.dr-label { margin: 10px 0 5px; font: 500 var(--fs-2xs)/1 var(--ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+.dr-extras { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; }
+.dr-chip { display: inline-flex; align-items: center; gap: 6px; }
+.dr-chip .dr-label { margin: 0 2px 0 0; }
+.dr-chip .tile2d.mini { width: 42px; }
+.dr-chip .meld { margin-right: 4px; }
+.dr-win .tile2d { box-shadow: 0 0 0 2px var(--brass-hi), 0 1px 0 #1f5a46; }
+.quiz-options.dr-two { grid-template-columns: 1fr 1fr; }
+/* Answer tiles big enough to read at a glance (the shared quiz style keeps lesson tiles small). */
+.drills .quiz-option .meld { gap: 3px; }
+.drills .quiz-option .tile2d.mini { width: 42px; }
+.dr-feedback:empty { display: none; }
+.dr-feedback { margin-top: var(--s3); padding: 12px 14px; border-radius: var(--r-sm); background: rgba(242, 234, 217, 0.03); border: 1px solid var(--line-soft); animation: dr-in 0.25s var(--ease); }
+.dr-feedback .btn { margin-top: 10px; }
+@keyframes dr-in { from { opacity: 0; transform: translateY(4px); } }
+.dr-verdict { margin: 0 0 4px; font: 500 15px/1.2 var(--display); }
+.dr-verdict.ok { color: var(--jade-hi); }
+.dr-verdict.no { color: var(--down); }
+.dr-why { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.dr-rewards { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: var(--s4); }
+.dr-skills { margin-bottom: var(--s4); }
+@media (max-width: 560px) {
+  .dr-rewards { grid-template-columns: 1fr 1fr; }
+  .tile2d.dr-big { width: 84px; }
+  /* Phones: the hand wraps onto two rows of about seven, so every tile stays readable. */
+  .dr-hand .tile2d, .dr-hand.pick .pz-tile .tile2d { width: min(46px, calc((100vw - 76px) / 7 - 4px)); }
+  .dr-pool .tile2d.mini, .dr-row .tile2d.mini, .dr-chip .tile2d.mini { width: min(40px, calc((100vw - 76px) / 7 - 4px)); }
+  .drills .quiz-option { flex-wrap: wrap; }
+  .drills .quiz-option .tile2d.mini { width: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dr-spin b, .dr-feedback { animation: none; }
+}
+.drills .pz-tile.wrong { border-color: var(--down); transform: translateY(-6px); }
+.drills .pz-tile.right { border-color: var(--up); transform: translateY(-6px); }

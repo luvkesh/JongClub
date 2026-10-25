@@ -1,0 +1,39 @@
+/* Table etiquette: the phrase bar and the bubbles beside a seat. */
+.reactions.etiquette-bar { flex-direction: column; align-items: stretch; gap: 6px; padding: 8px; border-radius: var(--r, 14px); max-width: min(330px, calc(100vw - 2 * var(--gutter, 16px))); }
+.etq-emoji { display: flex; justify-content: space-between; gap: 2px; }
+.etq-phrases { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; border-top: 1px solid var(--line-soft); }
+.etq-phrase {
+  min-height: 34px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--ivory);
+  font: 400 13px/1 var(--ui); letter-spacing: 0.02em; transition: background-color 0.15s, border-color 0.15s;
+}
+.etq-phrase.gesture { font-size: 18px; padding: 4px 10px; }
+.etq-phrase:hover, .etq-phrase:focus-visible { background: rgba(201, 165, 107, 0.12); border-color: var(--line-strong); }
+.etq-note { min-height: 14px; font-size: 12px; color: var(--muted); text-align: center; }
+.etq-note:empty { display: none; }
+
+.phrase-bubble {
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 2; width: max-content; max-width: 220px;
+  display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(234, 208, 154, 0.12), transparent 60%), var(--panel-solid, #121a16);
+  border: 1px solid var(--line-strong); color: var(--brass-hi);
+  font: italic 400 15px/1.2 var(--display); letter-spacing: 0.02em;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); pointer-events: none;
+  animation: etqIn 0.3s ease-out, etqOut 0.5s ease-in 2.9s forwards;
+}
+.phrase-bubble.gesture { font-style: normal; }
+.pb-glyph { font-size: 24px; line-height: 1; }
+.seat-1 .phrase-bubble { left: auto; right: 0; }
+.seat-0 .phrase-bubble { top: auto; bottom: calc(100% + 8px); }
+@keyframes etqIn { from { transform: translateY(4px) scale(0.96); opacity: 0; } }
+@keyframes etqOut { to { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .phrase-bubble { animation: none; } }
+
+/* Live tables: the watcher count on the table and the invite button. */
+.watchers-badge {
+  position: absolute; z-index: var(--z-controls, 20); left: 50%; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top, 0px) + 12px); padding: 4px 12px; border-radius: 999px;
+  background: var(--surface-solid, #121a16); border: 1px solid var(--line); color: var(--muted); font-size: 12px; pointer-events: none;
+}
+.watchers-badge[hidden] { display: none; }
+.wr-invite { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 10px; }

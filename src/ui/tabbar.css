@@ -1,0 +1,82 @@
+/* Phone navigation (tabbar.ts): five tabs at the foot, sub-tabs above the page.
+   "Phone" means narrow (portrait) or short (landscape), and touch tablets (iPad), where the full top nav would not fit; desktop keeps the top nav. */
+.tabbar, .subtabs { display: none; }
+
+@media (max-width: 720px), (max-height: 500px), (max-width: 1365px) and (hover: none) and (pointer: coarse) {
+  .topbar .nav { display: none; }
+  .topbar .icon-btn { margin-left: auto; }
+  /* The bar takes its own room in the shell, so the page needs no extra foot padding. */
+  #shell #screen { padding-bottom: 28px; }
+
+  /* Phones: room above and below the header, and one clean rule under it (desktop draws a single rule too). */
+  #shell .topbar { padding-top: calc(env(safe-area-inset-top, 0px) + 14px); padding-bottom: 12px; }
+  #shell:not(.is-home) .topbar::after { height: 0; border-bottom: 0; }
+  .page-head::after { height: 0; border-bottom: 0; }
+
+  .tabbar {
+    position: relative; display: flex; flex: none;
+    padding: 4px max(env(safe-area-inset-right, 0px), 6px) max(env(safe-area-inset-bottom, 0px), 10px) max(env(safe-area-inset-left, 0px), 6px);
+    background: linear-gradient(180deg, rgba(12, 18, 15, 0.94), rgba(9, 13, 11, 0.98));
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  .tabbar::before {
+    /* one brass rule along the top edge */
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 0;
+    border-top: 1px solid var(--line); pointer-events: none;
+  }
+  .tab {
+    position: relative; flex: 1 1 0; min-width: 0; min-height: 58px; padding: 10px 2px 6px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    background: none; border: 0; cursor: pointer; color: var(--muted);
+    font: 500 11px/1 var(--ui); letter-spacing: 0.03em;
+    transition: color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-icon { display: block; width: 22px; height: 22px; }
+  .tab-icon svg { display: block; width: 100%; height: 100%; }
+  .tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tab.on { color: var(--brass-hi); }
+  .tab::after {
+    /* the active mark: the brass lozenge of the top nav */
+    content: ''; position: absolute; left: 50%; top: 2px; width: 5px; height: 5px;
+    background: var(--brass-hi); transform: translateX(-50%) rotate(45deg) scale(0);
+    transition: transform 0.25s var(--ease);
+  }
+  .tab.on::after { transform: translateX(-50%) rotate(45deg) scale(1); }
+
+  .subtabs:not(:empty) { display: flex; justify-content: center; flex: none; padding: 12px var(--gutter) 12px; background: rgba(9, 13, 11, 0.86); }
+  .subtabs-seg {
+    display: flex; gap: 3px; width: min(420px, 100%); padding: 3px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--sunken); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+  .subtabs-seg button {
+    /* auto basis: a longer label ("Mini-games") takes the room it needs instead of spilling past its pill. */
+    flex: 1 1 auto; min-width: 0; min-height: 34px; padding: 6px 8px; border-radius: 999px; border: 1px solid transparent;
+    background: none; cursor: pointer; color: var(--muted); white-space: nowrap;
+    font: 500 12px/1 var(--ui); letter-spacing: 0.08em;
+    transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+  }
+  .subtabs-seg button.on { color: var(--brass-hi); border-color: rgba(201, 165, 107, 0.4); background: linear-gradient(180deg, rgba(234, 208, 154, 0.2), rgba(201, 165, 107, 0.12)); }
+}
+
+/* Landscape phones: every pixel of height counts, so icon and label sit side by side. */
+@media (max-height: 500px) and (orientation: landscape) {
+  #shell .topbar { padding-top: calc(env(safe-area-inset-top, 0px) + 8px); padding-bottom: 8px; }
+  .tabbar { padding-top: 2px; padding-bottom: max(env(safe-area-inset-bottom, 0px), 6px); }
+  .tab { flex-direction: row; gap: 8px; min-height: 44px; padding: 6px 4px; }
+  .tab::after { top: 1px; }
+  .tab-icon { width: 20px; height: 20px; }
+  .subtabs:not(:empty) { padding-top: 8px; padding-bottom: 8px; }
+  .subtabs-seg button { min-height: 30px; }
+}
+
+/* Wide enough landscape phones: the sub-tabs ride in the header row, between the wordmark and the buttons,
+   so the page gets that row's height back. */
+@media (max-height: 500px) and (orientation: landscape) and (min-width: 700px) {
+  #shell .subtabs:not(:empty) {
+    position: absolute; z-index: 2; left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 9px);
+    width: min(420px, calc(100vw - 2 * var(--gutter) - 380px)); padding: 0; background: none;
+  }
+  #shell .subtabs-seg { width: 100%; }
+}

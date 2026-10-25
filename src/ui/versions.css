@@ -1,0 +1,146 @@
+/* The Mahjong family: a map of the versions, and Mei's panel for each. */
+
+.versions { gap: 22px; }
+.vt-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.vt-head > div { min-width: 0; flex: 1 1 420px; }
+.vt-head .lede { margin-top: 8px; }
+
+/* ---------------------------------------------------------------- the catalogue */
+.vt-region-block {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 20px 22px 22px; border: 1px solid var(--line); border-radius: 16px;
+  background: radial-gradient(120% 60% at 50% 0%, rgba(200, 164, 106, 0.07), rgba(200, 164, 106, 0) 70%), var(--panel);
+}
+.vt-region-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; }
+.vt-region-head h3 { font-size: 24px; }
+.vt-region-head p { margin: 0; font-size: 13.5px; color: var(--muted); max-width: 70ch; }
+.vt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.vt-labels { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
+.vt-std, .vt-avail { font: 500 10px/1 var(--ui); letter-spacing: 0.13em; text-transform: uppercase; padding: 5px 7px; border-radius: 2px; white-space: nowrap; }
+.vt-std { color: var(--ivory); border: 1px solid var(--line-strong); background: rgba(201, 165, 107, 0.08); }
+.vt-std.formal { color: var(--jade-hi); border-color: rgba(124, 199, 160, 0.4); background: rgba(63, 138, 109, 0.12); }
+.vt-std.house { color: #e6cf9f; }
+.vt-avail.playable { color: var(--jade-hi); border: 1px solid rgba(124, 199, 160, 0.35); }
+.vt-avail.coming { color: var(--muted); border: 1px solid rgba(201, 165, 107, 0.3); }
+.vt-node {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  min-width: 0; padding: 14px 14px 13px; text-align: left;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid);
+  color: var(--ivory); font: inherit; cursor: pointer;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+button.vt-node:hover { border-color: var(--brass); transform: translateY(-2px); box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4); }
+button.vt-node:active { transform: translateY(0); }
+.vt-node.last { border-color: var(--line-strong); background: linear-gradient(180deg, rgba(200, 164, 106, 0.1), rgba(200, 164, 106, 0.02)), var(--panel-solid); }
+.vt-node.vt-soon { cursor: default; box-shadow: none; border-style: dashed; background: rgba(20, 28, 24, 0.5); }
+.vt-node.vt-soon .vt-name { color: #d8d0bd; }
+.vt-node.vt-soon .soon { margin-top: 2px; }
+.vt-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+.vt-flag { font-size: 22px; line-height: 1; }
+.vt-region { font-size: 10.5px; line-height: 1.3; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); min-width: 0; }
+.vt-done { margin-left: auto; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--jade); color: #eaf6ef; font-size: 11px; font-weight: 700; flex: none; }
+.vt-name { font: 18px/1.15 var(--display); letter-spacing: 0.01em; }
+.vt-level { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; color: var(--brass-hi); }
+.vt-pips { display: inline-flex; gap: 3px; }
+.vt-pips i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--brass); }
+.vt-pips i.on { background: var(--brass); }
+.vt-hook { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+.vt-tag { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- the western family */
+.vt-west { background: linear-gradient(135deg, rgba(122, 31, 27, 0.16), rgba(26, 36, 64, 0.2)), var(--panel); border-color: rgba(239, 230, 210, 0.14); }
+
+.vt-rounds { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 16px 20px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); }
+.vt-rounds .eyebrow { margin-bottom: 4px; }
+.vt-rounds-t { margin: 0; font-size: 14px; }
+
+.vt-legend { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 20px 40px; align-items: start; }
+.vt-path { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.vt-path li .vt-done { display: inline-grid; margin-left: 8px; vertical-align: middle; }
+.vt-key-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.vt-key-list li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: baseline; justify-items: start; }
+
+/* ---------------------------------------------------------------- phones */
+@media (max-width: 760px) {
+  .vt-head .btn { width: 100%; }
+  .vt-legend { grid-template-columns: 1fr; padding: 16px; }
+  .vt-key-list li { grid-template-columns: 1fr; gap: 4px; }
+  .vt-region-block { padding: 16px 14px; }
+  .vt-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .vt-node { padding: 12px; }
+}
+@media (max-width: 380px) { .vt-grid { grid-template-columns: 1fr; } }
+
+/* ---------------------------------------------------------------- Mei's panel */
+.vp-sheet { width: min(680px, 100%); max-height: calc(100dvh - 2 * var(--gutter)); overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 16px; animation: vp-in 0.22s ease-out; }
+.vp-sheet > * { flex-shrink: 0; }
+@keyframes vp-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { .vp-sheet { animation: none; } button.vt-node:hover { transform: none; } }
+.vp-head { display: flex; align-items: flex-start; gap: 14px; }
+.vp-flag { font-size: 40px; line-height: 1; }
+.vp-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.vp-title .eyebrow { margin: 0; }
+.vp-title h3 { margin: 0; font-size: 26px; }
+.vp-close { flex: none; }
+
+.vp-mei { display: flex; gap: 14px; align-items: flex-start; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(200, 164, 106, 0.06); }
+.vp-avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 20px/1 var(--display); color: #1a130b; background: linear-gradient(180deg, #e8cb92, #b98f52); box-shadow: 0 0 0 3px rgba(200, 164, 106, 0.2); }
+.vp-mei.speaking .vp-avatar { animation: vp-talk 1.4s ease-in-out infinite; }
+@keyframes vp-talk { 50% { box-shadow: 0 0 0 7px rgba(232, 203, 146, 0.18), 0 0 18px rgba(232, 203, 146, 0.35); } }
+@media (prefers-reduced-motion: reduce) { .vp-mei.speaking .vp-avatar { animation: none; } }
+.vp-mei-body { min-width: 0; flex: 1; }
+.vp-mei-body .eyebrow { margin-bottom: 6px; }
+.vp-say { margin: 0; font-size: 15px; line-height: 1.55; }
+.vp-voice { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+.vp-club { margin: 0; font-size: 13px; color: var(--muted); padding: 10px 12px; border-left: 2px solid var(--brass); background: rgba(255, 255, 255, 0.02); border-radius: 0 8px 8px 0; }
+.vp-club strong { color: var(--brass-hi); font-weight: 600; }
+
+.vp-facts { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.vp-facts > div { background: var(--panel-solid); padding: 10px 12px; min-width: 0; }
+.vp-facts > div.wide { grid-column: 1 / -1; }
+.vp-facts dt { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.vp-facts dd { margin: 0; font-size: 14px; }
+
+.vp-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.vp-action { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px 14px; min-height: 76px; border-radius: 12px; border: 1px solid var(--line-strong); background: rgba(20, 28, 24, 0.75); color: var(--ivory); cursor: pointer; font: inherit; transition: border-color 0.15s, background 0.15s; }
+.vp-action:hover { border-color: var(--brass-hi); background: rgba(40, 46, 36, 0.9); }
+.vp-action-t { font-weight: 700; font-size: 15px; }
+.vp-action-d { font-size: 12px; line-height: 1.35; color: var(--muted); }
+.vp-action.primary { background: linear-gradient(180deg, #d9b97e, #b98f52); border-color: transparent; color: #1a130b; }
+.vp-action.primary .vp-action-d { color: rgba(26, 19, 11, 0.75); }
+.vp-action.primary:hover { background: linear-gradient(180deg, #e8cb92, #c79d5e); }
+.vp-rulesets { display: flex; flex-direction: column; gap: 8px; }
+.vp-rulesets .eyebrow { margin: 0 0 2px; }
+.vp-ruleset {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; text-align: left;
+  padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: rgba(20, 28, 24, 0.75); color: var(--ivory); cursor: pointer; font: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.vp-ruleset:hover { border-color: var(--brass-hi); background: rgba(40, 46, 36, 0.9); }
+.vp-ruleset-t { font-weight: 600; font-size: 14.5px; }
+.vp-ruleset-d { grid-column: 1; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+.vp-ruleset-go { grid-column: 2; grid-row: 1 / span 2; font: 500 12px var(--ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass-hi); }
+.vp-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+
+@media (max-width: 560px) {
+  .vp-sheet { padding: 16px; gap: 14px; }
+  .vp-flag { font-size: 32px; }
+  .vp-title h3 { font-size: 22px; }
+  .vp-mei { padding: 12px; gap: 10px; }
+  .vp-avatar { width: 36px; height: 36px; font-size: 17px; }
+  .vp-facts > div { padding: 8px 10px; }
+  .vp-actions { grid-template-columns: 1fr; gap: 8px; }
+  /* On a phone the choices come straight after Mei, before the details. */
+  .vp-mei { order: 1; }
+  .vp-actions { order: 2; }
+  .vp-club { order: 3; }
+  .vp-facts { order: 4; }
+  .vp-foot { order: 5; }
+  .vp-action { min-height: 0; }
+}
+
+/* The Academy header links back to the map. */
+.learn-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

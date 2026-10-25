@@ -1,0 +1,41 @@
+/* Mei's caption panel during the guided game. */
+.coach {
+  position: absolute;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 74px);
+  transform: translateX(-50%);
+  z-index: var(--z-panel, 20);
+  width: min(540px, calc(100vw - 32px));
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 8px 12px 9px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+.coach[hidden] { display: none; }
+.coach.pop { animation: coach-pop 0.35s ease; }
+.coach .narrator { flex-basis: 30px; width: 30px; height: 30px; font-size: 14px; }
+.coach .eyebrow { margin: 0; flex: 1; }
+.coach-head { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+.coach-btn { width: 24px; height: 24px; display: grid; place-items: center; padding: 0; font-size: 13px; color: var(--brass-hi); background: transparent; border: 1px solid var(--line); border-radius: 50%; cursor: pointer; }
+.coach-btn:hover { border-color: var(--brass); }
+.coach-text { margin: 0; font-size: 14px; line-height: 1.42; color: var(--ivory); text-wrap: pretty; }
+.coach-extra { margin: 3px 0 0; font-size: 12.5px; color: var(--brass-hi); }
+.coach-extra:empty { display: none; }
+@keyframes coach-pop { from { opacity: 0.4; transform: translateX(-50%) translateY(-6px); } }
+@media (max-width: 700px) {
+  .coach { top: calc(env(safe-area-inset-top, 0px) + 56px); left: var(--gutter); right: var(--gutter); width: auto; transform: none; }
+  .coach.pop { animation: none; }
+  .coach-text { font-size: 13.5px; }
+  /* Long captions (this table's house rules plus JongBot) stay a few lines tall over the table. */
+  .coach-extra { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+}
+@media (max-height: 520px) {
+  .coach { max-height: 46vh; overflow-y: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .coach.pop { animation: none; } }

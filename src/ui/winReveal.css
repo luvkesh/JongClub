@@ -1,0 +1,97 @@
+/* The hand result after a win (winReveal.ts): the hand
+   in labelled revealed and concealed rows, a panel that docks at the side on
+   wide screens so the hand on the table stays in view, and a Hide summary mode. */
+.hand-result h2 {
+  /* The heading faces are set in ui/headings.css (--display-clear). */
+  font-family: var(--display-clear);
+  color: var(--ivory);
+}
+
+/* The hand, by kind of set. */
+.win-hand { display: grid; gap: 10px; margin: 18px 0; }
+.wh-row { display: grid; gap: 5px; min-width: 0; }
+.wh-label { font: 500 10.5px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.wh-row.revealed .wh-label { color: var(--brass-hi); }
+/* India Rules East round: the passport on its own line, framed in brass; called sets in it keep their tint. */
+.wh-row.passport .wh-label { color: var(--brass-hi); }
+.wh-row.passport .wh-sets { padding: 6px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--brass-hi, #c9a56b); background: rgba(201, 165, 107, 0.08); }
+.wh-sets .meld.called { padding: 3px; border-radius: 6px; background: rgba(201, 165, 107, 0.14); }
+.wh-row.no-passport .wh-label { color: #d88a7a; }
+.wh-sets { display: flex; flex-wrap: wrap; gap: 6px 10px; min-width: 0; }
+.wh-sets .meld { display: inline-flex; gap: 2px; flex: none; }
+.wh-row.revealed .meld { padding: 3px; border-radius: 6px; background: rgba(201, 165, 107, 0.1); box-shadow: inset 0 0 0 1px var(--line); }
+.win-hand .tile2d { width: clamp(22px, calc((min(100vw, 640px) - 150px) / 14), 34px); }
+.win-hand .win-tile { outline: 2px solid var(--brass-hi); outline-offset: 2px; border-radius: 3px; box-shadow: 0 0 14px rgba(234, 208, 154, 0.55); }
+
+.hand-result .btn-row .hide-summary { margin-inline-end: auto; }
+.peek-ic { display: inline-flex; flex: none; width: 14px; height: 14px; }
+.peek-ic svg { width: 100%; height: 100%; }
+
+/* A win's sheet: no blur, a lighter scrim, so the table and the hand read through. */
+.overlay.win-sheet {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  background: radial-gradient(120% 90% at 50% 45%, rgba(5, 8, 6, 0.18), rgba(5, 8, 6, 0.55));
+}
+/* Wide screens: the summary docks at the right and the table frames the hand beside it. */
+@media (min-width: 900px) and (min-height: 501px) {
+  .overlay.win-sheet {
+    place-items: center end; place-items: safe center end;
+    background: linear-gradient(90deg, transparent 0%, transparent 45%, rgba(5, 8, 6, 0.5) 72%, rgba(5, 8, 6, 0.72));
+  }
+  .overlay.win-sheet .hand-result { width: min(470px, 40vw); padding: 26px 24px; }
+  .overlay.win-sheet .win-hand .tile2d { width: clamp(20px, calc((min(40vw, 470px) - 110px) / 14), 30px); }
+}
+
+/* Hide summary: the card folds away into a small bar; the table takes taps and drags again. */
+.peek-bar { display: none; }
+.overlay.peek { background: none; pointer-events: none; overflow: hidden; }
+.overlay.peek > .hand-result { display: none; }
+.overlay.peek .peek-bar {
+  display: flex; flex-direction: column; gap: 8px; align-items: stretch; pointer-events: auto;
+  position: absolute; left: 50%; bottom: max(var(--gutter), env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  /* Corners nest: the bar's radius is the buttons' radius plus its padding. */
+  padding: 8px; border-radius: calc(var(--r-sm) + 8px); border: 1px solid var(--line-strong);
+  /* Solid, so tiles behind it (your tray on a phone) never show through the buttons. */
+  background: var(--panel-solid); box-shadow: var(--shadow-2);
+  animation: peek-in 0.28s var(--ease);
+}
+.overlay.peek .peek-bar .btn { white-space: nowrap; }
+.peek-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.peek-btns .btn { min-width: 0; padding: 0 18px; }
+.peek-strip { display: none; }
+/* Phones and landscape phones: the hand rides in the bar, in its sets. */
+@media (max-width: 899px), (max-height: 500px) {
+  .overlay.peek .peek-bar { width: min(calc(100vw - 2 * var(--gutter)), 560px); box-sizing: border-box; padding: 10px 12px; }
+  .peek-strip { display: block; }
+  .peek-strip .win-hand { margin: 0; gap: 6px; }
+  .peek-strip .wh-row { grid-template-columns: auto 1fr; align-items: center; column-gap: 8px; }
+  .peek-strip .wh-label { font-size: 9px; letter-spacing: 0.08em; width: 9.5em; line-height: 1.2; }
+  .peek-strip .wh-sets { gap: 4px 7px; }
+  .peek-strip .tile2d { width: clamp(18px, calc((min(100vw, 560px) - 150px) / 14), 30px); }
+  .peek-strip .wh-row.revealed .meld { padding: 2px; }
+}
+/* Narrow phones: tighter letter-spacing so both labels fit side by side. */
+@media (max-width: 400px) {
+  .peek-btns .btn { padding: 0 10px; letter-spacing: 0.08em; font-size: 12px; }
+}
+@media (max-height: 500px) {
+  .peek-strip .tile2d { width: clamp(18px, calc((min(100vw, 560px) - 150px) / 15), 26px); }
+}
+@keyframes peek-in { from { opacity: 0; transform: translate(-50%, 10px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay.peek .peek-bar { animation: none; }
+}
+.a11y-reduce-motion .overlay.peek .peek-bar { animation: none; }
+
+/* India Rules East round: every piece named under it, the winning tile lying sideways, a passport badge. */
+.passport-hand .wh-sets { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: flex-end; }
+.wh-piece { display: grid; justify-items: center; gap: 4px; }
+.wh-piece-label { font: 500 10px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.wh-piece .wh-won { color: var(--brass-hi); }
+.wh-piece.called .meld { padding: 3px; border-radius: 6px; background: rgba(201, 165, 107, 0.14); }
+.passport-hand .tile2d.win-tile.sideways { transform: rotate(90deg); margin-inline: 7px; }
+.passport-badge { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 10px; font: 600 16px 'Cormorant Garamond', serif; color: var(--brass-hi, #e2c58f); background: rgba(201, 165, 107, 0.1); box-shadow: inset 0 0 0 1px var(--brass-hi, #c9a56b); }
+.passport-badge .pb-ic { width: 16px; height: 16px; display: inline-flex; }
+.passport-badge .pb-ic svg { width: 100%; height: 100%; }
+.passport-badge.none { color: #e0a090; box-shadow: inset 0 0 0 1px rgba(224, 160, 144, 0.6); background: rgba(224, 160, 144, 0.08); }

@@ -1,0 +1,43 @@
+/* The signature moment's letterbox: dark bars with a fine brass rule, the
+   hand's name in engraved capitals. Above the table and plates, under the win banner. */
+.sig-moment {
+  position: absolute; inset: 0; z-index: calc(var(--z-toast) - 1);
+  pointer-events: auto; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.sig-bar {
+  position: absolute; left: 0; right: 0; height: clamp(36px, 9vh, 84px);
+  background: linear-gradient(180deg, rgba(5, 7, 6, 0.94), rgba(5, 7, 6, 0.86));
+  transition: transform 0.9s var(--ease), opacity 0.6s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.sig-bar.top { top: 0; transform: translateY(-100%); border-bottom: 1px solid rgba(201, 165, 107, 0.35); }
+.sig-bar.bottom { bottom: 0; transform: translateY(100%); border-top: 1px solid rgba(201, 165, 107, 0.35); }
+.sig-moment.on .sig-bar { transform: none; }
+.sig-name {
+  font: 400 clamp(12px, 1.6vw, 15px)/1 var(--inscr); letter-spacing: 0.42em; margin-right: -0.42em; text-transform: uppercase;
+  background: linear-gradient(90deg, #a98247, #f6e2b0 50%, #a98247); -webkit-background-clip: text; background-clip: text; color: transparent;
+  opacity: 0; transition: opacity 1.2s 0.6s ease;
+}
+.sig-moment.on .sig-name { opacity: 1; }
+.sig-skip {
+  position: absolute; right: var(--gutter); bottom: calc(clamp(36px, 9vh, 84px) + 12px);
+  min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(9, 13, 11, 0.6);
+  color: var(--brass-hi); font: 500 11px var(--ui); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+  opacity: 0; transition: opacity 0.6s 0.8s ease;
+}
+.sig-moment.on .sig-skip { opacity: 0.85; }
+.sig-moment.out .sig-bar.top { transform: translateY(-100%); }
+.sig-moment.out .sig-bar.bottom { transform: translateY(100%); }
+.sig-moment.out .sig-name, .sig-moment.out .sig-skip { opacity: 0; transition-delay: 0s; transition-duration: 0.25s; }
+/* The table's chrome steps back while the moment plays. */
+.sig-on .hud-top, .sig-on .seat, .sig-on .status-row, .sig-on .bottom:not(.sig-bar), .sig-on .action-row, .sig-on .view-controls { opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+/* Calm: no sliding, a short fade. */
+.sig-moment.calm .sig-bar { transform: none; opacity: 0; transition: opacity 0.4s ease; }
+.sig-moment.calm.on .sig-bar { opacity: 1; }
+.sig-moment.calm.out .sig-bar { opacity: 0; }
+.sig-moment.calm .sig-name { transition-delay: 0.1s; transition-duration: 0.4s; }
+@media (prefers-reduced-motion: reduce) {
+  .sig-bar { transition: opacity 0.3s ease; transform: none !important; opacity: 0; }
+  .sig-moment.on .sig-bar { opacity: 1; }
+  .sig-moment.out .sig-bar { opacity: 0; }
+}

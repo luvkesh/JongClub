@@ -1,0 +1,33 @@
+// opening: the throw for East and the wall break before each deal (src/ui/opening.ts). English key, then 简体中文, 繁體中文, 日本語, العربية, हिन्दी.
+import type { Row } from './types';
+
+export const OPENING: Row[] = [
+  ['Throw for East', '掷骰定庄', '擲骰定莊', '親決め', 'رمي النرد لتحديد الشرق', 'पूर्व के लिए पासा'],
+  ['Highest throw is East', '点数最高者坐东', '點數最高者坐東', '一番高い目の人が東です', 'صاحب أعلى رمية هو الشرق', 'सबसे ऊँचा पासा पूर्व बनता है'],
+  ['Tie on {total}: {names} throw again', '同为{total}点：{names}重掷', '同為{total}點：{names}重擲', '{total}で同点：{names}がもう一度振ります', 'تعادل عند {total}: {names} يرمون مرة أخرى', '{total} पर बराबरी: {names} फिर से फेंकेंगे'],
+  ['You are East', '你坐东', '你坐東', 'あなたが東です', 'أنت الشرق', 'आप पूर्व हैं'],
+  ['{name} is East', '{name}坐东', '{name}坐東', '{name}さんが東です', '{name} هو الشرق', '{name} पूर्व हैं'],
+  ['Breaking the wall', '开牌', '開牌', '牌山を割る', 'كسر الجدار', 'दीवार तोड़ना'],
+  ['Counting {total} round from East: your wall', '从东家数{total}：你的牌墙', '從東家數{total}：你的牌牆', '東から{total}を数えて：あなたの山', 'العدّ {total} من الشرق: جدارك', 'पूर्व से {total} गिनें: आपकी दीवार'],
+  ['Counting {total} round from East: {name}’s wall', '从东家数{total}：{name}的牌墙', '從東家數{total}：{name}的牌牆', '東から{total}を数えて：{name}さんの山', 'العدّ {total} من الشرق: جدار {name}', 'पूर्व से {total} गिनें: {name} की दीवार'],
+  ['{name} throws {total} too: {count} stacks from the right', '{name}再掷出{total}：从右数{count}墩', '{name}再擲出{total}：從右數{count}墩', '{name}さんも{total}：右から{count}幢', '{name} يرمي {total} أيضًا: {count} كومة من اليمين', '{name} ने भी {total} फेंका: दाईं ओर से {count} ढेर'],
+  ['East breaks their own wall, {count} stacks from the right', '东家开自己的牌墙，从右数{count}墩', '東家開自己的牌牆，從右數{count}墩', '東が自分の山を右から{count}幢目で割ります', 'الشرق يكسر جداره، {count} كومة من اليمين', 'पूर्व अपनी ही दीवार तोड़ता है, दाईं ओर से {count} ढेर'],
+  ['{count} stacks from the right: the wall breaks here', '从右数{count}墩：在此开牌', '從右數{count}墩：在此開牌', '右から{count}幢：ここで割ります', '{count} كومة من اليمين: هنا ينكسر الجدار', 'दाईं ओर से {count} ढेर: दीवार यहाँ टूटती है'],
+  ['The {tiles} tiles counted off become the flower wall', '数出的{tiles}张牌成为花墙', '數出的{tiles}張牌成為花牆', '数えた{tiles}枚が花の山になります', 'الـ{tiles} بلاطة المعدودة تصبح جدار الزهور', 'गिनी गई {tiles} टाइलें फूलों की दीवार बनती हैं'],
+  ['The last {tiles} tiles are the dead wall', '最后{tiles}张牌是王牌', '最後{tiles}張牌是王牌', '最後の{tiles}枚が王牌です', 'آخر {tiles} بلاطة هي الجدار الميت', 'आख़िरी {tiles} टाइलें डेड वॉल हैं'],
+  ['The last 16 tiles are never drawn', '最后16张牌不摸', '最後16張牌不摸', '最後の16枚はツモりません', 'آخر 16 بلاطة لا تُسحب أبدًا', 'आख़िरी 16 टाइलें कभी नहीं खींची जातीं'],
+  ['The two stacks at the break are the loose tiles', '开牌处的两墩是补牌', '開牌處的兩墩是補牌', '割れ目の2幢が補充牌です', 'الكومتان عند الكسر هما البلاطات السائبة', 'टूटने की जगह के दो ढेर ढीली टाइलें हैं'],
+  ['Front of the wall', '牌墙头', '牌牆頭', '山の先頭', 'مقدمة الجدار', 'दीवार का अगला सिरा'],
+  ['Back of the wall', '牌墙尾', '牌牆尾', '山の後ろ', 'مؤخرة الجدار', 'दीवार का पिछला सिरा'],
+  ['Flower wall', '花墙', '花牆', '花の山', 'جدار الزهور', 'फूलों की दीवार'],
+  ['Dead wall', '王牌', '王牌', '王牌', 'الجدار الميت', 'डेड वॉल'],
+  ['Last 16', '最后16张', '最後16張', '最後の16枚', 'آخر 16', 'आख़िरी 16'],
+  ['Loose tiles', '补牌', '補牌', '補充牌', 'البلاطات السائبة', 'ढीली टाइलें'],
+  ['Roll', '掷骰', '擲骰', '振る', 'ارمِ', 'फेंकें'],
+  ['Your turn to throw', '轮到你掷骰', '輪到你擲骰', 'あなたが振る番です', 'دورك في الرمي', 'आपकी फेंकने की बारी'],
+  ['{name} throws', '{name}掷骰', '{name}擲骰', '{name}さんが振ります', '{name} يرمي', '{name} फेंक रहे हैं'],
+  ['Your throw to break the wall', '由你掷骰开牌', '由你擲骰開牌', 'あなたが振って山を割ります', 'رميتك لكسر الجدار', 'दीवार तोड़ने के लिए आपकी फेंक'],
+  ['{name} throws to break the wall', '{name}掷骰开牌', '{name}擲骰開牌', '{name}さんが振って山を割ります', '{name} يرمي لكسر الجدار', '{name} दीवार तोड़ने के लिए फेंक रहे हैं'],
+  ['Counting {total} round from East', '从东家数{total}', '從東家數{total}', '東から{total}を数えます', 'العدّ {total} من الشرق', 'पूर्व से {total} गिनती'],
+  ['Counting {count} stacks from the right', '从右数{count}墩', '從右數{count}墩', '右から{count}幢を数えます', 'عدّ {count} كومة من اليمين', 'दाईं ओर से {count} ढेर गिनना'],
+];

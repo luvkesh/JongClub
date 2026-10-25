@@ -1,0 +1,68 @@
+/* Sign-in screen and the Account row in Settings. */
+.auth {
+  /* above #modal (70): it opens from Settings and from offers over the results card */
+  position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top)) var(--gutter) 24px;
+  background: radial-gradient(120% 80% at 50% 0%, #1b2a22 0%, var(--ink) 60%), var(--ink);
+  transition: opacity 0.35s;
+}
+.auth.leaving { opacity: 0; pointer-events: none; }
+.auth-card {
+  width: min(400px, 100%); padding: 28px 24px 20px; border-radius: 16px; text-align: center;
+  border: 1px solid var(--line-strong); background: var(--panel-solid); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+.auth-logo { display: flex; justify-content: center; margin-bottom: 12px; }
+.auth-logo svg { width: 64px; height: 64px; }
+.auth-mark { margin: 0; font: 28px/1 var(--display); letter-spacing: 0.28em; color: var(--brass-hi); }
+.auth-tag { margin: 8px 0 22px; font-size: 13px; letter-spacing: 0.12em; color: var(--muted); }
+.auth-body { display: flex; flex-direction: column; gap: 10px; }
+.auth-title { font-size: 22px; }
+.auth-lede { margin: 0 0 6px; font-size: 14px; color: var(--muted); }
+.auth-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 46px;
+  border-radius: 999px; border: 1px solid transparent; font-weight: 600; font-size: 15px; cursor: pointer;
+}
+.auth-btn:disabled { opacity: 0.6; cursor: default; }
+.auth-btn.google { background: #fff; color: #1f1f1f; border-color: #dadce0; }
+.auth-btn.apple { background: #000; color: #fff; border-color: #3a3a3a; }
+.auth-google-slot { display: flex; justify-content: center; min-height: 46px; }
+.auth-or { display: flex; align-items: center; gap: 10px; margin: 6px 0 2px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+.auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.auth-form { display: flex; flex-direction: column; gap: 10px; }
+.auth-form input {
+  width: 100%; min-height: 44px; padding: 0 14px; border-radius: 10px; font: 15px var(--ui);
+  border: 1px solid var(--line); background: #0f1512; color: var(--ivory);
+}
+.auth-form input:focus { outline: none; border-color: var(--brass-hi); }
+.auth-name { display: flex; }
+.auth-tabs button { text-align: center; }
+.auth-submit { width: 100%; }
+.auth-err { min-height: 1.2em; margin: 10px 0 0; font-size: 13px; color: var(--down); }
+.auth-err:empty { margin: 0; min-height: 0; }
+.auth-link { align-self: center; margin-top: 4px; padding: 8px 12px; border: 0; background: none; color: var(--brass-hi); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.auth-fine { margin: 2px 0 0; font-size: 12px; color: var(--faint); }
+.auth-demo-badge { align-self: center; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #1a130b; background: var(--brass); }
+
+.account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-transform: none; letter-spacing: 0; }
+.account-who { display: flex; flex-direction: column; min-width: 0; }
+.account-who b { color: var(--ivory); font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-who small { color: var(--muted); font-size: 12px; }
+
+/* "Save your progress?": the gentle offer to guests (prompt.ts). */
+.save-offer { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; text-align: left; }
+.save-offer-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 0; }
+.save-offer-text b { font: 500 16px/1.25 var(--display); color: var(--brass-hi); }
+.save-offer-text span { font-size: 13px; color: var(--muted); }
+.save-offer-btns { display: flex; gap: 8px; margin-left: auto; }
+.save-offer.inline { margin-top: var(--s4); padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-sm); background: rgba(201, 165, 107, 0.06); }
+.save-offer.floating {
+  position: fixed; z-index: 75; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); width: min(520px, calc(100% - 2 * var(--gutter)));
+  padding: 14px 16px; border-radius: var(--r-lg); border: 1px solid var(--line-strong);
+  background: var(--panel-solid); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  animation: offer-in 0.35s var(--ease) both; transition: opacity 0.3s, transform 0.3s;
+}
+.save-offer.floating.leaving { opacity: 0; transform: translate(-50%, 12px); }
+@keyframes offer-in { from { opacity: 0; transform: translate(-50%, 16px); } }
+/* Clear of the phone tab bar (ui/tabbar.css). */
+@media (max-width: 720px), (max-height: 500px), (max-width: 1365px) and (hover: none) and (pointer: coarse) { .save-offer.floating { bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); } }

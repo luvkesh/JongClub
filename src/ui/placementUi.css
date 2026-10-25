@@ -1,0 +1,7 @@
+/* Tournament placement scoring: lobby option and results column. */
+.ts-scoring { display: grid; gap: 8px; margin-top: 12px; }
+.ts-scoring .seg button { flex: 1 1 140px; }
+.ts-uma { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); }
+.standings li:has(.placement-pts) { grid-template-columns: 48px minmax(0, 1fr) auto 72px; }
+.standings li .placement-pts { text-align: right; color: var(--brass-hi); font-size: 14px; }
+.t-scoring { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 6px; }

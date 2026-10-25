@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000">
+<script>
+  // withBotAccessories picks a bot's extras from a salt drawn once per page load
+  // (SESSION_SALT in src/cosmetics/avatar.ts). Pin it from ?salt= so a
+  // companion's portrait matches one real table session, every run.
+  (function () {
+    const s = new URLSearchParams(location.search).get('salt');
+    if (s == null) return;
+    const real = Math.random;
+    // Every draw returns the salt until the modules have loaded (companions.ts unpins).
+    window.__pinnedSalt = (+s >>> 0) / 2 ** 32;
+    Math.random = function () {
+      return window.__pinnedSalt != null ? window.__pinnedSalt : real();
+    };
+  })();
+</script>

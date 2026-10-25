@@ -1,0 +1,54 @@
+/*
+ * Right-to-left layout (Arabic). <html dir="rtl"> mirrors flex rows and text
+ * flow on its own; these rules flip the few physical offsets in style.css.
+ * The 3D table, seat positions and the tile tray keep their physical layout.
+ */
+[dir='rtl'] .subline span + span { margin-left: 0; margin-right: 1.1em; }
+[dir='rtl'] .stat,
+[dir='rtl'] .stat .v.sm,
+[dir='rtl'] .results,
+[dir='rtl'] .history th,
+[dir='rtl'] .history td,
+[dir='rtl'] .bot-table th { text-align: right; }
+[dir='rtl'] .bot-table th { padding: 4px 0 4px 6px; }
+[dir='rtl'] .card > .card-close { right: auto; left: 18px; }
+[dir='rtl'] .standings li.me { padding-left: 0; padding-right: 10px; box-shadow: inset -2px 0 0 var(--brass-hi); background: linear-gradient(270deg, rgba(201, 165, 107, 0.1), transparent 70%); }
+[dir='rtl'] .chip.sm { margin-left: 0; margin-right: 8px; }
+[dir='rtl'] .insight { border-left: 0; border-right: 2px solid var(--jade); border-radius: var(--r-sm) 0 0 var(--r-sm); background: linear-gradient(270deg, rgba(63, 138, 109, 0.12), rgba(63, 138, 109, 0.03)); }
+[dir='rtl'] .narration { border-left: 1px solid var(--line-soft); border-right: 2px solid var(--brass); }
+[dir='rtl'] .lesson-progress i.quiz-dot { margin-left: 0; margin-right: 4px; }
+[dir='rtl'] .bot-depth,
+[dir='rtl'] .verdict,
+[dir='rtl'] .rp-count { margin-left: 0; margin-right: auto; }
+[dir='rtl'] .rules-list,
+[dir='rtl'] .insights,
+[dir='rtl'] .card-key { padding-left: 0; padding-right: 18px; }
+[dir='rtl'] .pz-answers { padding-left: 0; padding-right: 20px; }
+[dir='rtl'] summary::before { transform: rotate(135deg); }
+[dir='rtl'] details[open] > summary::before { transform: rotate(45deg) translate(-2px, -2px); }
+[dir='rtl'] .seat.waiting::after { margin-left: 0; margin-right: 4px; }
+[dir='rtl'] .actions .btn.claim .tile2d.mini:last-of-type { margin-right: 0; margin-left: 8px; }
+@media (max-width: 720px) {
+  [dir='rtl'] .topbar .icon-btn { margin-left: 0; margin-right: auto; }
+}
+@media (max-width: 680px) {
+  [dir='rtl'] .nav { padding-right: var(--gutter); padding-left: 32px; }
+}
+
+/* English text kept inside an Arabic page (lessons, Mei's narration) reads left to right. */
+[dir='rtl'] [lang='en'] { direction: ltr; unicode-bidi: isolate; text-align: left; }
+
+/* Tiles and score readouts in a hand read in table order. */
+[dir='rtl'] .tray,
+[dir='rtl'] .rp-marks { direction: ltr; }
+
+/* Japanese and Chinese headings break between phrases, not mid-word, where the browser can. */
+:lang(ja) :is(h1, h2, h3, .card-title, .mode-title),
+:lang(zh) :is(h1, h2, h3, .card-title, .mode-title),
+:lang(ja) .tagline,
+:lang(zh) .tagline { word-break: auto-phrase; overflow-wrap: anywhere; text-wrap: balance; }
+
+/* Devanagari and CJK have no capitals, so the wide tracking of the small-caps labels only pulls their letters apart. */
+:lang(hi) :is(.subline, .hx-t, .eyebrow, .field, .btn, .chip, .nav-item, .tagline, [class*='eyebrow']),
+:lang(ja) :is(.subline, .hx-t, .eyebrow, .field, .btn, .chip, .nav-item, .tagline, [class*='eyebrow']),
+:lang(zh) :is(.subline, .hx-t, .eyebrow, .field, .btn, .chip, .nav-item, .tagline, [class*='eyebrow']) { letter-spacing: 0 !important; }

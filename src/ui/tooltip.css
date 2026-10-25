@@ -1,0 +1,58 @@
+/* The club tooltip: a lacquer plaque with a double brass rim and cut corners. */
+.mj-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-tooltip, 9999);
+  max-width: min(300px, calc(100vw - 16px));
+  padding: 8px 14px 9px;
+  font: 500 13px/1.4 var(--ui);
+  color: var(--ivory);
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 40%),
+    radial-gradient(120% 140% at 50% 0%, #3a1512 0%, #1c0c0a 70%);
+  border: 1px solid var(--brass);
+  outline: 1px solid rgba(200, 164, 106, 0.35);
+  outline-offset: 2px;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  text-wrap: pretty;
+  white-space: pre-line;
+}
+.mj-tip.on { opacity: 1; }
+.mj-tip::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(200, 164, 106, 0.28);
+  clip-path: inherit;
+  pointer-events: none;
+}
+.mj-tip.tile {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 16px 9px;
+}
+.mj-tip.tile img { width: 46px; height: auto; border-radius: 5px; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); }
+.mj-tip.tile b { font: 400 17px/1.15 var(--display); color: var(--brass-hi); letter-spacing: 0.02em; }
+.mj-tip.tile small { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .mj-tip { transition: none; } }
+
+/* A field whose label explains itself on hover or tap carries a small info mark. */
+:is([data-tap-tips] .field > span:first-child[title], [data-tap-tips] .field > span:first-child[data-tip], [data-tap-tips] .field[title] > span:first-child, [data-tap-tips] .field[data-tip] > span:first-child, [data-tap-tips] .ts-bar-k[title], [data-tap-tips] .ts-bar-k[data-tip])::after {
+  content: '';
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-inline-start: 6px;
+  vertical-align: -1px;
+  background: currentColor;
+  opacity: 0.55;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M12 11v6M12 7.5v.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M12 11v6M12 7.5v.01'/%3E%3C/svg%3E") center / contain no-repeat;
+}

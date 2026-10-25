@@ -1,0 +1,58 @@
+/* An item's View pop-over: picture, a line about it, and Mei's pitch. */
+.iv-card {
+  position: relative; width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0;
+  border: 1px solid var(--line-strong); border-radius: var(--r-lg); background: linear-gradient(180deg, #121a16, #0b100d); box-shadow: var(--shadow-2, 0 24px 60px rgba(0, 0, 0, 0.55));
+}
+.iv-tools { position: absolute; top: 12px; inset-inline-end: 12px; z-index: 2; display: flex; gap: 8px; }
+.iv-x, .iv-mei {
+  position: relative; width: 40px; height: 40px; display: grid; place-items: center; padding: 9px;
+  border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(9, 13, 11, 0.78); color: var(--ivory); cursor: pointer; backdrop-filter: blur(4px);
+}
+.iv-x svg { width: 100%; height: 100%; display: block; }
+.iv-stage { position: relative; }
+.iv-nav {
+  position: absolute; top: 50%; z-index: 2; width: 42px; height: 42px; margin-top: -21px; display: grid; place-items: center; padding: 12px; cursor: pointer;
+  border: 1px solid var(--line-strong); border-radius: 50%; background: rgba(9, 13, 11, 0.72); color: var(--brass-hi); backdrop-filter: blur(4px);
+  transition: border-color 0.2s, background 0.2s;
+}
+.iv-nav:hover { border-color: var(--brass-hi); background: rgba(9, 13, 11, 0.9); }
+.iv-nav svg { width: 100%; height: 100%; display: block; }
+.iv-nav.prev { inset-inline-start: 12px; }
+.iv-nav.prev svg { transform: scaleX(-1); }
+.iv-nav.next { inset-inline-end: 12px; }
+[dir='rtl'] .iv-nav.prev svg { transform: none; }
+[dir='rtl'] .iv-nav.next svg { transform: scaleX(-1); }
+.iv-count { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); padding: 3px 10px; border-radius: 999px; background: rgba(9, 13, 11, 0.7); color: var(--muted); font: 500 11.5px/1.4 var(--ui); font-variant-numeric: tabular-nums; }
+.iv-pic { display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--line-soft); background: radial-gradient(70% 60% at 50% 40%, rgba(63, 138, 109, 0.28), transparent 70%), #0a0e0c; }
+.iv-pic .item-prev { width: 100%; height: auto; aspect-ratio: 480 / 264; margin: 0; border-radius: 0; }
+.iv-table .item-prev.felt { width: 62%; aspect-ratio: 1; margin: 28px auto; border-radius: 50%; }
+.iv-winAnimation .item-prev, .iv-tableEffect .item-prev, .iv-sound .item-prev { aspect-ratio: 16 / 7; }
+.iv-pic .fx-glyph { width: 64px; height: 64px; }
+.iv-portrait { padding: 22px 0 16px; }
+.iv-portrait img { width: 240px; height: 240px; display: block; }
+.iv-body { display: grid; gap: 10px; padding: 18px 22px 22px; }
+.iv-eyebrow { margin: 0; font: 500 11px/1.2 var(--ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass-hi); }
+.iv-name { margin: 0; font: 600 30px/1.1 var(--display-clear, 'Cormorant Garamond', serif); color: var(--ivory); }
+.iv-blurb { margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+.iv-mei { padding: 10px; color: var(--brass-hi); }
+.iv-mei svg { width: 100%; height: 100%; display: block; }
+.iv-mei:disabled { opacity: 0.5; cursor: default; }
+.iv-mei[data-state='loading'] { animation: iv-wait 1.1s ease-in-out infinite; }
+.iv-mei[data-state='playing'] { border-color: var(--brass); color: var(--brass-ink); background: linear-gradient(180deg, #e6c98f, #b98f4f); }
+.iv-mei[data-state='playing']::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid var(--brass); animation: iv-pulse 1.6s ease-out infinite; pointer-events: none; }
+@keyframes iv-pulse { from { opacity: 0.8; transform: scale(0.92); } to { opacity: 0; transform: scale(1.25); } }
+@keyframes iv-wait { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .iv-mei[data-state='playing']::after, .iv-mei[data-state='loading'] { animation: none; } }
+.iv-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.iv-status { display: inline-flex; align-items: center; gap: 8px; font: 500 13px/1.3 var(--ui); color: var(--brass-hi); }
+.iv-status span:first-child { width: 16px; height: 16px; display: inline-block; flex: none; }
+.iv-status span:first-child svg { width: 100%; height: 100%; display: block; }
+.iv-status.price { font-size: 16px; color: var(--ivory); font-variant-numeric: tabular-nums lining-nums; }
+.iv-actions { display: flex; gap: 8px; margin-inline-start: auto; }
+@media (max-width: 560px) {
+  .iv-body { padding: 14px 16px 16px; }
+  .iv-name { font-size: 25px; }
+  .iv-portrait img { width: 190px; height: 190px; }
+  .iv-actions { flex: 1 1 auto; }
+  .iv-actions .btn { flex: 1 1 0; }
+}

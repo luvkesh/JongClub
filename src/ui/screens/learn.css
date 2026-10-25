@@ -1,0 +1,144 @@
+/* Learn: the Academy's learning path. Header with progress, your lesson, then every level. */
+
+.lx-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); flex-wrap: wrap; }
+.lx-head::after { display: none; }
+.lx-head-text { flex: 1 1 420px; min-width: 0; }
+.lx-head h2 { font-size: clamp(38px, 5.4vw, 58px); line-height: 1.05; }
+.lx-sub { margin: var(--s2) 0 var(--s3); color: var(--muted); font-size: 15px; }
+.lx-progress { height: 8px; max-width: 520px; border-radius: 999px; background: rgba(242, 234, 217, 0.08); border: 1px solid var(--line-soft); overflow: hidden; }
+.lx-progress i { display: block; height: 100%; min-width: 8px; border-radius: inherit; background: linear-gradient(90deg, #c9a56b, #f0d9a8); box-shadow: 0 0 10px rgba(234, 208, 154, 0.4); }
+.learn-head-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.learn-head-links .btn { gap: 6px; }
+.learn-head-links .ico { width: 15px; height: 15px; }
+
+.lx-current { display: flex; flex-direction: column; gap: var(--s2); }
+.lx-current > .eyebrow { margin: 0; }
+
+/* toolbar: categories, search, sort */
+.lx-path { display: flex; flex-direction: column; gap: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.lx-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--s3); }
+.lx-cats { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.lx-cats button {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: rgba(9, 13, 11, 0.45); color: var(--ivory); font: 500 13.5px var(--ui); cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.lx-cats button .ico { width: 17px; height: 17px; color: var(--brass-hi); }
+.lx-cats button:hover { border-color: var(--line-strong); }
+.lx-cats button.on { background: linear-gradient(180deg, #ecd3a0, #c9a56b); border-color: #b48a4e; color: var(--brass-ink); }
+.lx-cats button.on .ico { color: var(--brass-ink); }
+.lx-tools { display: flex; gap: var(--s2); flex: 1 1 320px; justify-content: flex-end; }
+.lx-search, .lx-sort-wrap {
+  display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: rgba(9, 13, 11, 0.55); color: var(--brass-hi);
+}
+.lx-search { flex: 1 1 200px; max-width: 300px; }
+.lx-search:focus-within { border-color: var(--brass); }
+.lx-search .ico, .lx-sort-wrap .ico { width: 17px; height: 17px; flex: none; }
+.lx-search-in { flex: 1; min-width: 0; height: 38px; border: 0; background: none; outline: none; color: var(--ivory); font: 400 14px var(--ui); padding: 0; }
+.lx-sort-wrap { padding-right: 0; }
+.lx-sort { border: 0; background-color: transparent; box-shadow: none; min-height: 38px; padding-left: 0; }
+
+/* the levels */
+.lx-list { display: flex; flex-direction: column; gap: var(--s2); }
+.lx-row { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); box-shadow: var(--hi); transition: border-color 0.2s; }
+.lx-row:hover { border-color: var(--line-strong); }
+.lx-row.progress { border-color: var(--brass); }
+.lx-main { display: grid; grid-template-columns: 92px 44px minmax(0, 1fr) auto auto 36px; align-items: center; gap: var(--s3); padding: 12px 14px 12px 16px; }
+.lx-n {
+  justify-self: start; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 4px;
+  font: 500 11.5px/1 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); white-space: nowrap;
+}
+.lx-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); color: var(--brass-hi); background: radial-gradient(circle at 50% 35%, rgba(201, 165, 107, 0.16), transparent 70%); }
+.lx-ico .ico { width: 20px; height: 20px; }
+/* a variation's own tile, standing a little tilted on the card */
+.lx-ico.tile { border: 0; background: none; }
+.lx-ico.tile img { display: block; width: 30px; height: auto; border-radius: 4px; transform: rotate(-6deg); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); }
+.lx-row.child .lx-ico { width: 32px; height: 32px; }
+.lx-row.child .lx-ico.tile img { width: 24px; }
+.lx-text { min-width: 0; }
+.lx-t { margin: 0; font: 600 20px/1.2 var(--display); color: var(--ivory); }
+.lx-d { margin: 3px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+.lx-meta { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* wide screens: the status pill stays beside the button, in line with the other levels */
+@media (min-width: 861px) { .lx-meta { flex-direction: row-reverse; } }
+.lx-state { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.lx-state i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid currentColor; }
+.lx-state.progress { color: var(--jade-hi); border-color: rgba(124, 199, 160, 0.35); }
+.lx-state.progress i { border-color: var(--jade-hi); border-right-color: transparent; }
+.lx-state.done { color: var(--jade-hi); border-color: rgba(124, 199, 160, 0.35); background: rgba(63, 138, 109, 0.12); }
+.lx-state.done i { background: var(--jade-hi); border-color: var(--jade-hi); }
+.lx-go { gap: 6px; min-width: 110px; justify-content: center; }
+.lx-go .ico { width: 14px; height: 14px; }
+.lx-chev { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: none; color: var(--brass-hi); cursor: pointer; }
+.lx-chev:hover { background: rgba(201, 165, 107, 0.1); }
+.lx-chev .ico { width: 18px; height: 18px; transition: transform 0.2s var(--ease); }
+.lx-row.open > .lx-main .lx-chev .ico { transform: rotate(180deg); }
+.lx-chev-gap { width: 36px; }
+
+/* lettered levels inside their parent */
+.lx-kids { position: relative; display: flex; flex-direction: column; gap: var(--s2); padding: 0 14px 14px 56px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.lx-kids[hidden] { display: none; }
+.lx-kids::before { content: ''; position: absolute; left: 36px; top: 0; bottom: 34px; border-left: 1px solid var(--line-strong); }
+.lx-row.child { position: relative; background: rgba(9, 13, 11, 0.4); box-shadow: none; border-radius: var(--r-sm); }
+.lx-row.child::before { content: ''; position: absolute; left: -20px; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: var(--brass); transform: translate(-50%, -50%); }
+.lx-row.child .lx-main { grid-template-columns: 56px 32px minmax(0, 1fr) auto auto 36px; padding: 10px 12px; }
+.lx-row.child .lx-t { font-size: 18px; }
+.lx-more { display: flex; justify-content: center; }
+.lx-more .btn { gap: 8px; }
+.lx-more .ico { width: 15px; height: 15px; }
+.lx-empty { color: var(--muted); }
+
+@media (max-width: 860px) {
+  .lx-main { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'n text chev' 'n state go'; row-gap: 8px; }
+  .lx-n { grid-area: n; align-self: start; margin-top: 2px; }
+  .lx-ico { display: none; }
+  .lx-text { grid-area: text; }
+  .lx-meta { grid-area: state; justify-self: start; }
+  .lx-go { grid-area: go; justify-self: end; min-width: 0; }
+  .lx-chev, .lx-chev-gap { grid-area: chev; justify-self: end; align-self: start; }
+  .lx-row.child .lx-main { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .lx-tools { justify-content: stretch; }
+  .lx-search { max-width: none; }
+}
+@media (max-width: 560px) {
+  /* four lesson types in a 2 x 2 grid, so none is cut off at the edge */
+  .lx-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1 1 100%; width: 100%; }
+  .lx-cats button { min-width: 0; justify-content: center; padding-left: 8px; padding-right: 8px; white-space: normal; line-height: 1.2; text-align: center; }
+  .lx-main { padding: 12px; column-gap: 10px; }
+  /* the description runs under the level badge, the full width of the card */
+  /* level badge on its own line, so the title has the card's full width */
+  .lx-row:not(.child) .lx-main { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'n chev' 'title title' 'desc desc' 'state go'; align-items: center; row-gap: 6px; }
+  .lx-row:not(.child) .lx-n { padding: 5px 8px; font-size: 10.5px; }
+  .lx-row:not(.child) .lx-meta { margin-top: 6px; }
+  .lx-row:not(.child) .lx-go { margin-top: 6px; }
+  .lx-row:not(.child) .lx-chev-gap { display: none; }
+  .lx-row:not(.child) .lx-chev { margin: -6px -4px -6px 0; }
+  .lx-row:not(.child) .lx-text { display: contents; }
+  .lx-row:not(.child) .lx-t { grid-area: title; }
+  .lx-row:not(.child) .lx-d { grid-area: desc; margin: 0; }
+  .lx-row:not(.child) .lx-n { align-self: center; margin-top: 0; }
+  .lx-t { font-size: 18px; }
+  .lx-kids { padding-left: 28px; }
+  .lx-kids::before { left: 14px; }
+  .lx-row.child::before { left: -14px; }
+}
+
+/* All Lessons: three groups (Foundations 1-8, Mastering Mahjong 9-12, Variations 13+) */
+.lx-list.grouped { gap: var(--s5, 28px); }
+.lx-group { display: flex; flex-direction: column; gap: var(--s2); }
+.lx-group-head { display: flex; align-items: center; gap: 12px; padding: 0 2px 10px; border-bottom: 1px solid var(--brass); margin-bottom: 4px; }
+.lx-group-head h3 { margin: 0; font: 600 23px/1.15 var(--display-clear); color: var(--ivory); }
+.lx-group-head .lx-ico { width: 34px; height: 34px; }
+.lx-group-head .lx-ico .ico { width: 17px; height: 17px; }
+.lx-range { margin-left: auto; font: 500 11.5px/1 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); white-space: nowrap; }
+.lx-opt { display: inline-block; padding: 5px 9px; border: 1px solid var(--line-strong); border-radius: 999px; font: 500 10.5px/1 var(--ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass-hi); }
+@media (max-width: 640px) {
+  .lx-group-head h3 { font-size: 20px; }
+}
+@media (max-width: 640px) {
+  /* search and sort share one row inside the phone's width */
+  .lx-tools { flex: 1 1 100%; min-width: 0; }
+  .lx-search { flex: 1 1 0; min-width: 0; }
+  .lx-sort-wrap { flex: none; }
+}

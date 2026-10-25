@@ -1,0 +1,64 @@
+/* The score calculator: shares the rule book's panel (scoringGuide.css .sg-panel), with a tile picker. */
+.hud .calc-btn svg { display: block; margin: auto; }
+.hud .calc-btn.on { border-color: var(--brass-hi, #e8cb92); color: var(--brass-hi, #e8cb92); }
+.sc-panel .sg-close svg { display: block; margin: auto; }
+.sc-now { margin-bottom: 4px; }
+.sc-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sc-tools .btn { min-height: 36px; padding: 0 14px; font-size: 12px; letter-spacing: 0.08em; }
+.sc-count { margin-inline-start: auto; font-size: 12px; color: var(--muted, #b0a792); font-variant-numeric: lining-nums tabular-nums; }
+.sc-hand, .sc-melds { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; min-height: 40px; padding: 6px; border-radius: 10px;
+  background: radial-gradient(120% 140% at 50% 0%, rgba(46, 110, 82, 0.5), rgba(16, 48, 36, 0.7)); border: 1px solid rgba(232, 203, 146, 0.22); }
+.sc-melds { gap: 8px; min-height: 0; }
+.sc-melds[hidden] { display: none; }
+.sc-empty { align-self: center; font-size: 12px; color: #cfe3d6; padding: 4px; }
+.sc-tile, .sc-meld, .sc-pick { padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; border-radius: 4px; }
+.sc-meld { display: inline-flex; gap: 1px; padding: 2px; border: 1px dashed rgba(232, 203, 146, 0.4); }
+.sc-meld.concealed { border-style: solid; border-color: rgba(198, 163, 230, 0.6); }
+.sc-tile:focus-visible, .sc-meld:focus-visible, .sc-pick:focus-visible { outline: 2px solid var(--brass-hi, #ead09a); outline-offset: 2px; }
+.sc-gap { width: 8px; }
+.sc-tile.win { box-shadow: 0 0 0 2px var(--brass-hi, #ead09a), 0 0 12px rgba(234, 208, 154, 0.5); }
+.sc-panel .tile2d.mini { width: 26px; border-radius: 3px; box-shadow: 0 1px 0 #c9b893, 0 2px 0 #1f5a46, 0 3px 6px rgba(0, 0, 0, 0.35); }
+.sc-result:empty { display: none; }
+.sc-result { display: flex; flex-direction: column; gap: 6px; }
+.sc-msg { margin: 0; font-size: 12.5px; color: var(--muted, #b0a792); padding: 6px 2px; }
+.sc-msg.warn { color: #f0c38d; }
+.sc-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.sc-seg { display: inline-flex; border: 1px solid var(--line, rgba(201, 165, 107, 0.24)); border-radius: 999px; overflow: hidden; flex-wrap: wrap; }
+.sc-seg button { min-height: 34px; padding: 0 12px; border: 0; background: transparent; color: var(--ivory, #f2ead9); font: 500 12px var(--ui); cursor: pointer; }
+.sc-seg button + button { border-inline-start: 1px solid var(--line, rgba(201, 165, 107, 0.24)); }
+.sc-seg button[aria-pressed='true'] { background: linear-gradient(180deg, #f1d9a4, #c19858); color: #2a1d0b; }
+.sc-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; cursor: pointer; }
+.sc-check input { accent-color: var(--brass, #c9a56b); width: 16px; height: 16px; }
+.sc-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sc-cap { font: 500 10.5px var(--ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass, #c9a56b); }
+.sc-palette { display: flex; flex-direction: column; gap: 4px; }
+.sc-row { display: flex; flex-wrap: wrap; gap: 3px; }
+.sc-pick:hover .tile2d, .sc-tile:hover .tile2d { transform: translateY(-2px); }
+.sc-pick .tile2d, .sc-tile .tile2d { transition: transform 0.12s; }
+@media (max-width: 640px) {
+  .sc-panel .tile2d.mini { width: 24px; }
+  .sc-row { gap: 2px; }
+  .sc-way small { min-width: 0; }
+}
+@media (max-width: 380px) { .sc-panel .tile2d.mini { width: 21px; } }
+/* Wide screens: a wider panel, hand and score beside the picker. */
+.sg-panel.sc-panel { width: min(860px, calc(100% - 2 * var(--side, 16px))); }
+.sc-grid { display: flex; flex-direction: column; gap: 10px; }
+.sc-build, .sc-picker { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sc-pick:disabled { opacity: 0.3; cursor: default; }
+.sc-pick:disabled .tile2d { transform: none; }
+@media (min-width: 761px) {
+  .sc-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .sc-build { position: sticky; top: 0; }
+}
+/* Narrow screens: the hand and its score stay pinned while you scroll the picker. */
+@media (max-width: 760px) and (min-height: 501px) {
+  .sc-build { position: sticky; top: 0; z-index: 1; padding: 6px 0 8px; background: rgba(14, 18, 16, 0.98); border-bottom: 1px solid rgba(232, 203, 146, 0.14); }
+  .sc-build .hs-lines { max-height: 108px; overflow-y: auto; }
+}
+/* Phones: the calculator folds into the table menu (and your hand's status line opens it), so the bar keeps its buttons. */
+@media (max-width: 700px), (max-height: 500px) { .hud .hud-tools .calc-btn { display: none; } }
+.hud-drawer .drawer-item.calc-item { display: inline-flex; align-items: center; gap: 8px; }
+.hud-drawer .drawer-item.calc-item svg { flex: none; color: var(--brass-hi, #ead09a); }
+/* The calculator covers the table on phones: fully opaque, so the hand behind never shows through. */
+.sg-panel.sc-panel { background: rgb(14, 18, 16); }

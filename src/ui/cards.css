@@ -1,0 +1,38 @@
+/* Play screen mode icons: a sprite sheet of 24 pre-rendered frames of a 3D model
+   (scripts/mode-icons). Frame 0 at rest; hovering, focusing or pressing plays the sway. */
+.mode-icon {
+  --sz: 76px;
+  position: relative; isolation: isolate;
+  display: block; flex: none; width: var(--sz); height: var(--sz); margin: -4px 0 6px -4px;
+  background-repeat: no-repeat; background-position: 0 0; background-size: calc(var(--sz) * 24) var(--sz);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35)) brightness(1.08);
+  transition: transform 0.35s var(--ease);
+}
+/* A dark medallion with a fine gold ring behind each model, like the table's controls. */
+.mode-icon::before {
+  content: ''; position: absolute; inset: 3%; z-index: -1; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(124, 199, 160, 0.22), rgba(63, 138, 109, 0.08) 55%, rgba(9, 13, 11, 0.5) 100%);
+  border: 1px solid var(--line-strong); box-shadow: inset 0 1px 0 rgba(234, 208, 154, 0.18);
+}
+.mode:hover:not(:disabled):not(.locked) .mode-icon,
+.mode:focus-visible .mode-icon,
+.mode:active:not(:disabled) .mode-icon { animation: mode-sway 2.4s steps(24) infinite; transform: translateY(-2px) scale(1.06); }
+.mode.locked .mode-icon { filter: grayscale(0.6) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45)); }
+@keyframes mode-sway { to { background-position: calc(var(--sz) * -24) 0; } }
+@media (max-width: 560px) { .mode-icon { --sz: 60px; margin: -4px 0 2px -4px; } }
+@media (prefers-reduced-motion: reduce) {
+  .mode:hover .mode-icon, .mode:focus-visible .mode-icon, .mode:active .mode-icon { animation: none; transform: none; }
+}
+
+/* Profile: ratings for the variations this player has played. */
+.vr.unrated strong { color: var(--muted); font-size: 16px; }
+.vr .vr-games { color: var(--faint); font-size: 12px; }
+
+/* Play: the modes in two labelled groups, Single player then Multiplayer. */
+.mode-groups { display: flex; flex-direction: column; gap: var(--s5); }
+.mode-group { display: flex; flex-direction: column; gap: var(--s3); }
+.mode-group-head { display: flex; align-items: center; gap: 10px; font: 600 21px/1.2 var(--display); color: var(--ivory); }
+.mode-group-head::after { content: ''; flex: 1; height: 0; border-top: 1px solid var(--line-soft); margin-left: 6px; }
+.mode-group-head .ico { width: 20px; height: 20px; color: var(--brass-hi); }
+.mode-groups .modes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .mode-groups .modes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

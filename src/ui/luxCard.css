@@ -1,0 +1,79 @@
+/* The premium card (luxCard.ts): glassy jade-black panel, fine gold edge, rendered illustration,
+   Cinzel title over a single gold rule, one line and a round gold arrow. Shared by every menu. */
+
+.lux-row { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(10px, 1.4vw, 18px); width: 100%; }
+.lux-card {
+  --lux-edge: rgba(201, 165, 107, 0.42);
+  position: relative; flex: 1 1 0; min-width: 0; max-width: 250px;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+  padding: 14px 16px 18px; border-radius: 18px; color: var(--ivory);
+  background:
+    linear-gradient(180deg, rgba(255, 240, 210, 0.07), rgba(255, 240, 210, 0) 38%),
+    linear-gradient(180deg, rgba(16, 34, 28, 0.86), rgba(6, 12, 10, 0.9));
+  border: 1px solid var(--lux-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.12), 0 14px 34px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.lux-card:hover:not(.off), .lux-card:focus-within:not(.off) { transform: translateY(-3px); --lux-edge: rgba(234, 208, 154, 0.8); box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.16), 0 18px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(234, 190, 110, 0.18); }
+.lux-card.featured {
+  --lux-edge: rgba(240, 206, 132, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.18), 0 0 0 1px rgba(240, 206, 132, 0.35), 0 0 30px rgba(234, 190, 110, 0.32), 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+.lux-card.off { opacity: 0.72; }
+.lux-hit { position: absolute; inset: 0; z-index: 1; border: 0; border-radius: inherit; background: none; cursor: pointer; padding: 0; }
+.lux-hit:disabled { cursor: default; }
+.lux-hit:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 3px; }
+
+.lux-art { display: block; width: 100%; max-width: 170px; aspect-ratio: 4 / 3; pointer-events: none; }
+.lux-art svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+.lux-body { display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.lux-t { font: 600 clamp(13px, 1.05vw, 16px)/1.25 var(--inscr); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ivory); }
+.lux-card.featured .lux-t { color: var(--brass-hi); }
+.lux-rule { width: 34px; height: 1px; background: linear-gradient(90deg, transparent, var(--brass-hi), transparent); }
+.lux-d { font: 400 13.5px/1.45 var(--ui); color: var(--muted); max-width: 22ch; }
+.lux-go {
+  margin-top: auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  border: 1.4px solid var(--brass-hi); color: var(--brass-hi); pointer-events: none; transition: background-color 0.2s, color 0.2s;
+}
+.lux-go .ico { width: 16px; height: 16px; }
+.lux-card:hover:not(.off) .lux-go { background: var(--brass-hi); color: #1a1408; }
+.lux-corner { position: absolute; top: 10px; right: 10px; z-index: 2; }
+
+/* A foot with its own controls (a code box) sits above the card's button. */
+.lux-foot { position: relative; z-index: 2; margin-top: auto; display: flex; gap: 6px; width: 100%; }
+.lux-foot input {
+  flex: 1 1 auto; min-width: 0; height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 999px;
+  background: rgba(5, 8, 7, 0.75); color: var(--ivory); font: 500 13.5px var(--ui); text-align: center; letter-spacing: 0.08em;
+}
+.lux-foot input::placeholder { color: var(--muted); letter-spacing: 0.02em; }
+.lux-foot input:focus { outline: none; border-color: var(--brass-hi); }
+.lux-foot input:disabled { opacity: 0.7; }
+.lux-foot .lux-go-btn { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1.4px solid var(--brass-hi); background: none; color: var(--brass-hi); cursor: pointer; }
+.lux-foot .lux-go-btn:hover:not(:disabled) { background: var(--brass-hi); color: #1a1408; }
+.lux-foot .lux-go-btn:disabled { opacity: 0.5; cursor: default; }
+.lux-foot .lux-go-btn .ico { width: 16px; height: 16px; }
+
+/* Narrow tablets: five across with less padding, then three over two. */
+@media (max-width: 1100px) {
+  .lux-card { padding: 12px 10px 14px; gap: 8px; }
+  .lux-t { letter-spacing: 0.08em; }
+  .lux-d { font-size: 12.5px; }
+}
+@media (max-width: 860px) {
+  .lux-card { flex: 0 1 calc((100% - 2 * clamp(10px, 1.4vw, 18px)) / 3); max-width: 280px; }
+}
+/* Phones: each card becomes a row (picture, words, arrow), so nothing crowds or overlaps. */
+@media (max-width: 600px) {
+  .lux-row { flex-direction: column; gap: 10px; }
+  .lux-card { flex: none; max-width: none; width: 100%; flex-direction: row; text-align: left; gap: 12px; padding: 10px 14px 10px 8px; border-radius: 14px; }
+  .lux-card:hover:not(.off) { transform: none; }
+  .lux-art { width: 84px; flex: none; }
+  .lux-body { align-items: flex-start; flex: 1 1 auto; min-width: 0; gap: 5px; }
+  .lux-rule { width: 26px; background: linear-gradient(90deg, var(--brass-hi), transparent); }
+  .lux-d { max-width: none; font-size: 13px; }
+  .lux-go { margin-top: 0; flex: none; }
+  .lux-card:has(.lux-foot) { flex-wrap: wrap; }
+  .lux-card:has(.lux-foot) .lux-foot { flex: 1 1 100%; padding-left: 96px; }
+  .lux-corner { top: 8px; right: 8px; }
+}

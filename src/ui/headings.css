@@ -1,0 +1,59 @@
+/* Display type, matched to the website and the wordmark:
+   - Cinzel (--display-title) for short display words: the wordmark, round
+     names, table calls, codes and the win banner's call. Its lower case is
+     drawn as small capitals, so it suits a word or two, not a sentence.
+   - Cormorant Garamond at 600 (--display-clear) for every heading and title
+     in title case: page, panel and card titles, names, "Mei wins the hand".
+     It has true lower case and, at this weight, hairlines that hold on a phone.
+   The game's older tokens point here (--display, --inscr), so this file is the
+   one switch. Italic and sentence-length lines (taglines, chat, season lines,
+   places) keep Bodoni Moda through --display-prose.
+
+   Both faces are embedded (SIL OFL 1.1, see src/fonts/*-OFL.txt): the offline
+   app and the single-file builds need no font CDN. Chinese, Japanese, Arabic
+   and Hindi text falls through to each system's serif for that script. */
+@font-face {
+  font-family: 'Cinzel'; font-style: normal; font-display: swap; font-weight: 400 900;
+  src: url('../fonts/cinzel-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cinzel'; font-style: normal; font-display: swap; font-weight: 400 900;
+  src: url('../fonts/cinzel-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Cormorant Garamond'; font-style: normal; font-display: swap; font-weight: 300 700;
+  src: url('../fonts/cormorant-garamond-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cormorant Garamond'; font-style: normal; font-display: swap; font-weight: 300 700;
+  src: url('../fonts/cormorant-garamond-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Cormorant Garamond'; font-style: normal; font-display: swap; font-weight: 300 700;
+  src: url('../fonts/cormorant-garamond-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+
+:root {
+  --script-serif: 'Noto Serif SC', 'Songti SC', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Naskh Arabic', 'Geeza Pro', 'Noto Serif Devanagari', 'Kohinoor Devanagari', Georgia, serif;
+  --display-title: 'Cinzel', 'Trajan Pro', var(--script-serif);
+  --display-clear: 'Cormorant Garamond', 'Cormorant', 'Garamond', var(--script-serif);
+  --display-prose: 'Bodoni Moda', 'Didot', 'Bodoni 72', var(--script-serif);
+  --display: var(--display-clear);
+  --inscr: var(--display-title);
+}
+
+/* Cormorant is drawn smaller on the body than Bodoni: headings get a sturdier weight and a little more size. */
+h1, h2, h3, h4 { font-weight: 600; letter-spacing: 0; text-transform: none; }
+h2 { font-size: calc(var(--fs-2xl) * 1.08); }
+:root :is(.mode-title, .tr-name, .lv-t, .item-name, .ach-name, .rp-title, .ld-tile, .cc-name, .sc-name, .vt-name, .ts-rule-name, .ts-summary-k, .set-title, .placement-offer b, .save-offer-text b, .dr-verdict, .km-head h4, .ts-step-head h4, .mj-tip.tile b, .ladder li, .name-input, .results-title, .hand-result h2) { font-weight: 600; }
+
+/* Italic and sentence-length lines stay in Bodoni Moda. */
+:root :is(.tagline, .wb-sub, .sh-line, .sr-n, .results-title .ord, .standings .pl, .toast-sub, .board .rk, .bot-line, .phrase-bubble) { font-family: var(--display-prose); }
+
+/* The win banner's call (Mahjong, Tsumo, Hu…) is a short display word: Cinzel, upright. */
+:root .wb-word { font-family: var(--display-title); font-style: normal; font-weight: 600; letter-spacing: 0.04em; }

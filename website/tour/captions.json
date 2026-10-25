@@ -1,0 +1,846 @@
+{
+  "welcome": [
+    {
+      "t": 0.12,
+      "text": "Welcome to JongClub."
+    },
+    {
+      "t": 2.26,
+      "text": "I'm Mei, the club's host."
+    },
+    {
+      "t": 4.45,
+      "text": "Let me show you around while you scroll."
+    },
+    {
+      "t": 7.13,
+      "text": "When you're ready to play, the table is one click away, and I'll sit beside you for your very first hand."
+    }
+  ],
+  "prologue": [
+    {
+      "t": 0.12,
+      "text": "Every good evening starts with a sound: tiles clicking on felt."
+    },
+    {
+      "t": 4.35,
+      "text": "Here the table shuffles for you, then pushes up four fresh walls, ready for the first hand."
+    }
+  ],
+  "arrive": [
+    {
+      "t": 0.12,
+      "text": "Pull up a chair."
+    },
+    {
+      "t": 1.84,
+      "text": "Rex, Hiro, Lucky and Amara are strong, thoughtful players, each with a style of their own, and I'll be at the table too."
+    },
+    {
+      "t": 9.48,
+      "text": "Practise with us until you're sharp."
+    },
+    {
+      "t": 12.08,
+      "text": "And when your friends are free, start a table and share the link."
+    },
+    {
+      "t": 15.84,
+      "text": "You'll be playing together in seconds."
+    }
+  ],
+  "learn": [
+    {
+      "t": 0.12,
+      "text": "Never played before?"
+    },
+    {
+      "t": 2.15,
+      "text": "Perfect."
+    },
+    {
+      "t": 3.59,
+      "text": "In your first game I talk you through every tile and tell you why."
+    },
+    {
+      "t": 7.72,
+      "text": "Then the Academy has short voiced lessons, a placement test and fresh drills every day."
+    },
+    {
+      "t": 13.27,
+      "text": "And after every game, I'll show you what you did right, and what to do better."
+    }
+  ],
+  "play": [
+    {
+      "t": 0.12,
+      "text": "This is the real game, on a 3D table you can turn and tilt."
+    },
+    {
+      "t": 4.63,
+      "text": "Every discard is called out loud."
+    },
+    {
+      "t": 7.41,
+      "text": "If you get stuck, JongBot will tell you what it would play and why."
+    },
+    {
+      "t": 11.44,
+      "text": "Turn the hints off whenever you feel ready."
+    }
+  ],
+  "rounds": [
+    {
+      "t": 0.12,
+      "text": "A full game travels all the way round the table: East, South, West and North."
+    },
+    {
+      "t": 5.51,
+      "text": "The dealer's seat moves on, and the wind of the round changes what scores."
+    },
+    {
+      "t": 10.15,
+      "text": "Play one round over coffee, or all four for the whole evening."
+    }
+  ],
+  "ritual": [
+    {
+      "t": 0.12,
+      "text": "Every corner of the table has its own side table."
+    },
+    {
+      "t": 3.69,
+      "text": "Once a hand you can pour a bowl of tea and pass it to another player."
+    },
+    {
+      "t": 8.03,
+      "text": "The gold coins beside you rise and fall with your score, and the dice are rolled to break the wall."
+    }
+  ],
+  "minigames": [
+    {
+      "t": 0.12,
+      "text": "When you'd like a game for one, the Mini-games are always open."
+    },
+    {
+      "t": 4.16,
+      "text": "There are twelve of them, from Solitaire to Match-3, all in 3D on your own tiles, table and room."
+    },
+    {
+      "t": 10.47,
+      "text": "Every win earns Jong Points for the Atelier, and the daily puzzle gives the whole club the same board."
+    },
+    {
+      "t": 16.85,
+      "text": "None of them touch your rating."
+    }
+  ],
+  "variations": [
+    {
+      "t": 0.12,
+      "text": "Mahjong changed as it travelled, so we play it thirty ways."
+    },
+    {
+      "t": 4.2,
+      "text": "Hong Kong, Riichi, Taiwanese, American, and the Dubai club rules."
+    },
+    {
+      "t": 9.12,
+      "text": "Each one has its own scoring, its own lesson and its own cheat sheet."
+    }
+  ],
+  "collect": [
+    {
+      "t": 0.12,
+      "text": "Welcome to the Atelier."
+    },
+    {
+      "t": 2.22,
+      "text": "Every tile set here is its own object, with its own back, calligraphy and even its own click on the felt."
+    },
+    {
+      "t": 8.76,
+      "text": "Choose tiles, racks or rooms, and look at them one at a time."
+    },
+    {
+      "t": 12.8,
+      "text": "You earn them with Jong Points, and none of them change the game or your rating."
+    }
+  ],
+  "details": [
+    {
+      "t": 0.12,
+      "text": "Then come the finishing touches."
+    },
+    {
+      "t": 2.54,
+      "text": "Choose a cloth for the table, a frame for your portrait, an outfit for your player, and even the way your win is celebrated."
+    },
+    {
+      "t": 9.91,
+      "text": "They all add style and flair to your play."
+    }
+  ],
+  "interlude": [
+    {
+      "t": 0.12,
+      "text": "Take a walk through the rooms."
+    },
+    {
+      "t": 2.28,
+      "text": "A majlis in Dubai, a parlour in Tokyo, a Hong Kong tea house and the Imperial hall."
+    },
+    {
+      "t": 8.2,
+      "text": "Each one has its own light, chairs and sounds."
+    }
+  ],
+  "world-tour": [
+    {
+      "t": 0.12,
+      "text": "Take your passport around the Mahjong world."
+    },
+    {
+      "t": 3.29,
+      "text": "There are eighteen destinations, each with its own rules, lesson and challenges that earn stamps."
+    },
+    {
+      "t": 9.38,
+      "text": "Win in Hong Kong, Tokyo or a Dubai club, and that city's signature room opens for you."
+    }
+  ],
+  "club": [
+    {
+      "t": 0.12,
+      "text": "When you want stronger company, the Club is here."
+    },
+    {
+      "t": 3.33,
+      "text": "Every variation keeps its own rating, from Bronze to Master."
+    },
+    {
+      "t": 7.63,
+      "text": "Seasons last six weeks, each themed on a city, with a league, a reward track and the Season Finals."
+    },
+    {
+      "t": 14.0,
+      "text": "You can also start a private club for your friends."
+    }
+  ],
+  "final": [
+    {
+      "t": 0.12,
+      "text": "Your seat is set, and I'm waiting at the table."
+    },
+    {
+      "t": 3.24,
+      "text": "It takes one click to sit down."
+    },
+    {
+      "t": 5.73,
+      "text": "I'll see you there."
+    }
+  ],
+  "about": [
+    {
+      "t": 0.12,
+      "text": "Chacklate Experiences makes games the way a good chocolatier makes chocolate: with patience, care, and the finest ingredients."
+    },
+    {
+      "t": 8.45,
+      "text": "JongClub began with a simple wish: to bring the warmth of a real mahjong table online."
+    },
+    {
+      "t": 14.67,
+      "text": "So they built a premium club, and asked me to be your host."
+    },
+    {
+      "t": 18.41,
+      "text": "Thank you for spending the evening with us."
+    },
+    {
+      "t": 21.28,
+      "text": "谢谢光临！"
+    }
+  ],
+  "item-tiles-classic-ivory": [
+    {
+      "t": 0.12,
+      "text": "Every great collection begins somewhere, and ours begins here."
+    },
+    {
+      "t": 4.23,
+      "text": "Classic Ivory is hand-finished to a soft, warm glow, each glyph cut crisp and filled by hand, set against deep jade lacquer."
+    },
+    {
+      "t": 12.62,
+      "text": "Timeless, and it never goes out of style."
+    }
+  ],
+  "item-tiles-jade": [
+    {
+      "t": 0.12,
+      "text": "Feel the weight of these."
+    },
+    {
+      "t": 2.22,
+      "text": "Imperial Jade is carved from mottled stone, every glyph brushed by hand and a cloud engraved into each back."
+    },
+    {
+      "t": 9.65,
+      "text": "No two tiles carry quite the same markings."
+    },
+    {
+      "t": 12.84,
+      "text": "It is a set people notice from across the room."
+    }
+  ],
+  "item-tiles-obsidian": [
+    {
+      "t": 0.12,
+      "text": "This is one of my favourites."
+    },
+    {
+      "t": 2.46,
+      "text": "Obsidian and Gold is polished volcanic glass, with glyphs laid in real gold leaf and kintsugi veins traced by hand across every back."
+    },
+    {
+      "t": 11.7,
+      "text": "Dramatic, a little dangerous, and utterly unforgettable at the table."
+    }
+  ],
+  "item-tiles-pearl": [
+    {
+      "t": 0.12,
+      "text": "Turn one slowly in the light."
+    },
+    {
+      "t": 2.46,
+      "text": "Mother of Pearl is meticulously cut from iridescent shell, so every face shifts from rose to lilac as it moves, with scalloped backs to match."
+    },
+    {
+      "t": 11.51,
+      "text": "It is the most romantic set in the atelier."
+    }
+  ],
+  "item-tiles-crystal": [
+    {
+      "t": 0.12,
+      "text": "Ice Crystal is pure faceted glass, ground and polished by hand until the glyphs seem to glow from deep inside."
+    },
+    {
+      "t": 7.49,
+      "text": "And listen when they touch: a bright, clear chime."
+    },
+    {
+      "t": 10.87,
+      "text": "It turns every discard into a small moment."
+    }
+  ],
+  "item-tiles-black-marble": [
+    {
+      "t": 0.12,
+      "text": "Carrara and Nero is stone at its noblest."
+    },
+    {
+      "t": 3.44,
+      "text": "The faces are white Carrara, engraved like a monument, and each back is cut from veined black marble."
+    },
+    {
+      "t": 10.21,
+      "text": "Heavy, cool to the touch, and built to outlast all of us."
+    }
+  ],
+  "item-tiles-royal-gold": [
+    {
+      "t": 0.12,
+      "text": "For those who play to win, and want everyone to know it."
+    },
+    {
+      "t": 3.78,
+      "text": "Imperial Gold is fully gilded, with hand-chased filigree corners and an embossed dragon seal on every single back."
+    },
+    {
+      "t": 11.38,
+      "text": "It is the set that makes a statement before you play a tile."
+    }
+  ],
+  "item-tiles-champagne": [
+    {
+      "t": 0.12,
+      "text": "Rose Champagne is pure elegance."
+    },
+    {
+      "t": 2.71,
+      "text": "Blush faces lettered in fine Song calligraphy, rose-gold backs etched with an Art Deco fan."
+    },
+    {
+      "t": 9.01,
+      "text": "It is a set made for long evenings and something sparkling in the glass."
+    }
+  ],
+  "item-tiles-sapphire": [
+    {
+      "t": 0.12,
+      "text": "This is a love letter to the Ming kilns."
+    },
+    {
+      "t": 2.92,
+      "text": "Blue and White Porcelain is hand-painted in deep cobalt beneath a glassy glaze, and every back carries rolling waves drawn stroke by stroke."
+    },
+    {
+      "t": 12.02,
+      "text": "Museum-worthy, and yours to play with."
+    }
+  ],
+  "item-tiles-emerald": [
+    {
+      "t": 0.12,
+      "text": "Malachite and Gold is cut from banded green stone, so no two bodies share the same rings."
+    },
+    {
+      "t": 6.51,
+      "text": "The white faces are framed in hand-laid gold."
+    },
+    {
+      "t": 9.85,
+      "text": "Rich, rare, and quietly magnificent."
+    }
+  ],
+  "item-tiles-cinnabar": [
+    {
+      "t": 0.12,
+      "text": "Cinnabar was once reserved for the imperial court."
+    },
+    {
+      "t": 3.65,
+      "text": "These faces are carved in layer upon layer of red lacquer, the brushwork picked out in gold, on deep black bodies."
+    },
+    {
+      "t": 11.15,
+      "text": "Meticulously crafted, and absolutely regal."
+    }
+  ],
+  "item-tiles-walnut": [
+    {
+      "t": 0.12,
+      "text": "Some people like their tiles warm and honest."
+    },
+    {
+      "t": 3.44,
+      "text": "Walnut and Brass is hand-oiled wood, inlaid with bone and polished brass, and it makes the most satisfying hollow click."
+    },
+    {
+      "t": 11.15,
+      "text": "It ages beautifully, like a good leather chair."
+    }
+  ],
+  "item-tiles-noyer": [
+    {
+      "t": 0.12,
+      "text": "Ah, the masterpiece of the house."
+    },
+    {
+      "t": 2.5,
+      "text": "Noyer and Ivoire fuses ivory faces to solid walnut, and every back is stamped with a gilt sparrow seal by hand."
+    },
+    {
+      "t": 10.51,
+      "text": "It is the set our most devoted members save for."
+    },
+    {
+      "t": 14.14,
+      "text": "Truly, there is nothing finer."
+    }
+  ],
+  "item-tiles-amethyst": [
+    {
+      "t": 0.12,
+      "text": "Amethyst Regalia is pure jewellery."
+    },
+    {
+      "t": 3.12,
+      "text": "Polished amethyst set in a gold bezel, gilt symbols, and a ruby cabochon set into every face."
+    },
+    {
+      "t": 9.72,
+      "text": "Play a hand with these and you are wearing the crown."
+    }
+  ],
+  "item-tiles-gilt-porcelain": [
+    {
+      "t": 0.12,
+      "text": "Gilded Porcelain is delicate, but never fragile."
+    },
+    {
+      "t": 3.74,
+      "text": "Fine white porcelain framed in beaded gilt, on blush backs with a layered resin edge you can feel under your thumb."
+    },
+    {
+      "t": 11.13,
+      "text": "Graceful in every detail."
+    }
+  ],
+  "item-tiles-bone-bamboo": [
+    {
+      "t": 0.12,
+      "text": "These are made the old way."
+    },
+    {
+      "t": 2.33,
+      "text": "Bone and Bamboo pairs hand-carved bone faces dovetailed into bamboo backs, just as the great masters did a century ago."
+    },
+    {
+      "t": 10.64,
+      "text": "For the player who respects where this game comes from."
+    }
+  ],
+  "item-tiles-season-hongkong": [
+    {
+      "t": 0.12,
+      "text": "Harbour Lights is something money cannot buy."
+    },
+    {
+      "t": 3.31,
+      "text": "This set belongs to the Hong Kong season alone, earned on the reward track by those who played it."
+    },
+    {
+      "t": 9.55,
+      "text": "When the season ends, it is gone."
+    }
+  ],
+  "item-tiles-season-tokyo": [
+    {
+      "t": 0.12,
+      "text": "Maple Night is the Tokyo season's own set, washed in autumn colour."
+    },
+    {
+      "t": 5.02,
+      "text": "You will not find it on any shelf; it is earned on the reward track, and only while the season lasts."
+    }
+  ],
+  "item-tiles-season-dubai": [
+    {
+      "t": 0.12,
+      "text": "Desert Rose was made for the Dubai season, in the warm tones of sand and sunset."
+    },
+    {
+      "t": 5.59,
+      "text": "It is never sold."
+    },
+    {
+      "t": 7.5,
+      "text": "Play the season, climb the reward track, and it is yours."
+    }
+  ],
+  "item-tiles-season-taipei": [
+    {
+      "t": 0.12,
+      "text": "Lantern Market carries the glow of a Taipei night."
+    },
+    {
+      "t": 3.74,
+      "text": "It is the Taipei season's own reward, earned at the table and never sold."
+    },
+    {
+      "t": 8.69,
+      "text": "A true collector's piece."
+    }
+  ],
+  "item-tiles-season-singapore": [
+    {
+      "t": 0.12,
+      "text": "Garden City is the Singapore season's own set, lush and green."
+    },
+    {
+      "t": 4.65,
+      "text": "It cannot be bought at any price; it is earned on the reward track, by playing the season."
+    }
+  ],
+  "item-tiles-season-hanoi": [
+    {
+      "t": 0.12,
+      "text": "Lotus Lacquer was crafted for the Hanoi season, in layered lacquer and lotus gold."
+    },
+    {
+      "t": 5.63,
+      "text": "It is earned on the reward track, never sold."
+    },
+    {
+      "t": 8.8,
+      "text": "When it is gone, it is gone."
+    }
+  ],
+  "item-racks-rack-table": [
+    {
+      "t": 0.12,
+      "text": "A perfect match is always in good taste."
+    },
+    {
+      "t": 3.12,
+      "text": "These racks are cut from the very same wood as your table, with a fine brass line inlaid along the lip."
+    },
+    {
+      "t": 9.65,
+      "text": "Everything simply belongs together."
+    }
+  ],
+  "item-racks-rack-walnut": [
+    {
+      "t": 0.12,
+      "text": "Club Walnut is the gentleman's choice."
+    },
+    {
+      "t": 3.1,
+      "text": "Hand-oiled walnut with softly chamfered edges, green baize ledges and solid brass end caps."
+    },
+    {
+      "t": 9.46,
+      "text": "Understated, and beautifully made."
+    }
+  ],
+  "item-racks-rack-rosewood": [
+    {
+      "t": 0.12,
+      "text": "Run your hand along Rosewood and Brass."
+    },
+    {
+      "t": 2.99,
+      "text": "Polished rosewood strung with twin brass lines, and ledges lined in oxblood leather that cradles every tile."
+    },
+    {
+      "t": 10.02,
+      "text": "It feels as good as it looks."
+    }
+  ],
+  "item-racks-rack-trunk": [
+    {
+      "t": 0.12,
+      "text": "Trunk Maker is inspired by the great travelling trunks: walnut and pale beech, forest-green suede and a row of hand-set brass rivets."
+    },
+    {
+      "t": 8.81,
+      "text": "It makes every game feel like the start of a journey."
+    }
+  ],
+  "item-racks-rack-lacquer": [
+    {
+      "t": 0.12,
+      "text": "Black Lacquer and Gold is mirror-polished, coat after coat, then edged in hand-engraved gold, with cinnabar velvet ledges."
+    },
+    {
+      "t": 8.34,
+      "text": "Bold, glossy and very glamorous."
+    }
+  ],
+  "item-racks-rack-pearl": [
+    {
+      "t": 0.12,
+      "text": "Ebony and Mother of Pearl is the jeweller's rack."
+    },
+    {
+      "t": 3.44,
+      "text": "Gloss ebony, inlaid with shimmering shell panels set in silver, on midnight velvet."
+    },
+    {
+      "t": 9.16,
+      "text": "Exquisite in candlelight."
+    }
+  ],
+  "item-racks-rack-jade": [
+    {
+      "t": 0.12,
+      "text": "Zitan and Jade is made from the rarest of woods."
+    },
+    {
+      "t": 3.78,
+      "text": "Dark zitan, carved jade cartouches framed in gold, and jade cabochons crowning each cap."
+    },
+    {
+      "t": 10.08,
+      "text": "A piece for a true connoisseur."
+    }
+  ],
+  "item-racks-rack-gilt": [
+    {
+      "t": 0.12,
+      "text": "And this is fit for an emperor, quite literally."
+    },
+    {
+      "t": 3.22,
+      "text": "Imperial Gilt is solid gilt engraved with drifting clouds, inlaid with jade, studded with rubies and lined in crimson velvet."
+    },
+    {
+      "t": 11.66,
+      "text": "Nothing in the atelier is grander."
+    }
+  ],
+  "item-rooms-private-club": [
+    {
+      "t": 0.12,
+      "text": "Imagine walking in here after dinner."
+    },
+    {
+      "t": 2.82,
+      "text": "The Private Club is all walnut panelling, porcelain on the shelves and a lacquer pendant glowing low over the table."
+    },
+    {
+      "t": 10.0,
+      "text": "Leather, brass and quiet conversation."
+    },
+    {
+      "t": 12.86,
+      "text": "Our members never want to leave."
+    }
+  ],
+  "item-rooms-tokyo": [
+    {
+      "t": 0.12,
+      "text": "Tokyo Neon is my rainy-night favourite."
+    },
+    {
+      "t": 3.39,
+      "text": "A tatami room tucked behind shoji screens, the city's neon shimmering through the rain outside."
+    },
+    {
+      "t": 9.59,
+      "text": "Calm inside, electric beyond the glass."
+    }
+  ],
+  "item-rooms-taipei": [
+    {
+      "t": 0.12,
+      "text": "Step into the Taipei Night Market."
+    },
+    {
+      "t": 2.8,
+      "text": "Red lacquer columns, a moon gate, and strings of lanterns glowing over the street."
+    },
+    {
+      "t": 8.08,
+      "text": "You can almost smell the food stalls."
+    }
+  ],
+  "item-rooms-dubai": [
+    {
+      "t": 0.12,
+      "text": "The Dubai Majlis is hospitality made into a room."
+    },
+    {
+      "t": 4.03,
+      "text": "Carved mashrabiya arches, a hand-laid zellige floor and a pierced brass lantern casting patterns at desert sunset."
+    },
+    {
+      "t": 11.85,
+      "text": "Pure warmth."
+    }
+  ],
+  "item-rooms-new-york": [
+    {
+      "t": 0.12,
+      "text": "Manhattan Loft is for the bold."
+    },
+    {
+      "t": 2.6,
+      "text": "Exposed brick, steel-framed windows, Edison bulbs glowing above a midnight skyline."
+    },
+    {
+      "t": 8.48,
+      "text": "The city never sleeps, and neither will your table."
+    }
+  ],
+  "item-rooms-shanghai": [
+    {
+      "t": 0.12,
+      "text": "Shanghai in the Thirties: black lacquer, gold and a little jazz in the air, with the Bund lit up across the river."
+    },
+    {
+      "t": 7.13,
+      "text": "Glamour from a golden age."
+    }
+  ],
+  "item-rooms-modern-luxury": [
+    {
+      "t": 0.12,
+      "text": "The Sky Penthouse is light itself."
+    },
+    {
+      "t": 2.97,
+      "text": "White marble, walls of glass, and nothing but a calm sea far below."
+    },
+    {
+      "t": 7.63,
+      "text": "Serene, spacious and completely private."
+    }
+  ],
+  "item-rooms-kyoto": [
+    {
+      "t": 0.12,
+      "text": "Kyoto Garden is where I go to breathe."
+    },
+    {
+      "t": 3.22,
+      "text": "An open tea pavilion above a bamboo grove and a maple garden, in soft afternoon light."
+    },
+    {
+      "t": 9.38,
+      "text": "Every game here feels unhurried."
+    }
+  ],
+  "item-rooms-imperial": [
+    {
+      "t": 0.12,
+      "text": "The Forbidden City is the grandest hall we have."
+    },
+    {
+      "t": 3.56,
+      "text": "Vermilion columns, hand-painted beams and gold at every turn."
+    },
+    {
+      "t": 8.05,
+      "text": "Play here, and you are playing in the emperor's own hall."
+    }
+  ],
+  "item-rooms-hk-teahouse": [
+    {
+      "t": 0.12,
+      "text": "The Hong Kong Tea House is full of life."
+    },
+    {
+      "t": 3.05,
+      "text": "Teak booths, green-tiled walls, songbirds in their cages and a slow ceiling fan above a busy street."
+    },
+    {
+      "t": 9.7,
+      "text": "Order a pot and settle in."
+    }
+  ],
+  "item-rooms-tokyo-janso": [
+    {
+      "t": 0.12,
+      "text": "Tokyo Jansō is the real thing, a Shōwa-era parlour."
+    },
+    {
+      "t": 4.1,
+      "text": "Square table lamps, rule boards on the wall, quiet tables and rain against the window."
+    },
+    {
+      "t": 9.78,
+      "text": "For the serious player."
+    }
+  ],
+  "item-rooms-al-fahidi-majlis": [
+    {
+      "t": 0.12,
+      "text": "Al Fahidi Majlis takes you back in time."
+    },
+    {
+      "t": 3.27,
+      "text": "Coral-stone walls, a palm-frond ceiling, sadu cushions and the scent of cardamom coffee."
+    },
+    {
+      "t": 9.14,
+      "text": "Old Dubai at its most welcoming."
+    }
+  ]
+}
