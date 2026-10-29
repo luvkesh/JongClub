@@ -118,11 +118,11 @@ describe('India Rules: the table', () => {
     expect(P.flowers).toBe(true);
     expect(roundOverlay(P, 'indiaEast').specialRound).toBe('indiaEast');
   });
-  it('passes the deal after every game, and keeps it after a draw', async () => {
+  it('passes the deal after every game, a draw too (the user, 2026-10-25)', async () => {
     const { advanceRound } = await import('../src/engine/rounds');
     const r0 = { windIndex: 0, dealerHand: 0, repeat: 0, dealerSeat: 0, handsPlayed: 0, finished: false };
     expect(advanceRound(indiaProfile.rounds, r0, 4, { dealerWon: true, drawn: false }).dealerSeat).toBe(1);
-    expect(advanceRound(indiaProfile.rounds, r0, 4, { dealerWon: false, drawn: true }).dealerSeat).toBe(0);
+    expect(advanceRound(indiaProfile.rounds, r0, 4, { dealerWon: false, drawn: true }).dealerSeat).toBe(1);
   });
   it('AI players finish East-round games and the ledger balances', () => {
     const P = withHouseRules(indiaProfile, {});

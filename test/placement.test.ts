@@ -24,7 +24,7 @@ describe('placement test', () => {
   it('has ten short questions covering every skill asked for', () => {
     expect(PLACEMENT).toHaveLength(10);
     expect(new Set(PLACEMENT.map((q) => q.id)).size).toBe(10);
-    for (const s of ['tiles', 'sets', 'waits', 'discard', 'scoring', 'riichi']) expect(PLACEMENT.some((q) => q.skill === s), s).toBe(true);
+    for (const s of ['tiles', 'sets', 'waits', 'discard', 'scoring', 'calls']) expect(PLACEMENT.some((q) => q.skill === s), s).toBe(true);
     for (const q of PLACEMENT) {
       expect(q.answer).toBeLessThan(q.options.length);
       expect(q.q.length).toBeLessThan(90);
@@ -65,7 +65,7 @@ describe('placement test', () => {
   });
 
   it('only marks a lesson whose questions were all right', () => {
-    const r = gradePlacement(missing('faan', 'wait-multi'));
+    const r = gradePlacement(missing('india-pay', 'wait-multi'));
     expect(r.score).toBe(8);
     expect(r.lessons).toContain('basics');
     expect(r.lessons).toContain('rounds');
@@ -75,7 +75,7 @@ describe('placement test', () => {
   });
 
   it('a low score marks nothing and starts with the guided game, even with the basics right', () => {
-    const r = gradePlacement(missing('terminals', 'dealer', 'wait-two-sided', 'wait-multi', 'best-discard', 'faan'));
+    const r = gradePlacement(missing('terminals', 'dealer', 'wait-two-sided', 'wait-multi', 'best-discard', 'india-pay'));
     expect(r.score).toBe(4);
     expect(r.lessons).toEqual([]);
     expect(r.suggestion).toEqual(suggestionFor(0));

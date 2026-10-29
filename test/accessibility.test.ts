@@ -17,7 +17,7 @@ describe('suit-marked tile index', () => {
 
   it('letters winds and dragons, with the White Dragon distinct from West', () => {
     expect(['E', 'S', 'W', 'N'].map(label)).toEqual(['E', 'S', 'W', 'N']);
-    expect(['Rd', 'Gd', 'Wd'].map(label)).toEqual(['R◆', 'G◆', 'W◆']);
+    expect(['Rd', 'Gd', 'Wd'].map(label)).toEqual(['RED◆', 'GREEN◆', 'WHITE◆']);
   });
 
   it('numbers flowers and seasons by seat, each with its own mark', () => {
@@ -33,10 +33,11 @@ describe('suit-marked tile index', () => {
 
   it('gives every tile kind a short index, and different kinds different indexes', () => {
     const all = Array.from({ length: TILE_KIND_COUNT }, (_, k) => tileIndexLabel(k));
-    for (const l of all) {
+    all.forEach((l, k) => {
       expect(l.length).toBeGreaterThan(0);
-      expect(l.length).toBeLessThanOrEqual(3);
-    }
+      // Dragons are named in full (RED, GREEN, WHITE) so White never reads as West.
+      expect(l.length).toBeLessThanOrEqual(k >= 31 && k <= 33 ? 6 : 3);
+    });
     // Flowers share numbers with suits only through their own marks.
     expect(new Set(all).size).toBe(all.length);
   });

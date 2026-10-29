@@ -44,10 +44,11 @@ import type { LockstepLink } from '../net/lockstep';
 import type { ReplayRecord } from '../net/replay';
 import type { ClaimKind, TutorialCoach } from './coach';
 import { clear, fmt, h, sleep, tileImg } from './dom';
-import { concealedSetIds, openArea, summaryToggle, winHandSection } from './winReveal';
+import { openArea, winTableSets, summaryToggle, winHandSection } from './winReveal';
 import { ALL_HANDS_ICON, allHandsList } from './allHands';
 import { arrangeHand, moveTile, type HandLayout, type HandSlot } from './handOrder';
 import { viewControls } from './viewControls';
+import { startFreeCamera } from './freeCam';
 import { quadrantOf, seatAtQuadrant, seatList, type Quadrant } from '../render/seatLayout';
 import { haptic } from './accessibility';
 import { charlestonPrompt, claimPrompt, hintSpoken, resultSpoken, turnPrompt, votePrompt, withHint, LINES, type Spoken } from './matchLines';
@@ -64,6 +65,9 @@ import { TeaService } from './tea';
 import { diceForVariation } from '../render/sideTables';
 import { andList, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
+import { cardGrip, consoleWidth, dockButton, hudMode, moreSheet, restoreCard, type GridItem, type HudMode } from './matchControls';
+import { applyVolumes, type MusicSettings } from './musicToggle';
+import './matchControls.css';
 
 /** A seat plate's portrait: the 3D figure's head and shoulders, or the flat bust where WebGL is unavailable. */
 const seatPortrait = (a: AvatarSpec) => {
@@ -225,6 +229,28 @@ export class MatchController {
     waits: HTMLElement;
     win: HTMLElement;
   };
+  /** The containers the controls move between as the screen changes shape (arrange()). */
+  private ctl!: {
+    badge: HTMLElement;
+    tools: HTMLElement;
+    more: HTMLElement;
+    hudTop: HTMLElement;
+    statusRow: HTMLElement;
+    actionRow: HTMLElement;
+    bottom: HTMLElement;
+    ppBtn: HTMLElement;
+    quick: HTMLElement;
+    dockBar: HTMLElement;
+    dock: { hand: HTMLElement; bot: HTMLElement; tutor: HTMLElement };
+    con: HTMLElement;
+    conHead: HTMLElement;
+    conBody: HTMLElement;
+    conHand: HTMLElement;
+    conDock: HTMLElement;
+  };
+  private hudMode: HudMode = 'classic';
+  /** Upright screens: JongBot's card is open (from the dock bar). */
+  private botShown = false;
   private resolveHuman?: (fn: () => void) => void;
   /** The open warning before a call that leaves your hand unable to win (callWarning), if any. */
   private callWarn?: HTMLElement;
@@ -403,6 +429,16 @@ export class MatchController {
       this.resync();
     };
     els.autoDraw.onclick = () => this.setAutoDraw(!this.settings.autoDraw);
+    // The passport strip scrolls with a mouse wheel too, not only a swipe.
+    els.pp.addEventListener(
+      'wheel',
+      (e) => {
+        if (this.hudMode === 'console' || Math.abs(e.deltaX) > Math.abs(e.deltaY) || els.pp.scrollWidth <= els.pp.clientWidth) return;
+        els.pp.scrollLeft += e.deltaY;
+        e.preventDefault();
+      },
+      { passive: false },
+    );
     els.group.onclick = () => {
       this.settings.groupSets = !this.settings.groupSets;
       sound.play('click');
@@ -426,29 +462,48 @@ export class MatchController {
     // Reactions plus preset table phrases (src/ui/etiquette.ts); never free text.
     fillEtiquetteBar(reactBar, (code) => (this.sendReaction(code), (reactBar.hidden = true)));
     reactBar.prepend(this.tea.row);
+    // The variation always heads the title, so you know which rules this table plays.
+    const badge = h('div', { class: 'round-badge' }, h('span', { class: 'round-emblem', html: icon('turn') }), h('div', { class: 'round-text' }, h('div', { class: 'round-var' }, tr(VARIATIONS.find((v) => v.id === this.config.variation)?.short ?? this.game.profile.name)), els.round, h('div', { class: 'round-meta' }, els.hand, h('span', { class: 'dot' }, '·'), els.wall), els.extra));
+    const more = h('button', { class: 'icon-btn more-btn', 'aria-label': tr('More options'), 'aria-expanded': 'false', title: tr('More options: rule book, possibilities, score calculator, reactions and settings'), onclick: () => this.toggleMore(reactBar), html: icon('more') });
+    const tools = h(
+      'div',
+      { class: 'hud-tools' },
+      this.game.profile.card ? h('button', { class: 'icon-btn card-btn', 'aria-label': tr('View the card'), title: tr('The card'), onclick: () => this.showCard() }, tr('Card')) : null,
+      this.guide.button,
+      this.calc.button,
+      h('button', { class: 'icon-btn keys-btn', 'aria-label': tr('Keyboard shortcuts'), title: tr('Keyboard shortcuts (?)'), onclick: () => this.showShortcuts(), html: icon('keys') }),
+      usesDubaiCard(this.game.profile) ? h('button', { class: 'icon-btn card-btn', 'aria-label': tr('Open the cheat sheet'), title: tr('Cheat sheet: every scoring line on the Dubai card'), onclick: () => showCheatSheet(this.els.sheet, { scored: this.lastScored, dice: this.game.state.dice }) }, tr('Card')) : null,
+      h('button', { class: 'icon-btn react-toggle', 'aria-label': tr('Reactions'), title: tr('Send a reaction to the table'), onclick: () => (reactBar.hidden = !reactBar.hidden), html: icon('react') }),
+      this.hooks.musicButton?.() ?? null,
+      this.hooks.openLabs ? labsButton(() => this.hooks.openLabs!(), 'icon-btn labs-btn settings-btn') : null,
+      h('button', { class: 'icon-btn settings-btn', 'aria-label': tr('Settings'), title: tr('Settings: sound, tile calls, spoken help and hand sorting'), onclick: () => this.hooks.openSettings(), html: icon('settings') }),
+      // Everything that isn't on the bar folds into the More options grid.
+      more,
+      h('button', { class: 'icon-btn', 'aria-label': tr('Leave table'), title: tr('Leave the table'), onclick: () => this.confirmLeave(), html: icon('close') }),
+    );
+    const hudTop = h('div', { class: 'hud-top' }, badge, tools);
+    const statusRow = h('div', { class: 'status-row' }, els.status, els.waits, els.sort, els.group, els.autoDraw, els.pp);
+    const actionRow = h('div', { class: 'action-row' }, els.timer, els.actions);
+    const bottom = h('div', { class: 'bottom' }, els.bot, statusRow, actionRow, els.tray);
+    // Upright screens: the passport you are aiming for, as a pill that opens every possibility.
+    const ppBtn = h('button', { type: 'button', class: 'sort-btn pp-btn', onclick: () => this.showPossibilities() });
+    const quick = h('div', { class: 'quick-row' });
+    const dHand = dockButton('db-hand', 'person', tr('Your hand'), () => this.calc.toggle(true));
+    const dBot = dockButton('db-bot', 'robot', tr('JongBot'), () => this.toggleBotCard());
+    const dTutor = this.opts.coach
+      ? dockButton('db-tutor', 'lesson', tr('Tutor'), () => this.toggleTutor())
+      : dockButton('db-tutor', 'book', tr('Rules'), () => this.guide.toggle());
+    const dMore = dockButton('db-more', 'more', tr('More'), () => this.toggleMore(reactBar));
+    const dockBar = h('nav', { class: 'dock-bar', 'aria-label': tr('Table controls') }, dHand.el, dBot.el, dTutor.el, dMore.el);
+    // Wide screens: the side console (see matchControls.ts).
+    const conHead = h('div', { class: 'con-head' });
+    const conHand = h('section', { class: 'con-sec con-hand' }, h('h3', { class: 'con-cap' }, tr('Your hand')));
+    const conBody = h('div', { class: 'con-body' }, conHand);
+    const conDock = h('div', { class: 'con-dock' });
+    const con = h('aside', { class: 'match-console', 'aria-label': tr('Table console') }, conHead, conBody, conDock);
+    this.ctl = { badge, tools, more, hudTop, statusRow, actionRow, bottom, ppBtn, quick, dockBar, dock: { hand: dHand.sub, bot: dBot.sub, tutor: dTutor.sub }, con, conHead, conBody, conHand, conDock };
     r.append(
-      h(
-        'div',
-        { class: 'hud-top' },
-        // The variation always heads the title, so you know which rules this table plays.
-        h('div', { class: 'round-badge' }, h('span', { class: 'round-emblem', html: icon('turn') }), h('div', { class: 'round-text' }, h('div', { class: 'round-var' }, tr(VARIATIONS.find((v) => v.id === this.config.variation)?.short ?? this.game.profile.name)), els.round, h('div', { class: 'round-meta' }, els.hand, h('span', { class: 'dot' }, '·'), els.wall), els.extra)),
-        h(
-          'div',
-          { class: 'hud-tools' },
-          this.game.profile.card ? h('button', { class: 'icon-btn card-btn', 'aria-label': tr('View the card'), title: tr('The card'), onclick: () => this.showCard() }, tr('Card')) : null,
-          this.guide.button,
-          this.calc.button,
-          h('button', { class: 'icon-btn keys-btn', 'aria-label': tr('Keyboard shortcuts'), title: tr('Keyboard shortcuts (?)'), onclick: () => this.showShortcuts(), html: icon('keys') }),
-          usesDubaiCard(this.game.profile) ? h('button', { class: 'icon-btn card-btn', 'aria-label': tr('Open the cheat sheet'), title: tr('Cheat sheet: every scoring line on the Dubai card'), onclick: () => showCheatSheet(this.els.sheet, { scored: this.lastScored, dice: this.game.state.dice }) }, tr('Card')) : null,
-          h('button', { class: 'icon-btn react-toggle', 'aria-label': tr('Reactions'), title: tr('Send a reaction to the table'), onclick: () => (reactBar.hidden = !reactBar.hidden), html: icon('react') }),
-          this.hooks.musicButton?.() ?? null,
-          this.hooks.openLabs ? labsButton(() => this.hooks.openLabs!(), 'icon-btn labs-btn settings-btn') : null,
-          h('button', { class: 'icon-btn settings-btn', 'aria-label': tr('Settings'), title: tr('Settings: sound, tile calls, spoken help and hand sorting'), onclick: () => this.hooks.openSettings(), html: icon('settings') }),
-          // Phones: view, sorting, reactions and settings fold into one menu, so the table stays clear.
-          h('button', { class: 'icon-btn more-btn', 'aria-label': tr('Table menu'), 'aria-expanded': 'false', title: tr('View, sorting, reactions and settings'), onclick: (e: Event) => this.toggleDrawer(e.currentTarget as HTMLElement, reactBar), html: icon('more') }),
-          h('button', { class: 'icon-btn', 'aria-label': tr('Leave table'), title: tr('Leave the table'), onclick: () => this.confirmLeave(), html: icon('close') }),
-        ),
-      ),
+      hudTop,
       reactBar,
       // Zoom and tilt: on the left edge on wide screens, top right on phones, clear of the hand and plates.
       views,
@@ -457,13 +512,19 @@ export class MatchController {
       this.guide.panel,
       this.calc.panel,
       // JongBot lives in the bottom stack so on phones it sits above your tiles, never over the table.
-      h('div', { class: 'bottom' }, els.bot, h('div', { class: 'status-row' }, els.status, els.waits, els.sort, els.group, els.autoDraw, els.pp), h('div', { class: 'action-row' }, els.timer, els.actions), els.tray),
+      bottom,
       els.toast,
       els.win,
       els.overlay,
       els.sheet,
       ...(this.opts.coach ? [this.opts.coach.el] : []),
+      con,
     );
+    // Mei's guide moves by its grip like JongBot's card.
+    const coachEl = this.opts.coach?.el;
+    coachEl?.querySelector('.coach-head')?.prepend(cardGrip(coachEl, () => `coach.${this.hudMode}`, () => this.placeDock()));
+    coachEl?.addEventListener('coach-tuck', () => this.refreshDock());
+    this.arrange(true);
     // Hover (or tap) a player's plate to see their discards in order.
     seats.forEach((el, rel) => {
       const seat = seatAtQuadrant(rel as Quadrant, this.me, this.n);
@@ -491,49 +552,219 @@ export class MatchController {
     window.addEventListener('keydown', this.onKey);
   }
 
-  /** The compact table menu (narrow screens): view controls, hand sorting, reactions, shortcuts and settings. */
-  private toggleDrawer(btn: HTMLElement, reactBar: HTMLElement) {
-    const open = this.root.querySelector('.hud-drawer');
+  /**
+   * Put the controls where this screen shape wants them (matchControls.ts): the side console on wide
+   * screens, the header plate, hand tools and dock bar on upright ones, the floating layout otherwise.
+   */
+  private arrange(first = false) {
+    const c = this.ctl;
+    const e = this.els;
+    const r = this.root;
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const mode = hudMode(W, H);
+    const cw = mode === 'console' ? consoleWidth(W, H) : 0;
+    const changed = first || mode !== this.hudMode;
+    this.hudMode = mode;
+    if (changed) {
+      r.classList.remove('mode-phone', 'mode-console', 'mode-classic');
+      r.classList.add(`mode-${mode}`);
+      if (mode === 'console') {
+        c.conHead.append(c.tools);
+        c.conBody.prepend(c.badge, e.last);
+        c.conHand.append(e.status, e.waits, h('div', { class: 'con-tools' }, e.sort, e.group, e.autoDraw));
+        c.conBody.append(e.pp);
+        c.quick.remove();
+        c.dockBar.remove();
+      } else {
+        c.hudTop.append(c.badge, c.tools);
+        r.insertBefore(e.last, this.guide.panel);
+        c.statusRow.append(e.status, e.waits, e.sort, e.group, e.autoDraw, e.pp);
+        c.conHand.querySelector('.con-tools')?.remove();
+        if (mode === 'phone') {
+          c.quick.append(e.sort, c.ppBtn, e.group, e.autoDraw);
+          c.bottom.append(c.quick, c.dockBar);
+        } else {
+          c.quick.remove();
+          c.dockBar.remove();
+        }
+      }
+      restoreCard(e.bot, `bot.${mode}`);
+      if (this.opts.coach) restoreCard(this.opts.coach.el, `coach.${mode}`);
+      if (!first) this.renderHint(this.lastHint);
+    }
+    // The table narrows to make room for the console.
+    const body = document.body;
+    body.classList.toggle('with-console', mode === 'console');
+    if (body.style.getPropertyValue('--console-w') !== `${cw}px`) {
+      body.style.setProperty('--console-w', `${cw}px`);
+      this.table.resize();
+    }
+    this.refreshDock();
+  }
+
+  /** Give the whole screen back to the table (the match is over or left). */
+  private releaseStage() {
+    const body = document.body;
+    if (!body.classList.contains('with-console')) return;
+    body.classList.remove('with-console');
+    body.style.removeProperty('--console-w');
+    this.table.resize();
+  }
+
+  /** The second lines of the dock bar: your hand's state, JongBot's advice, Mei's guide. */
+  private refreshDock() {
+    const c = this.ctl;
+    if (!c) return;
+    const st = this.els.status.textContent ?? '';
+    c.dock.hand.textContent = st.replace(/^[^:：]*[:：]\s*/, '') || tr('Tap for its score');
+    const hint = this.lastHint;
+    c.dock.bot.textContent = !this.hintsOn ? tr('Tap for hints') : hint ? hint.headline : tr('Suggests next move');
+    c.dockBar.querySelector('.db-bot')?.classList.toggle('on', this.botShown && !!hint);
+    const coach = this.opts.coach?.el;
+    if (coach) {
+      const away = coach.hidden || coach.classList.contains('tucked');
+      c.dock.tutor.textContent = away ? tr('Show Mei’s guide') : tr('Mei’s guide is open');
+      c.dockBar.querySelector('.db-tutor')?.classList.toggle('on', !away);
+    } else c.dock.tutor.textContent = tr('How to win and score');
+  }
+
+  /** Upright screens: JongBot's card opens from the dock bar (and closes again). */
+  private toggleBotCard(force?: boolean) {
+    const show = force ?? !this.botShown;
+    if (show && !this.hintsOn) (this.hintsOn = true), this.resync();
+    this.botShown = show;
+    if (show) this.botOpen = true;
+    sound.play('click');
+    this.renderHint(this.lastHint);
+    this.refreshDock();
+  }
+
+  /** The Tutor button: Mei's guide out of her portrait, or back into it. */
+  private toggleTutor() {
+    const coach = this.opts.coach?.el;
+    if (!coach) return;
+    if (coach.classList.contains('tucked')) coach.querySelector<HTMLElement>('button.narrator')?.click();
+    else coach.querySelector<HTMLElement>('.coach-hide')?.click();
+    this.refreshDock();
+  }
+
+  /** The More options grid: everything that isn't on the bar, as round icon buttons (all screen sizes). */
+  private toggleMore(reactBar: HTMLElement) {
+    const btn = this.ctl.more;
+    const open = this.root.querySelector('.more-wrap');
     if (open) {
       open.remove();
       btn.setAttribute('aria-expanded', 'false');
       return;
     }
     const close = () => {
-      d.remove();
+      wrap.remove();
       btn.setAttribute('aria-expanded', 'false');
     };
-    const item = (label: string, act: () => void, on?: boolean) =>
-      h('button', { class: `drawer-item ${on ? 'on' : ''}`, onclick: () => (act(), close()) }, label);
+    const touch = matchMedia('(pointer: coarse)').matches;
+    const kit = this.kit();
+    const music = this.hooks.musicButton?.() as HTMLButtonElement | undefined;
     const by = this.settings.sort === 'suit' ? tr('by suit') : tr('by number');
-    const d = h(
-      'div',
-      { class: 'hud-drawer', role: 'menu' },
-      h('div', { class: 'drawer-sec' }, h('span', { class: 'drawer-cap' }, tr('View')), viewControls(this.table)),
-      h(
-        'div',
-        { class: 'drawer-sec drawer-grid' },
-        item(this.customOrder ? tr('Sort: your order ↺') : tr('Sort: {by}', { by }), () => this.els.sort.click()),
-        item(this.settings.groupSets ? tr('Sets grouped ✓') : tr('Group sets'), () => this.els.group.click(), !!this.settings.groupSets),
-        item(this.settings.autoDraw ? tr('Auto-draw: on ✓') : tr('Auto-draw: off'), () => this.setAutoDraw(!this.settings.autoDraw), !!this.settings.autoDraw),
-        item(tr('Reactions ☺'), () => (reactBar.hidden = false)),
-        ...(this.spectator ? [] : [item(`${tr('Pass tea')} 🍵`, () => (reactBar.hidden = false))]),
-        h('button', { class: 'drawer-item calc-item', onclick: () => (close(), this.calc.toggle(true)), html: `${CALC_ICON}<span>${tr('Score calculator')}</span>` }),
-        item(tr('Settings ⚙'), () => this.hooks.openSettings()),
-        this.hooks.openLabs && dev.enabled ? item('Labs ⚗', () => this.hooks.openLabs!()) : null,
-      ),
-    );
-    this.root.append(d);
+    const items: (GridItem | null)[] = [
+      { label: tr('Rule book'), icon: 'book', act: () => this.guide.toggle(true) },
+      kit && !this.spectator ? { label: tr('Possibilities'), icon: 'target', act: () => this.showPossibilities() } : null,
+      { label: tr('Score calc'), icon: CALC_ICON, act: () => this.calc.toggle(true) },
+      this.game.profile.card ? { label: tr('The card'), icon: 'card', act: () => this.showCard() } : null,
+      usesDubaiCard(this.game.profile) ? { label: tr('Cheat sheet'), icon: 'card', act: () => showCheatSheet(this.els.sheet, { scored: this.lastScored, dice: this.game.state.dice }) } : null,
+      touch ? null : { label: tr('Shortcuts'), icon: 'keys', act: () => this.showShortcuts() },
+      { label: tr('Emoji'), icon: 'react', act: () => (reactBar.hidden = false) },
+      { label: this.muted ? tr('Unmute') : tr('Mute'), icon: this.muted ? 'speakerOff' : 'speaker', on: this.muted, act: () => this.setMuted(!this.muted) },
+      music ? { label: tr('Music'), icon: music.classList.contains('off') ? 'musicOff' : 'music', on: !music.classList.contains('off'), act: () => music.click() } : null,
+      this.hudMode === 'console' ? null : { label: this.customOrder ? tr('Sort: your order ↺') : tr('Sort: {by}', { by }), icon: 'sort', act: () => this.els.sort.click() },
+      kit ? null : { label: this.settings.groupSets ? tr('Sets grouped ✓') : tr('Group sets'), icon: 'group', on: !!this.settings.groupSets, act: () => this.els.group.click() },
+      this.hooks.openLabs && dev.enabled ? { label: tr('Labs'), icon: 'labs', act: () => this.hooks.openLabs!() } : null,
+      { label: tr('Settings'), icon: 'settings', act: () => this.hooks.openSettings() },
+      { label: tr('Close game'), icon: 'close', act: () => this.confirmLeave() },
+    ];
+    const view = h('div', { class: 'more-view' }, h('span', { class: 'more-cap' }, tr('View')), viewControls(this.table));
+    const sheet = moreSheet(items.filter((x): x is GridItem => !!x), view, close);
+    const wrap = h('div', { class: 'more-wrap', onclick: (e: Event) => e.target === wrap && close() }, sheet);
+    wrap.addEventListener('keydown', (e) => e.key === 'Escape' && close());
+    this.root.append(wrap);
     btn.setAttribute('aria-expanded', 'true');
-    // A tap anywhere else closes it.
-    const away = (e: PointerEvent) => {
-      if (!d.isConnected) return document.removeEventListener('pointerdown', away, true);
-      if (!d.contains(e.target as Node) && e.target !== btn) {
-        close();
-        document.removeEventListener('pointerdown', away, true);
+    // Keyboard users start on the first button; a tap doesn't leave a focus ring on it.
+    if (!matchMedia('(pointer: coarse)').matches) sheet.querySelector<HTMLElement>('.more-close')?.focus({ preventScroll: true });
+  }
+
+  /** Every table sound off at once (tile sounds, callers, music and the room); Mei and spoken help stay as set. */
+  private muted = false;
+  private setMuted(on: boolean) {
+    this.muted = on;
+    if (on) sound.setVolumes({ effects: 0, music: 0, ambient: 0 });
+    else {
+      const s = this.settings as Settings & Partial<MusicSettings>;
+      if (s.volumes) applyVolumes(s as MusicSettings);
+      else sound.setVolumes({ effects: 1, music: 1, ambient: 1 });
+    }
+  }
+
+  /** Every target hand you can still make (the passports in the East round), in a list that scrolls; tap one to aim for it. */
+  private showPossibilities() {
+    const kit = this.kit();
+    if (!kit) return;
+    const o = this.els.sheet;
+    const list = h('div', { class: 'poss-list' });
+    const paint = () => {
+      clear(list);
+      const plans = this.game.state.phase.kind === 'handOver' ? [] : this.targetPlansNow();
+      const chosen = this.targetPlan();
+      if (!plans.length) list.append(h('p', { class: 'muted' }, tr('Nothing to aim for yet: the possibilities show once your tiles are dealt.')));
+      for (const p of plans) {
+        const on = chosen?.key === p.key;
+        const tiles = h('div', { class: 'poss-tiles' });
+        p.pieces.forEach((piece, i) => {
+          const g = h('span', { class: 'poss-piece' });
+          piece.forEach((k, j) => {
+            const img = tileImg(k, 'mini', this.settings.labels);
+            if (j >= piece.length - p.gaps[i]) img.classList.add('need');
+            g.append(img);
+          });
+          tiles.append(g);
+        });
+        list.append(
+          h(
+            'button',
+            {
+              type: 'button',
+              class: `poss-row${on ? ' on' : ''}`,
+              'aria-pressed': String(on),
+              onclick: () => {
+                this.ppChoice = p.key;
+                if (!this.settings.groupSets) (this.settings.groupSets = true), this.hooks.saveSettings?.();
+                sound.play('click');
+                this.pushLayout();
+                this.resync();
+                paint();
+              },
+            },
+            h('span', { class: 'poss-top' }, h('b', { class: 'poss-name' }, passportNames(p.names)), h('span', { class: 'poss-away' }, passportAway(p.missing - 1))),
+            p.note ? h('span', { class: 'poss-note' }, tr(p.note)) : null,
+            p.pieces.length ? tiles : null,
+          ),
+        );
       }
     };
-    document.addEventListener('pointerdown', away, true);
+    paint();
+    const on = !!this.settings.groupSets;
+    clear(o).hidden = false;
+    o.append(
+      h(
+        'div',
+        { class: 'card poss-sheet', role: 'dialog', 'aria-label': tr(kit.chip) },
+        h('p', { class: 'eyebrow' }, tr(kit.chip)),
+        h('h2', {}, tr('Possibilities')),
+        h('p', { class: 'muted small' }, tr('Every hand you can still make. Tap to choose one.')),
+        h('button', { type: 'button', class: `sort-btn group-btn${on ? ' on' : ''}`, 'aria-pressed': String(on), onclick: () => (this.els.group.click(), this.showPossibilities()), html: icon('group') + `<span>${on ? tr(kit.groupOn) : tr(kit.groupOff)}</span>` }),
+        list,
+        h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Back to the table'))),
+      ),
+    );
   }
 
   /** A player's discards, oldest first (claimed tiles are gone from the river); with `score`, what the hand is worth now above them. */
@@ -675,11 +906,11 @@ export class MatchController {
       if (this.cardSetsFor?.key !== key) this.cardSetsFor = { key, sets: c === undefined ? { pungs: new Set(), chows: new Set() } : cardSets(SMALL_CARDS[c], st.seatWinds[this.me], st.prevailingWind) };
       layout.only = this.cardSetsFor.sets;
     }
-    // India Rules passport rounds: crochets and mixed chows group too.
-    if (p.passportView && !this.spectator) layout.indiaSets = true;
+    // India Rules East round and Classic: crochets and mixed chows group too.
+    if ((p.mixedSets || p.passportView) && !this.spectator) layout.indiaSets = true;
     // A round with a target hand (a passport, a card hand, a yaku...): the one you chose (JongBot's
     // nearest until you pick one) is set aside first, piece by piece.
-    const plan = this.spectator || !this.settings.groupSets ? null : this.targetPlan();
+    const plan = this.spectator || !this.settings.groupSets ? null : this.setAsidePlan();
     if (plan?.pieces.length) layout.groups = plan.pieces.flatMap((piece, i) => (plan.fromMeld[i] ? [] : [piece.slice(0, piece.length - plan.gaps[i])]));
     return layout;
   }
@@ -707,6 +938,13 @@ export class MatchController {
     const plans = this.targetPlansNow();
     return plans.find((p) => p.key === this.ppChoice) ?? plans[0] ?? null;
   }
+  /** The target set aside on your rack. With the passport optional, a passport is set aside only when
+   *  you pick one or it is complete, so a half-made one doesn't split your crochets and other sets. */
+  private setAsidePlan(): TargetPlan | null {
+    const plan = this.targetPlan();
+    if (!plan || !this.game.profile.passportOptional || plan.key === this.ppChoice) return plan;
+    return plan.gaps.every((g) => g === 0) ? plan : null;
+  }
 
   /** A gold edge on your tiles in the target set aside, and a red edge on tiles that could feed a target
    *  another player is showing, or that JongBot rates high risk against a ready-looking hand (while
@@ -717,7 +955,7 @@ export class MatchController {
     t.ppIds.clear();
     t.riskKinds.clear();
     if (this.spectator || g.state.phase.kind === 'handOver') return;
-    const plan = this.settings.groupSets ? this.targetPlan() : null;
+    const plan = this.settings.groupSets ? this.setAsidePlan() : null;
     if (plan?.pieces.length) {
       const left = new Map<number, number>();
       plan.pieces.forEach((piece, i) => !plan.fromMeld[i] && piece.slice(0, piece.length - plan.gaps[i]).forEach((k) => left.set(k, (left.get(k) ?? 0) + 1)));
@@ -741,6 +979,18 @@ export class MatchController {
     const kit = this.kit();
     const plans = kit && this.settings.groupSets && this.game.state.phase.kind !== 'handOver' ? this.targetPlansNow().filter((p) => p.pieces.length) : [];
     row.hidden = !plans.length;
+    // The phone pill: the target you're aiming for; it opens every possibility.
+    const pill = this.ctl?.ppBtn;
+    if (pill) {
+      const live = !!kit && !this.spectator && this.game.state.phase.kind !== 'handOver' && this.targetPlansNow().length > 0;
+      pill.hidden = !live;
+      if (live) {
+        const aim = this.settings.groupSets ? this.targetPlan() : null;
+        pill.innerHTML = icon('grid');
+        pill.append(h('span', { class: 'pp-btn-text' }, aim ? `${tr(kit!.chip)}: ${passportNames(aim.names)}` : tr('Possibilities')));
+        pill.title = tr('Every hand you can still make. Tap to choose one.');
+      }
+    }
     if (!kit || !plans.length) return;
     const chosen = this.targetPlan();
     row.setAttribute('aria-label', tr(kit.chip));
@@ -861,6 +1111,8 @@ export class MatchController {
     const coach = this.opts.coach?.el;
     const el = this.els.last;
     el.style.left = el.style.right = el.style.transform = '';
+    // The console holds the card in its own column.
+    if (this.hudMode === 'console') return void (el.style.top = '');
     const wide = matchMedia('(min-height: 501px) and (min-aspect-ratio: 85/100)').matches;
     // Wide tables: tucked under the round title (whose height varies with dora and bonus rows); the view buttons follow below.
     const corner = () => {
@@ -1008,6 +1260,7 @@ export class MatchController {
     this.aborted = true;
     this.closeCallWarning(false);
     window.removeEventListener('resize', this.onResize);
+    this.releaseStage();
     callers.stop();
     window.clearTimeout(this.spoken.timer);
     this.opts.link?.close();
@@ -1147,6 +1400,7 @@ export class MatchController {
     const st = pre ? '' : this.asSeen(() => handStatus(this.game, this.me));
     this.els.status.textContent = st ? tr('Your hand: {status}', { status: st }) : '';
     this.renderWaits();
+    this.refreshDock();
   }
 
   /** The latest discard by someone else, while it can still be claimed or has just landed: your matching tiles get a soft cue. */
@@ -1226,6 +1480,7 @@ export class MatchController {
   private onResize = () => {
     if (this.aborted) return window.removeEventListener('resize', this.onResize);
     if (this.table.tray !== this.trayCompact) this.renderTray();
+    this.arrange();
     this.placeDock();
     this.guide.place();
     this.calc.place();
@@ -1386,9 +1641,19 @@ export class MatchController {
     this.unstackPlates();
     if (upright) this.clearSidePlates();
     let vars: Record<string, string>;
-    if (upright) {
+    if (this.hudMode === 'console' && this.ctl) {
+      // The console: JongBot and Mei stand at its foot (unless moved), and its contents scroll above them.
+      const cw = parseFloat(getComputedStyle(document.body).getPropertyValue('--console-w')) || 300;
+      const head = this.ctl.conHead.getBoundingClientRect().bottom || 70;
+      vars = { '--dock-bottom': '14px', '--dock-w': `${Math.round(cw - 28)}px`, '--dock-h': `${Math.round(H * 0.42)}px`, '--dock-tall': `${Math.round(Math.max(160, H - head - 28))}px` };
+      const docked = [this.els.bot, this.opts.coach?.el].filter((el): el is HTMLElement => !!el && !el.hidden && el.offsetParent !== null && !el.classList.contains('floating') && getComputedStyle(el).display !== 'none');
+      const tall = Math.max(0, ...docked.map((el) => el.getBoundingClientRect().height));
+      const want = tall ? `${Math.round(tall + 20)}px` : '0px';
+      if (this.ctl.conDock.style.height !== want) this.ctl.conDock.style.height = want;
+    } else if (upright) {
       // Mei's guide sits under the tray on upright screens (match.css): the bottom stack makes room for it.
-      const coach = this.opts.coach?.el;
+      // With the dock bar (phone layout) she floats above your tiles instead, like JongBot's card.
+      const coach = this.hudMode === 'phone' ? null : this.opts.coach?.el;
       const space = coach && !coach.hidden && coach.isConnected && !coach.classList.contains('tucked') ? coach.offsetHeight + 6 : 0;
       if (hud.style.getPropertyValue('--coach-space') !== `${space}px`) hud.style.setProperty('--coach-space', `${space}px`);
       // The rivers keep out from under the side plates and the last-discard chip (TableRenderer.keepOut).
@@ -1397,6 +1662,9 @@ export class MatchController {
         .map((e) => e.getBoundingClientRect())
         .filter((b) => b.width > 0)
         .map((b) => ({ l: b.left - 4, t: b.top - 4, r: b.right + 4, b: b.bottom + 4 }));
+      // The phone header plate's foot: the plates and the last-discard chip start below it (matchControls.css).
+      const headB = `${Math.round(visible(hud.querySelector('.hud-top'))?.bottom ?? 90)}px`;
+      if (hud.style.getPropertyValue('--head-b') !== headB) hud.style.setProperty('--head-b', headB);
       const across = visible(hud.querySelector('.seat-2')) ?? visible(hud.querySelector('.hud-top'));
       const talkTop = `${Math.round((across?.bottom ?? 120) + 6)}px`;
       if (hud.style.getPropertyValue('--talk-top') !== talkTop) hud.style.setProperty('--talk-top', talkTop);
@@ -1429,7 +1697,7 @@ export class MatchController {
       this.dockKey = key;
       for (const [k, v] of Object.entries(vars)) hud.style.setProperty(k, v);
     }
-    if (!upright) this.liftRightPlate();
+    if (!upright && this.hudMode !== 'console') this.liftRightPlate();
     this.levelSidePlates(upright);
     this.measureBottomClear();
   }
@@ -1642,7 +1910,8 @@ export class MatchController {
   /** Compute and show a hint, keeping the recipe so the What / Why / Analyse tabs can redo it. */
   private showHint<T extends Hint | null>(src: (d: HintDepth) => T): T {
     this.hintSrc = src;
-    this.botOpen = false;
+    // A card opened from the dock bar stays open, in full, until you close it.
+    this.botOpen = this.hudMode === 'phone' && this.botShown;
     const hint = src(this.settings.hintDepth);
     this.renderHint(hint);
     return hint;
@@ -1688,6 +1957,7 @@ export class MatchController {
   private renderHint(hint: Hint | null) {
     this.lastHint = hint;
     if (!hint) this.hintSrc = null;
+    this.refreshDock();
     const bot = clear(this.els.bot);
     this.table.hintKind = null;
     if (!hint) {
@@ -1695,6 +1965,15 @@ export class MatchController {
       return;
     }
     bot.hidden = false;
+    // Upright screens: the dock bar carries the advice; the card opens from its JongBot button.
+    const phone = this.hudMode === 'phone';
+    if (phone && !this.botShown) {
+      bot.hidden = true;
+      if (this.hintsOn) this.table.hintKind = hint.focusKind ?? null;
+      return;
+    }
+    const grip = () => cardGrip(bot, () => `bot.${this.hudMode}`, () => this.placeDock());
+    const shut = () => (phone ? h('button', { type: 'button', class: 'bot-close', title: tr('Close'), 'aria-label': tr('Close'), onclick: () => this.toggleBotCard(false), html: icon('close') }) : null);
     if (!this.hintsOn) {
       bot.classList.add('collapsed');
       bot.append(h('button', { class: 'bot-open', onclick: () => ((this.hintsOn = true), this.renderHint(hint), this.resync()) }, h('span', { class: 'bot-mark' }, '◆'), tr('JongBot')));
@@ -1716,6 +1995,7 @@ export class MatchController {
         h(
           'div',
           { class: 'bot-row' },
+          grip(),
           h(
             'button',
             { type: 'button', class: 'bot-more', 'aria-expanded': 'false', title: tr('More from JongBot: why, analysis and options'), onclick: () => ((this.botOpen = true), this.renderHint(hint)) },
@@ -1724,6 +2004,7 @@ export class MatchController {
             hint.warning ? h('span', { class: 'bot-warn-dot', title: hint.warning, 'aria-label': hint.warning }, '!') : null,
           ),
           h('button', { type: 'button', class: 'bot-say', title: tr('Read this hint aloud'), 'aria-label': tr('Read this hint aloud'), onclick: speak, html: icon('speaker') }),
+          shut(),
         ),
       );
       return;
@@ -1733,9 +2014,11 @@ export class MatchController {
       h(
         'div',
         { class: 'bot-head' },
+        grip(),
         h('span', { class: 'bot-mark' }, '◆'),
         tr('JongBot'),
         h('button', { type: 'button', class: 'bot-less', 'aria-expanded': 'true', title: tr('Back to one line'), 'aria-label': tr('Back to one line'), onclick: () => ((this.botOpen = false), this.renderHint(hint)), html: icon('chevronDown') }),
+        shut(),
       ),
       this.hintTabs(depth),
       h('p', { class: 'bot-line', dir: 'auto' }, hint.headline),
@@ -3023,13 +3306,22 @@ export class MatchController {
 
   // ------------------------------------------------------------ results
 
+  /** How the winning tile came, for the hand summary: self-drawn, or whose discard. */
+  winFrom(r: HandResult): { selfDrawn: boolean; from?: string; yours?: boolean } | undefined {
+    if (r.type !== 'win') return undefined;
+    if (r.discarder === null || r.discarder === undefined) return { selfDrawn: true };
+    return { selfDrawn: false, from: r.discarder === this.me ? undefined : this.game.players[r.discarder].name, yours: r.discarder === this.me };
+  }
+
   private async showHandResult(r: HandResult, over: boolean, label: string) {
     const g = this.game;
     const t = this.table;
     const winner = r.winner;
     this.table.matchKind = null;
     // The winner's concealed tiles part into the sets they make, the winning tile marked (winReveal.ts).
-    const winSets = r.type === 'win' && winner !== undefined ? concealedSetIds(g.players[winner].hand) : undefined;
+    // In the summary's order: India Rules East round reads passports first, then the sets with them and the pair.
+    const winHand = winner !== undefined ? r.revealedHand ?? g.players[winner].hand : [];
+    const winSets = r.type === 'win' && winner !== undefined ? winTableSets(winHand, g.profile.passportView?.(winHand, r.revealedMelds ?? g.players[winner].melds)) : undefined;
     t.layout(g.state, { reveal: seatList(this.n), winner, winLift: r.type === 'win', winSets, winTileId: r.winTile?.id });
     this.refreshHud();
     this.els.status.textContent = '';
@@ -3074,6 +3366,9 @@ export class MatchController {
     clear(o).hidden = false;
     // The summary has the table to itself: no close-up strip of your hand (and its frame lines) behind it.
     t.splitPaused = true;
+    // Every hand is face up now: the player can take the camera and look around the table.
+    o.classList.add('free-cam');
+    const endFreeCam = startFreeCamera(t, o);
     const card = h('div', { class: 'card hand-result' });
     if (r.type === 'win' && winner !== undefined && r.score) {
       const s = r.score;
@@ -3083,7 +3378,7 @@ export class MatchController {
       this.speak(resultSpoken(this.rel(winner), `${headline}, for ${fmt(s.points)} points.`));
       const wh = r.revealedHand ?? [];
       const wm = r.revealedMelds ?? [];
-      card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm) }));
+      card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm), winFrom: this.winFrom(r) }));
       const items = h('ul', { class: 'score-items' });
       for (const it of s.items) items.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
       const summary = `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;
@@ -3192,7 +3487,8 @@ export class MatchController {
       this.resolveHuman = () => resolve();
     });
     o.hidden = true;
-    o.classList.remove('win-sheet', 'peek');
+    o.classList.remove('win-sheet', 'peek', 'free-cam');
+    endFreeCam();
     t.splitPaused = false;
     if (!over) t.setView('seat', 0.8);
   }
@@ -3320,6 +3616,7 @@ export class MatchController {
     this.opts.link?.close();
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
+    this.releaseStage();
     this.hooks.onFinished(summary, standings, insight, replay);
   }
 }

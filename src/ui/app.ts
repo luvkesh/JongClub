@@ -312,6 +312,8 @@ export class App {
     this.guidedTheme = theme;
     this.settings.hintDepth = 'learning';
     const base = variation === 'classic' ? DEFAULT_TABLE : tableFor(variation);
+    // India Rules is played in its Classic style for a first hand with Mei: the East round's game, no passports.
+    if (variation === 'india') base.houseRules = { ...base.houseRules, indiaRounds: 'C' };
     this.startMatch({ ...base, name: tr('Guided Game'), length: 'oneHand', difficulty: 'beginner', personalities: ['teacher', 'zen', 'teacher'], hints: true, timer: 0, pace: 'untimed' }, { tag: 'tutorial', coach: new TutorialCoach(variation, theme) });
   }
 

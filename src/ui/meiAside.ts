@@ -29,7 +29,7 @@ const CONCEPTS: Concept[] = [
   { re: /\bknits?\b/, label: 'Knit', picks: ['9m 9p', '3s 3m', '5p 5s', '7p 7m'] },
   { re: /\b(pungs?|pongs?|pon)\b/, label: 'Pung', picks: ['777p', 'Gd Gd Gd', '222s', 'SSS'] },
   { re: /\b(kongs?|kans?|gangs?|quads?)\b/, label: 'Kong', picks: ['4444m', 'WWWW', '9999s'] },
-  { re: /\b(chows?|chis?)\b/, label: 'Chow', picks: ['678s', '234p', '567m'] },
+  { re: /\b(chows?|chis?)\b/, label: 'Chow', picks: ['678s', '234p', '567m', '123p'] },
   { re: /\bpairs?\b/, label: 'Pair', picks: ['NN', 'Wd Wd', '88m', '11p'] },
   { re: /\bdragons?\b/, label: 'Dragons', picks: ['Rd Gd Wd'], family: true },
   { re: /\bwinds?\b/, label: 'Winds', picks: ['E S W N'], family: true },
