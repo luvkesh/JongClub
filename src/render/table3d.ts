@@ -2637,7 +2637,7 @@ export class TableRenderer {
 
       // Melds and flowers sit on the racks' set ledges, level with the wall's
       // top so they are never hidden behind it. Yours lie on the ledge in front
-      // of your hand, from its right end toward the left, leaning toward you.
+      // of your hand, sets from its left end and flowers from its right, leaning toward you.
       // Each opponent's sit on the sloped shelf of their rack, tilted toward the
       // centre and turned to read upright from your seat. A long row shrinks a
       // little to stay on its ledge.
@@ -2648,7 +2648,9 @@ export class TableRenderer {
         const room = this.racks.humanLength - 0.3;
         const need = pl.melds.reduce((a, m) => a + m.tiles.length * (TW + 0.006) + 0.1, 0) + flowers.length * (TW + 0.006);
         const ms = Math.min(MY_MELD_SCALE, need > 0 ? room / need : MY_MELD_SCALE);
-        let mx = room / 2;
+        // Sets from the ledge's left end in the order made, flowers from its right end, so the two never merge.
+        const setsLen = pl.melds.reduce((a, m) => a + m.tiles.length * (TW * ms + 0.006) + 0.1 * ms, 0);
+        let mx = -room / 2 + setsLen;
         const onLedge = (sc: number, x: number, faceDown: boolean): Pose => {
           const across = TH * sc * Math.cos(MY_LEDGE.tilt);
           const z = MY_LEDGE.z0 + 0.05 + across / 2;
@@ -2670,6 +2672,7 @@ export class TableRenderer {
           });
           mx -= 0.1 * ms;
         }
+        mx = room / 2;
         for (const f of flowers) {
           const t = this.tiles.get(f.id)!;
           const fs = ms;
@@ -2688,8 +2691,9 @@ export class TableRenderer {
           placed.add(tile.id);
         }
       } else if (rel === 0) {
-        let mx = 2.85;
         const ms = MY_MELD_SCALE;
+        // Sets on the left, flowers from the right end (as on the ledge).
+        let mx = -2.85 + pl.melds.reduce((a, m) => a + m.tiles.length * (TW * ms + 0.006) + 0.1, 0);
         for (let mi = pl.melds.length - 1; mi >= 0; mi--) {
           const m = pl.melds[mi];
           const tiles = [...m.tiles].reverse();
@@ -2704,6 +2708,7 @@ export class TableRenderer {
           });
           mx -= 0.1;
         }
+        mx = 2.85;
         for (const f of pl.flowers ?? []) {
           const t = this.tiles.get(f.id)!;
           setAside(t, this.place(seat, new THREE.Vector3(mx - (TW * ms) / 2, (TD * ms) / 2 + 0.02, MELD_Z), qFromEuler(-Math.PI / 2, 0, 0), ms));
@@ -2717,7 +2722,8 @@ export class TableRenderer {
         const need = pl.melds.reduce((a, m) => a + m.tiles.length * (along + 0.006) + 0.1, 0) + flowers.length * (along + 0.006);
         const room = OPP_RACK.length - 0.3;
         const ms = Math.min(OPP_MELD_SCALE, need > 0 ? room / need : OPP_MELD_SCALE);
-        let mx = room / 2;
+        // Each player's sets at the left end of their shelf (their left), flowers from the right end, so the two never merge.
+        let mx = -room / 2 + pl.melds.reduce((a, m) => a + m.tiles.length * (along * ms + 0.006) + 0.1 * ms, 0);
         const onShelf = (sc: number, x: number, faceDown: boolean): Pose => {
           const across = TH * sc * Math.cos(OPP_RACK.slope);
           const z = OPP_RACK.shelfZ + 0.008 + across / 2;
@@ -2740,6 +2746,7 @@ export class TableRenderer {
           mx -= 0.1 * ms;
         }
         const hideFlowers = this.flowersHidden && !shown && pl.melds.filter((m) => !m.concealed).length < 3;
+        mx = room / 2;
         for (const f of flowers) {
           const t = this.tiles.get(f.id)!;
           const fs = ms;

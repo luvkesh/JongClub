@@ -44,7 +44,7 @@ import type { LockstepLink } from '../net/lockstep';
 import type { ReplayRecord } from '../net/replay';
 import type { ClaimKind, TutorialCoach } from './coach';
 import { clear, fmt, h, sleep, tileImg } from './dom';
-import { concealedSetIds, openArea, summaryToggle, winHandSection } from './winReveal';
+import { openArea, winTableSets, summaryToggle, winHandSection } from './winReveal';
 import { ALL_HANDS_ICON, allHandsList } from './allHands';
 import { arrangeHand, moveTile, type HandLayout, type HandSlot } from './handOrder';
 import { viewControls } from './viewControls';
@@ -675,11 +675,11 @@ export class MatchController {
       if (this.cardSetsFor?.key !== key) this.cardSetsFor = { key, sets: c === undefined ? { pungs: new Set(), chows: new Set() } : cardSets(SMALL_CARDS[c], st.seatWinds[this.me], st.prevailingWind) };
       layout.only = this.cardSetsFor.sets;
     }
-    // India Rules passport rounds: crochets and mixed chows group too.
-    if (p.passportView && !this.spectator) layout.indiaSets = true;
+    // India Rules East round and Classic: crochets and mixed chows group too.
+    if ((p.mixedSets || p.passportView) && !this.spectator) layout.indiaSets = true;
     // A round with a target hand (a passport, a card hand, a yaku...): the one you chose (JongBot's
     // nearest until you pick one) is set aside first, piece by piece.
-    const plan = this.spectator || !this.settings.groupSets ? null : this.targetPlan();
+    const plan = this.spectator || !this.settings.groupSets ? null : this.setAsidePlan();
     if (plan?.pieces.length) layout.groups = plan.pieces.flatMap((piece, i) => (plan.fromMeld[i] ? [] : [piece.slice(0, piece.length - plan.gaps[i])]));
     return layout;
   }
@@ -707,6 +707,13 @@ export class MatchController {
     const plans = this.targetPlansNow();
     return plans.find((p) => p.key === this.ppChoice) ?? plans[0] ?? null;
   }
+  /** The target set aside on your rack. With the passport optional, a passport is set aside only when
+   *  you pick one or it is complete, so a half-made one doesn't split your crochets and other sets. */
+  private setAsidePlan(): TargetPlan | null {
+    const plan = this.targetPlan();
+    if (!plan || !this.game.profile.passportOptional || plan.key === this.ppChoice) return plan;
+    return plan.gaps.every((g) => g === 0) ? plan : null;
+  }
 
   /** A gold edge on your tiles in the target set aside, and a red edge on tiles that could feed a target
    *  another player is showing, or that JongBot rates high risk against a ready-looking hand (while
@@ -717,7 +724,7 @@ export class MatchController {
     t.ppIds.clear();
     t.riskKinds.clear();
     if (this.spectator || g.state.phase.kind === 'handOver') return;
-    const plan = this.settings.groupSets ? this.targetPlan() : null;
+    const plan = this.settings.groupSets ? this.setAsidePlan() : null;
     if (plan?.pieces.length) {
       const left = new Map<number, number>();
       plan.pieces.forEach((piece, i) => !plan.fromMeld[i] && piece.slice(0, piece.length - plan.gaps[i]).forEach((k) => left.set(k, (left.get(k) ?? 0) + 1)));
@@ -3023,13 +3030,22 @@ export class MatchController {
 
   // ------------------------------------------------------------ results
 
+  /** How the winning tile came, for the hand summary: self-drawn, or whose discard. */
+  winFrom(r: HandResult): { selfDrawn: boolean; from?: string; yours?: boolean } | undefined {
+    if (r.type !== 'win') return undefined;
+    if (r.discarder === null || r.discarder === undefined) return { selfDrawn: true };
+    return { selfDrawn: false, from: r.discarder === this.me ? undefined : this.game.players[r.discarder].name, yours: r.discarder === this.me };
+  }
+
   private async showHandResult(r: HandResult, over: boolean, label: string) {
     const g = this.game;
     const t = this.table;
     const winner = r.winner;
     this.table.matchKind = null;
     // The winner's concealed tiles part into the sets they make, the winning tile marked (winReveal.ts).
-    const winSets = r.type === 'win' && winner !== undefined ? concealedSetIds(g.players[winner].hand) : undefined;
+    // In the summary's order: India Rules East round reads passports first, then the sets with them and the pair.
+    const winHand = winner !== undefined ? r.revealedHand ?? g.players[winner].hand : [];
+    const winSets = r.type === 'win' && winner !== undefined ? winTableSets(winHand, g.profile.passportView?.(winHand, r.revealedMelds ?? g.players[winner].melds)) : undefined;
     t.layout(g.state, { reveal: seatList(this.n), winner, winLift: r.type === 'win', winSets, winTileId: r.winTile?.id });
     this.refreshHud();
     this.els.status.textContent = '';
@@ -3083,7 +3099,7 @@ export class MatchController {
       this.speak(resultSpoken(this.rel(winner), `${headline}, for ${fmt(s.points)} points.`));
       const wh = r.revealedHand ?? [];
       const wm = r.revealedMelds ?? [];
-      card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm) }));
+      card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm), winFrom: this.winFrom(r) }));
       const items = h('ul', { class: 'score-items' });
       for (const it of s.items) items.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
       const summary = `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;

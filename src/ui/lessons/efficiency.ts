@@ -39,7 +39,7 @@ export const efficiencyLesson: Lesson = {
         facts: ['Two half-sets to fill', 'Fill one: ready. Fill both: Mahjong'],
       },
     }),
-    S('Steps from ready', 'Experts always know how far they are. Count the tiles you still need before you’re ready, one tile from winning. Ready is zero steps. In Japan, this count is called shanten. At JongClub, your hand line shows it for you.', {
+    S('Steps from ready', 'Experts always know how far they are. Count the tiles you still need before you’re ready, one tile from winning. Ready is zero steps. At JongClub, your hand line shows it for you.', {
       table: {
         head: ['Hand', 'Steps from ready'],
         rows: [
@@ -87,24 +87,24 @@ export const efficiencyLesson: Lesson = {
         ],
       },
     }),
-    S('The order to let go', 'Early in a hand, let tiles go in this order. First, honours you can’t score with. Then lonely ones and nines. Then lonely twos and eights. Keep middle tiles, dragons, and your own winds a little longer.', {
+    S('The order to let go', 'Early in a hand, let tiles go in this order. First, lonely honours. Then lonely ones and nines. Then lonely twos and eights. Keep middle tiles, and honour pairs, a little longer: they can grow into pungs, or start a passport.', {
       table: {
         head: ['Order', 'Tile', 'Why'],
         rows: [
-          ['1st', { tiles: 'N', text: 'A wind that scores nothing for you' }, 'It can only ever make a pung'],
+          ['1st', { tiles: 'N', text: 'A lonely wind' }, 'It can only ever make a pung'],
           ['2nd', { tiles: '1p 9s', text: 'A lonely 1 or 9' }, 'Only one run can use it'],
           ['3rd', { tiles: '2m 8s', text: 'A lonely 2 or 8' }, 'Two runs can use it'],
-          ['Keep', { tiles: '5p RdRd', text: 'Middle tiles, value honours' }, 'Fast to join, or worth points'],
+          ['Keep', { tiles: '5p RdRd', text: 'Middle tiles, honour pairs' }, 'Fast to join, or a passport start'],
         ],
       },
     }),
-    S('How many pairs?', 'You need one pair, so keep one. Two pairs are lovely too: whichever one draws a match becomes a pung. But four or more pairs slow you down, unless you’re going for seven pairs. Then pairs are exactly what you want.', {
+    S('How many pairs?', 'You need one pair, so keep one. Two pairs are lovely too: whichever one draws a match becomes a pung. But four or more pairs slow you down, unless you’re in the East round, where three pairs can make a six-tile passport.', {
       table: {
         head: ['Pairs in your hand', 'What it means'],
         rows: [
           [{ tiles: 'EE' }, 'One: your pair is ready'],
           [{ tiles: 'EE 55s' }, 'Two: perfect. Either can grow into a pung'],
-          [{ tiles: 'EE 55s 77p 22m' }, 'Four or more: slow, unless you aim for seven pairs'],
+          [{ tiles: 'EE 55s 77p 22m' }, 'Four or more: slow, unless three make a passport'],
         ],
       },
     }),

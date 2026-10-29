@@ -13,6 +13,16 @@
 
 .lx-current { display: flex; flex-direction: column; gap: var(--s2); }
 .lx-current > .eyebrow { margin: 0; }
+/* which lesson is on: its level and name above the card, and a live green dot here and in the list */
+.lx-now { display: flex; flex-direction: column; gap: 4px; padding: 0 2px; }
+.lx-now .eyebrow { display: inline-flex; align-items: center; gap: 10px; margin: 0; }
+.lx-now .eyebrow::before { display: none; }
+.lx-now-t { margin: 0; font: 600 clamp(26px, 3.4vw, 34px)/1.15 var(--display); color: var(--ivory); }
+.lx-live { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: #4fdc8a; box-shadow: 0 0 0 0 rgba(79, 220, 138, 0.6), 0 0 10px rgba(79, 220, 138, 0.7); animation: lx-live 1.6s ease-in-out infinite; vertical-align: middle; }
+.lx-state .lx-live { width: 8px; height: 8px; margin: 0; }
+.lx-row.active { border-color: rgba(79, 220, 138, 0.55); box-shadow: var(--hi), 0 0 0 1px rgba(79, 220, 138, 0.18), 0 0 22px rgba(79, 220, 138, 0.12); }
+@keyframes lx-live { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(79, 220, 138, 0.55), 0 0 10px rgba(79, 220, 138, 0.7); } 50% { opacity: 0.35; box-shadow: 0 0 0 6px rgba(79, 220, 138, 0), 0 0 4px rgba(79, 220, 138, 0.3); } }
+@media (prefers-reduced-motion: reduce) { .lx-live { animation: none; } }
 
 /* toolbar: categories, search, sort */
 .lx-path { display: flex; flex-direction: column; gap: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--line); }

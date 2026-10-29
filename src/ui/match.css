@@ -588,3 +588,6 @@
 .seat-pp-tag { flex: none; padding: 1px 5px; border-radius: 4px; background: rgba(212, 85, 63, 0.28); border: 1px solid rgba(212, 85, 63, 0.6); color: #ffd9c9; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
 @media (max-width: 600px) { .seat-pp { max-width: 120px; font-size: 10px; } }
 .jongbot .bot-call { margin-top: 6px; padding: 5px 8px; border-inline-start: 3px solid var(--brass-hi); background: rgba(201, 162, 74, 0.12); border-radius: 4px; font-size: 12.5px; line-height: 1.35; }
+/* Your sets at the left of the tray's extras line, set-aside flowers at the right, so the two never merge. */
+.tray-extras > .tray-sets { margin-right: auto; }
+.tray-extras > .tray-bonus:not(.tray-sets) { margin-left: auto; }

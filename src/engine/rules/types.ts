@@ -266,6 +266,10 @@ export interface RuleProfile {
   dealCards?: number;
   /** India Rules East round: how the hand summary lays out a hand (its passports apart from the rest). */
   passportView?(hand: Tile[], melds: Meld[]): PassportLayout;
+  /** India Rules East round and Classic: crochets and mixed chows are sets, so hand sorting groups them. */
+  mixedSets?: boolean;
+  /** The passport is optional (India Rules East with passports not compulsory). */
+  passportOptional?: boolean;
   /** Each player is offered this many cards and keeps one after seeing their tiles (the table rule
    *  "draw 3, keep 1"). */
   cardChoice?: number;
