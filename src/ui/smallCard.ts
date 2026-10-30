@@ -23,6 +23,9 @@ export function cardValueLine(card: SmallCard, faan = false): string {
   return `${tr(LIMIT_LABEL[card.value])} · ${faan ? tr('{n} faan', { n: LIMIT_FAAN[card.value] }) : LIMIT_PAY[card.value].toLocaleString('en-US')}`;
 }
 
+/** A printed sentence ends with a full stop (the book's lines often don't). */
+const sentence = (t: string) => (/[.!?]$/.test(t.trim()) ? t.trim() : `${t.trim()}.`);
+
 /** Text steps down (to 70%) until the printed face fits its card, as a printer would set a long card. */
 function fitWhenShown(card: HTMLElement) {
   if (typeof ResizeObserver === 'undefined') return;
@@ -80,7 +83,7 @@ const withCaption = (card: HTMLElement, below: (HTMLElement | null)[]) => {
 };
 
 export function smallCardView(card: SmallCard, opts: { distance?: number; recommended?: boolean; faan?: boolean } = {}): HTMLElement {
-  const face = printedCard('small', card.n, card.name, card.picture, !!opts.recommended, [cardValueLine(card, opts.faan), card.wall ? h('span', { class: 'sc-wall' }, tr('All from the wall')) : null], [h('p', { class: 'sc-how' }, card.how)]);
+  const face = printedCard('small', card.n, card.name, card.picture, !!opts.recommended, [cardValueLine(card, opts.faan), card.wall ? h('span', { class: 'sc-wall' }, tr('All from the wall')) : null], [h('p', { class: 'sc-how' }, sentence(card.how))]);
   return withCaption(face, [
     opts.distance !== undefined ? h('div', { class: 'sc-distance' }, opts.distance >= 99 ? tr('no win possible with these sets') : opts.distance <= 0 ? tr('Ready or nearly ready') : tr('{n} tiles from ready', { n: opts.distance })) : null,
     opts.recommended ? h('div', { class: 'sc-pick' }, tr('JongBot suggests this card')) : null,
@@ -91,6 +94,6 @@ export function smallCardView(card: SmallCard, opts: { distance?: number; recomm
 export function bigCardView(card: BigCard, opts: { onPick?: () => void; recommended?: boolean; faan?: boolean } = {}): HTMLElement {
   const extras = card.extras.kong === 1 && card.extras.qwong === 2 ? null : h('span', { class: 'sc-wall' }, tr('Extra tiles: a qwong {q}, a kong {k}', { q: card.extras.qwong, k: card.extras.kong }));
   const value = opts.faan ? tr('{a} faan · concealed {b} faan', { a: LIMIT_FAAN.limit, b: LIMIT_FAAN.double }) : tr('{a} · concealed {b}', { a: BIG_PAY.normal.toLocaleString('en-US'), b: BIG_PAY.concealed.toLocaleString('en-US') });
-  const face = printedCard('big', card.n, card.name, card.picture, !!opts.recommended, [value, extras], [h('p', { class: 'sc-how' }, card.how), h('p', { class: 'sc-jokers' }, h('b', {}, tr('Jokers')), ' ', card.jokersText)]);
+  const face = printedCard('big', card.n, card.name, card.picture, !!opts.recommended, [value, extras], [h('p', { class: 'sc-how' }, sentence(card.how)), h('p', { class: 'sc-jokers' }, h('b', {}, tr('Jokers')), ' ', sentence(card.jokersText))]);
   return withCaption(face, [opts.onPick ? h('button', { class: `btn${opts.recommended ? ' primary' : ''}`, onclick: opts.onPick }, tr('Play this card')) : null]);
 }
