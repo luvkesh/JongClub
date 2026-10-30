@@ -38,6 +38,9 @@ export interface TileIndex {
  * jokers J (Vietnamese jokers name their group: JF JW JD JN) and animals a
  * short name.
  */
+/** Dragon corner names, written in full so White never reads as West's "W". */
+export const DRAGON_INDEX = ['RED', 'GREEN', 'WHITE'] as const;
+
 export function tileIndex(kind: number): TileIndex {
   if (isJoker(kind)) return { text: 'J', mark: 'none', ink: 'red' };
   if (isFlower(kind)) {
@@ -54,7 +57,7 @@ export function tileIndex(kind: number): TileIndex {
   }
   const s = suitOf(kind);
   if (s === 'wind') return { text: WINDS[kind - 27], mark: 'none', ink: 'ink' };
-  if (s === 'dragon') return { text: 'RGW'[kind - 31], mark: 'dragon', ink: (['red', 'green', 'blue'] as const)[kind - 31] };
+  if (s === 'dragon') return { text: DRAGON_INDEX[kind - 31], mark: 'dragon', ink: (['red', 'green', 'blue'] as const)[kind - 31] };
   const n = String(rankOf(kind));
   if (s === 'pin') return { text: n, mark: 'dot', ink: 'blue' };
   if (s === 'sou') return { text: n, mark: 'bamboo', ink: 'green' };

@@ -5,6 +5,8 @@
 // Everything is drawn from real tile faces, so it follows the equipped set.
 // Labels are lesson text: English, through lt() like the rest of a lesson.
 
+import { smallCardView } from './smallCard';
+import { cardByName } from '../engine/rules/indiaCards';
 import { parseKinds } from '../engine/tiles';
 import { lt } from '../i18n/lessons';
 import { h, tileImg } from './dom';
@@ -56,7 +58,7 @@ export function handPic(p: HandPic, labels: boolean): HTMLElement {
     'div',
     { class: 'lesson-pic hand-pic' },
     p.title ? h('p', { class: 'lp-title' }, lt(p.title)) : null,
-    groups,
+    p.card && cardByName(p.card) ? h('div', { class: 'hp-with-card' }, smallCardView(cardByName(p.card)!), groups) : groups,
     facts,
     score || pay ? h('div', { class: 'hp-panels' }, score, pay) : null,
   );
@@ -262,7 +264,7 @@ export function demoPic(kind: DemoKind, labels: boolean): HTMLElement {
     at(three, [[12.6, { ...xy(SEAT_AT.S), opacity: 0 }], [12.8, { ...xy([82, 47]), opacity: 1 }], [13.6, { ...xy([50, 36]), opacity: 1 }], ...end([50, 36])]);
     const nope = say('No chow from your right', [50, 61], true);
     at(nope, [[13.8, { opacity: 0 }], [14.1, { opacity: 1 }], [15.8, { opacity: 1 }], [16.1, { opacity: 0 }]]);
-    steps.push('Pung from anyone: West throws a 5, you hold two', 'Show the set, discard, and play goes on from you', 'Chow only from your left: North throws the 6 you need', 'From anyone else, a run tile is just a discard');
+    steps.push('Pung from anyone: West throws a 5, you hold two', 'Place the set face up in front of your rack, discard, and play goes on from you', 'Chow only from your left: North throws the 6 you need', 'From anyone else, a run tile is just a discard');
     timedSteps = [[0.5, 4.2], [4.2, 7.4], [7.8, 12.2], [12.4, 16.2]];
     loop = L;
   } else if (kind === 'tictactoe') {

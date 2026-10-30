@@ -10,6 +10,8 @@ export type Visual =
   | { hand: HandPic }
   /** A comparison table. */
   | { table: TablePic }
+  /** Several tables, one under the other. */
+  | { tables: TablePic[] }
   /** Points in a list, each with optional tiles. */
   | { list: ListItem[]; title?: string }
   /** Illustrated cards side by side. */
@@ -21,6 +23,8 @@ export type Visual =
 
 export interface HandPic {
   title?: string;
+  /** An India Rules Small Card, by name, drawn to the left of the hand. */
+  card?: string;
   /** Each set: tiles in parseKinds notation, a label (CHOW), a detail (1-2-3 Bamboo), a flag above it, and a highlight. */
   groups: { tiles: string; label?: string; sub?: string; flag?: string; mark?: 'hl' | 'win' | 'called' }[];
   /** What happened, as short chips. */
@@ -59,6 +63,8 @@ export interface Scene {
   /** Spoken and shown as the caption. */
   say: string;
   visual?: Visual;
+  /** Read for Mei's tile aside instead of say, when it should show only some of the sets she names. */
+  aside?: string;
 }
 
 export interface Question {
@@ -78,7 +84,7 @@ export interface Lesson {
   base?: LessonId;
 }
 
-export const S = (title: string, say: string, visual?: Visual): Scene => ({ title, say, visual });
+export const S = (title: string, say: string, visual?: Visual, aside?: string): Scene => ({ title, say, visual, ...(aside ? { aside } : {}) });
 export const Q = (q: string, options: (string | [string, string])[], answer: number, explain: string): Question => ({
   q,
   options: options.map((o) => (typeof o === 'string' ? { text: o } : { text: o[0], tiles: o[1] })),

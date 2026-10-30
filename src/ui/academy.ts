@@ -17,6 +17,7 @@ import { cardsPic, demoPic, handPic, listPic, tablePic, videoPic } from './lesso
 import { lessonContents, meiAside } from './meiAside';
 import { indianLesson } from './lessons/indian';
 import { indiaEastLesson, indiaLesson, indiaNorthLesson, indiaSouthLesson, indiaWestBigLesson, indiaWestDoublesLesson, indiaWestLesson } from './lessons/india';
+import { classicLesson } from './lessons/classic';
 import { roundsLesson } from './lessons/rounds';
 import { singaporeLesson } from './lessons/singapore';
 import { vietnameseLesson } from './lessons/vietnamese';
@@ -63,23 +64,23 @@ export const LESSONS: Record<LessonId, Lesson> = {
     id: 'basics',
     title: 'Mahjong for beginners',
     scenes: [
-      S('Welcome to the club', 'Hello, and welcome to JongClub! I’m Mei. Come in, pull up a chair, the tea is still warm. If you’re new to Mahjong, all these tiles can look a little intimidating at first. Don’t worry, everyone feels that way on their first night. Once we break it down, it’s really quite simple. Let me show you!', { tiles: ['5p', 'Rd', 'E', '3s', '7m'] }),
+      S('Welcome to the club', 'Hello, and welcome to JongClub! I’m Mei. Come in, pull up a chair, the tea is still warm. If you’re new to Mahjong, all these tiles can look a little intimidating at first. Don’t worry, everyone feels that way on their first day. Once we break it down, it’s really quite simple. Let me show you!', { tiles: ['5p', 'Rd', 'E', '3s', '7m'] }),
       S('The table', 'This is our table. Four friends sit around it, and each seat is named after a wind. You’re East. South is on your right, West is across, and North is on your left. East is the dealer, which simply means the player who starts the hand. Tonight, that’s you.', { board: 'seats' }),
-      S('The shuffle', 'Before every hand, all the tiles are turned face down and mixed, with that lovely clatter you’ll soon come to love. It’s called washing the tiles, a little cleansing that clears away the last hand, so everyone starts fresh. Nobody can see which tile is which.', { video: 'wall', demo: 'wash', caption: 'At JongClub, the table washes the tiles and builds the wall for you.' }),
+      S('The shuffle', 'Before every hand, all the tiles are turned face down and mixed, with that lovely clatter you’ll soon come to love. Nobody can see which tile is which.', { video: 'wall', demo: 'wash', caption: 'At JongClub, the table washes the tiles and builds the wall for you.' }),
       S('The wall', 'Then we build the tiles into four walls, two tiles high, pushed together into a square. Everyone draws from the wall, one tile at a time.', { demo: 'wall' }),
-      S('Three suits', 'Most of the tiles belong to three suits, each numbered one to nine: Characters, Dots and Bamboo. If you’ve ever played cards, you already know the idea. They’re just like hearts, clubs and spades.', {
-        cards: [
-          { tiles: '1m 5m 9m', title: 'Characters', alt: 'also called Craks', text: 'A Chinese number on top, 萬 underneath.' },
-          { tiles: '1p 5p 9p', title: 'Dots', alt: 'also called Circles', text: 'Count the circles.' },
-          { tiles: '1s 5s 9s', title: 'Bamboo', alt: 'also called Bams', text: 'Count the sticks. The 1 is a bird.' },
+      S('Three suits', 'Most of the tiles belong to three suits, each numbered one to nine: Cracks, Bamboos and Rings. Cracks are also called Characters, and Rings are also called Dots. If you’ve ever played cards, you already know the idea. They’re just like hearts, clubs and spades.', {
+        list: [
+          { tiles: '123456789m', title: 'Cracks, also called Characters', text: 'A Chinese number on top, 萬 underneath.' },
+          { tiles: '123456789s', title: 'Bamboos, also called Bams', text: 'Count the sticks. The 1 is a bird.' },
+          { tiles: '123456789p', title: 'Rings, also called Dots', text: 'Count the rings.' },
         ],
       }),
-      S('Reading a tile', 'Reading a tile is easy. For Dots and Bamboo, just count. For Characters, the top symbol is the number. And at JongClub, every tile has its number in the corner, so you never have to guess.', {
+      S('Reading a tile', 'Reading a tile is easy. For Rings and Bamboos, just count. For Cracks, the top symbol is the number. And at JongClub, every tile has its number in the corner, so you never have to guess.', {
         list: [
-          { tiles: '3p', title: 'Dots', text: 'Count the circles: three circles, the 3 of Dots.' },
-          { tiles: '4s', title: 'Bamboo', text: 'Count the sticks: four sticks, the 4 of Bamboo.' },
-          { tiles: '1s', title: 'The 1 of Bamboo', text: 'A bird instead of one stick. It’s just the 1.' },
-          { tiles: '7m', title: 'Characters', text: 'The top symbol is the number. Look at the corner: 7.' },
+          { tiles: '3p', title: 'Rings', text: 'Count the rings: three rings, the 3 of Rings.' },
+          { tiles: '4s', title: 'Bamboos', text: 'Count the sticks: four sticks, the 4 of Bamboos.' },
+          { tiles: '1s', title: 'The 1 of Bamboos', text: 'A bird instead of one stick. It’s just the 1.' },
+          { tiles: '7m', title: 'Cracks', text: 'The top symbol is the number. Look at the corner: 7.' },
         ],
       }),
       S('The honours', 'Then we have the honours, my favourites. Four winds: East, South, West and North. And three dragons: Red, Green and White. Honours have no numbers, so they can never be part of a run.', {
@@ -88,71 +89,95 @@ export const LESSONS: Record<LessonId, Lesson> = {
           { tiles: 'Rd Gd Wd', title: 'Three dragons', alt: 'Red · Green · White', text: 'The White Dragon is a plain frame.' },
         ],
       }),
-      S('Four of each', 'Here’s a little secret. There are four copies of every tile, which makes one hundred and thirty-six tiles in all. Some tables add extra tiles, like flowers or jokers. We’ll meet those later, so tonight we’ll keep things simple.', {
+      S('Four of each', 'Here’s a little secret. There are four copies of every suit tile and every honour, one hundred and thirty-six tiles. Then come eight bonus tiles, just one of each: four flowers and four seasons. That makes one hundred and forty-four, the full set India Rules plays with.', {
         table: {
           head: ['Tiles', 'Kinds', 'Copies', 'Total'],
           rows: [
             [{ tiles: '1m 1p 1s', text: 'Suits' }, '3 suits × 9 numbers', '× 4', '108'],
             [{ tiles: 'E S W N', text: 'Winds' }, '4', '× 4', '16'],
             [{ tiles: 'Rd Gd Wd', text: 'Dragons' }, '3', '× 4', '12'],
-            ['All together', '', '', '136'],
+            [{ tiles: 'F1 F5', text: 'Flowers and seasons' }, '8', '× 1', '8'],
+            ['All together', '', '', '144'],
           ],
         },
       }),
-      S('The goal', 'Now, the goal. You want four sets and one pair, fourteen tiles. I’ll show you both in a moment. Complete that, and you call out, Mahjong! It’s the best feeling in the club, I promise!', {
+      S('Flowers, seasons and jokers', 'Now the bonus tiles. Four flowers and four seasons, each numbered one to four. You never build sets with them. Draw one, put it aside, and take a new tile from the flower wall. Some India Rules games add jokers, wild tiles that can stand in for others. The traditional Chinese game uses none of these.', {
+        list: [
+          { tiles: 'F1 F2 F3 F4', title: 'Flowers', text: 'Numbered 1 to 4. Used in India Rules.' },
+          { tiles: 'F5 F6 F7 F8', title: 'Seasons', text: 'Numbered 1 to 4. Used in India Rules.' },
+          { tiles: 'F3 5s', title: 'Jokers', text: 'Wild tiles in some India Rules games: in the North round, the flowers, or a number East names, can turn wild.' },
+          { tiles: 'Rd 5p', title: 'The traditional Chinese game', text: 'Plays without flowers, seasons or jokers.' },
+        ],
+      }),
+      S('The goal', 'Now, the goal. You want four sets and one pair, fourteen tiles. A set can be a run, three of a kind, or one of the Indian sets, the mixed chow and the crochet. I’ll show you each in a moment. Complete that, and you call out, Mahjong! It’s the best feeling in the club, I promise!', {
         hand: {
           title: 'A winning hand: four sets and one pair',
           groups: [
-            { tiles: '123m', label: 'Set 1' },
-            { tiles: '456p', label: 'Set 2' },
-            { tiles: '789s', label: 'Set 3' },
-            { tiles: 'RdRdRd', label: 'Set 4' },
+            { tiles: '123m', label: 'Chow', sub: 'a run' },
+            { tiles: '2m 3s 4p', label: 'Mixed chow', sub: 'across 3 suits' },
+            { tiles: '7m 7s 7p', label: 'Crochet', sub: 'one number, 3 suits' },
+            { tiles: 'RdRdRd', label: 'Pung', sub: 'three the same' },
             { tiles: 'EE', label: 'The pair', mark: 'hl' },
           ],
           facts: ['4 sets × 3 tiles = 12', '+ 1 pair = 14 tiles'],
         },
       }),
-      S('Sets', 'So, what’s a set? It’s three tiles. A chow is a run in one suit, like three, four, five of Bamboo. A pung is three of the same tile. And a kong is four of the same, but it still counts as just one set.', {
+      S('Sets', 'So, what’s a set? Usually three tiles. A chow is a run in one suit, like three, four, five of Bamboos. A pung is three of the same tile. A kong is four of the same, but still just one set. And India Rules adds two more: a mixed chow, a run across the three suits, and a crochet, one number in all three suits.', {
         cards: [
           { tiles: '345s', title: 'Chow', alt: 'a run', text: 'Three numbers in a row, all in one suit.' },
           { tiles: 'EEE', title: 'Pung', alt: 'three the same', text: 'Any tile, three times.' },
           { tiles: '7777p', title: 'Kong', alt: 'four the same', text: 'Four of one tile. Still just one set.' },
+          { tiles: '4m 5s 6p', title: 'Mixed chow', alt: 'a run across the suits', text: 'Three numbers in a row, one from each suit.' },
+          { tiles: '2m 2s 2p', title: 'Crochet', alt: 'one number, three suits', text: 'The same number in all three suits.' },
         ],
       }),
-      S('What isn’t a run', 'A few things look like runs, but aren’t. At most tables, a run must stay in one suit. Numbers can’t skip, and they don’t go round the corner from nine back to one. And honours never make runs at all.', {
+      S('What isn’t a run', 'A few things look like runs, but aren’t. Numbers can’t skip, and they don’t go round the corner from nine back to one. A run in two suits is neither a chow nor a mixed chow. And honours never make runs at all, not even the three dragons, Red, Green and White.', {
         list: [
-          { tiles: '3s 4p 5m', title: 'Mixed suits', text: 'Not a run at most tables. A few house rules allow it.' },
           { tiles: '2s 4s 6s', title: 'Gaps', text: 'Not a run: the numbers must be next to each other.' },
+          { tiles: '3s 4s 5m', title: 'Two suits', text: 'Not a run: a chow is one suit, a mixed chow uses all three.' },
           { tiles: '8s 9s 1s', title: 'Round the corner', text: 'Not a run: nine never wraps back to one.' },
-          { tiles: 'E S W', title: 'Honours', text: 'Never a run. Honours only make pungs and kongs.' },
+          { tiles: 'E S W', title: 'Winds', text: 'Never a run. Winds only make pungs and kongs.' },
+          { tiles: 'Rd Gd Wd', title: 'Red, Green and White dragons', text: 'Not a chow. Dragons only make pungs and kongs.' },
         ],
       }),
-      S('The pair', 'The pair is the easy part. Any two matching tiles will do, and every winning hand needs exactly one.', {
+      S('The pair', 'The pair is the easy part. Any two matching tiles will do: that’s a pure pair. India Rules has one more pair, the knit: the same number in two suits. But a knit counts as your pair only when your hand also holds a crochet. Every winning hand needs exactly one pair.', {
         list: [
-          { tiles: 'EE', title: 'A pair', text: 'Two of the same tile.' },
-          { tiles: '22m', title: 'Also a pair', text: 'Numbers or honours, both are fine.' },
+          { tiles: 'EE', title: 'A pure pair', text: 'Two of the same tile. Numbers or honours, both are fine.' },
+          { tiles: '7m 7s', title: 'A knit', text: 'One number in two suits. Your pair only when your hand holds a crochet.' },
           { tiles: '2m 3m', title: 'Not a pair', text: 'The two tiles must match exactly.' },
         ],
       }),
       S('Your turn', 'Every turn has the same gentle rhythm. Draw one tile from the wall, then throw one away, face up, into the middle of the table. That’s called a discard. Between turns, you’ll always hold thirteen. Draw, discard. You’ll find it quite relaxing.', { demo: 'turn' }),
       S('Turn by turn', 'Turns go around the table to the right: East, then South, then West, then North, and back to East. When it isn’t your turn, just watch what the others throw away.', { board: 'turns' }),
-      S('Calling', 'Now, here’s where it gets fun! When someone discards a tile you need, you can call for it. Holding two that match? Call Pung, from anyone. Need it for a run? Call Chow, but only from the player on your left. Show the set, discard, and play carries on from you. So if West calls Pung, West discards, then it’s North, East and South. And a tile that finishes your hand? Call Mahjong!', { demo: 'call' }),
-      S('Which call when?', 'Here’s every call on one card. Pung needs two matching tiles in your hand. Chow needs two tiles of a run, and only from your left. Kong needs three matching. And Mahjong takes any tile that finishes your hand.', {
-        table: {
-          head: ['Call', 'You hold', 'You can take it from'],
-          rows: [
-            [{ tiles: '5s 5s', text: 'Pung' }, 'Two matching tiles', 'Anyone'],
-            [{ tiles: '4s 6s', text: 'Chow' }, 'Two tiles of a run', 'Only the player on your left'],
-            [{ tiles: '5s 5s 5s', text: 'Kong' }, 'Three matching tiles, still in your hand', 'Anyone'],
-            [{ tiles: 'EE', text: 'Mahjong' }, 'A hand that one tile finishes', 'Anyone'],
-          ],
-        },
-      }),
-      S('A kong after a pung', 'One thing to know about kongs. Once your pung is face up, you can’t call a thrown tile to make it a kong. But if you draw the fourth tile yourself, you can add it on your turn: an added kong. Watch out, though: a player who needs that tile can rob your kong and win with it. Almost every table plays it this way. American tables have no added kongs.', {
+      S('Calling', 'Here’s the fun part! When someone discards a tile you need, you can call for it. Two that match? Call Pung, from anyone. Need it for a run? Call Chow, only from your left. Place the set face up in front of your rack, discard, and play carries on from you. And a tile that finishes your hand? Call Mahjong, from anyone, for any set: even a pair, knit, crochet or mixed chow!', { demo: 'call' }),
+      S('Which call when?', 'Here are the calls you can make, and the sets you can never call. Pung needs two matching tiles in your hand. Chow needs two tiles of a run, and only from your left. Kong needs three matching. But you can never call a tile for a pair, a mixed chow, a knit or a crochet. Those always come from your hand or the wall. Only Mahjong may take any tile, for any set.', {
+        tables: [
+          {
+            title: 'Calls you can make',
+            head: ['Call', 'You hold', 'You can take it from'],
+            rows: [
+              [{ tiles: '5s 5s', text: 'Pung' }, 'Two matching tiles', 'Anyone'],
+              [{ tiles: '4s 6s', text: 'Chow' }, 'Two tiles of a run', 'Only the player on your left'],
+              [{ tiles: '5s 5s 5s', text: 'Kong' }, 'Three matching tiles, still in your hand', 'Anyone'],
+              [{ tiles: 'EE', text: 'Mahjong' }, 'A hand that one tile finishes', 'Anyone, for any set'],
+            ],
+          },
+          {
+            title: 'Never called',
+            head: ['Set', 'Example', 'Where it comes from'],
+            rows: [
+              ['Pair', { tiles: 'NN' }, 'Your hand or the wall'],
+              ['Mixed chow', { tiles: '2m 3s 4p' }, 'Your hand or the wall'],
+              ['Crochet', { tiles: '7m 7s 7p' }, 'Your hand or the wall'],
+              ['Knit', { tiles: '9m 9p' }, 'Your hand or the wall'],
+            ],
+          },
+        ],
+      }, 'Pung, chow and kong.'),
+      S('A kong after a pung', 'One thing to know about kongs. Once your pung is face up, you can’t call a thrown tile to make it a kong. But if you draw the fourth tile yourself, you can add it on your turn: an added kong. Then draw a replacement tile from the flower wall.', {
         list: [
           { tiles: '5s 5s 5s 5s', title: 'A thrown fourth tile: no', text: 'A face-up pung can’t claim a discard to become a kong' },
           { tiles: 'Gd Gd Gd Gd', title: 'Your own draw: an added kong', text: 'Add it to your face-up pung on your turn, then draw a replacement tile' },
-          { tiles: 'Gd', title: 'Robbing the kong', text: 'If that tile would finish someone’s hand, they may take it and win' },
         ],
       }),
       S('Be quick to call', 'Calls happen in a short window, right after a tile is thrown. If you wait too long, the next player draws, and the chance is gone. Online, that window can be almost instant. When playing against AI players, the table’s timer can be set to relaxed, standard or competitive. While you’re learning, relaxed gives you plenty of time.', { tiles: ['5s', '5s'] }),
@@ -168,14 +193,17 @@ export const LESSONS: Record<LessonId, Lesson> = {
     quiz: [
       Q('What makes a winning hand?', ['Four sets and one pair', 'Thirteen different tiles', 'Five pairs'], 0, 'A winning hand is four sets plus one pair: fourteen tiles.'),
       Q('Which of these is a chow?', [['Run in one suit', '345s'], ['Numbers with a gap', '2s 4s 6s'], ['Three winds', 'E S W']], 0, 'A chow is three numbers in a row in the same suit. Gaps don’t count, and honours never make runs.'),
-      Q('Which tile is an honour?', [['Red Dragon', 'Rd'], ['5 Dots', '5p'], ['9 Bamboo', '9s']], 0, 'Winds and dragons are honours. Numbered tiles belong to suits.'),
+      Q('Which of these is a crochet?', [['One number in all three suits', '2m 2s 2p'], ['A run in one suit', '234p'], ['Three of one wind', 'NNN']], 0, 'A crochet is the same number in Cracks, Bamboos and Rings.'),
+      Q('Which tile is an honour?', [['Red Dragon', 'Rd'], ['5 Rings', '5p'], ['9 Bamboo', '9s']], 0, 'Winds and dragons are honours. Numbered tiles belong to suits.'),
       Q('What do you do on your turn?', ['Draw one tile, then discard one', 'Discard two tiles', 'Draw until you win'], 0, 'Every turn: draw one, discard one. You keep thirteen.'),
       Q('Someone discards a 5 Bamboo and you hold two 5 Bamboo. What can you call?', ['Pung', 'Nothing', 'Chow'], 0, 'Two matching tiles plus the discard make a pung, so you can call Pung.'),
       Q('When can you call a discard?', ['Straight away, before the next player draws', 'Any time later in the hand', 'Only at the end of the hand'], 0, 'A call must be made quickly, right after the discard. Once the next player draws, the chance is gone.'),
+      Q('Someone throws the tile your mixed chow needs. Can you call it?', ['Only if it finishes your hand', 'Yes, from anyone', 'Only from your left'], 0, 'Pairs, mixed chows, knits and crochets can’t be called. They come from your hand or the wall, unless the tile wins your hand.'),
     ],
   },
   words: wordsLesson,
   scoring: scoringLesson,
+  classic: classicLesson,
   shapes: shapesLesson,
   tradition: traditionLesson,
   efficiency: efficiencyLesson,
@@ -195,6 +223,7 @@ export const LESSONS: Record<LessonId, Lesson> = {
       S('Furiten', 'You can win by Ron or by Tsumo. But be careful! If you’ve already discarded one of your own winning tiles, you’re furiten, and then only Tsumo will do.', { tiles: ['3m', '6m'] }),
       S('Han and fu', 'Now scoring, at a gentle level. Han are the doubles. Each yaku and each dora adds han. Fu are small extra points for how the hand is built, and most hands have thirty. A one han, thirty fu hand won by Ron is worth one thousand points. Each extra han roughly doubles it, and five han is a mangan, eight thousand.', { tiles: ['234m', '567p', '345s', '678s', '22p'] }),
       S('Who pays', 'Win by Ron, and the discarder pays it all. Win by Tsumo, and everyone pays a share, with the dealer paying double. And the dealer’s own wins are worth half as much again. Don’t worry, the table does the maths for you.', { tiles: ['5p'] }),
+      S('A hanchan', 'Riichi players in Japan usually play the East and South rounds, which they call a hanchan, or half game. The dealer keeps the deal by winning, or by being ready when the wall runs out. At JongClub, a Riichi table plays a hanchan unless you choose otherwise.', { tiles: ['E', 'S'] }),
     ],
     quiz: [
       Q('Your hand is complete but has no yaku. Can you win?', ['No, every win needs a yaku', 'Yes, any complete hand wins', 'Only on a discard'], 0, 'In Riichi, a complete hand still needs at least one yaku.'),
@@ -217,6 +246,7 @@ export const LESSONS: Record<LessonId, Lesson> = {
       S('Counting the score', 'Each hand is worth a base of three hundred, plus one hundred for every tai. So a hand with no tai is worth three hundred, and a three tai hand is worth six hundred.', { tiles: ['RdRdRd', 'EEE'] }),
       S('Who pays', 'Here’s how paying works. Win on a discard, and only the player who discarded pays. Win on your own draw, and all three players pay that amount.', { tiles: ['5p'] }),
       S('The dealer', 'And the dealer? They add a tai to any hand they win or pay for, plus two more for every hand they keep the deal. So keep an eye on a dealer who’s on a streak!', { tiles: ['E'] }),
+      S('A long evening', 'Taiwanese tables love a long game, all the way through the four winds: East, South, West and North. The dealer keeps the deal on a win, or when nobody wins, so a lucky dealer can stay East for a while.', { tiles: ['E', 'S', 'W', 'N'] }),
     ],
     quiz: [
       Q('How many tiles do you hold between turns?', ['16', '13', '14'], 0, 'Taiwanese hands are sixteen tiles.'),
@@ -234,10 +264,12 @@ export const LESSONS: Record<LessonId, Lesson> = {
       S('New words', 'Tonight’s new words are the card, jokers, the Charleston, and exposures. A win is called Mah Jongg. You’ll call Pung for three of a kind, and Kong for four. And here, groups can be bigger: five of a kind is a quint.', { tiles: ['5555s J'] }),
       S('The card', 'Real American groups play from the National Mah Jongg League’s card, printed fresh every year. It lists every hand you’re allowed to win with. Look at your tiles, pick one or two hands that match, and build toward them exactly. At the table, just tap Card to see JongClub’s own card.', { tiles: ['F1 F5', '2222m', '44p', '66p', '8888m'] }),
       S('Jokers and flowers', 'There are eight jokers. A joker can stand in for any tile in a group of three or more, but never in a pair, and never on its own. The eight flowers all count as the same tile here, and they stay in your hand.', { tiles: ['J', 'J', 'F1', 'F5'] }),
-      S('The Charleston', 'Before play begins, there’s a lovely tradition called the Charleston. Everyone passes three tiles: to the right, then across, then to the left. If everyone agrees, you pass again: left, across, right. Just remember, jokers can never be passed.', { tiles: ['9p', 'Rd', '1s'] }),
+      S('The Charleston', 'Before play begins, there’s a lovely tradition called the Charleston. Everyone passes three tiles at the same time: to the right, then across, then to the left. If everyone agrees, you pass again: left, across, right. Just remember, jokers can never be passed.', { demo: 'charleston' }),
       S('Calling and swapping', 'You can call a discard only to complete a group of three or more. Then you lay the group face up, and that’s called an exposure. Pairs and single tiles can only be called for Mah Jongg. And here’s a clever move: on your turn, you may swap a real tile for a joker in anyone’s exposure.', { tiles: ['5s', '5s', 'J'] }),
       S('Paying', 'Every hand on the card has its value printed beside it, like twenty-five or fifty. Win on a discard, and the discarder pays double, while the others pay the value once. Win on your own draw, and everyone pays double. If your hand has no jokers at all, the value doubles too.', { tiles: ['2m', 'Wd', '2m', '6m'] }),
       S('A quick example', 'Say you win a twenty-five hand on a discard. The discarder pays you fifty, and the other two pay twenty-five each. Draw it yourself instead, and all three pay you fifty.', { tiles: ['5p'] }),
+      S('The deal and the round', 'American play keeps things simple. The deal passes every hand, and there’s no round wind to score, because every hand is matched against the card.', { tiles: ['E', 'S', 'W', 'N'] }),
+      S('A goulash', 'Some groups add a custom after a wall game, when nobody wins: a goulash. East keeps the deal for one more hand, which starts with a Charleston, and the house may let jokers be passed. Why give one away? A joker can’t stand in for a pair or a single tile, so a player chasing a hand of pairs can’t use it, and would rather swap it for a tile they need.', { tiles: ['J', 'J', '9p'] }),
     ],
     quiz: [
       Q('How do you win in American Mahjong?', ['Match a hand on the card exactly', 'Any four sets and a pair', 'Seven pairs of anything'], 0, 'You must complete one hand from the card.'),
@@ -308,13 +340,29 @@ export const LESSONS: Record<LessonId, Lesson> = {
 };
 
 /** The Academy path, in the order the Learn screen lists it (Foundations, Mastering Mahjong, Variations). `tradition` is optional. */
+/** Scenes that teach a rule India Rules sets its own way. Each shows a note under
+ * Mei's caption that other variations may differ (the user, 2026-10-25). */
+export const INDIA_RULE_SCENES: Record<LessonId, string[]> = {
+  basics: ['The wall', 'Four of each', 'Flowers, seasons and jokers', 'The goal', 'Sets', 'What isn’t a run', 'The pair', 'Turn by turn', 'Calling', 'Which call when?', 'A kong after a pung'],
+  scoring: ['Points to start', 'Three kinds of win', 'Everyone pays the winner', 'East pays double', 'What keeps a hand concealed', 'Example one', 'Example two', 'Example three', 'Flowers and seasons pay', 'East pays flowers the same', 'When nobody wins', 'The table counts for you'],
+  rounds: ['Seats that move', 'Throw for East', 'Breaking the wall', 'The flower wall', 'The round wind', 'A match of four rounds', 'The goulash round', 'How long shall we play?'],
+  shapes: ['Building a crochet', 'Building a mixed chow', 'Passports', 'Passport hands', 'Card hands'],
+  strategy: ['Calling wisely'],
+  tradition: ['Why jokers?', 'The club rulebook'],
+  words: ['More new words', 'Everything on one page'],
+  efficiency: ['How many pairs?'],
+  waits: ['Your own discards'],
+  defence: ['Why defence wins', 'Their own discards'],
+  value: ['Fast or big?', 'Card hands pay more', 'The dealer’s chance', 'The last game'],
+};
+
 export const ACADEMY_ORDER: LessonId[] = [
-  // Foundations (Strategy is Level 7, Tradition the optional Level 8)
-  'basics', 'words', 'scoring', 'rounds', 'shapes', 'strategy', 'tradition',
+  // Foundations, all India Rules: Tradition is the optional Level 7, and Words at the table comes after it
+  'basics', 'scoring', 'rounds', 'shapes', 'strategy', 'tradition', 'words',
   // Mastering Mahjong
   'efficiency', 'waits', 'defence', 'value',
   // Variations and regional rules
-  'india', 'india-east', 'india-south', 'india-west', 'india-west-doubles', 'india-west-big', 'india-north', 'indian',
+  'india', 'india-east', 'india-south', 'india-west', 'india-west-doubles', 'india-west-big', 'india-north', 'classic', 'indian',
   'hongkong', 'taiwanese', 'riichi', 'american',
   'uae', 'uae-taiwanese', 'uae-american', 'uae-custom',
   'vietnamese', 'singapore', 'malaysian', 'sichuan', 'mcr', 'korean3', 'sanma', 'malaysian3',
@@ -364,6 +412,7 @@ function sceneVisual(v: Visual, labels: boolean): HTMLElement {
   if ('board' in v) return boardDiagram(v.board);
   if ('hand' in v) return handPic(v.hand, labels);
   if ('table' in v) return tablePic(v.table, labels);
+  if ('tables' in v) return h('div', { class: 'lesson-pics' }, ...v.tables.map((t) => tablePic(t, labels)));
   if ('list' in v) return listPic(v.list, labels, v.title);
   if ('cards' in v) return cardsPic(v.cards, labels);
   if ('video' in v) return videoPic(v.video, labels, v.demo, v.caption);
@@ -481,15 +530,23 @@ export function lessonPlayer(lesson: Lesson, opts: LessonPlayerOptions): HTMLEle
     const pic = s.visual ? sceneVisual(s.visual, opts.labels) : null;
     root.classList.add('playing');
     clear(root).append(
-      h('div', { class: 'lesson-progress' }, ...lesson.scenes.map((_, j) => h('i', { class: j <= i ? 'on' : '' })), h('i', { class: 'quiz-dot' })),
+      h(
+        'div',
+        { class: 'lesson-progress jump' },
+        ...lesson.scenes.map((sc, j) =>
+          h('button', { type: 'button', class: `lp-seg ${j <= i ? 'on' : ''}`, title: lt(sc.title), 'aria-label': `${j + 1}. ${lt(sc.title)}`, 'aria-current': j === i ? 'step' : null, onclick: () => j !== i && go(() => ((i = j), scene())) }),
+        ),
+        h('button', { type: 'button', class: 'lp-seg quiz-dot', title: tr('Take the test'), 'aria-label': tr('Take the test'), onclick: () => go(quiz) }),
+      ),
       h('div', { class: 'story-head' }, h('p', { class: 'eyebrow' }, `${lt(lesson.title)} · ${tr('{n} of {total}', { n: i + 1, total: lesson.scenes.length })}`), voiceBtn()),
       lessonNote() ? h('p', { class: 'lesson-lang-note' }, lessonNote()) : '',
       h('h3', { lang: lessonsTranslated() ? null : 'en' }, lt(s.title)),
       pic ?? '',
-      h('div', { class: 'narration' }, h('div', { class: 'narrator', 'aria-hidden': 'true' }, 'M'), h('p', { class: 'lesson-body', lang: lessonsTranslated() ? null : 'en', dir: lessonsTranslated() ? null : 'ltr' }, lt(s.say)), meiAside(s.say, pic, opts.labels, { n: i + 1, total: lesson.scenes.length, title: lesson.scenes[i + 1]?.title ?? null })),
+      h('div', { class: 'narration' }, h('div', { class: 'narrator', 'aria-hidden': 'true' }, 'M'), h('p', { class: 'lesson-body', lang: lessonsTranslated() ? null : 'en', dir: lessonsTranslated() ? null : 'ltr' }, lt(s.say)), meiAside(s.aside ?? s.say, pic, opts.labels, { n: i + 1, total: lesson.scenes.length, title: lesson.scenes[i + 1]?.title ?? null })),
       i === 0 && lesson.base && LESSONS[lesson.base] && opts.onOpenLesson
         ? h('button', { class: 'btn sm lesson-base', onclick: () => (narrator.stop(), opts.onOpenLesson!(lesson.base!)) }, tr('New to this game? Start with “{lesson}” ›', { lesson: lt(LESSONS[lesson.base].title) }))
         : '',
+      INDIA_RULE_SCENES[lesson.id]?.includes(s.title) ? h('p', { class: 'lesson-rule-note' }, tr('This rule follows India Rules. Other variations may differ.')) : '',
       h(
         'div',
         { class: 'btn-row' },
