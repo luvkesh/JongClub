@@ -126,6 +126,15 @@ const TORSO: [number, number][] = [
   [0.0, 1.22],
 ];
 const TORSO_SX = 1.15;
+/** The torso's radius at a height (straight between the profile points). */
+function torsoR(y: number) {
+  for (let i = 1; i < TORSO.length; i++) {
+    const [r0, y0] = TORSO[i - 1],
+      [r1, y1] = TORSO[i];
+    if (y <= y1) return r0 + ((r1 - r0) * (y - y0)) / (y1 - y0);
+  }
+  return 0;
+}
 const TORSO_SZ = 0.62;
 
 interface Mats {
@@ -143,6 +152,10 @@ interface Mats {
   lip: THREE.MeshStandardMaterial;
   gold: THREE.MeshStandardMaterial;
   wear: THREE.MeshStandardMaterial;
+  cards: THREE.MeshStandardMaterial;
+  lapel: THREE.MeshStandardMaterial;
+  sleeveTrim: THREE.MeshStandardMaterial;
+  nail: THREE.MeshStandardMaterial;
   lens: THREE.MeshStandardMaterial;
   frame: THREE.MeshStandardMaterial;
   extra: THREE.Material[];
@@ -225,6 +238,99 @@ function locks(g: THREE.BufferGeometry, depth: number, count = 22, from = 0, to 
   g.computeVertexNormals();
   return g;
 }
+
+let cardTex: THREE.CanvasTexture | null = null;
+/** A hair card's strands: fine light and dark hairs on a clear ground, thinning out toward the tip. White-based; shared. */
+function cardTexture() {
+  if (cardTex) return cardTex;
+  const W = 32 * TEX(),
+    H = 128 * TEX();
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const g = c.getContext('2d')!;
+  let n = 17;
+  const rnd = () => ((n = (n * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < W * 1.6; i++) {
+    const x = W * (0.08 + rnd() * 0.84);
+    const v = Math.round(105 + rnd() * 150);
+    const end = H * (0.75 + rnd() * 0.25);
+    const gr = g.createLinearGradient(0, 0, 0, end);
+    gr.addColorStop(0, `rgba(${v},${v},${v},1)`);
+    gr.addColorStop(0.8, `rgba(${v},${v},${v},0.9)`);
+    gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    g.strokeStyle = gr;
+    g.lineWidth = Math.max(1, W / 40) * (0.7 + rnd() * 0.8);
+    g.beginPath();
+    g.moveTo(x, 0);
+    g.bezierCurveTo(x + (rnd() - 0.5) * W * 0.15, end * 0.35, x + (rnd() - 0.5) * W * 0.2, end * 0.7, x + (rnd() - 0.5) * W * 0.25, end);
+    g.stroke();
+  }
+  cardTex = new THREE.CanvasTexture(c);
+  cardTex.colorSpace = THREE.SRGBColorSpace;
+  cardTex.anisotropy = 8;
+  return cardTex;
+}
+
+/**
+ * Hair cards over a shell (a unit sphere piece, SphereGeometry's angles):
+ * narrow strips of strands that start near the parting and fall along the
+ * shell, each a little lifted, waved and turned, so hair breaks into real locks
+ * and strands at the edges. One geometry, drawn with alpha testing.
+ */
+function strandCards(phiStart: number, phiLength: number, thetaFrom: number, thetaTo: number, count: number, lift = 0.05, seed = 1, fringe = 0) {
+  let n = seed * 7919 + 13;
+  const rnd = () => ((n = (n * 16807) % 2147483647) / 2147483647);
+  const SEGS = 8;
+  const pos: number[] = [],
+    nor: number[] = [],
+    uv: number[] = [],
+    idx: number[] = [];
+  const pt = (th: number, ph: number, r: number) => [-Math.cos(ph) * Math.sin(th) * r, Math.cos(th) * r, Math.sin(ph) * Math.sin(th) * r];
+  for (let c = 0; c < count; c++) {
+    const ph0 = phiStart + rnd() * phiLength;
+    const t0 = thetaFrom + rnd() * 0.25 * (thetaTo - thetaFrom);
+    // Cards over the forehead (phi near the front) may fall further as a fringe.
+    const front = Math.max(0, Math.cos(ph0 - Math.PI / 2));
+    const t1 = thetaTo + (rnd() - 0.3) * 0.12 + fringe * front ** 3 * (0.4 + rnd() * 0.6);
+    const w = 0.07 + rnd() * 0.1;
+    const lf = 1 + lift * (0.4 + rnd() * 0.6);
+    const sway = (rnd() - 0.5) * 0.25;
+    const twist = (rnd() - 0.5) * 0.6;
+    const base = pos.length / 3;
+    for (let i = 0; i <= SEGS; i++) {
+      const k = i / SEGS;
+      const th = t0 + (t1 - t0) * k;
+      const ph = ph0 + sway * k * k + Math.sin(k * 5 + c) * 0.02;
+      // The card narrows toward its tip and lifts off the shell a little more as it falls.
+      const half = (w / 2) * (1 - 0.45 * k);
+      const r = lf + 0.015 * k;
+      const ang = twist * k;
+      for (const side of [-1, 1]) {
+        const dp = (side * half * Math.cos(ang)) / Math.max(0.25, Math.sin(th));
+        const dr = side * half * Math.sin(ang) * 0.3;
+        const p = pt(th, ph + dp, r + dr);
+        pos.push(...p);
+        const l = Math.hypot(p[0], p[1], p[2]);
+        nor.push(p[0] / l, p[1] / l, p[2] / l);
+        uv.push(side < 0 ? 0 : 1, 1 - k);
+      }
+      if (i < SEGS) {
+        const a = base + i * 2;
+        idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  return g;
+}
+
+/** How many hair cards a shell gets: a full head of them up close, fewer on lean devices. */
+const CARDS = (n: number) => Math.round(n * (leanGraphics() ? 0.45 : 1));
 
 let strandTex: THREE.CanvasTexture | null = null;
 /** Fine light and dark strands (white-based, so it multiplies the hair colour). Shared by every figure. */
@@ -599,6 +705,35 @@ function outfitTexture(spec: AvatarSpec, outfit: string, skin: string) {
     g.lineCap = 'round';
     g.stroke();
   };
+  // Soft folds where cloth gathers at the waist and under the arms: a shade beside a highlight.
+  for (const [dx, y0, y1, a] of [
+    [0.32, -1.1, -0.1, 0.1],
+    [-0.36, -1.1, 0.0, 0.1],
+    [0.7, -1.0, 0.5, 0.12],
+    [-0.72, -1.0, 0.5, 0.12],
+    [0.12, -1.1, -0.5, 0.07],
+    [-0.1, -1.1, -0.6, 0.07],
+  ] as [number, number, number, number][]) {
+    const x = X(dx),
+      w = 22 * k;
+    const gr = g.createLinearGradient(x - w, 0, x + w, 0);
+    gr.addColorStop(0, 'rgba(0,0,0,0)');
+    gr.addColorStop(0.45, `rgba(0,0,0,${a})`);
+    gr.addColorStop(0.6, `rgba(255,255,255,${a * 0.6})`);
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr;
+    const ya = Y(y1),
+      yb = Y(y0);
+    g.save();
+    g.beginPath();
+    g.moveTo(x, ya);
+    g.lineTo(x + w, yb);
+    g.lineTo(x - w, yb);
+    g.closePath();
+    g.clip();
+    g.fillRect(x - w, ya, 2 * w, yb - ya);
+    g.restore();
+  }
   const top = 1.2;
   switch (spec.outfit) {
     case 'suit':
@@ -760,6 +895,10 @@ export class SeatFigure {
       lip: std(mix(skin, '#9c4a43', 0.5), 0.55),
       gold: std(GOLD, 0.32, 0.9),
       wear: std(wear, 0.75, 0, { side: THREE.DoubleSide }),
+      lapel: std(shade(outfit, kandura ? 0 : 0.12), 0.7),
+      sleeveTrim: std(shade(sleeve, 0.2), 0.75),
+      nail: std(mix(skin, '#f2d0c8', 0.5), 0.25),
+      cards: std(shade(hair, 0.02), 0.85, 0, { side: THREE.DoubleSide, alphaTest: 0.45, emissiveIntensity: 0.1 }),
       lens: std('#0b0d10', 0.08, 0.6, { transparent: true, opacity: 0.92 }),
       frame: std('#121212', 0.4, 0.3),
       extra: [],
@@ -770,6 +909,7 @@ export class SeatFigure {
       const strands = hairTexture();
       this.mats.hair.map = strands;
       this.mats.hair.emissiveMap = strands;
+      this.mats.cards.map = this.mats.cards.emissiveMap = cardTexture();
     }
     const iris = spec.eyeColor || '';
     this.mats.ink.color.set('#ffffff');
@@ -815,10 +955,12 @@ export class SeatFigure {
       limb(this.group, m.sleeve, el, wr, 0.17);
       // A sliver of shirt cuff under a jacket sleeve.
       if (this.spec.outfit === 'suit' || this.spec.outfit === 'blazer') limb(this.group, m.white, wr.clone().lerp(el, 0.02), wr.clone().lerp(el, -0.03), 0.15);
-      const hand = mesh(geo('hand', () => new THREE.SphereGeometry(0.16, seg(14), seg(10))), m.skin, this.group, side * 0.46, 0.12, 1.16);
-      hand.scale.set(0.95, 0.62, 1.25);
-      hand.rotation.y = side * 0.5;
+      // A cuff where the sleeve ends.
+      const cuff = mesh(geo('cuff', () => new THREE.TorusGeometry(0.165, 0.03, seg(6), seg(18))), m.sleeveTrim, this.group, wr.x, wr.y, wr.z);
+      cuff.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), wr.clone().sub(el).normalize());
+      this.buildHand(side, wr, wr.clone().sub(el).normalize());
     }
+    this.buildDress();
     // Shoulder caps round off where arms meet the torso.
     for (const side of [-1, 1]) mesh(geo('shoulder', () => new THREE.SphereGeometry(0.205, seg(14), seg(10))), m.sleeve, this.group, side * 0.82, 0.86, 0);
     const s = this.spec;
@@ -841,6 +983,113 @@ export class SeatFigure {
       fan.position.set(0.5, 0.35, 1.05);
       fan.rotation.set(-0.5, -0.25, -0.45);
       this.group.add(fan);
+    }
+  }
+
+  /**
+   * A hand at rest on the table's rim: a palm, four jointed fingers curling
+   * down onto the wood and a thumb along the inner side, continuing the forearm.
+   */
+  private buildHand(side: number, wrist: THREE.Vector3, dir: THREE.Vector3) {
+    const m = this.mats;
+    const hand = new THREE.Group();
+    hand.position.copy(wrist).addScaledVector(dir, 0.1);
+    hand.position.y -= 0.02;
+    hand.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(dir.x, 0, dir.z).normalize());
+    const palm = mesh(geo('palm', () => new THREE.SphereGeometry(1, seg(16), seg(10))), m.skin, hand, 0, 0, 0.02);
+    palm.scale.set(0.12, 0.05, 0.12);
+    const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    // Index to little finger (x across the back of the hand, mirrored for the left), with a slight spread.
+    const FINGERS: [number, number][] = [
+      [0.07, 0.95],
+      [0.024, 1.05],
+      [-0.022, 1.0],
+      [-0.066, 0.82],
+    ];
+    for (const [fx, len] of FINGERS) {
+      const x = fx * -side;
+      const k0 = V(x, 0.005, 0.11);
+      const k1 = V(x * 1.08, -0.005, 0.11 + 0.065 * len);
+      const k2 = V(x * 1.12, -0.04, 0.11 + 0.11 * len);
+      limb(hand, m.skin, k0, k1, 0.022);
+      limb(hand, m.skin, k1, k2, 0.02);
+      // A knuckle and a nail.
+      mesh(geo('knuckle', () => new THREE.SphereGeometry(0.024, seg(8), seg(6))), m.skin, hand, k0.x, k0.y + 0.004, k0.z);
+      const nail = mesh(geo('nail', () => new THREE.SphereGeometry(0.015, seg(8), seg(4), 0, Math.PI * 2, 0, Math.PI / 2)), m.nail, hand, k2.x, k2.y + 0.012, k2.z - 0.008);
+      nail.scale.set(1, 0.4, 1.3);
+    }
+    // The thumb, along the inner side and forward.
+    const t0 = V(0.09 * side, -0.005, -0.01);
+    const t1 = V(0.125 * side, -0.01, 0.06);
+    const t2 = V(0.12 * side, -0.025, 0.12);
+    limb(hand, m.skin, t0, t1, 0.03);
+    limb(hand, m.skin, t1, t2, 0.024);
+    this.group.add(hand);
+  }
+
+  /**
+   * The outfit in relief: collars, lapels with a raised edge, buttons and
+   * piping, set just proud of the torso so the painted outfit gains depth.
+   */
+  private buildDress() {
+    const m = this.mats;
+    const s = this.spec;
+    // A point on the torso's front at an offset across the chest (as the outfit painting measures it) and a height.
+    const on = (dx: number, y: number, out = 0.012) => {
+      const r = torsoR(y) + out;
+      const a = dx / 0.8;
+      return new THREE.Vector3(Math.sin(a) * r * TORSO_SX, y, Math.cos(a) * r * TORSO_SZ);
+    };
+    const edge = (pts: [number, number][], mat: THREE.Material, rad: number, out = 0.012) => {
+      for (let i = 1; i < pts.length; i++) limb(this.group, mat, on(...pts[i - 1], out), on(...pts[i], out), rad).scale.set(1, 1, 0.6);
+    };
+    const button = (dx: number, y: number, mat: THREE.Material, r = 0.03) => {
+      const b = mesh(geo(`btn${r}`, () => new THREE.CylinderGeometry(r, r, 0.014, seg(14))), mat, this.group);
+      b.position.copy(on(dx, y, 0.018));
+      b.rotation.x = Math.PI / 2;
+      b.rotation.z = 0;
+      b.lookAt(b.position.clone().multiplyScalar(2));
+      b.rotateX(Math.PI / 2);
+    };
+    switch (s.outfit) {
+      case 'suit':
+      case 'blazer': {
+        for (const side of [-1, 1]) {
+          // Lapel: the raised fold from the collar down to the button stance, and its notch.
+          edge([[0.24 * side, 1.2], [0.0, 0.3]], m.lapel, 0.022);
+          edge([[0.24 * side, 1.2], [0.5 * side, 0.7]], m.lapel, 0.018);
+          // Shirt collar points either side of the knot.
+          edge([[0.06 * side, 1.2], [0.15 * side, 1.07]], m.white, 0.02, 0.02);
+        }
+        for (const y of s.outfit === 'suit' ? [0.18] : [0.1, -0.25]) button(0.02, y, s.outfit === 'suit' ? m.lapel : m.gold);
+        break;
+      }
+      case 'qipao': {
+        // A stand collar round the neck, piped in gold, and frog fastenings down the diagonal.
+        const col = mesh(geo('stand', () => new THREE.CylinderGeometry(0.205, 0.215, 0.11, seg(20), 1, true)), m.lapel, this.group, 0, 1.24, 0);
+        col.scale.set(1, 1, 1);
+        mesh(geo('standRim', () => new THREE.TorusGeometry(0.205, 0.008, seg(4), seg(20))), m.gold, this.group, 0, 1.295, 0).rotation.x = Math.PI / 2;
+        for (const [x, y] of [[0.18, 0.82], [0.32, 0.62], [0.42, 0.45]] as [number, number][]) {
+          edge([[x - 0.05, y], [x + 0.06, y]], m.gold, 0.012, 0.016);
+          button(x + 0.065, y, m.gold, 0.016);
+        }
+        break;
+      }
+      case 'kimono':
+        // The collar bands crossing at the chest.
+        edge([[0.2, 1.2], [-0.08, 0.15]], m.white, 0.03);
+        edge([[-0.2, 1.2], [0.12, 0.0]], m.white, 0.03, 0.02);
+        break;
+      case 'sweater': {
+        // A ribbed neckline.
+        const rib = mesh(geo('rib', () => new THREE.TorusGeometry(0.212, 0.024, seg(8), seg(24))), m.lapel, this.group, 0, 1.165, 0);
+        rib.rotation.x = Math.PI / 2;
+        break;
+      }
+      case 'kandura':
+        // The tassel at the collar.
+        edge([[-0.02, 1.02], [-0.03, 0.6], [-0.02, 0.28]], m.lapel, 0.014);
+        break;
     }
   }
 
@@ -944,6 +1193,15 @@ export class SeatFigure {
     crown.scale.set(cr * 0.95 * fx, cr * 1.1 * fy, cr * 1.02 * fzs);
     // Tipped back to show the forehead, but not so far that the top of the head shows through.
     crown.rotation.x = style === 'slicked' ? -0.2 : -0.26;
+    const cards = !close && style !== 'afro' && style !== 'curly';
+    // Wisps over the forehead for styles that wear a fringe.
+    const fringe = style === 'bob' || style === 'short' || style === 'sidepart' || style === 'long' || style === 'wavy' || style === 'bun' ? 0.24 : 0.06;
+    if (cards) {
+      // Strands from the parting over the crown, falling just past the shell's edge.
+      const strands = mesh(geo(`crownCards${crownTheta}:${fringe}`, () => strandCards(0, Math.PI * 2, 0.04, crownTheta + 0.06, CARDS(260), 0.08, 3, fringe)), m.cards, h, 0, at(HEAD_Y), 0);
+      strands.scale.copy(crown.scale);
+      strands.rotation.copy(crown.rotation);
+    }
     // The sides and back, open at the face. [lowest theta, gap at the front in radians]
     const skirt: Record<AvatarSpec['hair'], [number, number] | null> = {
       short: [1.75, 2.7],
@@ -968,6 +1226,11 @@ export class SeatFigure {
       const o = mesh(g, m.hair, h, 0, at(HEAD_Y), -0.01);
       const sr = close ? HEAD_R + 0.006 : R;
       o.scale.set(sr * 0.96 * fx, sr * 1.1 * fy, sr * 1.04 * fzs);
+      if (cards) {
+        const long = thetaEnd > 2;
+        const strands = mesh(geo(`skirtCards${thetaEnd}:${gap}`, () => strandCards(Math.PI / 2 + gap / 2 + 0.05, Math.PI * 2 - gap - 0.1, 0.55, thetaEnd + 0.05, CARDS(long ? 340 : 220), 0.09, 5)), m.cards, h, 0, at(HEAD_Y), -0.01);
+        strands.scale.copy(o.scale);
+      }
     }
     if (style === 'afro') {
       // A full rounded halo, open at the face.
