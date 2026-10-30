@@ -197,15 +197,16 @@ export function claimAchievement(p: Profile, id: string): number {
 // ------------------------------------------------------------ lessons
 
 /**
- * Free from the start, always: the first three levels (Basics, the guided game
- * and Scoring teach enough to sit down and play) and every India Rules lesson
+ * Free from the start, always: Levels 1 to 5 (Basics, the guided game and
+ * Scoring teach enough to sit down and play; Winds and rounds and Hand shapes
+ * are needed for a full India Rules match; the user, 2026-10-30) and every India Rules lesson
  * (the India Rules course 13 and 13A-F, and the Kolkata Joker Club).
  * 'guided' is Level 2, the guided game.
  */
-export const FREE_LESSONS = ['basics', 'guided', 'scoring', 'india', 'india-east', 'india-south', 'india-west', 'india-west-doubles', 'india-west-big', 'india-north', 'indian'];
+export const FREE_LESSONS = ['basics', 'guided', 'scoring', 'rounds', 'shapes', 'india', 'india-east', 'india-south', 'india-west', 'india-west-doubles', 'india-west-big', 'india-north', 'indian'];
 
 /** Lessons in Foundations (after Level 3) and Mastering Mahjong. */
-export const FOUNDATIONS_PLUS = ['rounds', 'shapes', 'strategy', 'tradition', 'words'];
+export const FOUNDATIONS_PLUS = ['strategy', 'tradition', 'words'];
 export const MASTERY = ['efficiency', 'waits', 'defence', 'value'];
 
 export interface Price {
@@ -230,7 +231,7 @@ export interface Bundle {
 }
 
 export const BUNDLES: Bundle[] = [
-  { id: 'foundations', name: tr('Foundations bundle'), blurb: tr('Levels 4 to 8: winds and rounds, hand shapes, strategy, tradition and the words at the table.'), price: { jp: 3000, inr: 149 }, lessons: () => FOUNDATIONS_PLUS },
+  { id: 'foundations', name: tr('Foundations bundle'), blurb: tr('Levels 6 to 8: strategy, tradition and the words at the table.'), price: { jp: 1800, inr: 99 }, lessons: () => FOUNDATIONS_PLUS },
   { id: 'mastery', name: tr('Mastering Mahjong bundle'), blurb: tr('Levels 9 to 12: fast hands, reading waits, defence, and value over a long game.'), price: { jp: 2500, inr: 149 }, lessons: () => MASTERY },
   { id: 'world', name: tr('World variations bundle'), blurb: tr('Every variation lesson from beyond India: Chinese Classical, Hong Kong, Riichi, Taiwanese, American and the rest.'), price: { jp: 15000, inr: 499 }, lessons: (all) => all.filter((l) => !isFree(l) && !FOUNDATIONS_PLUS.includes(l) && !MASTERY.includes(l)) },
   { id: 'academy', name: tr('Complete Academy'), blurb: tr('Every lesson in the Academy, now and as new ones arrive.'), price: { jp: 18000, inr: 699 }, lessons: (all) => all.filter((l) => !isFree(l)) },

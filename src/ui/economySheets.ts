@@ -129,7 +129,7 @@ export function unlockLesson(ctx: AppCtx, id: string, title: string, done: () =>
     h('span', { class: 'ec-lock', html: glyph('lock') }),
     h('p', { class: 'eyebrow' }, tr('Advanced lesson')),
     h('h3', { class: 'ec-title' }, title),
-    h('p', { class: 'ec-line' }, tr('Levels 1 to 3 and every India Rules lesson are free. Unlock this lesson to keep learning.')),
+    h('p', { class: 'ec-line' }, tr('Levels 1 to 5 and every India Rules lesson are free. Unlock this lesson to keep learning.')),
     h('div', { class: 'ec-actions' }, jp, money),
     short ? h('p', { class: 'ec-short' }, tr('You have {n} JP.', { n: fmt(p.jongPoints) }), ' ', h('button', { class: 'link', onclick: () => ((ctx.modal.hidden = true), ctx.go('store')) }, tr('Earn more Jong Points'))) : null,
     bundles.length
@@ -226,7 +226,7 @@ export function lockedLesson(ctx: AppCtx, id: string, title: string, done: () =>
     h('span', { class: 'ec-lock', html: glyph('lock') }),
     h('p', { class: 'eyebrow' }, tr('Advanced lesson')),
     h('h3', { class: 'ec-title' }, title),
-    h('p', { class: 'ec-line' }, tr('Levels 1 to 3 and every India Rules lesson are free. Unlock this lesson to keep learning.')),
+    h('p', { class: 'ec-line' }, tr('Levels 1 to 5 and every India Rules lesson are free. Unlock this lesson to keep learning.')),
     h(
       'div',
       { class: 'ec-actions' },

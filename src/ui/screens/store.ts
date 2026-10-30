@@ -90,7 +90,7 @@ export function storeScreen(ctx: AppCtx) {
 
   // ------------------------------------------------ spend
   const spend = [
-    card(glyph('star'), tr('Advanced lessons'), tr('Levels 1 to 3 and every India Rules lesson are free. Unlock the rest one at a time or in a bundle.'), h('button', { class: 'btn sm ghost', onclick: () => ctx.go('learn') }, tr('Learn'))),
+    card(glyph('star'), tr('Advanced lessons'), tr('Levels 1 to 5 and every India Rules lesson are free. Unlock the rest one at a time or in a bundle.'), h('button', { class: 'btn sm ghost', onclick: () => ctx.go('learn') }, tr('Learn'))),
     card(glyph('brush'), tr('Cosmetics and rooms'), tr('Tile sets, racks, tables, rooms, outfits and win effects in The Atelier. They never change how the game plays.'), h('button', { class: 'btn sm ghost', onclick: () => ctx.go('atelier') }, tr('The Atelier'))),
     card(glyph('crown'), tr('Tournaments'), tr('Daily, weekend and global tournaments take an entry in Jong Points and pay out bigger prizes.'), h('button', { class: 'btn sm ghost', onclick: () => ctx.go('tournaments') }, tr('Tournaments'))),
   ];

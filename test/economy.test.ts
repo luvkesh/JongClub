@@ -11,18 +11,18 @@ const fresh = (): Profile => loadProfile();
 const day = (d: number, h = 12) => new Date(2026, 9, d, h);
 
 describe('Jong Points economy', () => {
-  it('keeps Levels 1-3 and every India Rules lesson free, and locks the rest', () => {
+  it('keeps Levels 1-5 and every India Rules lesson free, and locks the rest', () => {
     const p = fresh();
-    for (const l of ['basics', 'guided', 'scoring', 'india', 'india-east', 'india-south', 'india-west', 'india-west-doubles', 'india-west-big', 'india-north', 'indian']) expect(canOpen(p, l, all), l).toBe(true);
-    for (const l of ['rounds', 'shapes', 'efficiency', 'classic', 'riichi', 'american']) expect(canOpen(p, l, all), l).toBe(false);
+    for (const l of ['basics', 'guided', 'scoring', 'rounds', 'shapes', 'india', 'india-east', 'india-south', 'india-west', 'india-west-doubles', 'india-west-big', 'india-north', 'indian']) expect(canOpen(p, l, all), l).toBe(true);
+    for (const l of ['strategy', 'words', 'efficiency', 'classic', 'riichi', 'american']) expect(canOpen(p, l, all), l).toBe(false);
     // Every India lesson in the Academy is free.
     for (const l of ACADEMY_ORDER.filter((x) => x.startsWith('india'))) expect(FREE_LESSONS).toContain(l);
   });
 
   it('keeps lessons finished before the economy open', () => {
     const p = fresh();
-    p.lessonsDone = ['rounds', 'riichi'];
-    expect(canOpen(p, 'rounds', all)).toBe(true);
+    p.lessonsDone = ['strategy', 'riichi'];
+    expect(canOpen(p, 'strategy', all)).toBe(true);
     expect(canOpen(p, 'riichi', all)).toBe(true);
     // Lessons marked done later (a placement skip) do not open them.
     p.lessonsDone.push('waits');
@@ -32,12 +32,12 @@ describe('Jong Points economy', () => {
   it('unlocks a lesson with Jong Points only when the balance covers it', () => {
     const p = fresh();
     p.jongPoints = 100;
-    expect(unlockLessonJp(p, 'rounds', all)).toBe(false);
-    p.jongPoints = lessonPrice('rounds').jp + 5;
-    expect(unlockLessonJp(p, 'rounds', all)).toBe(true);
+    expect(unlockLessonJp(p, 'strategy', all)).toBe(false);
+    p.jongPoints = lessonPrice('strategy').jp + 5;
+    expect(unlockLessonJp(p, 'strategy', all)).toBe(true);
     expect(p.jongPoints).toBe(5);
-    expect(canOpen(p, 'rounds', all)).toBe(true);
-    expect(canOpen(p, 'shapes', all)).toBe(false);
+    expect(canOpen(p, 'strategy', all)).toBe(true);
+    expect(canOpen(p, 'words', all)).toBe(false);
   });
 
   it('bundles open their lessons and cost less than buying each one', () => {
