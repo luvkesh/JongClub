@@ -92,6 +92,34 @@ const classic: CoachScript = {
   youWon: 'Mahjong! You did it! Your very first winning hand. I’m so proud of you!',
 };
 
+/** India Rules in its Classic style (the East round's game, no passports): the guided game the Academy plays. */
+const india: CoachScript = {
+  welcome:
+    'Hello again! This time we’ll play a real India Rules hand together, and I’ll sit right here beside you. Your tiles are along the bottom of the table. Any flowers or seasons go aside, and you’ll get new tiles from the flower wall.',
+  first:
+    'You’re East, the dealer, so you go first. The tile you just drew is glowing gold. Now choose one tile to throw away. Click it once to lift it, then click it again to discard.',
+  tips: [
+    'Your turn again. Draw, then discard. Look for lonely tiles that don’t fit with anything.',
+    'Remember the Indian sets. The same number in all three suits is a crochet, and a run across the three suits is a mixed chow. They count just like any other set.',
+    'Crochets and mixed chows can’t be called from a discard. They have to come from the wall, unless the tile wins your hand. So keep the pieces close.',
+    'Pairs are precious. Keep one or two, because every winning hand needs a pair.',
+    'No calls at all makes a concealed hand, and it pays double. Draw the winning tile yourself, and it doubles again!',
+    'If you’re unsure, JongBot’s suggestion is lifted a little in your hand. Hover over any tile to see its name.',
+  ],
+  claim: {
+    pung: 'Ooh, you can claim that tile! Press Pung to make three of a kind, or Pass to keep your hand concealed. Decide quickly! At a real table, and especially online, the chance is gone once the next player draws.',
+    chow: 'That tile fits a run in your hand! Press Chow to take it. Remember, you can only chow from the player on your left, and only a run in one suit. Be quick, the chance is gone once the next player draws.',
+    kong: 'Four of a kind! Press Kong to claim it, and you’ll draw an extra tile from the flower wall.',
+    win: 'That’s your winning tile! Press Mahjong, quickly! To win, a discard can finish any set, even a crochet or a pair.',
+  },
+  selfWin: 'You’ve drawn your winning tile! Press Mahjong!',
+  ready: 'Look at that! You’re only one tile away from Mahjong. Keep an eye on every discard.',
+  youWon: 'Mahjong! You did it! Your very first India Rules win. I’m so proud of you!',
+  moments: {
+    bonus: 'See the flower beside your tiles? Flowers and seasons never stay in your hand. They go aside, and you draw a new tile from the flower wall. Your own flower and season together pay you five hundred!',
+  },
+};
+
 const riichi: CoachScript = {
   welcome:
     'Welcome to the Tokyo table! This is Riichi, so remember the golden rule. Every win needs a yaku, and riichi itself is the easiest one. Have a look at your tiles while everyone takes theirs.',
@@ -416,6 +444,7 @@ const korean: CoachScript = {
 
 export const SCRIPTS: Record<string, CoachScript> = {
   classic,
+  india,
   riichi,
   taiwanese,
   american,
@@ -439,47 +468,47 @@ export const SCRIPTS: Record<string, CoachScript> = {
 export const scriptFor = (variation: string): CoachScript => SCRIPTS[variation] ?? classic;
 
 /**
- * Guided games that follow a lesson: Mei plays a Classic hand with you and
+ * Guided games that follow a lesson: Mei plays an India Rules hand with you and
  * uses that lesson's words and customs as they come up. Each replaces the
  * table's welcome, tips and key lines; the rest comes from the table's script.
  */
 const THEMES: Record<string, Partial<CoachScript>> = {
-  // Level 3, Words at the table: every word, named at the moment it happens.
+  // Level 8, Words at the table: every word of an India Rules table, named at the moment it happens.
   words: {
     welcome:
       'Welcome back! This hand is all about the words you just learned. I’ll name things as they happen, so the words stick. Your tiles are your concealed hand, hidden from everyone else.',
     first:
       'You’re East, the dealer, so you go first. The gold tile is the one you just drew. Now discard, which means throw one tile away. Tap it once to lift it, then tap it again.',
     tips: [
-      'Look at your suits: Characters, Dots and Bamboo. Twos to eights are simples. Ones and nines are terminals. Winds and dragons are honours.',
-      'The tiles thrown into the middle are the discards. Japanese players call that the river.',
-      'Two matching tiles make a pair. In Chinese, the pair is called the eyes. Every winning hand needs one.',
-      'Your seat wind is the wind of your chair. The round wind is East this hand. If you sit East too, a pung of East counts for both, so it scores twice!',
-      'A finished set is a meld once it’s face up. A chow is Chi, a pung is Peng or Pon, and a kong is Gang or Kan.',
-      'Count your blocks: sets, half-sets and pairs. You want four sets and a pair, and then you can call Mahjong, or Hu.',
+      'Look at your suits: Cracks, Bamboos and Rings. Twos to eights are minors. Ones and nines are terminals. Winds, dragons and terminals together are the majors.',
+      'Each suit has its own dragon, its corresponding dragon. Red goes with Cracks, Green with Bamboos, and White with Rings.',
+      'Two matching tiles make a pure pair. The same number in two suits is a knit, but a knit is your pair only when you also hold a crochet.',
+      'A crochet is one number in all three suits. A mixed chow is a run across the three suits. Neither can be called from a discard.',
+      'A finished set is a meld once it’s face up. With no melds at all, your hand is concealed, and a concealed win pays double.',
+      'Count your sets and your pair. You want four sets and a pair, and then you can call Mahjong.',
     ],
     claim: {
-      chow: 'You can chow! A chow is a run of three, called Chi in Chinese and Japanese. You can only chow the tile from the player on your left.',
-      pung: 'You can pung! Three of a kind, called Peng in Chinese and Pon in Japan. Calling it makes it a meld, face up for everyone to see.',
-      kong: 'You can kong! Four of a kind, called Gang or Kan. You’ll draw a replacement tile straight after.',
-      win: 'That tile wins your hand! Winning on a discard is called Ron in Japan. Tap Mahjong!',
+      chow: 'You can chow! A chow is a run of three in one suit. You can only chow the tile from the player on your left.',
+      pung: 'You can pung! Three of a kind. Calling it makes it a meld, face up for everyone to see, and your hand is no longer concealed.',
+      kong: 'You can kong! Four of a kind. You’ll take an extra tile from the flower wall straight after.',
+      win: 'That tile wins your hand! Winning on a discard is fine for any set. Tap Mahjong!',
     },
-    selfWin: 'You drew your winning tile yourself! That’s a self-draw: Tsumo in Japan, Zimo in Chinese. Tap Mahjong!',
-    ready: 'Your hand is ready! One more tile wins. In Japan that’s tenpai, and the tiles that would finish it are your wait.',
-    youWon: 'Mahjong! You won. Hu, as they say in Chinese. And now you know the words for every part of it.',
-    end: 'Lovely playing! Draw, discard, meld, wait, and Hu. You can talk Mahjong at any table now. Shall we carry on with the lessons?',
+    selfWin: 'You drew your winning tile yourself! That’s a self-draw. Tap Mahjong!',
+    ready: 'Your hand is ready! One more tile wins, and the tiles that would finish it are your wait.',
+    youWon: 'Mahjong! You won. And now you know the words for every part of it.',
+    end: 'Lovely playing! Draw, discard, meld, wait, and Mahjong. You can talk Mahjong at any India Rules table now. Shall we carry on with the lessons?',
   },
-  // Level 8, Tradition and etiquette: the customs of the table, as they come up.
+  // Level 7, Tradition and etiquette: the customs of the table, as they come up.
   tradition: {
     welcome:
       'Welcome to the table! This time, let’s play like a proper club. The tiles have been washed and the wall is built. Sit tall, keep a steady pace, and enjoy the company.',
     first:
       'You’re East, so you open the hand. At a real table, you’d name your discard as you throw it, so everyone hears. Tap a tile once to lift it, then again to discard.',
     tips: [
-      'Look at your Dots: the old copper coins, round with a square hole. The Bamboo are strings of coins, and the Characters are ten thousands.',
+      'Look at your Rings: the old copper coins, round with a square hole. The Bamboos are strings of coins, and the Cracks are ten thousands.',
       'Keep a steady pace. A good player never keeps the table waiting.',
       'Once a tile is discarded, it stays down. Down is down, at every good club.',
-      'Have a look at the one of Bamboo. That little bird is the sparrow, one of Mahjong’s oldest names.',
+      'Have a look at the one of Bamboos. That little bird is the sparrow, one of Mahjong’s oldest names.',
       'The dragons have meanings too. Red is the centre, Green is to prosper, and White is a clean blank board.',
       'Remember, never touch another player’s tiles, and only discard on your own turn. That’s the club spirit.',
     ],
@@ -522,7 +551,7 @@ function scriptLines(s: CoachScript): string[] {
 /** Every line the coach can say, at every table, for recording. */
 export function coachLines(): string[] {
   const out = new Set<string>();
-  for (const s of [...Object.values(SCRIPTS), ...Object.keys(THEMES).map((k) => themedScript('classic', k))]) for (const l of scriptLines(s)) out.add(l);
+  for (const s of [...Object.values(SCRIPTS), ...Object.keys(THEMES).map((k) => themedScript('india', k))]) for (const l of scriptLines(s)) out.add(l);
   for (const l of Object.values(SHARED)) out.add(l);
   return [...out];
 }

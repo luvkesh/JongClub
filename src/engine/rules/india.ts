@@ -12,8 +12,8 @@
 //
 // A table plays all four rounds, any one or any mix of them, or Classic: the East round's game
 // without passports in all four (house rule indiaRounds).
-// The deal passes after every game, except after a drawn game, which East
-// plays again. East always pays and receives double. Flowers and seasons are
+// The deal passes after every game, won or drawn: East never keeps it (the user,
+// 2026-10-25, over the book's extra game after a draw). East always pays and receives double. Flowers and seasons are
 // paid by everyone at the end of every game, drawn games included.
 //
 // Pieces (the book's words): pung, kong, chow (a pure run), mixed chow (a
@@ -396,6 +396,8 @@ function eastRound(base: RuleProfile, passportOnly: boolean): RuleProfile {
     shapes: { sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(passportOnly)] },
     seatShapes: (_seat, info) => ({ sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(passportOnly, info.melds)] }),
     passportView: (hand, melds) => passportLayout(hand, melds, passportOnly),
+    mixedSets: true,
+    passportOptional: !passportOnly,
     score: eastScore(passportOnly),
     payments: indiaPayments,
     handPayments: flowerPayments,
@@ -645,6 +647,20 @@ function northBigRound(base: RuleProfile, n: number): RuleProfile {
   };
 }
 
+/** The club's cards for another ruleset's special wind rounds (windRounds.ts): the South round
+ *  deals the club's Small Cards (keep one of three), the North round plays the Big Card East picks
+ *  before the deal. The card rules come from the book; the table keeps its own scoring and
+ *  payments (the caller sets `score`), and India Rules' compulsory exchange and buying stay out. */
+export function clubSmallCardRound(base: RuleProfile): RuleProfile {
+  const { indiaExchange: _x, buyFromLeft: _b, guide: _g, ...south } = southRound(base);
+  return { ...south, payments: base.payments, handPayments: base.handPayments, scoreUnit: base.scoreUnit };
+}
+
+export function clubBigCardRound(base: RuleProfile, n: number): RuleProfile {
+  const { indiaExchange: _x, buyFromLeft: _b, guide: _g, ...big } = northBigRound(base, n);
+  return { ...big, payments: base.payments, handPayments: base.handPayments, scoreUnit: base.scoreUnit };
+}
+
 function bigGuide(card: (typeof BIG_CARDS)[number]): RuleProfile['guide'] {
   const flowers = card.flowers === 'joker' ? 'Flowers and seasons are jokers on this card: kept in the hand, not replaced, not paid.' : card.flowers === 'tile' ? 'A flower or season is the 0 on this card: kept in the hand, not replaced, not paid.' : 'Flowers and seasons are set aside, replaced and paid as usual.';
   return {
@@ -720,7 +736,7 @@ export const indiaProfile: RuleProfile = {
   calls: { chow: true, pung: true, exposedKong: true, concealedKong: true, addedKong: true, chowFromLeftOnly: true },
   shapes: { sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(true)] },
   minValue: 0,
-  rounds: { prevailingWinds: ['E'], seatWindOrder: ['E', 'S', 'W', 'N'], handsPerWind: 4, dealerRetention: 'onDraw', maxHands: 0, lockWinds: true },
+  rounds: { prevailingWinds: ['E'], seatWindOrder: ['E', 'S', 'W', 'N'], handsPerWind: 4, dealerRetention: 'never', maxHands: 0, lockWinds: true },
   score: eastScore(true),
   payments: indiaPayments,
   handPayments: flowerPayments,
@@ -776,6 +792,7 @@ export const indiaProfile: RuleProfile = {
         shapes: { sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(false)] },
         seatShapes: (_seat, info) => ({ sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(false, info.melds)] }),
         score: eastScore(false, false),
+        mixedSets: true,
         tableName: 'Bombay Gymkhana',
         guide: CLASSIC_GUIDE,
       };

@@ -40,7 +40,7 @@
 .hp-group.hl .hp-tiles { border-color: rgba(201, 165, 107, 0.7); background: rgba(201, 165, 107, 0.08); box-shadow: 0 0 22px rgba(201, 165, 107, 0.22); }
 .hp-group.win .hp-tiles { border-color: rgba(124, 199, 160, 0.7); background: rgba(63, 138, 109, 0.12); box-shadow: 0 0 22px rgba(124, 199, 160, 0.2); }
 .hp-group.called .hp-tiles { border-style: dashed; border-color: rgba(242, 234, 217, 0.35); }
-.hp-group figcaption { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding-top: 9px; min-width: 100%; text-align: center; }
+.hp-group figcaption { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px; padding-top: 9px; min-width: 100%; min-height: 42px; box-sizing: border-box; text-align: center; }
 .hp-group figcaption::before { content: ''; position: absolute; top: 0; left: 8px; right: 8px; height: 6px; border: 1px solid var(--brass); border-top: 0; border-radius: 0 0 4px 4px; }
 .hp-group figcaption b { font: 500 12px/1.2 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); }
 .hp-group figcaption span { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
@@ -240,3 +240,13 @@
 .bd-phrase { font: 500 19px/1.3 var(--display-title); color: var(--muted); }
 .bd-phrase b { font-weight: 700; color: var(--brass-hi); font-size: 1.15em; }
 .bd-mnemonic i { color: var(--muted); font-size: 14px; }
+/* A full suit, 1 to 9, stays on one row on phones (Basics "Three suits"). */
+@media (max-width: 560px) {
+  .ll-tiles:has(> :nth-child(9)) { flex-wrap: nowrap; gap: 2px; }
+  .ll-tiles:has(> :nth-child(9)) { width: 100%; }
+  .ll-tiles:has(> :nth-child(9)) .tile2d { flex: none; width: calc((100% - 16px) / 9); min-width: 0; }
+}
+/* A hand beside the Small Card that names it (Hand shapes, "Card hands"). */
+.hp-with-card { display: flex; align-items: center; gap: 20px; }
+.hp-with-card > .small-card { flex: 0 0 auto; --cc-w: 340px; }
+@media (max-width: 700px) { .hp-with-card { flex-direction: column; align-items: stretch; } .hp-with-card > .small-card { flex: none; } }

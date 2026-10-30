@@ -76,6 +76,10 @@ button.vt-node:active { transform: translateY(0); }
 /* ---------------------------------------------------------------- Mei's panel */
 .vp-sheet { width: min(680px, 100%); max-height: calc(100dvh - 2 * var(--gutter)); overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 16px; animation: vp-in 0.22s ease-out; }
 .vp-sheet > * { flex-shrink: 0; }
+/* The sheet scrolls, so the card's inner brass rule is drawn as a fixed inset frame rather than a
+   ::before box, which would scroll away and cut across the content. */
+.vp-sheet::before { display: none; }
+.vp-sheet { box-shadow: inset 0 0 0 5px var(--surface-solid), inset 0 0 0 6px var(--line-soft), var(--hi), var(--shadow-2); }
 @keyframes vp-in { from { opacity: 0; transform: translateY(10px); } }
 @media (prefers-reduced-motion: reduce) { .vp-sheet { animation: none; } button.vt-node:hover { transform: none; } }
 .vp-head { display: flex; align-items: flex-start; gap: 14px; }

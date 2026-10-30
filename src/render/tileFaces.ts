@@ -8,7 +8,7 @@
 import { ANIMAL_BASE, FLOWER_BASE, FLOWER_JOKER, KIND_COUNT, WINDS, flowerNumber, isAnimal, isFlower, isJoker, isTypedJoker, rankOf, suitOf } from '../engine/tiles';
 import { TILE_SETS, tileSetStyle, type TileFinish, type TileFoil, type TileSetStyle } from '../cosmetics/catalog';
 import { FACE_STORE_VERSION, blobCanvas, encodePng, loadFaces, saveFace } from './faceStore';
-import { FACE_ACCESS, accessibleStyle, tileIndex, type FaceAccess, type SuitMark } from './tileAccess';
+import { FACE_ACCESS, accessibleStyle, DRAGON_INDEX, tileIndex, type FaceAccess, type SuitMark } from './tileAccess';
 
 export const FACE_W = 192;
 export const FACE_H = 256;
@@ -104,6 +104,13 @@ function applyStyle(next: TileSetStyle, access = true) {
     paper: dark ? mix(next.face[0], '#ffffff', 0.12) : mix(next.face[0], '#ffffff', 0.25),
     dark,
   });
+  // 2D tiles in the UI wear the equipped set's body, metal seam and back (style.css .tile2d).
+  if (access && typeof document !== 'undefined') {
+    const root = document.documentElement.style;
+    root.setProperty('--tile-body', mix(next.body, '#000000', 0.12));
+    root.setProperty('--tile-metal', METALS[jewelMetal()].stops[1]);
+    root.setProperty('--tile-back', next.back);
+  }
 }
 
 /** Equip a tile set for every face drawn from now on (3D textures and 2D images). Clears caches. */
@@ -269,7 +276,7 @@ export async function primeFaces(labels: boolean, timeoutMs = 2500): Promise<num
         const [face, foil, relief] = await Promise.all([blobCanvas(v.face), v.foil ? blobCanvas(v.foil) : null, blobCanvas(v.relief)]);
         // The set or detail may have changed while decoding.
         if (!face || !relief || TILE_SET.id !== setId || detail !== scale) return;
-        if (style.foil && !foil) return;
+        if (!foil) return;
         const [k, r] = rest.split(':');
         const key = `${setId}:${k}:${labels}:${r}:${scale}`;
         if (cache.has(key)) return;
@@ -301,19 +308,34 @@ export function drawFaceSurface(kind: number, labels: boolean, red = false, grou
   const key = `${TILE_SET.id}:${kind}:${labels}:${red ? 'r' : ''}:${scale}`;
   const relief = reliefCache.get(key);
   if (!relief) return null;
+  return surfaceMap(relief, surfaceCache.get(key) ?? null, groundRough);
+}
+
+/** Enamel takes a glassy polish whatever the ground (three.js roughness, 0-1). */
+const ENAMEL_ROUGH = 0.1;
+
+/**
+ * The surface map from a face's relief and metal mask: relief in red (the bump map), roughness in
+ * green (the ground's, enamel polished glassy, metal its own) and metalness in blue.
+ */
+function surfaceMap(relief: HTMLCanvasElement, metalMask: HTMLCanvasElement | null, groundRough: number) {
   const [c, g] = canvas(relief.width, relief.height, true);
-  g.fillStyle = `rgb(0,${Math.round(groundRough * 255)},0)`;
+  g.fillStyle = '#000000';
   g.fillRect(0, 0, c.width, c.height);
-  const foil = style.foil ? surfaceCache.get(key) : null;
-  if (foil && style.foil) {
-    const m = METALS[style.foil.metal];
-    g.drawImage(tinted(foil, `rgb(0,${Math.round(m.rough * 255)},${Math.round(m.metal * 255)})`), 0, 0, c.width, c.height);
-  }
-  // Red carries the relief, read by the material as its bump map: the ink sits below the surface.
+  const m = METALS[jewelMetal()];
+  if (metalMask) g.drawImage(tinted(metalMask, `rgb(0,${Math.round(m.rough * 255)},${Math.round(m.metal * 255)})`), 0, 0, c.width, c.height);
   const img = g.getImageData(0, 0, c.width, c.height);
   const r = relief.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, c.width, c.height).data;
   const d = img.data;
-  for (let i = 0; i < d.length; i += 4) d[i] = r[i];
+  const ground = Math.round(groundRough * 255),
+    glassy = Math.round(ENAMEL_ROUGH * 255);
+  for (let i = 0; i < d.length; i += 4) {
+    d[i] = r[i];
+    // Where the metal fades out at its edge, what lies under it shows: enamel or ground.
+    const under = r[i] < ENAMEL_BELOW ? glassy : ground;
+    const k = d[i + 2] / 255 / m.metal;
+    if (k < 1) d[i + 1] = Math.round(d[i + 1] + under * (1 - k));
+  }
   g.putImageData(img, 0, 0);
   return c;
 }
@@ -327,17 +349,7 @@ export function drawFaceOnce(kind: number, scale: number, groundRough = 0.32): {
   FACE_SCALE = scale;
   try {
     const { face, foil, relief } = renderFace(kind, false, false);
-    const [c, g] = canvas(relief.width, relief.height, true);
-    g.fillStyle = `rgb(0,${Math.round(groundRough * 255)},0)`;
-    g.fillRect(0, 0, c.width, c.height);
-    if (foil && style.foil) {
-      const m = METALS[style.foil.metal];
-      g.drawImage(tinted(foil, `rgb(0,${Math.round(m.rough * 255)},${Math.round(m.metal * 255)})`), 0, 0, c.width, c.height);
-    }
-    const img = g.getImageData(0, 0, c.width, c.height);
-    const r = relief.getContext('2d', { willReadFrequently: true })!.getImageData(0, 0, c.width, c.height).data;
-    for (let i = 0; i < img.data.length; i += 4) img.data[i] = r[i];
-    g.putImageData(img, 0, 0);
+    const c = surfaceMap(relief, foil, groundRough);
     return { face, surface: c };
   } finally {
     FACE_SCALE = prev;
@@ -366,6 +378,166 @@ export const setTilePicture3d = (fn: typeof picture3d) => void (picture3d = fn);
 let layer: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
 let tintL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
 
+// ------------------------------------------------------------ the jeweller's setting
+//
+// Every set is made the way a jeweller makes cloisonné: each symbol is enamel
+// laid between fine metal wires (the cloisons), pips are cabochons in metal
+// collars, bamboo canes wear metal ferrules, and the whole face sits in a
+// polished metal bezel. The wires, collars and bezel are real metal on the 3D
+// table (the surface map's blue), the enamel a glassy polish (its green), and
+// the ground carries an engine-turned guilloche that only the light reveals
+// (the relief), so the faces stay truly white.
+
+/** Metal parts the symbols draw for themselves (ferrules, beaks, studs), at face resolution. */
+let metalL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
+/** While a face's symbols are drawn: the context they paint metal parts onto. */
+let metalCtx: CanvasRenderingContext2D | null = null;
+/** Width of the wire round each symbol, in face units (fine round calligraphy, a little bolder round pips and canes). */
+let wireW = 1.3;
+let wireL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
+let maskL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
+let paintL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
+
+/** The set's metal: its foil's, or what its trim colour is (silver, brass or gold). */
+function jewelMetal(): TileFoil['metal'] {
+  if (style.foil) return style.foil.metal;
+  const [r, g, b] = rgb(style.trim);
+  if (Math.max(r, g, b) - Math.min(r, g, b) < 24) return 'silver';
+  return luma(style.trim) < 0.45 ? 'brass' : 'gold';
+}
+
+/** Paint metal parts of a symbol (in face units, like the symbol itself); nothing when no face is being drawn. */
+function metalPart(draw: (m: CanvasRenderingContext2D) => void) {
+  if (!metalCtx) return;
+  metalCtx.save();
+  metalCtx.fillStyle = metalCtx.strokeStyle = '#ffffff';
+  draw(metalCtx);
+  metalCtx.restore();
+}
+
+const sized = (l: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined, w: number, h: number) => (l && l[0].width === w && l[0].height === h ? l : canvas(w, h));
+
+/** The wires: a band `w` face units wide hugging the outside of every shape on `L`. */
+function wires(L: HTMLCanvasElement, w: number) {
+  wireL = sized(wireL, L.width, L.height);
+  const [O, og] = wireL;
+  og.setTransform(1, 0, 0, 1, 0, 0);
+  og.globalCompositeOperation = 'source-over';
+  og.clearRect(0, 0, O.width, O.height);
+  const r = w * FACE_SCALE;
+  for (const [n, k] of [
+    [20, 1],
+    [10, 0.55],
+  ])
+    for (let a = 0; a < n; a++) og.drawImage(L, Math.cos((a / n) * Math.PI * 2) * r * k, Math.sin((a / n) * Math.PI * 2) * r * k);
+  og.globalCompositeOperation = 'destination-out';
+  og.drawImage(L, 0, 0);
+  og.globalCompositeOperation = 'source-over';
+  return O;
+}
+
+/** The face's bezel: a polished band round the very edge of the face, in face units. */
+function bezel(g: CanvasRenderingContext2D) {
+  g.save();
+  g.strokeStyle = '#ffffff';
+  g.lineWidth = 3.4;
+  g.beginPath();
+  g.roundRect(1.7, 1.7, FACE_W - 3.4, FACE_H - 3.4, 9);
+  g.stroke();
+  g.restore();
+}
+
+/**
+ * Lays polished metal wherever `mask` is opaque: the set's metal under a raking light, a fine brushed
+ * grain, a bright bevel on the upper-left of every wire and a shaded one below, and a hairline shadow
+ * where the metal stands proud of the face.
+ */
+function paintMetal(g: CanvasRenderingContext2D, mask: HTMLCanvasElement, metal: TileFoil['metal']) {
+  const m = METALS[metal];
+  paintL = sized(paintL, mask.width, mask.height);
+  const [P, pg] = paintL;
+  pg.setTransform(1, 0, 0, 1, 0, 0);
+  pg.globalCompositeOperation = 'source-over';
+  pg.clearRect(0, 0, P.width, P.height);
+  pg.drawImage(mask, 0, 0);
+  pg.globalCompositeOperation = 'source-in';
+  const lg = pg.createLinearGradient(0, 0, P.width * 0.9, P.height);
+  m.stops.forEach((c, i) => lg.addColorStop(i / (m.stops.length - 1), c));
+  pg.fillStyle = lg;
+  pg.fillRect(0, 0, P.width, P.height);
+  pg.globalCompositeOperation = 'source-atop';
+  const r = rng(seedOf(style.id) + 29);
+  const step = Math.max(1, FACE_SCALE * 0.6);
+  for (let y = 0; y < P.height; y += step) {
+    pg.fillStyle = r() < 0.5 ? `rgba(255,255,255,${r() * 0.14})` : `rgba(0,0,0,${r() * 0.1})`;
+    pg.fillRect(0, y, P.width, step * 0.6);
+  }
+  pg.drawImage(inkEdge(mask, 0.5, 'rgba(255,252,236,0.8)', true), 0, 0);
+  pg.drawImage(inkEdge(mask, -0.6, 'rgba(48,26,4,0.5)', true), 0, 0);
+  pg.globalCompositeOperation = 'source-over';
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(inkEdge(mask, 0.7, TILE_SET.dark ? 'rgba(0,0,0,0.55)' : 'rgba(70,46,12,0.32)', false), 0, 0);
+  g.drawImage(P, 0, 0);
+  g.restore();
+}
+
+/**
+ * Glassy enamel: the ink is already laid; this domes it. A bright meniscus along the upper-left of
+ * each shape where it meets its wire, the lower-right rim a shade deeper, and a soft sheen across.
+ * `fine` is for calligraphy, whose strokes are too slender for a broad highlight.
+ */
+function enamel(g: CanvasRenderingContext2D, L: HTMLCanvasElement, fine: boolean) {
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const dark = TILE_SET.dark;
+  g.drawImage(inkEdge(L, fine ? -1.1 : -2.6, dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.2)', true), 0, 0);
+  g.drawImage(inkEdge(L, fine ? 0.9 : 2.2, `rgba(255,255,255,${fine ? 0.32 : 0.42})`, true), 0, 0);
+  const [c, tg] = (tintL = sized(tintL, L.width, L.height));
+  tg.globalCompositeOperation = 'source-over';
+  tg.clearRect(0, 0, c.width, c.height);
+  tg.drawImage(L, 0, 0);
+  tg.globalCompositeOperation = 'source-in';
+  const lg = tg.createLinearGradient(0, 0, c.width * 0.7, c.height);
+  lg.addColorStop(0, 'rgba(255,255,255,0.22)');
+  lg.addColorStop(0.45, 'rgba(255,255,255,0.02)');
+  lg.addColorStop(1, 'rgba(0,0,0,0.12)');
+  tg.fillStyle = lg;
+  tg.fillRect(0, 0, c.width, c.height);
+  tg.globalCompositeOperation = 'source-over';
+  g.drawImage(c, 0, 0);
+  g.restore();
+}
+
+/** Engine-turned guilloche for the relief: fine waves round the face, a few grey levels deep (cached per size). */
+const guillocheCache = new Map<string, HTMLCanvasElement>();
+function guilloche(w: number, h: number) {
+  const key = `${w}x${h}`;
+  let c = guillocheCache.get(key);
+  if (c) return c;
+  const [gc, gg] = canvas(w, h, true);
+  const img = gg.createImageData(w, h);
+  const d = img.data;
+  const cx = w / 2,
+    cy = h / 2,
+    s = FACE_W / w;
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const dx = (x - cx) * s,
+        dy = (y - cy) * s;
+      const rr = Math.hypot(dx, dy),
+        th = Math.atan2(dy, dx);
+      // Rings rippled by a twelve-fold rose: the barleycorn of a watch dial.
+      const v = 0.5 + 0.5 * Math.sin(rr * 0.9 + 2.2 * Math.sin(th * 12 + rr * 0.05));
+      const i = (y * w + x) * 4;
+      d[i] = d[i + 1] = d[i + 2] = 255;
+      d[i + 3] = Math.round(v * 255);
+    }
+  gg.putImageData(img, 0, 0);
+  guillocheCache.set(key, gc);
+  return gc;
+}
+
 function renderFace(kind: number, labels: boolean, red: boolean): { face: HTMLCanvasElement; foil: HTMLCanvasElement | null; relief: HTMLCanvasElement } {
   const PW = Math.round(FACE_W * FACE_SCALE),
     PH = Math.round(FACE_H * FACE_SCALE);
@@ -385,27 +557,46 @@ function renderFace(kind: number, labels: boolean, red: boolean): { face: HTMLCa
   g.drawImage(halo ? knockOut(D, halo) : D, 0, 0);
   g.restore();
 
-  const { L } = inkLayer(g, kind, labels, red);
+  const { L, M } = inkLayer(g, kind, labels, red);
+  const metal = jewelMetal();
+  const gilt = style.inkStyle === 'gilded';
+  // Everything that is metal on this face, at full resolution: the symbols' own metal parts,
+  // the wires round them (gilt ink is metal already and needs none), and the bezel.
+  maskL = sized(maskL, PW, PH);
+  const [MM, mmg] = maskL;
+  mmg.setTransform(1, 0, 0, 1, 0, 0);
+  mmg.clearRect(0, 0, PW, PH);
+  if (!gilt) mmg.drawImage(wires(L, wireW), 0, 0);
+  mmg.drawImage(M, 0, 0);
+  mmg.setTransform(FACE_SCALE, 0, 0, FACE_SCALE, 0, 0);
+  bezel(mmg);
+  mmg.setTransform(1, 0, 0, 1, 0, 0);
+
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  setInk(g, L);
   if (I) {
+    // The index is set the same way, with the finest finish so it stays crisp at a glance.
+    const w0 = wireW;
+    wireW = 1;
+    setInk(g, I);
+    wireW = w0;
     const lg = L.getContext('2d')!;
     lg.save();
     lg.setTransform(1, 0, 0, 1, 0, 0);
     lg.drawImage(I, 0, 0);
     lg.restore();
   }
-
-  g.setTransform(1, 0, 0, 1, 0, 0);
-  setInk(g, L);
+  paintMetal(g, MM, metal);
   g.setTransform(FACE_SCALE, 0, 0, FACE_SCALE, 0, 0);
   drawGloss(g);
   const gems = style.foil ? drawGems(g) : [];
   if (red) drawRedMarker(g);
 
-  let foil: HTMLCanvasElement | null = null;
+  // The metal mask, at half resolution: the setting, the foil (parted round the index as on the
+  // face) and, on gilt sets, all the ink, index included, so the whole face reads as one surface.
+  const [mc, mg] = canvas(Math.round(PW / 2), Math.round(PH / 2));
+  mg.drawImage(MM, 0, 0, mc.width, mc.height);
   if (style.foil) {
-    // The metal mask, at half resolution: the foil (parted round the index as on the face) and,
-    // on gilt sets, all the ink, index included, so the whole face reads as one surface.
-    const [mc, mg] = canvas(Math.round(PW / 2), Math.round(PH / 2));
     mg.drawImage(halo ? knockOut(F, halo) : F, 0, 0, mc.width, mc.height);
     if (style.foil.ink) mg.drawImage(L, 0, 0, mc.width, mc.height);
     mg.globalCompositeOperation = 'destination-out';
@@ -415,17 +606,28 @@ function renderFace(kind: number, labels: boolean, red: boolean): { face: HTMLCa
       mg.arc(x, y, r * 0.8, 0, Math.PI * 2);
       mg.fill();
     }
-    foil = mc;
   }
-  // The relief: the surface white, the ink cut into it with softly sloped walls (half resolution).
+  const foil = mc;
+  // The relief (half resolution): the ground engine-turned a few levels deep, the enamel lying a
+  // little below it and the metal standing proud, with softly sloped walls.
   const [rc, rg] = canvas(Math.round(PW / 2), Math.round(PH / 2), true);
-  rg.fillStyle = '#ffffff';
+  rg.fillStyle = `rgb(${RELIEF.ground},${RELIEF.ground},${RELIEF.ground})`;
   rg.fillRect(0, 0, rc.width, rc.height);
-  if (typeof rg.filter === 'string') rg.filter = `blur(${Math.max(0.5, FACE_SCALE * 0.22).toFixed(2)}px)`;
-  rg.drawImage(tinted(L, 'rgb(40,40,40)'), 0, 0, rc.width, rc.height);
+  rg.globalAlpha = 0.16;
+  rg.drawImage(tinted(guilloche(rc.width, rc.height), '#ffffff'), 0, 0);
+  rg.globalAlpha = 1;
+  if (typeof rg.filter === 'string') rg.filter = `blur(${Math.max(0.5, FACE_SCALE * 0.18).toFixed(2)}px)`;
+  rg.drawImage(tinted(L, `rgb(${RELIEF.enamel},${RELIEF.enamel},${RELIEF.enamel})`), 0, 0, rc.width, rc.height);
+  rg.drawImage(tinted(MM, '#ffffff'), 0, 0, rc.width, rc.height);
+  if (gilt) rg.drawImage(tinted(L, '#ffffff'), 0, 0, rc.width, rc.height);
   rg.filter = 'none';
   return { face: c, foil, relief: rc };
 }
+
+/** Relief levels (0-255): the ground (its guilloche lifts it a little), the enamel just below it, metal proud. */
+const RELIEF = { ground: 214, enamel: 186, metal: 255 };
+/** Below this relief level a non-metal pixel is enamel (polished glassy) rather than ground. */
+const ENAMEL_BELOW = 205;
 
 let indexL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
 let haloL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
@@ -452,7 +654,7 @@ function indexHalo(I: HTMLCanvasElement) {
   hg.clearRect(0, 0, H.width, H.height);
   const r = 3.2 * FACE_SCALE;
   // The index lives in the top-left corner: only that corner needs growing.
-  const cw = Math.round(110 * FACE_SCALE),
+  const cw = Math.round(170 * FACE_SCALE),
     ch = Math.round(72 * FACE_SCALE);
   for (let a = 0; a < 16; a++) hg.drawImage(I, 0, 0, cw, ch, Math.cos((a / 16) * Math.PI * 2) * r, Math.sin((a / 16) * Math.PI * 2) * r, cw, ch);
   hg.drawImage(I, 0, 0, cw, ch, 0, 0, cw, ch);
@@ -472,27 +674,38 @@ function knockOut(src: HTMLCanvasElement, hole: HTMLCanvasElement) {
   return K;
 }
 
-/** The face's symbols on the scratch layer, already moved clear of the corner index; and the index. */
+/** The face's symbols on the scratch layer (and their metal parts on their own), already moved clear of the corner index; and the index. */
 function inkLayer(g: CanvasRenderingContext2D, kind: number, labels: boolean, red: boolean) {
   const PW = Math.round(FACE_W * FACE_SCALE),
     PH = Math.round(FACE_H * FACE_SCALE);
   if (!layer || layer[0].width !== PW || layer[0].height !== PH) layer = canvas(PW, PH);
+  metalL = sized(metalL, PW, PH);
   const [L, lg] = layer;
-  lg.setTransform(1, 0, 0, 1, 0, 0);
-  lg.clearRect(0, 0, PW, PH);
-  lg.setTransform(FACE_SCALE, 0, 0, FACE_SCALE, 0, 0);
+  const [M, ml] = metalL;
+  for (const x of [lg, ml]) {
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.clearRect(0, 0, PW, PH);
+    x.setTransform(FACE_SCALE, 0, 0, FACE_SCALE, 0, 0);
+  }
   const s = suitOf(kind);
-  if (isJoker(kind)) drawJoker(lg);
-  else if (isFlower(kind)) drawFlower(lg, kind);
-  else if (isTypedJoker(kind)) drawKhung(lg, kind - FLOWER_JOKER);
-  else if (isAnimal(kind)) drawAnimal(lg, kind - ANIMAL_BASE);
-  else if (s === 'man') drawCharacter(lg, rankOf(kind), red);
-  else if (s === 'pin') drawDots(lg, rankOf(kind), red);
-  else if (s === 'sou') drawBamboo(lg, rankOf(kind), red);
-  else if (s === 'wind') drawGlyph(lg, '東南西北'[kind - 27], TILE_SET.ink, 132);
-  else if (kind === 31) drawGlyph(lg, '中', TILE_SET.red, 140);
-  else if (kind === 32) drawGlyph(lg, '發', TILE_SET.green, 132);
-  else drawWhiteDragon(lg);
+  // Calligraphy takes the finest wire; pips and canes a bolder one.
+  wireW = s === 'pin' || s === 'sou' ? 1.6 : 1.15;
+  metalCtx = ml;
+  try {
+    if (isJoker(kind)) drawJoker(lg);
+    else if (isFlower(kind)) drawFlower(lg, kind);
+    else if (isTypedJoker(kind)) drawKhung(lg, kind - FLOWER_JOKER);
+    else if (isAnimal(kind)) drawAnimal(lg, kind - ANIMAL_BASE);
+    else if (s === 'man') drawCharacter(lg, rankOf(kind), red);
+    else if (s === 'pin') drawDots(lg, rankOf(kind), red);
+    else if (s === 'sou') drawBamboo(lg, rankOf(kind), red);
+    else if (s === 'wind') drawGlyph(lg, '東南西北'[kind - 27], TILE_SET.ink, 132);
+    else if (kind === 31) drawGlyph(lg, '中', TILE_SET.red, 140);
+    else if (kind === 32) drawGlyph(lg, '發', TILE_SET.green, 132);
+    else drawWhiteDragon(lg);
+  } finally {
+    metalCtx = null;
+  }
 
   // The corner index (and a red five's marker) never touch the tile's symbols:
   // if the ink reaches under them, the whole design shrinks a little and moves
@@ -501,8 +714,8 @@ function inkLayer(g: CanvasRenderingContext2D, kind: number, labels: boolean, re
   const idx = indexFor(kind, labels, red);
   if (idx) keepOut.push(idx.marked ? markedIndexBox(g, idx.text, idx.mark) : indexBox(g, idx.text));
   if (red) keepOut.push(RED_MARKER_BOX);
-  if (keepOut.length) clearOfIndex(L, keepOut);
-  return { L, idx, keepOut };
+  if (keepOut.length) clearOfIndex(L, keepOut, M);
+  return { L, M, idx, keepOut };
 }
 
 /**
@@ -558,7 +771,7 @@ function indexFor(kind: number, labels: boolean, red: boolean): FaceIndex | null
       label = String(i < 2 ? 1 : 2);
       ink = ANIMAL_RING[i];
     } else {
-      label = s === 'wind' ? WINDS[kind - 27] : s === 'dragon' ? ['R', 'G', 'W'][kind - 31] : String(rankOf(kind));
+      label = s === 'wind' ? WINDS[kind - 27] : s === 'dragon' ? DRAGON_INDEX[kind - 31] : String(rankOf(kind));
       // Ink follows the suit, so number and suit read together at a glance.
       ink = s === 'dragon' ? [TILE_SET.red, TILE_SET.green, TILE_SET.blue][kind - 31] : red ? TILE_SET.aka : s === 'pin' ? TILE_SET.blue : s === 'sou' ? TILE_SET.green : s === 'man' ? TILE_SET.red : TILE_SET.ink;
     }
@@ -584,7 +797,7 @@ const RED_MARKER_BOX: Box = { x: FACE_W - 30, y: 10, w: 20, h: 20 };
  * grown by INDEX_GAP, using a summed-area table of the ink, and redraws the
  * layer with it. Faces already clear are left untouched.
  */
-function clearOfIndex(L: HTMLCanvasElement, boxes: Box[]) {
+function clearOfIndex(L: HTMLCanvasElement, boxes: Box[], M?: HTMLCanvasElement) {
   // Worked out on a copy at 1.5 pixels per unit (the fit does not need more), applied at full detail.
   const k = Math.min(FACE_SCALE, 1.5),
     up = FACE_SCALE / k;
@@ -594,7 +807,13 @@ function clearOfIndex(L: HTMLCanvasElement, boxes: Box[]) {
   const pg = probeL[1];
   pg.clearRect(0, 0, W, H);
   pg.drawImage(L, 0, 0, W, H);
-  const lg = L.getContext('2d')!;
+  // The symbols' metal parts and their wires keep clear too.
+  if (M) pg.drawImage(M, 0, 0, W, H);
+  if (typeof pg.filter === 'string') {
+    pg.filter = `blur(${(1.6 * k).toFixed(2)}px)`;
+    pg.drawImage(L, 0, 0, W, H);
+    pg.filter = 'none';
+  }
   const data = pg.getImageData(0, 0, W, H).data;
   // sat[(y+1)*(W+1)+(x+1)] = inked pixels in [0,x] x [0,y].
   const sat = new Uint32Array((W + 1) * (H + 1));
@@ -638,18 +857,21 @@ function clearOfIndex(L: HTMLCanvasElement, boxes: Box[]) {
         }
       }
     if (best) {
-      const FW = L.width,
-        FH = L.height;
-      const copy = document.createElement('canvas');
-      copy.width = FW;
-      copy.height = FH;
-      copy.getContext('2d')!.drawImage(L, 0, 0);
-      lg.save();
-      lg.setTransform(1, 0, 0, 1, 0, 0);
-      lg.clearRect(0, 0, FW, FH);
-      lg.setTransform(s, 0, 0, s, (cx - s * cx + best[0]) * up, (cy - s * cy + best[1]) * up);
-      lg.drawImage(copy, 0, 0);
-      lg.restore();
+      for (const layerC of M ? [L, M] : [L]) {
+        const FW = layerC.width,
+          FH = layerC.height;
+        const lg = layerC.getContext('2d')!;
+        const copy = document.createElement('canvas');
+        copy.width = FW;
+        copy.height = FH;
+        copy.getContext('2d')!.drawImage(layerC, 0, 0);
+        lg.save();
+        lg.setTransform(1, 0, 0, 1, 0, 0);
+        lg.clearRect(0, 0, FW, FH);
+        lg.setTransform(s, 0, 0, s, (cx - s * cx + best[0]) * up, (cy - s * cy + best[1]) * up);
+        lg.drawImage(copy, 0, 0);
+        lg.restore();
+      }
       return;
     }
   }
@@ -672,14 +894,15 @@ function paintFinish(g: CanvasRenderingContext2D, w: number, h: number, f: TileF
     g.fillRect(0, 0, w, h);
   };
   const metal = (stops: string[]) => {
+    // Polished, not painted: the colour stays close to the metal's own and the room's reflections
+    // do the shading, with only a whisper of a fine satin grain.
     const gr = g.createLinearGradient(0, 0, w, h);
-    stops.forEach((s, i) => gr.addColorStop(i / (stops.length - 1), s));
+    stops.forEach((s, i) => gr.addColorStop(i / (stops.length - 1), mix(s, base, 0.7)));
     g.fillStyle = gr;
     g.fillRect(0, 0, w, h);
-    // Brushed grain.
-    for (let y = 0; y < h; y += 1.5) {
-      g.fillStyle = r() < 0.5 ? `rgba(255,255,255,${r() * 0.08})` : `rgba(0,0,0,${r() * 0.08})`;
-      g.fillRect(0, y, w, 1);
+    for (let y = 0; y < h; y += 0.5) {
+      g.fillStyle = r() < 0.5 ? `rgba(255,255,255,${r() * 0.03})` : `rgba(0,0,0,${r() * 0.03})`;
+      g.fillRect(0, y, w, 0.5);
     }
   };
   switch (f) {
@@ -979,11 +1202,11 @@ function paintFinish(g: CanvasRenderingContext2D, w: number, h: number, f: TileF
 
 /** Metals for foil linework: shading stops (shadow, body, highlight, fold) and the 3D surface they take. */
 const METALS: Record<TileFoil['metal'], { stops: string[]; rough: number; metal: number }> = {
-  gold: { stops: ['#7a5212', '#d9b25a', '#fff0b8', '#b88a2e', '#e8c873'], rough: 0.3, metal: 0.85 },
-  silver: { stops: ['#5f656d', '#c9ced6', '#ffffff', '#8d949d', '#dfe3e8'], rough: 0.28, metal: 0.85 },
-  rosegold: { stops: ['#7a3e30', '#d99a84', '#ffe2d4', '#a86a58', '#ebb7a3'], rough: 0.3, metal: 0.85 },
-  copper: { stops: ['#5e2a12', '#c27242', '#ffcfa8', '#8e4a26', '#d98a58'], rough: 0.32, metal: 0.85 },
-  brass: { stops: ['#5e4216', '#c9a45a', '#f6e2a6', '#94722e', '#dcbb72'], rough: 0.36, metal: 0.8 },
+  gold: { stops: ['#7a5212', '#d9b25a', '#fff0b8', '#b88a2e', '#e8c873'], rough: 0.2, metal: 1 },
+  silver: { stops: ['#5f656d', '#c9ced6', '#ffffff', '#8d949d', '#dfe3e8'], rough: 0.18, metal: 1 },
+  rosegold: { stops: ['#7a3e30', '#d99a84', '#ffe2d4', '#a86a58', '#ebb7a3'], rough: 0.2, metal: 1 },
+  copper: { stops: ['#5e2a12', '#c27242', '#ffcfa8', '#8e4a26', '#d98a58'], rough: 0.24, metal: 1 },
+  brass: { stops: ['#5e4216', '#c9a45a', '#f6e2a6', '#94722e', '#dcbb72'], rough: 0.26, metal: 1 },
 };
 
 /** The struck foil of the equipped set at one detail, the same on every face: [foil, foil set with its emboss]. */
@@ -1413,11 +1636,10 @@ function setInk(g: CanvasRenderingContext2D, L: HTMLCanvasElement) {
   g.save();
   switch (style.inkStyle) {
     case 'carved': {
-      // A groove: light catches its lower-right wall, shadow fills the upper-left.
-      g.drawImage(tinted(L, TILE_SET.dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.7)'), 1.6 * k, 1.6 * k);
-      g.drawImage(tinted(L, 'rgba(0,0,0,0.45)'), -1.1 * k, -1.1 * k);
-      g.globalAlpha = 0.92;
+      // Carved stone: the cut is filled with enamel to the brim, then polished flush.
+      g.drawImage(tinted(L, TILE_SET.dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.6)'), 0.9 * k, 0.9 * k);
       g.drawImage(L, 0, 0);
+      enamel(g, L, wireW < 1.4);
       break;
     }
     case 'gilded': {
@@ -1460,33 +1682,10 @@ function setInk(g: CanvasRenderingContext2D, L: HTMLCanvasElement) {
       g.globalCompositeOperation = 'source-over';
       break;
     }
-    case 'inlay': {
-      // Inlaid: a fine dark seam round every stroke, and a polished top.
-      const seam = tinted(L, TILE_SET.dark ? 'rgba(0,0,0,0.7)' : rgba(TILE_SET.trim, 0.95));
-      for (const [dx, dy] of [
-        [1.4, 0],
-        [-1.4, 0],
-        [0, 1.4],
-        [0, -1.4],
-        [1, 1],
-        [-1, -1],
-        [1, -1],
-        [-1, 1],
-      ])
-        g.drawImage(seam, dx * k, dy * k);
-      g.drawImage(L, 0, 0);
-      g.drawImage(tinted(L, 'rgba(255,255,255,0.18)'), -0.7 * k, -0.9 * k);
-      g.globalCompositeOperation = 'source-atop';
-      g.drawImage(L, 0, 0);
-      g.globalCompositeOperation = 'source-over';
-      g.drawImage(inkEdge(L, 1.2, 'rgba(0,0,0,0.28)', true), 0, 0);
-      break;
-    }
     default:
-      // Printed sets too: the ink is cut into the face, then filled.
-      recess(g, L, true);
+      // Printed, inlaid and the rest: cloisonné, enamel laid between the wires and domed.
       g.drawImage(L, 0, 0);
-      recess(g, L, false);
+      enamel(g, L, wireW < 1.4);
   }
   g.restore();
 }
@@ -1539,18 +1738,21 @@ function drawFlower(g: CanvasRenderingContext2D, kind: number) {
  * read on distant tiles. It is drawn with the symbols, in the same ink and
  * finish, straight onto the face (no chip behind it).
  */
+/** The plain index's font: a bold letter or number, or a smaller word (the dragons' RED, GREEN, WHITE). */
+const indexFont = (label: string) => `800 ${label.length > 2 ? 29 : 50}px Manrope, system-ui, sans-serif`;
+
 function indexBox(g: CanvasRenderingContext2D, label: string): Box {
   g.save();
-  g.font = '800 50px Manrope, system-ui, sans-serif';
+  g.font = indexFont(label);
   const w = Math.max(40, g.measureText(label).width + 14);
   g.restore();
-  return { x: 5, y: 5, w, h: 54 };
+  return { x: 5, y: 5, w, h: label.length > 2 ? 40 : 54 };
 }
 
 function drawIndex(g: CanvasRenderingContext2D, label: string, ink: string) {
   const { x, y, w, h } = indexBox(g, label);
   g.save();
-  g.font = '800 50px Manrope, system-ui, sans-serif';
+  g.font = indexFont(label);
   g.fillStyle = ink;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
@@ -1758,9 +1960,34 @@ function circle(g: CanvasRenderingContext2D, x: number, y: number, r: number, co
   g.arc(x, y, r * 0.62, 0, Math.PI * 2);
   g.fill();
   g.restore();
-  g.fillStyle = color;
+  cabochon(g, x, y, r * 0.38, color);
+}
+
+/** A domed stone: deep at its rim, bright at the crown, with one white glint. */
+function cabochon(g: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
+  const gr = g.createRadialGradient(x - r * 0.32, y - r * 0.36, r * 0.05, x, y, r);
+  gr.addColorStop(0, mix(color, '#ffffff', 0.5));
+  gr.addColorStop(0.5, color);
+  gr.addColorStop(1, mix(color, '#000000', 0.38));
+  g.fillStyle = gr;
   g.beginPath();
-  g.arc(x, y, r * 0.38, 0, Math.PI * 2);
+  g.arc(x, y, r, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = 'rgba(255,255,255,0.85)';
+  g.beginPath();
+  g.ellipse(x - r * 0.36, y - r * 0.42, r * 0.24, r * 0.15, -0.6, 0, Math.PI * 2);
+  g.fill();
+}
+
+/** A pearl: white nacre with a rosy sheen and a soft glint. */
+function pearl(g: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  const gr = g.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.05, x, y, r);
+  gr.addColorStop(0, '#ffffff');
+  gr.addColorStop(0.55, '#f1ebf0');
+  gr.addColorStop(1, '#b9adb8');
+  g.fillStyle = gr;
+  g.beginPath();
+  g.arc(x, y, r, 0, Math.PI * 2);
   g.fill();
 }
 
@@ -1875,13 +2102,10 @@ function drawDots(g: CanvasRenderingContext2D, n: number, red = false) {
     g.beginPath();
     g.arc(FACE_W / 2, FACE_H / 2, 74, 0, Math.PI * 2);
     g.stroke();
-    // A petal ring round the great dot.
-    g.fillStyle = TILE_SET.green;
+    // A ring of pearls round the great dot, each in its own collar.
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2;
-      g.beginPath();
-      g.arc(FACE_W / 2 + Math.cos(a) * 67, FACE_H / 2 + Math.sin(a) * 67, 3.2, 0, Math.PI * 2);
-      g.fill();
+      pearl(g, FACE_W / 2 + Math.cos(a) * 66, FACE_H / 2 + Math.sin(a) * 66, 3.6);
     }
   }
 }
@@ -1892,10 +2116,24 @@ function stick(g: CanvasRenderingContext2D, x: number, y: number, h: number, col
   g.beginPath();
   g.roundRect(x - w / 2, y - h / 2, w, h, 7);
   g.fill();
-  g.fillStyle = 'rgba(255,255,255,0.45)';
-  g.fillRect(x - 2, y - h / 2 + 6, 3, h - 12);
-  g.fillStyle = mix(color, '#000000', 0.45);
-  g.fillRect(x - w / 2, y - 2, w, 4);
+  // Enamel over a cane: lit down one side, deeper down the other.
+  const lg = g.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
+  lg.addColorStop(0, 'rgba(255,255,255,0)');
+  lg.addColorStop(0.3, 'rgba(255,255,255,0.32)');
+  lg.addColorStop(0.55, 'rgba(255,255,255,0)');
+  lg.addColorStop(1, 'rgba(0,0,0,0.22)');
+  g.fillStyle = lg;
+  g.beginPath();
+  g.roundRect(x - w / 2, y - h / 2, w, h, 7);
+  g.fill();
+  // Metal ferrules: one at the node, a cap at each end.
+  metalPart((m) => {
+    m.beginPath();
+    m.roundRect(x - w / 2 - 1.8, y - 3, w + 3.6, 6, 2.2);
+    m.roundRect(x - w / 2 - 0.6, y - h / 2 - 1.2, w + 1.2, 4.6, 2);
+    m.roundRect(x - w / 2 - 0.6, y + h / 2 - 3.4, w + 1.2, 4.6, 2);
+    m.fill();
+  });
 }
 
 const BAMBOO: Record<number, [number, number, number][]> = {
@@ -1987,20 +2225,17 @@ function drawBird(g: CanvasRenderingContext2D) {
   g.beginPath();
   g.arc(cx - 40, cy - 30, 22, 0, Math.PI * 2);
   g.fill();
-  g.fillStyle = '#f6efe0';
-  g.beginPath();
-  g.arc(cx - 46, cy - 34, 6, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = '#1b1b1b';
-  g.beginPath();
-  g.arc(cx - 47, cy - 34, 3, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = '#c99a2e';
-  g.beginPath();
-  g.moveTo(cx - 62, cy - 30);
-  g.lineTo(cx - 82, cy - 24);
-  g.lineTo(cx - 62, cy - 22);
-  g.fill();
+  // A pearl eye with a jet pupil, and a beak of solid metal.
+  pearl(g, cx - 46, cy - 34, 6.5);
+  cabochon(g, cx - 47, cy - 34, 3.2, '#1b1b1b');
+  metalPart((m) => {
+    m.beginPath();
+    m.moveTo(cx - 61, cy - 31);
+    m.lineTo(cx - 83, cy - 24);
+    m.lineTo(cx - 61, cy - 21);
+    m.closePath();
+    m.fill();
+  });
   // Tail feathers
   g.strokeStyle = TILE_SET.blue;
   g.lineWidth = 7;
@@ -2019,6 +2254,19 @@ function drawWhiteDragon(g: CanvasRenderingContext2D) {
   g.strokeRect(34, 40, FACE_W - 68, FACE_H - 80);
   g.lineWidth = 3;
   g.strokeRect(48, 54, FACE_W - 96, FACE_H - 108);
+  // Metal studs at the corners of the frame, as on a jewel box.
+  metalPart((m) => {
+    for (const [x, y] of [
+      [34, 40],
+      [FACE_W - 34, 40],
+      [34, FACE_H - 40],
+      [FACE_W - 34, FACE_H - 40],
+    ]) {
+      m.beginPath();
+      m.arc(x, y, 7.5, 0, Math.PI * 2);
+      m.fill();
+    }
+  });
 }
 
 // ------------------------------------------------------------ backs and bodies

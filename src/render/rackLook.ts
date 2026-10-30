@@ -51,13 +51,13 @@ function paintBody(wood: RackWood, base: string, size: number): { map: HTMLCanva
       g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
     }
   } else if (wood === 'gilt') {
-    // Brushed gold: fine lines along the rack, then a slow sheen.
+    // Polished gold: a whisper of brushing along the rack; the reflections do the shading.
     for (let y = 0; y < H; y += 1) {
-      g.fillStyle = css(shade(base, (r() - 0.5) * 0.22), 0.5);
+      g.fillStyle = css(shade(base, (r() - 0.5) * 0.08), 0.4);
       g.fillRect(0, y, W, 1);
     }
     const sh = g.createLinearGradient(0, 0, W, 0);
-    for (let i = 0; i <= 6; i++) sh.addColorStop(i / 6, css(shade(base, i % 2 ? 0.18 : -0.1), 0.35));
+    for (let i = 0; i <= 6; i++) sh.addColorStop(i / 6, css(shade(base, i % 2 ? 0.08 : -0.05), 0.2));
     g.fillStyle = sh;
     g.fillRect(0, 0, W, H);
   } else {
@@ -132,15 +132,16 @@ function woodMaterial(wood: RackWood, color: string, gloss: number, tier: Qualit
   const metal = wood === 'gilt';
   const painted = paintBody(wood, color, tier === 'low' ? 0.5 : 1);
   const map = tex(painted.map, true, aniso);
-  const rough = metal ? 0.3 : Math.max(0.12, 0.6 - gloss * 0.45);
+  const rough = metal ? 0.24 : Math.max(0.12, 0.6 - gloss * 0.45);
   if (tier === 'low') return new THREE.MeshStandardMaterial({ map, roughness: rough, metalness: metal ? 0.85 : 0.04, envMapIntensity: metal ? 1.1 : 0.8 });
   const m = new THREE.MeshPhysicalMaterial({
     map,
     roughness: rough,
-    metalness: metal ? 0.9 : 0.03,
-    clearcoat: metal ? 0.2 : 0.3 + gloss * 0.7,
-    clearcoatRoughness: metal ? 0.3 : Math.max(0.04, 0.3 - gloss * 0.25),
-    envMapIntensity: metal ? 1.15 : 0.9,
+    // A jeweller's finish: every wood under a deep, clear French polish; gilt polished bright.
+    metalness: metal ? 1 : 0.03,
+    clearcoat: metal ? 0.35 : 0.55 + gloss * 0.45,
+    clearcoatRoughness: metal ? 0.12 : Math.max(0.03, 0.2 - gloss * 0.17),
+    envMapIntensity: metal ? 1.35 : 1,
   });
   return m;
 }
@@ -151,7 +152,7 @@ export function rackMaterials(st: RackStyle, tier: QualityTier, table: { wood: T
   const own = <T extends THREE.Material>(m: T) => (owned.push(m), m);
   const body = st.body === 'table' ? table.wood : own(woodMaterial(st.body, st.bodyColor, st.gloss, tier, aniso));
   const accent = st.accent ? own(woodMaterial(st.accent, st.accentColor ?? st.bodyColor, st.gloss, tier, aniso)) : body;
-  const trim = st.body === 'table' ? table.trim : own(new THREE.MeshStandardMaterial({ color: st.trim, metalness: 1, roughness: st.engraved ? 0.22 : 0.3, envMapIntensity: 1.2 }));
+  const trim = st.body === 'table' ? table.trim : own(new THREE.MeshStandardMaterial({ color: st.trim, metalness: 1, roughness: st.engraved ? 0.18 : 0.22, envMapIntensity: 1.45 }));
   const liningColor = st.lining || shade(table.felt, -0.25).getStyle();
   const clothMap = tex(paintCloth(liningColor, st.cloth), true, aniso);
   clothMap.repeat.set(6, 6);
@@ -168,7 +169,7 @@ export function rackMaterials(st: RackStyle, tier: QualityTier, table: { wood: T
   const gem = own(
     tier === 'low'
       ? new THREE.MeshStandardMaterial({ color: st.gem ?? '#ffffff', roughness: 0.1, metalness: 0.1, emissive: st.gem ?? '#000000', emissiveIntensity: 0.15 })
-      : new THREE.MeshPhysicalMaterial({ color: st.gem ?? '#ffffff', roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0, emissive: st.gem ?? '#000000', emissiveIntensity: 0.12 }),
+      : new THREE.MeshPhysicalMaterial({ color: st.gem ?? '#ffffff', roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0, iridescence: 0.25, envMapIntensity: 2.2, emissive: st.gem ?? '#000000', emissiveIntensity: 0.16 }),
   );
   // The carving's floor takes a deep shade of the wood it is cut into (the
   // second wood on two-tone racks, whose rail and front band carry it).

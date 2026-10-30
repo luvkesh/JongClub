@@ -6,6 +6,9 @@ import { avatarSvg } from '../cosmetics/avatar';
 import { tileSetPreview } from '../render/tileFaces';
 import { environmentPreview } from '../render/backdrop';
 import { rackPreview } from '../render/rackPreview';
+import { tablePreview } from '../render/tablePreview';
+import { avatarPortraitUrl } from '../render/avatar3d';
+import { effectPreview } from '../render/effectArt';
 import { CATALOG, VARIATION_TABLE, type Cosmetic, type CosmeticCategory, type Loadout } from '../cosmetics/catalog';
 import { VARIATIONS } from '../engine/rules';
 import { saveProfile, unlock, type Profile } from '../progression/profile';
@@ -62,6 +65,35 @@ export function equip(ctx: AppCtx, c: Cosmetic) {
   ctx.club?.setWho(ctx.who());
 }
 
+/**
+ * Rendered pictures (racks, tables) are made one at a time between frames, so a screen full of
+ * cards opens at once and fills in; each shows its colours until its picture is ready.
+ */
+const queue: (() => void)[] = [];
+function later(job: () => void) {
+  queue.push(job);
+  if (queue.length === 1) setTimeout(next, 30);
+}
+function next() {
+  const job = queue.shift();
+  job?.();
+  if (queue.length) setTimeout(next, 0);
+}
+export function picture(cls: string, make: () => string | Promise<string>, fallback: string, bg = '#0a0d0b', ...kids: HTMLElement[]) {
+  const el = h('div', { class: `item-prev ${cls} real-prev`, style: { height: 'auto', aspectRatio: '480 / 264', background: fallback } }, ...kids);
+  later(() => {
+    if (!el.isConnected) return;
+    void Promise.resolve(make())
+      .then((url) => {
+        if (!url) return;
+        el.style.background = `${bg} url(${url}) center / cover no-repeat`;
+        el.replaceChildren();
+      })
+      .catch(() => undefined);
+  });
+  return el;
+}
+
 /** A small visual preview for an item. */
 export function preview(ctx: AppCtx, c: Cosmetic): HTMLElement {
   const [a, b] = c.swatch;
@@ -71,23 +103,33 @@ export function preview(ctx: AppCtx, c: Cosmetic): HTMLElement {
       return h('div', { class: 'item-prev tiles-prev real-prev', style: { height: 'auto', aspectRatio: '480 / 264', background: `#0b0f0d url(${tileSetPreview(c.id)}) center / cover no-repeat` } });
     case 'rack': {
       // The real rack, holding a few of your tiles.
-      const url = rackPreview(c.id);
-      return h('div', { class: 'item-prev tiles-prev real-prev', style: { height: 'auto', aspectRatio: '480 / 264', background: url ? `#0a0d0b url(${url}) center / cover no-repeat` : `linear-gradient(160deg, ${a}, ${b})` } });
+      return picture('tiles-prev', () => rackPreview(c.id), `linear-gradient(160deg, ${a}, ${b})`);
     }
     case 'table':
-      return h('div', { class: 'item-prev felt', style: { background: `radial-gradient(circle at 50% 40%, color-mix(in srgb, ${a} 70%, white 12%), ${a})`, boxShadow: `inset 0 0 0 6px ${b}` } });
+      // The real table in miniature, laid for a game with your tiles.
+      return picture('table-prev', () => tablePreview(c.id), `radial-gradient(60% 50% at 50% 55%, color-mix(in srgb, ${a} 80%, black), #0a0d0b)`);
     case 'environment':
       // The real room: its view, walls, floor, rug and lamp.
-      return h('div', { class: 'item-prev env real-prev', style: { height: 'auto', aspectRatio: '480 / 264', background: `#0b0f0d url(${environmentPreview(c.id)}) center / cover no-repeat` } });
+      return h('div', { class: 'item-prev env real-prev', style: { height: 'auto', aspectRatio: '480 / 264', background: `#0b0f0d url(${environmentPreview(c.id, 960, 528)}) center / cover no-repeat` } });
     case 'avatar':
     case 'accessory':
     case 'frame': {
       const p = ctx.profile.avatar;
       const spec = c.category === 'avatar' ? { ...p, outfit: c.id.replace('outfit-', '') as typeof p.outfit } : c.category === 'accessory' ? { ...p, accessory: c.id as typeof p.accessory } : { ...p, frame: c.id };
-      return h('div', { class: 'item-prev av-prev', html: avatarSvg(spec, 72) });
+      // The drawn bust at once, then the 3D portrait (with its jewelled frame) when it is ready.
+      // The fan is held low, below the 3D bust's crop, so it keeps the drawing.
+      const el = h('div', { class: 'item-prev av-prev', html: avatarSvg(spec, 72) });
+      if (c.id !== 'fan')
+        later(() => {
+          if (!el.isConnected) return;
+          const url = avatarPortraitUrl(spec, 180);
+          if (url) clear(el).append(h('img', { src: url, alt: '', width: 180, height: 180 }));
+        });
+      return el;
     }
     default:
-      return h('div', { class: 'item-prev fx-prev', style: { background: `radial-gradient(circle at 50% 60%, ${a}66, transparent 55%), radial-gradient(circle at 30% 30%, ${b}55, transparent 40%), #101411` } }, h('span', { class: 'fx-glyph', html: glyph(c.category === 'sound' ? 'note' : c.category === 'winAnimation' ? 'sparkle' : 'wand') }));
+      // The effect painted over the table as it plays (effectArt.ts); its glyph until that is ready.
+      return picture('fx-prev', () => effectPreview(c.id), `radial-gradient(circle at 50% 60%, ${a}66, transparent 55%), radial-gradient(circle at 30% 30%, ${b}55, transparent 40%), #101411`, '#0a0d0b', h('span', { class: 'fx-glyph', html: glyph(c.category === 'sound' ? 'note' : c.category === 'winAnimation' ? 'sparkle' : 'wand') }));
   }
 }
 

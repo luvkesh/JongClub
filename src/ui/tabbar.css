@@ -1,4 +1,4 @@
-/* Phone navigation (tabbar.ts): five tabs at the foot, sub-tabs above the page.
+/* Phone navigation (tabbar.ts): six tabs at the foot, sub-tabs above the page.
    "Phone" means narrow (portrait) or short (landscape), and touch tablets (iPad), where the full top nav would not fit; desktop keeps the top nav. */
 .tabbar, .subtabs { display: none; }
 
@@ -44,6 +44,16 @@
   }
   .tab.on::after { transform: translateX(-50%) rotate(45deg) scale(1); }
 
+}
+
+/* Sub-tabs above the page wherever the full ten-tab strip doesn't show: phones and tablets (with the
+   tab bar), and narrower desktop windows, whose top strip keeps the same six tabs as the phone bar
+   (app.ts marks the other four .nav-extra and lights their parent tab with .on-group). */
+@media (max-width: 1279px), (max-height: 500px), (max-width: 1365px) and (hover: none) and (pointer: coarse) {
+  .topbar .nav-item.nav-extra { display: none; }
+  .topbar .nav-item.on-group { color: var(--brass-hi); }
+  .topbar .nav-item.on-group::after { transform: translateX(-50%) rotate(45deg) scale(1); }
+  .topbar .nav-item.on-group::before { opacity: 1; }
   .subtabs:not(:empty) { display: flex; justify-content: center; flex: none; padding: 12px var(--gutter) 12px; background: rgba(9, 13, 11, 0.86); }
   .subtabs-seg {
     display: flex; gap: 3px; width: min(420px, 100%); padding: 3px; border-radius: 999px;
