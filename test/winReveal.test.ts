@@ -31,3 +31,20 @@ describe('winning hand split into sets', () => {
     expect(shape(k)).toHaveLength(4);
   });
 });
+
+describe('winning hand on the table follows the summary', () => {
+  it('lays an India East hand out passport first, then the sets with it, the pair last', async () => {
+    const { passportLayout } = await import('../src/engine/rules/indiaLayout');
+    const { winTableSets } = await import('../src/ui/winReveal');
+    const { parseKinds } = await import('../src/engine/tiles');
+    // The user's screenshot: knits 2m2s 3m3s 8m8s, chow 234p, pung 111m, pair 1s1s.
+    const tiles = parseKinds('111238m 234p 11238s').map((kind, id) => ({ id, kind }));
+    const pl = passportLayout(tiles, [], true);
+    const kinds = winTableSets(tiles, pl).map((ids) => ids.map((id) => tiles[id].kind).sort((a, b) => a - b));
+    const summary = [...pl.passports.flatMap((p) => p.sets), ...pl.sets].map((x) => x.tiles.map((t) => t.kind).sort((a, b) => a - b));
+    expect(kinds).toEqual(summary);
+    expect(kinds.slice(0, 3).every((g) => g.length === 2)).toBe(true);
+    expect(kinds[kinds.length - 1]).toEqual([18, 18]);
+    expect(kinds.flat()).toHaveLength(14);
+  });
+});

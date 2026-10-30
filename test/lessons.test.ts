@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ACADEMY_ORDER, LESSONS, OPTIONAL_LESSONS, RETIRED_LESSONS, narrationLines } from '../src/ui/academy';
+import { ACADEMY_ORDER, INDIA_RULE_SCENES, LESSONS, OPTIONAL_LESSONS, RETIRED_LESSONS, narrationLines } from '../src/ui/academy';
 import { coachLines, SCRIPTS } from '../src/ui/coach';
 import { parseKinds } from '../src/engine/tiles';
-import { EAST_PAY, eastReading } from '../src/engine/rules/india';
+import { EAST_PAY, eastReading, eastScore, indiaPayments } from '../src/engine/rules/india';
 import { WEST_EXAMPLES, goulashCount } from '../src/ui/lessons/india';
 import { loserCount, westCount } from '../src/engine/rules/indiaWest';
 import { classicPayments, classicScore } from '../src/engine/rules/classic';
@@ -15,7 +15,7 @@ import { malaysianProfile, malaysianScore } from '../src/engine/rules/malaysian'
 import type { ScoringContext } from '../src/engine/rules/types';
 import type { Meld } from '../src/engine/state';
 
-const NEW = ['words', 'scoring', 'shapes', 'tradition', 'hongkong', 'mcr', 'sichuan', 'malaysian', 'uae-taiwanese', 'uae-american', 'uae-custom'];
+const NEW = ['basics', 'words', 'scoring', 'rounds', 'shapes', 'tradition', 'classic', 'value', 'defence', 'hongkong', 'mcr', 'sichuan', 'malaysian', 'uae-taiwanese', 'uae-american', 'uae-custom'];
 const text = (id: string) => {
   const l = LESSONS[id];
   return [...l.scenes.flatMap((s) => [s.title, s.say]), ...l.quiz.flatMap((q) => [q.q, q.explain, ...q.options.map((o) => o.text)])].join(' ');
@@ -31,7 +31,9 @@ describe('academy lessons', () => {
     for (const id of ['hongkong', 'mcr', 'sichuan', 'malaysian', 'uae-taiwanese', 'uae-american', 'uae-custom']) expect(SCRIPTS[id], id).toBeDefined();
     // The Dubai tables link to the lesson they build on.
     expect([LESSONS['uae-taiwanese'].base, LESSONS['uae-american'].base, LESSONS['uae-custom'].base]).toEqual(['taiwanese', 'american', 'uae']);
-    expect(ACADEMY_ORDER.slice(0, 3)).toEqual(['basics', 'words', 'scoring']);
+    expect(ACADEMY_ORDER.slice(0, 7)).toEqual(['basics', 'scoring', 'rounds', 'shapes', 'strategy', 'tradition', 'words']);
+    // India Rules is the base: Chinese Classical comes first among the variations, after India Rules.
+    expect(ACADEMY_ORDER.indexOf('classic')).toBeGreaterThan(ACADEMY_ORDER.indexOf('india'));
   });
 
   for (const id of Object.keys(LESSONS)) {
@@ -68,34 +70,33 @@ describe('academy lessons', () => {
       meld: 'words',
       terminal: 'words',
       'self-draw': 'words',
-      tenpai: 'words',
-      'prevailing wind': 'words',
-      faan: 'words',
-      tai: 'words',
-      han: 'words',
-      phán: 'words',
-      Ron: 'words',
-      Tsumo: 'words',
-      Phỗng: 'words',
-      'chicken hand': 'scoring',
-      hanchan: 'rounds',
-      goulash: 'words',
-      'seven pairs': 'scoring',
-      'thirteen orphans': 'shapes',
-      Sanshoku: 'shapes',
-      yaku: 'words',
-      dora: 'words',
-      'dead wall': 'words',
+      goulash: 'rounds',
+      'prevailing wind': 'classic',
+      faan: 'classic',
+      'chicken hand': 'classic',
+      'thirteen orphans': 'classic',
+      Sanshoku: 'classic',
+      'dead wall': 'classic',
+      fan: 'classic',
+      tenpai: 'riichi',
+      han: 'riichi',
+      Ron: 'riichi',
+      Tsumo: 'riichi',
+      hanchan: 'riichi',
+      yaku: 'riichi',
+      dora: 'riichi',
       furiten: 'riichi',
-      fu: 'words',
+      fu: 'riichi',
+      tai: 'taiwanese',
       exposure: 'american',
+      Charleston: 'american',
+      Phỗng: 'vietnamese',
       Khung: 'vietnamese',
-      shooter: 'words',
-      fan: 'words',
+      shooter: 'singapore',
       Sheung: 'hongkong',
       'half-spicy': 'hongkong',
       'Sik Wu': 'hongkong',
-      Peng: 'words',
+      Peng: 'sichuan',
       'wind and rain': 'sichuan',
       'missing suit': 'sichuan',
       'knitted': 'mcr',
@@ -116,19 +117,28 @@ describe('academy lessons', () => {
   });
 
   it('keeps seat directions right: from East, South is on the right, West across, North on the left', () => {
-    for (const id of ['basics', 'tradition']) expect(text(id)).toMatch(/South is on your right, West is across, and North is on your left/);
-    expect(text('rounds')).toMatch(/player on East’s right is South, the player opposite is West, and the player on East’s left is North/);
+    expect(text('basics')).toMatch(/South is on your right, West is across, and North is on your left/);
     const all = ACADEMY_ORDER.map(text).join(' ');
     expect(all).not.toMatch(/South (is|sits) on (your|East’s) left|North (is|sits) on (your|East’s) right/);
   });
 
   it('never claims one official UAE ruleset, and keeps American rules apart', () => {
     expect(text('uae')).toMatch(/no single official UAE way/);
-    expect(text('tradition')).toMatch(/no single official UAE rulebook/);
     // The Dubai Asian goulash exchanges three tiles; the Charleston and the card belong to American tables.
     for (const id of ['uae', 'uae-taiwanese', 'uae-custom']) expect(text(id), id).not.toMatch(/Charleston|\bcard\b/i);
     for (const id of ['uae', 'uae-taiwanese', 'uae-american', 'uae-custom']) expect(text(id), id).toMatch(/not an official|no single official|official UAE rulebook|isn’t the League’s card/);
     expect(text('american')).not.toMatch(/faan|\btai\b|\bhan\b|yaku/);
+  });
+
+  it('keeps the Foundations and Mastery lessons to India Rules', () => {
+    // The user, 2026-10-25: the first lessons teach India Rules only; other tables live in their own lessons.
+    const base = ACADEMY_ORDER.slice(0, ACADEMY_ORDER.indexOf('value') + 1);
+    expect(base).toHaveLength(11);
+    for (const id of base) expect(text(id), id).not.toMatch(/Riichi|Japan|Hong Kong|American|Charleston|NMJL|Vietnam|Chinese Official|Taiwan|Dubai|\bfaan\b|\byaku\b|\btai\b|seven pairs/);
+  });
+
+  it('marks India-specific rule scenes with a note, by titles that exist', () => {
+    for (const [id, titles] of Object.entries(INDIA_RULE_SCENES)) for (const t of titles) expect(LESSONS[id].scenes.some((s) => s.title === t), `${id}: ${t}`).toBe(true);
   });
 
   it('every variant lesson opens with where it is played and how it differs', () => {
@@ -139,7 +149,34 @@ describe('academy lessons', () => {
   });
 });
 
-describe('scoring lesson examples match the Classic engine', () => {
+describe('India Rules scoring lesson examples match the engine', () => {
+  // Seats 0-3 are East, South, West, North; East (0) deals. You sit South (1) unless you are East.
+  const tiles = (spec: string) => parseKinds(spec).map((kind, id) => ({ id, kind }));
+  const play = (concealed: string, melds: Meld[], win: string, selfDrawn: boolean, winner: number) => {
+    const counts = new Array(34).fill(0);
+    for (const k of parseKinds(concealed)) counts[k]++;
+    const s = eastScore(false)({ concealedCounts: counts, melds, winKind: parseKinds(win)[0], selfDrawn } as unknown as ScoringContext);
+    const pays = indiaPayments(winner, selfDrawn ? null : 3, s, 0, 4);
+    return { points: s.points, pays: pays.map((p) => p.amount), total: pays.reduce((a, p) => a + p.amount, 0) };
+  };
+
+  it('example one: South, a called pung, on a discard: a normal hand, East 1,000, 2,000 in all', () => {
+    const r = play('123m 4m 5s 6p 9m 9s 9p EE', [{ type: 'pung', tiles: tiles('777p'), concealed: false, from: 0 }], 'E', false, 1);
+    expect(r).toEqual({ points: 500, pays: [1000, 500, 500], total: 2000 });
+  });
+
+  it('example two: South, no calls, on a discard: concealed, East 2,000, 4,000 in all', () => {
+    const r = play('234s 6m 7p 8s 3m 3s 3p RdRdRd NN', [], 'N', false, 1);
+    expect(r).toEqual({ points: 1000, pays: [2000, 1000, 1000], total: 4000 });
+  });
+
+  it('example three: East, no calls, self-drawn: fully concealed, 4,000 each, 12,000', () => {
+    const r = play('123p 456p 789m 5m 5s 5p GdGd', [], 'Gd', true, 0);
+    expect(r).toEqual({ points: 2000, pays: [4000, 4000, 4000], total: 12000 });
+  });
+});
+
+describe('Chinese Classical lesson examples match the Classic engine', () => {
   const tiles = (spec: string) => parseKinds(spec).map((kind, id) => ({ id, kind }));
   const score = (concealed: string, melds: Meld[], win: number, selfDrawn: boolean) => {
     const counts = new Array(34).fill(0);

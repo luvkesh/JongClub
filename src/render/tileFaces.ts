@@ -8,7 +8,7 @@
 import { ANIMAL_BASE, FLOWER_BASE, FLOWER_JOKER, KIND_COUNT, WINDS, flowerNumber, isAnimal, isFlower, isJoker, isTypedJoker, rankOf, suitOf } from '../engine/tiles';
 import { TILE_SETS, tileSetStyle, type TileFinish, type TileFoil, type TileSetStyle } from '../cosmetics/catalog';
 import { FACE_STORE_VERSION, blobCanvas, encodePng, loadFaces, saveFace } from './faceStore';
-import { FACE_ACCESS, accessibleStyle, tileIndex, type FaceAccess, type SuitMark } from './tileAccess';
+import { FACE_ACCESS, accessibleStyle, DRAGON_INDEX, tileIndex, type FaceAccess, type SuitMark } from './tileAccess';
 
 export const FACE_W = 192;
 export const FACE_H = 256;
@@ -452,7 +452,7 @@ function indexHalo(I: HTMLCanvasElement) {
   hg.clearRect(0, 0, H.width, H.height);
   const r = 3.2 * FACE_SCALE;
   // The index lives in the top-left corner: only that corner needs growing.
-  const cw = Math.round(110 * FACE_SCALE),
+  const cw = Math.round(170 * FACE_SCALE),
     ch = Math.round(72 * FACE_SCALE);
   for (let a = 0; a < 16; a++) hg.drawImage(I, 0, 0, cw, ch, Math.cos((a / 16) * Math.PI * 2) * r, Math.sin((a / 16) * Math.PI * 2) * r, cw, ch);
   hg.drawImage(I, 0, 0, cw, ch, 0, 0, cw, ch);
@@ -558,7 +558,7 @@ function indexFor(kind: number, labels: boolean, red: boolean): FaceIndex | null
       label = String(i < 2 ? 1 : 2);
       ink = ANIMAL_RING[i];
     } else {
-      label = s === 'wind' ? WINDS[kind - 27] : s === 'dragon' ? ['R', 'G', 'W'][kind - 31] : String(rankOf(kind));
+      label = s === 'wind' ? WINDS[kind - 27] : s === 'dragon' ? DRAGON_INDEX[kind - 31] : String(rankOf(kind));
       // Ink follows the suit, so number and suit read together at a glance.
       ink = s === 'dragon' ? [TILE_SET.red, TILE_SET.green, TILE_SET.blue][kind - 31] : red ? TILE_SET.aka : s === 'pin' ? TILE_SET.blue : s === 'sou' ? TILE_SET.green : s === 'man' ? TILE_SET.red : TILE_SET.ink;
     }
@@ -1539,18 +1539,21 @@ function drawFlower(g: CanvasRenderingContext2D, kind: number) {
  * read on distant tiles. It is drawn with the symbols, in the same ink and
  * finish, straight onto the face (no chip behind it).
  */
+/** The plain index's font: a bold letter or number, or a smaller word (the dragons' RED, GREEN, WHITE). */
+const indexFont = (label: string) => `800 ${label.length > 2 ? 29 : 50}px Manrope, system-ui, sans-serif`;
+
 function indexBox(g: CanvasRenderingContext2D, label: string): Box {
   g.save();
-  g.font = '800 50px Manrope, system-ui, sans-serif';
+  g.font = indexFont(label);
   const w = Math.max(40, g.measureText(label).width + 14);
   g.restore();
-  return { x: 5, y: 5, w, h: 54 };
+  return { x: 5, y: 5, w, h: label.length > 2 ? 40 : 54 };
 }
 
 function drawIndex(g: CanvasRenderingContext2D, label: string, ink: string) {
   const { x, y, w, h } = indexBox(g, label);
   g.save();
-  g.font = '800 50px Manrope, system-ui, sans-serif';
+  g.font = indexFont(label);
   g.fillStyle = ink;
   g.textAlign = 'center';
   g.textBaseline = 'middle';

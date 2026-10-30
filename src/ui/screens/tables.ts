@@ -31,6 +31,6 @@ export function tableFor(variation: string): TableConfig {
   return { ...DEFAULT_TABLE, name: tr('{name} Table', { name: p.tableName }), variation, length: variation === 'riichi' || variation === 'sanma' ? 'eastSouth' : 'eastRound', houseRules: houseDefaults(variation) };
 }
 
-export type Lesson = 'basics' | 'words' | 'scoring' | 'shapes' | 'tradition' | 'rounds' | 'riichi' | 'taiwanese' | 'american' | 'uae' | 'vietnamese' | 'india' | 'india-east' | 'india-south' | 'india-west' | 'india-west-doubles' | 'india-west-big' | 'india-north' | 'indian' | 'singapore' | 'hongkong' | 'mcr' | 'sichuan' | 'malaysian' | 'korean3' | 'sanma' | 'malaysian3' | 'uae-taiwanese' | 'uae-american' | 'uae-custom' | 'strategy' | 'efficiency' | 'waits' | 'defence' | 'value';
+export type Lesson = 'basics' | 'words' | 'scoring' | 'classic' | 'shapes' | 'tradition' | 'rounds' | 'riichi' | 'taiwanese' | 'american' | 'uae' | 'vietnamese' | 'india' | 'india-east' | 'india-south' | 'india-west' | 'india-west-doubles' | 'india-west-big' | 'india-north' | 'indian' | 'singapore' | 'hongkong' | 'mcr' | 'sichuan' | 'malaysian' | 'korean3' | 'sanma' | 'malaysian3' | 'uae-taiwanese' | 'uae-american' | 'uae-custom' | 'strategy' | 'efficiency' | 'waits' | 'defence' | 'value';
 
 export const variationInfo = (id: string) => VARIATIONS.find((v) => v.id === id) ?? VARIATIONS[0];

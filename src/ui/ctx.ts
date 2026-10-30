@@ -7,7 +7,7 @@ import type { Profile } from '../progression/profile';
 import type { MatchOptions, TableConfig } from './match';
 import type { LiveHost } from './live';
 
-export type Screen = 'home' | 'play' | 'versions' | 'learn' | 'passport' | 'club' | 'collection' | 'profile' | 'daily' | 'tournaments' | 'atelier' | 'seasons' | 'minigames';
+export type Screen = 'home' | 'play' | 'versions' | 'learn' | 'passport' | 'club' | 'collection' | 'profile' | 'daily' | 'tournaments' | 'atelier' | 'seasons' | 'minigames' | 'store';
 
 export interface AppCtx {
   profile: Profile;

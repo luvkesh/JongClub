@@ -26,6 +26,7 @@ describe('phone tab bar', () => {
     expect(subOf('tournaments')?.label).toBe('Play');
     expect(subOf('passport')?.label).toBe('World Tour');
     expect(subOf('learn')).toBeNull();
-    expect(PHONE_TABS.find((t) => t.id === 'you')?.subs?.map((s) => s.label)).toEqual(['Profile', 'Settings']);
+    expect(PHONE_TABS.find((t) => t.id === 'you')?.subs?.map((s) => s.label)).toEqual(['Profile', 'Jong Points', 'Settings']);
+    expect(subOf('store')?.label).toBe('Jong Points');
   });
 });

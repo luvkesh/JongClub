@@ -119,6 +119,37 @@ function loadSplitPref(): SplitPref {
 }
 /** How far the view can slide left or right, as a share of the view's width. */
 export const PAN_SHARE = 0.1;
+/** The free camera after a hand: the point it circles, how far round (theta) and down from overhead (phi), and how far away. */
+interface FreePose {
+  target: THREE.Vector3;
+  theta: number;
+  phi: number;
+  dist: number;
+}
+const FREE_LOOK_Y = 0.4;
+const FREE_PHI_MIN = 0.08;
+const FREE_PHI_MAX = 1.36;
+const FREE_DIST_MIN = 2.4;
+const FREE_DIST_MAX = 15;
+/** How far from the centre the point the free camera circles may wander (world units). */
+const FREE_REACH = 6.5;
+/** Keys that steer the free camera: [forward, right, turn, zoom]. Arrows move like WASD. */
+const FREE_KEYS: Record<string, [number, number, number, number]> = {
+  KeyW: [1, 0, 0, 0],
+  ArrowUp: [1, 0, 0, 0],
+  KeyS: [-1, 0, 0, 0],
+  ArrowDown: [-1, 0, 0, 0],
+  KeyA: [0, -1, 0, 0],
+  ArrowLeft: [0, -1, 0, 0],
+  KeyD: [0, 1, 0, 0],
+  ArrowRight: [0, 1, 0, 0],
+  KeyQ: [0, 0, 1, 0],
+  KeyE: [0, 0, -1, 0],
+  Equal: [0, 0, 0, 1],
+  NumpadAdd: [0, 0, 0, 1],
+  Minus: [0, 0, 0, -1],
+  NumpadSubtract: [0, 0, 0, -1],
+};
 const VIEW_KEY = 'jongclub.view.v1';
 const DEFAULT_VIEW: TableView = { zoom: 1, tilt: 0, yaw: 0, pan: 0 };
 const clampView = (v: Partial<TableView>): TableView => ({
@@ -327,7 +358,9 @@ export class TableRenderer {
     | { kind: 'press'; id: number | null; pointerId: number; x: number; y: number; touch: boolean }
     | { kind: 'drag'; id: number; pointerId: number }
     | { kind: 'look'; pointerId: number; x: number; y: number; tilt: number; pan: number; moved: boolean }
-    | { kind: 'pinch'; d: number; mx: number; my: number; zoom: number; tilt: number; pan: number } = null;
+    | { kind: 'pinch'; d: number; mx: number; my: number; zoom: number; tilt: number; pan: number }
+    | { kind: 'free'; pointerId: number; x: number; y: number; slide: boolean; from: FreePose | null }
+    | { kind: 'freePinch'; d: number; mx: number; my: number; from: FreePose } = null;
   private suppressClick = false;
   private longPress = 0;
   /** Your hand as last laid out, and each slot's resting x. */
@@ -495,6 +528,9 @@ export class TableRenderer {
     });
     el.addEventListener('contextmenu', (e) => e.preventDefault());
     el.addEventListener('wheel', (e) => this.onWheel(e), { passive: false });
+    window.addEventListener('keydown', (e) => this.onFreeKey(e, true));
+    window.addEventListener('keyup', (e) => this.onFreeKey(e, false));
+    window.addEventListener('blur', () => this.freeKeys.clear());
     // Hover, drags and pinches change the picture: draw at full rate while the pointer is busy.
     // Moving the pointer only highlights: draw smoothly, but don't count it as motion (resolution and
     // face sharpening only give way to real tile and camera movement).
@@ -1461,6 +1497,8 @@ export class TableRenderer {
   }
 
   setView(view: 'orbit' | 'seat' | 'focus', dur = 1.4, focus?: THREE.Vector3) {
+    // A new framing takes the camera back from the player, gliding from wherever they left it.
+    this.releaseFree();
     this.view = view;
     this.applyViewShift();
     this.camFrom.pos.copy(this.camBase);
@@ -2000,6 +2038,7 @@ export class TableRenderer {
     this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
     this.clearTip();
     window.clearTimeout(this.longPress);
+    if (this.freeOn) return this.freeDown(e);
     if (this.ptrs.size >= 2) {
       // A second finger: pinch to zoom, move both to tilt and turn.
       if (this.gesture?.kind === 'drag') this.endDrag(false);
@@ -2038,6 +2077,7 @@ export class TableRenderer {
   private onMove(e: PointerEvent) {
     if (this.ptrs.has(e.pointerId)) this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const g = this.gesture;
+    if (g?.kind === 'free' || g?.kind === 'freePinch') return this.freeMove(e);
     if (g?.kind === 'pinch') {
       if (this.ptrs.size < 2) return;
       const [a, b] = [...this.ptrs.values()];
@@ -2091,7 +2131,10 @@ export class TableRenderer {
     window.clearTimeout(this.longPress);
     const g = this.gesture;
     if (g?.kind === 'drag' && g.pointerId === e.pointerId) this.endDrag(!cancel);
-    else if (g?.kind === 'look' && g.pointerId === e.pointerId) {
+    else if ((g?.kind === 'free' && g.pointerId === e.pointerId) || (g?.kind === 'freePinch' && this.ptrs.size < 2)) {
+      this.gesture = null;
+      this.renderer.domElement.style.cursor = 'grab';
+    } else if (g?.kind === 'look' && g.pointerId === e.pointerId) {
       this.gesture = null;
       this.renderer.domElement.style.cursor = this.viewAdjustable ? 'grab' : 'default';
     }
@@ -2105,6 +2148,13 @@ export class TableRenderer {
   }
 
   private onWheel(e: WheelEvent) {
+    if (this.freeOn) {
+      e.preventDefault();
+      const d = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 800 : e.deltaY;
+      const g = this.takeFree();
+      g.dist = THREE.MathUtils.clamp(g.dist * Math.exp(d * (e.ctrlKey ? 0.01 : 0.0012)), FREE_DIST_MIN, FREE_DIST_MAX);
+      return;
+    }
     if (!this.viewAdjustable) return;
     e.preventDefault();
     this.clearTip();
@@ -2112,6 +2162,222 @@ export class TableRenderer {
     // Wheel steps in pixels: Firefox counts lines (about 3 a notch), where Chrome and Safari send about 100 px.
     const d = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 800 : e.deltaY;
     this.setZoom(this.viewT.zoom * Math.exp(-d * (e.ctrlKey ? 0.01 : 0.0012)));
+  }
+
+  // ------------------------------------------------------------ free camera (after a hand)
+
+  /** While a hand's result is up, the player can move the camera anywhere around the table to see every hand. */
+  private freeOn = false;
+  /** Where the player has the free camera now, and where it is easing to. Null until they take it (drag, wheel or a key). */
+  private freeCur: FreePose | null = null;
+  private freeGoal: FreePose | null = null;
+  private freeKeys = new Set<string>();
+  private static freeSph = new THREE.Spherical();
+
+  /**
+   * Turn the free camera on (a hand has ended) or off. Until the player
+   * moves it, the table keeps its own framing (the win shot, View in All hands).
+   * Drag to circle the table, right-drag, Shift+drag or two fingers to slide,
+   * pinch or scroll to zoom; WASD or the arrow keys move, Q and E turn, R resets.
+   */
+  setFreeCamera(on: boolean) {
+    if (on === this.freeOn) return;
+    this.freeOn = on;
+    this.freeKeys.clear();
+    if (this.gesture?.kind === 'free' || this.gesture?.kind === 'freePinch') this.gesture = null;
+    if (!on) this.releaseFree();
+    this.renderer.domElement.style.cursor = on ? 'grab' : 'default';
+  }
+
+  /** True while the free camera is on (after a hand). */
+  get freeCamera() {
+    return this.freeOn;
+  }
+
+  /** Called the first time the player moves the free camera after it turns on or is reset. */
+  onFreeMove?: () => void;
+  /** Whether the keys may steer the free camera now (false while a panel covers the table and the arrows should scroll it). */
+  freeKeysAllowed?: () => boolean;
+
+  /** Take the camera from the table's framing, starting exactly where it is now. */
+  private takeFree(): FreePose {
+    if (this.freeGoal) return this.freeGoal;
+    const pos = this.camera.position;
+    const dir = this.camera.getWorldDirection(new THREE.Vector3());
+    // Circle the point on the table the camera is looking at.
+    const t = dir.y < -0.05 ? THREE.MathUtils.clamp((FREE_LOOK_Y - pos.y) / dir.y, FREE_DIST_MIN, FREE_DIST_MAX) : 8;
+    const target = pos.clone().addScaledVector(dir, t);
+    target.y = FREE_LOOK_Y;
+    const s = TableRenderer.freeSph.setFromVector3(pos.clone().sub(target));
+    const pose = { target, theta: s.theta, phi: THREE.MathUtils.clamp(s.phi, FREE_PHI_MIN, FREE_PHI_MAX), dist: THREE.MathUtils.clamp(s.radius, FREE_DIST_MIN, FREE_DIST_MAX) };
+    this.freeCur = { ...pose, target: target.clone() };
+    this.freeGoal = { ...pose, target: target.clone() };
+    // A glide still under way stops here; the player has the camera now.
+    this.camT = 1;
+    this.clearTip();
+    this.onFreeMove?.();
+    return this.freeGoal;
+  }
+
+  /**
+   * Hand the camera back to the table's framing. The framing glides on from
+   * where the player left the camera (to the last shot, or the new one setView
+   * is about to set up).
+   */
+  private releaseFree() {
+    if (!this.freeCur) return;
+    this.camBase.copy(this.camera.position);
+    this.camLook.copy(this.freeCur.target);
+    this.freeCur = this.freeGoal = null;
+    this.camFrom.pos.copy(this.camBase);
+    this.camFrom.look.copy(this.camLook);
+    this.camT = 0;
+    this.camStart = this.clock.getElapsedTime();
+    this.camDur = this.reducedMotion ? 0.01 : 0.9;
+  }
+
+  /** The free camera is easing or a key is held. */
+  private freeMoving() {
+    const c = this.freeCur,
+      g = this.freeGoal;
+    if (!c || !g) return false;
+    return this.freeKeys.size > 0 || Math.abs(c.theta - g.theta) + Math.abs(c.phi - g.phi) + Math.abs(c.dist - g.dist) + c.target.distanceTo(g.target) > 1e-3;
+  }
+
+  private freeDown(e: PointerEvent) {
+    if (this.gesture?.kind === 'drag') this.endDrag(false);
+    if (this.ptrs.size >= 2) {
+      const [a, b] = [...this.ptrs.values()];
+      const g = this.takeFree();
+      this.gesture = { kind: 'freePinch', d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, from: { ...g, target: g.target.clone() } };
+      this.suppressClick = true;
+      return;
+    }
+    if (e.button !== 0 && e.button !== 2) return;
+    if (e.pointerType === 'mouse') e.preventDefault();
+    // A click without a drag still names the tile under the pointer; the camera is taken once the pointer moves.
+    this.gesture = { kind: 'free', pointerId: e.pointerId, x: e.clientX, y: e.clientY, slide: e.button === 2 || e.shiftKey, from: null };
+    try {
+      this.renderer.domElement.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private freeMove(e: PointerEvent) {
+    const g = this.gesture;
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const h = Math.max(240, r.height);
+    if (g?.kind === 'freePinch') {
+      if (this.ptrs.size < 2) return;
+      const [a, b] = [...this.ptrs.values()];
+      const d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+      const goal = this.takeFree();
+      goal.dist = THREE.MathUtils.clamp(g.from.dist * (g.d / d), FREE_DIST_MIN, FREE_DIST_MAX);
+      // Both fingers moving together slide the view.
+      this.slideFree(goal, g.from, (a.x + b.x) / 2 - g.mx, (a.y + b.y) / 2 - g.my, h);
+      return;
+    }
+    if (g?.kind !== 'free' || e.pointerId !== g.pointerId) return;
+    const dx = e.clientX - g.x,
+      dy = e.clientY - g.y;
+    if (!g.from) {
+      if (Math.hypot(dx, dy) <= DRAG_PX) return;
+      const p = this.takeFree();
+      g.from = { ...p, target: p.target.clone() };
+      this.suppressClick = true;
+      this.setHover(null);
+      this.renderer.domElement.style.cursor = 'grabbing';
+    }
+    const goal = this.freeGoal!;
+    if (g.slide) {
+      this.slideFree(goal, g.from, dx, dy, h);
+      return;
+    }
+    // Drag sideways to circle the table, up and down to look from higher or lower.
+    goal.theta = g.from.theta - (dx / h) * Math.PI * 1.4;
+    goal.phi = THREE.MathUtils.clamp(g.from.phi - (dy / h) * Math.PI * 0.9, FREE_PHI_MIN, FREE_PHI_MAX);
+  }
+
+  /** Slide the point the free camera circles so the table follows the pointer. */
+  private slideFree(goal: FreePose, from: FreePose, dx: number, dy: number, h: number) {
+    const perPx = (2 * from.dist * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2))) / h;
+    const fwd = TableRenderer.v3.set(-Math.sin(from.theta), 0, -Math.cos(from.theta));
+    const right = TableRenderer.v3b.set(Math.cos(from.theta), 0, -Math.sin(from.theta));
+    // Looking straight down, dragging up the screen moves along the table; from low down it moves further.
+    const along = 1 / Math.max(0.35, Math.cos(from.phi));
+    goal.target.copy(from.target).addScaledVector(right, -dx * perPx).addScaledVector(fwd, dy * perPx * along);
+    this.clampFreeTarget(goal.target);
+  }
+
+  private clampFreeTarget(t: THREE.Vector3) {
+    t.y = FREE_LOOK_Y;
+    const r = Math.hypot(t.x, t.z);
+    if (r > FREE_REACH) t.multiplyScalar(FREE_REACH / r).setY(FREE_LOOK_Y);
+  }
+
+  private onFreeKey(e: KeyboardEvent, down: boolean) {
+    if (!down) {
+      this.freeKeys.delete(e.code);
+      if (e.key === 'Shift') this.freeKeys.delete('Shift');
+      return;
+    }
+    if (!this.freeOn || e.ctrlKey || e.metaKey || e.altKey) return;
+    const tgt = e.target as HTMLElement | null;
+    if (tgt?.closest?.('input, select, textarea, [contenteditable]')) return;
+    const modal = document.getElementById('modal');
+    if ((modal && !modal.hidden) || this.freeKeysAllowed?.() === false) return;
+    if (e.key === 'Shift') {
+      this.freeKeys.add('Shift');
+      return;
+    }
+    if (e.code === 'KeyR' || e.code === 'Home') {
+      e.preventDefault();
+      // Back to the table's own framing.
+      this.releaseFree();
+      return;
+    }
+    if (!FREE_KEYS[e.code]) return;
+    e.preventDefault();
+    this.takeFree();
+    this.freeKeys.add(e.code);
+    this.wake(300);
+  }
+
+  /** Ease the free camera toward where the player is steering it, and place the camera there. */
+  private applyFree(dt: number) {
+    const c = this.freeCur!,
+      g = this.freeGoal!;
+    if (this.freeKeys.size) {
+      let f = 0,
+        r = 0,
+        turn = 0,
+        zoom = 0;
+      for (const k of this.freeKeys) {
+        const m = FREE_KEYS[k];
+        if (!m) continue;
+        f += m[0];
+        r += m[1];
+        turn += m[2];
+        zoom += m[3];
+      }
+      const fast = this.freeKeys.has('Shift') ? 2.2 : 1;
+      // Further out moves faster, so crossing the table takes about the same time at any zoom.
+      const step = dt * (1.6 + g.dist * 0.32) * fast;
+      g.target.x += (-Math.sin(g.theta) * f + Math.cos(g.theta) * r) * step;
+      g.target.z += (-Math.cos(g.theta) * f - Math.sin(g.theta) * r) * step;
+      this.clampFreeTarget(g.target);
+      g.theta += turn * dt * 1.5 * fast;
+      g.dist = THREE.MathUtils.clamp(g.dist * Math.exp(-zoom * dt * 1.2 * fast), FREE_DIST_MIN, FREE_DIST_MAX);
+    }
+    const k = this.reducedMotion ? 1 : 1 - Math.exp(-dt * 10);
+    c.theta += (g.theta - c.theta) * k;
+    c.phi += (g.phi - c.phi) * k;
+    c.dist += (g.dist - c.dist) * k;
+    c.target.lerp(g.target, k);
+    const s = TableRenderer.freeSph.set(c.dist, c.phi, c.theta);
+    this.camera.position.setFromSpherical(s).add(c.target);
+    this.camera.lookAt(c.target);
   }
 
   /** Start moving the camera with one pointer (mouse drag, one finger, right-drag or Shift+drag). */
@@ -2637,7 +2903,7 @@ export class TableRenderer {
 
       // Melds and flowers sit on the racks' set ledges, level with the wall's
       // top so they are never hidden behind it. Yours lie on the ledge in front
-      // of your hand, from its right end toward the left, leaning toward you.
+      // of your hand, sets from its left end and flowers from its right, leaning toward you.
       // Each opponent's sit on the sloped shelf of their rack, tilted toward the
       // centre and turned to read upright from your seat. A long row shrinks a
       // little to stay on its ledge.
@@ -2648,7 +2914,9 @@ export class TableRenderer {
         const room = this.racks.humanLength - 0.3;
         const need = pl.melds.reduce((a, m) => a + m.tiles.length * (TW + 0.006) + 0.1, 0) + flowers.length * (TW + 0.006);
         const ms = Math.min(MY_MELD_SCALE, need > 0 ? room / need : MY_MELD_SCALE);
-        let mx = room / 2;
+        // Sets from the ledge's left end in the order made, flowers from its right end, so the two never merge.
+        const setsLen = pl.melds.reduce((a, m) => a + m.tiles.length * (TW * ms + 0.006) + 0.1 * ms, 0);
+        let mx = -room / 2 + setsLen;
         const onLedge = (sc: number, x: number, faceDown: boolean): Pose => {
           const across = TH * sc * Math.cos(MY_LEDGE.tilt);
           const z = MY_LEDGE.z0 + 0.05 + across / 2;
@@ -2670,6 +2938,7 @@ export class TableRenderer {
           });
           mx -= 0.1 * ms;
         }
+        mx = room / 2;
         for (const f of flowers) {
           const t = this.tiles.get(f.id)!;
           const fs = ms;
@@ -2688,8 +2957,9 @@ export class TableRenderer {
           placed.add(tile.id);
         }
       } else if (rel === 0) {
-        let mx = 2.85;
         const ms = MY_MELD_SCALE;
+        // Sets on the left, flowers from the right end (as on the ledge).
+        let mx = -2.85 + pl.melds.reduce((a, m) => a + m.tiles.length * (TW * ms + 0.006) + 0.1, 0);
         for (let mi = pl.melds.length - 1; mi >= 0; mi--) {
           const m = pl.melds[mi];
           const tiles = [...m.tiles].reverse();
@@ -2704,6 +2974,7 @@ export class TableRenderer {
           });
           mx -= 0.1;
         }
+        mx = 2.85;
         for (const f of pl.flowers ?? []) {
           const t = this.tiles.get(f.id)!;
           setAside(t, this.place(seat, new THREE.Vector3(mx - (TW * ms) / 2, (TD * ms) / 2 + 0.02, MELD_Z), qFromEuler(-Math.PI / 2, 0, 0), ms));
@@ -2717,7 +2988,8 @@ export class TableRenderer {
         const need = pl.melds.reduce((a, m) => a + m.tiles.length * (along + 0.006) + 0.1, 0) + flowers.length * (along + 0.006);
         const room = OPP_RACK.length - 0.3;
         const ms = Math.min(OPP_MELD_SCALE, need > 0 ? room / need : OPP_MELD_SCALE);
-        let mx = room / 2;
+        // Each player's sets at the left end of their shelf (their left), flowers from the right end, so the two never merge.
+        let mx = -room / 2 + pl.melds.reduce((a, m) => a + m.tiles.length * (along * ms + 0.006) + 0.1 * ms, 0);
         const onShelf = (sc: number, x: number, faceDown: boolean): Pose => {
           const across = TH * sc * Math.cos(OPP_RACK.slope);
           const z = OPP_RACK.shelfZ + 0.008 + across / 2;
@@ -2740,6 +3012,7 @@ export class TableRenderer {
           mx -= 0.1 * ms;
         }
         const hideFlowers = this.flowersHidden && !shown && pl.melds.filter((m) => !m.concealed).length < 3;
+        mx = room / 2;
         for (const f of flowers) {
           const t = this.tiles.get(f.id)!;
           const fs = ms;
@@ -3199,7 +3472,7 @@ export class TableRenderer {
 
   /** Whether anything on screen is in motion (tiles, camera, a gesture, the win moment); hover lifts don't count. */
   private moving(ms: number): boolean {
-    if (ms < this.activeUntil || this.view === 'orbit' || this.camT < 1 || this.cine || this.gesture || this.room.sides.busy) return true;
+    if (ms < this.activeUntil || this.view === 'orbit' || this.camT < 1 || this.cine || this.gesture || this.room.sides.busy || this.freeMoving()) return true;
     for (const t of this.tiles.values()) if (t.tween && !this.hoverTweens.has(t.id)) return true;
     const c = this.viewC,
       v = this.viewT;
@@ -3287,6 +3560,7 @@ export class TableRenderer {
     const cine = this.cine ? [this.camBase.clone(), this.camLook.clone()] : null;
     if (this.cine && !this.cine.update(now, this.camBase, this.camLook, this.pointScale)) this.cine = null;
     this.applyCamera(dt);
+    if (this.freeCur) this.applyFree(dt);
     this.updateFigures(now, dt);
     if (now - this.handTopAt > (busy ? 0.12 : 0.5)) {
       this.handTopAt = now;
@@ -3364,6 +3638,7 @@ export class TableRenderer {
   /** Back to the landing loop. */
   idle() {
     this.watchOnly = false;
+    this.setFreeCamera(false);
     this.room.sides.setPurses([START_UNITS, START_UNITS, START_UNITS, START_UNITS]);
     this.lastState = undefined;
     this.interactive.clear();

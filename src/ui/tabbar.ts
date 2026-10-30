@@ -48,8 +48,8 @@ export const PHONE_TABS: Tab[] = [
     id: 'you',
     label: tr('You'),
     icon: svg('<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.4-3.8 4.2-5.7 7.5-5.7s6.1 1.9 7.5 5.7"/>'),
-    screens: ['profile'],
-    subs: [{ label: tr('Profile'), screen: 'profile' }, { label: tr('Settings'), action: 'settings' }],
+    screens: ['profile', 'store'],
+    subs: [{ label: tr('Profile'), screen: 'profile' }, { label: tr('Jong Points'), screen: 'store' }, { label: tr('Settings'), action: 'settings' }],
   },
 ];
 

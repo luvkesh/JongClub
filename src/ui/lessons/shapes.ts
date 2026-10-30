@@ -1,30 +1,65 @@
-// Academy lesson: hand shapes beyond four sets and a pair. Seven pairs and
-// thirteen orphans (which JongClub tables allow them: see `shapes` in each
-// profile under src/engine/rules/), and the mixed chow and mixed pung
-// patterns across the three suits. Those are named scoring patterns in
-// Chinese Official (MCR) rules, and in Riichi as Sanshoku; JongClub's
-// Classic, Dubai and Indian tables accept them as ordinary winning hands with
-// no extra faan, and clubs that do score them do so as a house rule.
+// Academy lesson (Foundations, Level 5): hand shapes in India Rules
+// (src/engine/rules/india.ts and indiaPassport.ts). The Indian sets and how to
+// build them (a crochet or mixed chow can't be called, so its last tile comes
+// from the wall unless it wins the hand), the knit as the pair (only with a
+// crochet, the rulebook's p. 7), concealed hands, the East round's passports
+// and their combinations, and the card hands of the South and North rounds.
+// Seven pairs, thirteen orphans and the cross-suit patterns of other tables
+// moved to the Chinese Classical lesson (lessons/classic.ts).
 
 import { S, Q, type Lesson } from '../lessonKit';
 
 export const shapesLesson: Lesson = {
   id: 'shapes',
-  title: 'Hand shapes and variations',
+  title: 'Hand shapes in India Rules',
   scenes: [
-    S('More than one shape', 'Four sets and a pair is the shape you’ll see most. But some games, and some rounds, welcome other shapes too. Each table decides which ones count, so let me show you the common ones.', { hand: { title: 'The usual shape: four sets and a pair', groups: [{ tiles: '123m', label: 'Set' }, { tiles: '456p', label: 'Set' }, { tiles: '789s', label: 'Set' }, { tiles: 'RdRdRd', label: 'Set' }, { tiles: 'EE', label: 'Pair' }] } }),
-    S('Seven pairs', 'First, seven pairs. Fourteen tiles, no sets at all, just seven pairs. Classic and Hong Kong welcome it, for four faan. Indian, Malaysian, Sichuan and Chinese Official tables allow it too, and Dubai hosts can switch it on or off. In Riichi it’s a scoring pattern called Chiitoitsu, and all seven pairs must be different.', { hand: { title: 'Seven pairs: fourteen tiles, no sets', groups: [{ tiles: '11m', label: 'Pair' }, { tiles: '44m', label: 'Pair' }, { tiles: '77p', label: 'Pair' }, { tiles: '22s', label: 'Pair' }, { tiles: '99s', label: 'Pair' }, { tiles: 'EE', label: 'Pair' }, { tiles: 'RdRd', label: 'Pair' }], facts: ['Classic and Hong Kong: 4 faan', 'Riichi: Chiitoitsu, all seven different'] } }),
-    S('Where pairs don’t count', 'Taiwanese, Vietnamese and Singapore tables don’t use seven pairs, so stick to sets there. American tables are different again. Their card has its own pair hands, which must be played exactly as printed.', { table: { head: ['Table', 'Seven pairs?'], rows: [['Classic, Hong Kong, Indian, Malaysian, Sichuan, Chinese Official', 'Yes'], ['Riichi', 'Yes: Chiitoitsu, seven different pairs'], ['Dubai', 'The host decides'], ['Taiwanese, Vietnamese, Singapore', 'No: build sets'], ['American', 'Only the pair hands printed on the card']] } }),
-    S('Thirteen orphans', 'Then there’s thirteen orphans. One of every terminal and every honour, plus one extra to make a pair. It’s a limit hand in Classic, Hong Kong, Riichi and Indian clubs. In Singapore it’s called the thirteen wonders.', { hand: { title: 'Thirteen orphans: one of every terminal and honour, plus one', groups: [{ tiles: '1m 9m 1p 9p 1s 9s', label: 'Terminals', sub: 'every 1 and 9' }, { tiles: 'E S W N', label: 'Winds', sub: 'one of each' }, { tiles: 'Rd Gd Wd Wd', label: 'Dragons', sub: 'one doubled for the pair', mark: 'hl' }], facts: ['A limit hand: Classic, Hong Kong, Riichi, Indian clubs'] } }),
-    S('Mixed chows', 'Now a different idea, mixing the suits. The same run in all three suits, like two three four in Characters, Dots and Bamboo, is a mixed triple chow. Step it up one in each suit, one two three, then two three four, then three four five, and that’s mixed shifted chows.', { cards: [{ tiles: '234m 234p 234s', title: 'Mixed triple chow', text: 'The same run in all three suits.' }, { tiles: '123m 234p 345s', title: 'Mixed shifted chows', text: 'Up one step in each suit.' }] }),
-    S('Mixed pungs', 'Pungs can do the same. Fives in all three suits is a triple pung. Three, four and five, each in a different suit, is mixed shifted pungs.', { cards: [{ tiles: '555m 555p 555s', title: 'Triple pung', text: 'The same number in all three suits.' }, { tiles: '333m 444p 555s', title: 'Mixed shifted pungs', text: 'Up one step in each suit.' }] }),
-    S('Who scores them', 'At our Chinese Official table they score: mixed triple chow is eight fan, mixed shifted chows six, triple pung sixteen. Riichi calls the same run or pung in all three suits Sanshoku. At Classic, Hong Kong, Dubai and Indian tables, they’re good hands with no extra faan. Some clubs add them as a house rule for a round, so ask the host.', { table: { head: ['Pattern', 'Chinese Official', 'Riichi', 'Classic, Hong Kong, Dubai, Indian'], rows: [[{ tiles: '345m 345p 345s', text: 'Mixed triple chow' }, '8 fan', 'Sanshoku', 'A good hand, no extra faan'], [{ tiles: '123m 234p 345s', text: 'Mixed shifted chows' }, '6 fan', '—', 'No extra faan'], [{ tiles: '555m 555p 555s', text: 'Triple pung' }, '16 fan', 'Sanshoku', 'No extra faan']] } }),
+    S('More than one shape', 'You met the Indian sets in the Basics: the mixed chow, the crochet and the knit pair. Now let’s see how to build them, and the special shapes some rounds ask for.', { hand: { title: 'The usual shape: four sets and a pair', groups: [{ tiles: '123m', label: 'Chow' }, { tiles: '2m 3s 4p', label: 'Mixed chow' }, { tiles: '7m 7s 7p', label: 'Crochet' }, { tiles: 'RdRdRd', label: 'Pung' }, { tiles: 'EE', label: 'Pair' }] } }),
+    S('Building a crochet', 'Say you hold the five of Cracks and the five of Bamboos. Only the five of Rings makes a crochet. And you can’t call it from a discard, so it has to come from the wall, unless it wins your hand. With one way in, a crochet can be slow. Keep it when you have other good sets.', {
+      list: [
+        { tiles: '5m 5s', title: 'Two of the three', text: 'Waiting on one tile: the 5 of Rings.' },
+        { tiles: '5p', title: 'From the wall', text: 'You draw it yourself, or it’s your winning tile.' },
+      ],
+    }),
+    S('Building a mixed chow', 'A mixed chow has more ways in. Hold the four of Cracks and the five of Bamboos, and a three or a six of Rings will finish it. Hold the four of Cracks and the six of Bamboos, and you need the five of Rings. Like a crochet, it comes from the wall, unless the tile wins your hand.', {
+      table: {
+        head: ['You hold', 'You need', 'Ways in'],
+        rows: [
+          [{ tiles: '4m 5s' }, { tiles: '3p 6p' }, 'Two: either end'],
+          [{ tiles: '4m 6s' }, { tiles: '5p' }, 'One: the middle'],
+          [{ tiles: '5m 5s' }, { tiles: '5p' }, 'One: a crochet'],
+        ],
+      },
+    }),
+    S('Passports', 'In the East round of a full match, every winning hand needs a passport: a special group of nine, six or five tiles. Here they are. You’ll meet each one properly in the East round lesson.', {
+      table: {
+        head: ['Passport', 'Made of'],
+        rows: [
+          [{ tiles: '222m 555s 888p', text: '9 tiles' }, '3 pungs or 3 chows, in 3 suits or one suit; 3 crochets; or 3 mixed chows'],
+          [{ tiles: '11s 44s 77s', text: '6 tiles' }, '3 pairs in one suit or 3 suits; or 3 knits in the same 2 suits'],
+          [{ tiles: 'E S W N N', text: '5 tiles' }, 'An honour pung and honour pair; NEWS and one more wind; Green, Red and White and an honour pair; or a crochet and a knit'],
+        ],
+      },
+    }),
+    S('Passport hands', 'A passport takes the place of some of your sets. Whatever is left is made of threes and a pair. So a nine-tile passport needs one more set and a pair. A five-tile passport needs three more sets. Two passports can even share one hand.', {
+      table: {
+        head: ['Passports', 'Plus', 'Fourteen tiles'],
+        rows: [
+          ['9', 'a set and a pair', '9 + 3 + 2'],
+          ['6', 'two sets and a pair', '6 + 3 + 3 + 2'],
+          ['5', 'three sets', '5 + 3 + 3 + 3'],
+          ['9 and 5', 'nothing else', '9 + 5'],
+          ['6 and 6', 'a pair', '6 + 6 + 2'],
+          ['5 and 6', 'a set', '5 + 6 + 3'],
+        ],
+      },
+    }),
+    S('Card hands', 'In the South and North rounds, you build the exact hand named on a card. For example, one of the South cards is Unique Wonders: the one and nine of every suit, all four winds and all three dragons, plus one more of any of them. Check the round before you plan your hand. Now, shall we try your test?', { hand: { title: 'One of the South cards: Unique Wonders', card: 'Unique Wonders', groups: [{ tiles: '1m 9m 1s 9s 1p 9p', label: 'Terminals', sub: 'every 1 and 9' }, { tiles: 'E S W N', label: 'Winds', sub: 'all four' }, { tiles: 'Rd Gd Wd Wd', label: 'Dragons', sub: 'one doubled', mark: 'hl' }] } }),
   ],
   quiz: [
-    Q('Which of these is a mixed triple chow?', [['The same run in three suits', '234m 234p 234s'], ['Three runs in one suit', '123m 456m 789m'], ['Three pungs of winds', 'EEE SSS WWW']], 0, 'A mixed triple chow is the same run in Characters, Dots and Bamboo.'),
-    Q('Which tables never count seven pairs?', ['Taiwanese, Vietnamese and Singapore', 'Classic and Riichi', 'Every table'], 0, 'Seven pairs counts in Classic, Hong Kong, Riichi, Indian, Malaysian, Sichuan and Chinese Official play, and Dubai hosts choose. Taiwanese, Vietnamese and Singapore tables don’t use it.'),
-    Q('In Riichi, what is the same run in all three suits called?', ['Sanshoku', 'Pon', 'Tsumo'], 0, 'Riichi calls the same run or pung in all three suits Sanshoku.'),
-    Q('At a Classic table, does a mixed triple chow add faan?', ['No, but it still wins', 'Yes, eight faan', 'It isn’t allowed'], 0, 'At JongClub’s Classic table it’s a good hand with no extra faan. Chinese Official play scores it eight fan.'),
-    Q('What is thirteen orphans made of?', ['Every terminal and honour, plus one', 'Seven pairs', 'Only dragons'], 0, 'Thirteen orphans is one of each terminal and honour, plus one more to make a pair.'),
+    Q('You hold the 4 of Cracks and the 5 of Bamboos. Which tiles make a mixed chow?', [['3 or 6 of Rings', '3p 6p'], ['5 of Rings only', '5p'], ['4 or 5 of Rings', '4p 5p']], 0, 'A mixed chow is a run across the three suits: 3-4-5 or 4-5-6, with the Ring at either end.'),
+    Q('You hold the 5 of Cracks and the 5 of Bamboos. Which tile makes a crochet?', [['The 5 of Rings', '5p'], ['The 4 or 6 of Rings', '4p 6p'], ['Any Ring', '1p']], 0, 'A crochet is one number in all three suits, so only the 5 of Rings finishes it.'),
+    Q('A five-tile passport needs what else?', ['Three more sets', 'One more set and a pair', 'Nothing else'], 0, 'Five plus three, three and three makes fourteen.'),
+    Q('What does a small card do?', ['It names your whole hand', 'It doubles your score', 'It lets you call any tile'], 0, 'In the South round your card names the hand you must build.'),
+    Q('A nine-tile passport needs what else?', ['One more set and a pair', 'Three more sets', 'Nothing else'], 0, 'Nine plus three plus two makes fourteen.'),
   ],
 };
