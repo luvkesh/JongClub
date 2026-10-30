@@ -16,9 +16,9 @@ try {
 const base = process.argv[2] || 'http://127.0.0.1:5311/';
 const SIZES = { desktop: [1440, 900], laptop: [1280, 800], 'ipad-land': [1180, 820], 'ipad-port': [820, 1180], phone: [390, 844], 'small-phone': [360, 740] };
 // Screens, with an optional step: open the first item pop-over, or switch tab.
-const SCREENS = (process.env.SCREENS || 'home,play,learn,club,collection,collection>view,atelier,atelier>view,profile,daily,minigames').split(',');
+const SCREENS = (process.env.SCREENS || 'home,play,learn,club,collection,collection>view,atelier,atelier>view,profile,daily,minigames,store').split(',');
 // Boxes whose contents must stay inside them.
-const BOXES = '.cc-card, .card, .iv-card, .lux-card, .cc-strip, .cc-top, .pf-hero, .tile-card';
+const BOXES = '.cc-card, .card, .iv-card, .lux-card, .cc-strip, .cc-top, .pf-hero, .tile-card, .ec-card, .ec-item, .ec-bundle, .ec-pack, .ec-day, .ec-daily';
 
 const problems = [];
 const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });

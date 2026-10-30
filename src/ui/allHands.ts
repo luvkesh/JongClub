@@ -31,6 +31,12 @@ function order(n: number, me: number, winner: number | undefined): number[] {
   return out;
 }
 
+/** How the winning tile came: self-drawn, or whose discard. */
+function winFrom(g: MahjongGame, r: HandResult, me: number): WinHandParts['winFrom'] {
+  if (r.discarder === null || r.discarder === undefined) return { selfDrawn: true };
+  return { selfDrawn: false, from: r.discarder === me ? undefined : g.players[r.discarder].name, yours: r.discarder === me };
+}
+
 /** The list of every hand, one row per seat. */
 export function allHandsList(o: AllHandsOpts): HTMLElement {
   const g = o.game;
@@ -45,7 +51,7 @@ export function allHandsList(o: AllHandsOpts): HTMLElement {
     const notes: string[] = [];
     if (!won && r.type === 'win' && r.discarder === s) notes.push(tr('Discarded the winning tile'));
     const parts: WinHandParts = won
-      ? { hand: r.revealedHand ?? p.hand, melds: r.revealedMelds ?? p.melds, flowers: p.flowers ?? [], winTileId: r.winTile?.id, labels: o.labels, red: o.red }
+      ? { hand: r.revealedHand ?? p.hand, melds: r.revealedMelds ?? p.melds, flowers: p.flowers ?? [], winTileId: r.winTile?.id, labels: o.labels, red: o.red, winFrom: winFrom(g, r, o.me) }
       : { hand: p.hand, melds: p.melds, flowers: p.flowers ?? [], labels: o.labels, red: o.red };
     // India Rules East round: passports apart from the other sets.
     if (g.profile.passportView) parts.passports = g.profile.passportView(parts.hand, parts.melds);

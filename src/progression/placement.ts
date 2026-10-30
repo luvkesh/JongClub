@@ -12,7 +12,7 @@ import type { GameLength } from '../engine/rounds';
 import type { Profile } from './profile';
 import { tr } from '../i18n';
 
-export type PlacementSkill = 'tiles' | 'sets' | 'words' | 'rounds' | 'waits' | 'discard' | 'scoring' | 'riichi';
+export type PlacementSkill = 'tiles' | 'sets' | 'words' | 'rounds' | 'waits' | 'discard' | 'scoring' | 'calls';
 
 export interface PlacementQuestion {
   id: string;
@@ -40,7 +40,7 @@ const Q = (id: string, skill: PlacementSkill, q: string, options: (string | [str
 });
 
 export const PLACEMENT: PlacementQuestion[] = [
-  Q('name-character', 'tiles', tr('Which tile is the 7 of Characters?'), [['', '7m'], ['', '7p'], ['', '7s']], 0, tr('Characters carry the number in Chinese, with 萬 beneath it.'), { noLabels: true }),
+  Q('name-character', 'tiles', tr('Which tile is the 7 of Cracks?'), [['', '7m'], ['', '7p'], ['', '7s']], 0, tr('Cracks carry the number in Chinese, with 萬 beneath it.'), { noLabels: true }),
   Q('name-dragon', 'tiles', tr('Which tile is the Green Dragon?'), [['', 'Gd'], ['', 'Rd'], ['', 'Wd']], 0, tr('The Green Dragon is 發; the Red is 中 and the White is a plain frame.'), { noLabels: true }),
   Q('set', 'sets', tr('Which of these is a complete set?'), [['', '678p'], ['', '689p'], ['', '66p 7p']], 0, tr('A chow is three numbers in a row in one suit.')),
   Q('terminals', 'words', tr('Which tiles are terminals?'), [tr('The ones and nines'), tr('The twos to eights'), tr('The winds and dragons')], 0, tr('Terminals sit at the ends of each suit; winds and dragons are honours.')),
@@ -48,8 +48,8 @@ export const PLACEMENT: PlacementQuestion[] = [
   Q('wait-two-sided', 'waits', tr('Your hand is ready. Which tiles complete it?'), [[tr('3 or 6 Bamboo'), '3s 6s'], [tr('4 or 5 Bamboo'), '4s 5s'], [tr('Only 6 Bamboo'), '6s']], 0, tr('4 and 5 Bamboo wait on either end: 3 or 6.'), { hand: '123m 456p 789s EE 45s' }),
   Q('wait-multi', 'waits', tr('Your hand is ready. Which tiles complete it?'), [[tr('2 or 5 Characters'), '2m 5m'], [tr('1 or 6 Characters'), '1m 6m'], [tr('3 or 4 Characters'), '3m 4m']], 0, tr('2-3-4-5 is a run plus a single: a 2 or a 5 makes the pair.'), { hand: '2345m 123p 789s EEE' }),
   Q('best-discard', 'discard', tr('You have just drawn. Which tile do you discard?'), [[tr('North'), 'N'], [tr('3 Bamboo'), '3s'], [tr('East'), 'E']], 0, tr('Throwing the lone North leaves you ready, waiting on 2 or 5 Bamboo.'), { hand: '123m 456p 789s 34s EE N' }),
-  Q('faan', 'scoring', tr('In Classic, a hand of three faan is worth…'), [tr('128 points'), tr('48 points'), tr('3 points')], 0, tr('Sixteen points doubled once per faan: 32, 64, 128.')),
-  Q('riichi-yaku', 'riichi', tr('In Riichi, your hand is complete but has no yaku. Can you win?'), [tr('No, every win needs a yaku'), tr('Yes, any complete hand wins'), tr('Only by self-draw')], 0, tr('A Riichi win always needs at least one yaku, even with dora.')),
+  Q('india-pay', 'scoring', tr('In India Rules, South wins a concealed hand. What does East pay?'), [tr('2,000'), tr('1,000'), tr('500')], 0, tr('A concealed hand is worth 1,000, and East always pays double.')),
+  Q('india-call', 'calls', tr('In India Rules, can you call a discard to make a mixed chow?'), [tr('No, only to win the hand'), tr('Yes, from anyone'), tr('Yes, from your left')], 0, tr('Mixed chows, crochets, knits and pairs come from the wall, unless the tile wins your hand.')),
 ];
 
 /** Beginner lessons the test can mark as known: every one of their questions right, and a score at least this. */

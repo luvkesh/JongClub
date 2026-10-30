@@ -51,6 +51,17 @@ export function concealedSetIds(hand: Tile[]): number[][] {
   return concealedSets(hand).map((g) => g.map((t) => t.id));
 }
 
+/**
+ * The winner's concealed tiles for the table, set by set in the summary's order: with a passport
+ * reading (India Rules East round) its passport pieces, then the pieces with it, the pair last;
+ * otherwise the summary's concealed sets. Revealed sets stay on the ledge in front.
+ */
+export function winTableSets(hand: Tile[], pl?: PassportLayout): number[][] {
+  if (!pl) return concealedSetIds(hand);
+  const ids = (ts: Tile[]) => ts.map((t) => t.id);
+  return [...pl.passports.flatMap((pp) => pp.sets.map((x) => ids(x.tiles))), ...pl.sets.map((x) => ids(x.tiles)), ...concealedSetIds(pl.loose)];
+}
+
 export interface WinHandParts {
   hand: Tile[];
   melds: Meld[];
@@ -60,6 +71,19 @@ export interface WinHandParts {
   red: (id: number) => boolean;
   /** India Rules East round: the hand read as passports and the rest. */
   passports?: PassportLayout;
+  /** How the winning tile came: drawn from the wall, or whose discard it was. */
+  winFrom?: { selfDrawn: boolean; from?: string; yours?: boolean };
+}
+
+/** "Self-drawn" or "Rex's discard", for the winning tile. */
+const winHow = (w: NonNullable<WinHandParts['winFrom']>) => (w.selfDrawn ? tr('Self-drawn') : w.yours ? tr('Your discard') : w.from ? tr('{name}’s discard', { name: w.from }) : tr('From a discard'));
+
+/** The winning tile and how it came, under the hand, so the score reads clearly. */
+function winTileLine(p: WinHandParts, img: (t: Tile) => HTMLElement): HTMLElement | null {
+  const all = [...p.hand, ...p.melds.flatMap((m) => m.tiles)];
+  const t = all.find((x) => x.id === p.winTileId);
+  if (!t || !p.winFrom) return null;
+  return h('div', { class: `wh-last ${p.winFrom.selfDrawn ? 'self' : 'discard'}` }, h('span', { class: 'wh-label' }, tr('Winning tile')), h('div', { class: 'meld' }, img(t)), h('span', { class: 'wh-how' }, winHow(p.winFrom)));
 }
 
 /**
@@ -78,6 +102,8 @@ export function winHandSection(p: WinHandParts): HTMLElement {
   if (pl) return passportHand(p, pl, row);
   if (open.length) box.append(row(tr('Revealed sets'), 'revealed', open.map((m) => set(m.tiles))));
   box.append(row(tr('Concealed sets'), 'concealed', [...closedKongs.map((m) => set(m.tiles, 'kong')), ...concealedSets(p.hand).map((g) => set(g))]));
+  const last = winTileLine(p, (t) => tileImg(t.kind, '', p.labels, p.red(t.id)));
+  if (last) box.append(last);
   if (p.flowers.length) box.append(row(tr('Bonus tiles'), 'flowers', [set(p.flowers)]));
   return box;
 }
@@ -91,7 +117,13 @@ function passportHand(p: WinHandParts, pl: PassportLayout, row: (label: string, 
   const img = (t: Tile) => tileImg(t.kind, t.id === p.winTileId ? 'win-tile sideways' : '', p.labels, p.red(t.id));
   const piece = (tiles: Tile[], type: string, cls = '') => {
     const won = tiles.some((t) => t.id === p.winTileId);
-    return h('div', { class: `wh-piece ${cls}`.trim() }, h('div', { class: 'meld' }, ...tiles.map(img)), h('span', { class: 'wh-piece-label' }, tr(PIECE_NAMES[type] ?? type), won ? h('span', { class: 'wh-won' }, ` · ${tr('Won')}`) : null));
+    const called = cls === 'called';
+    return h(
+      'div',
+      { class: `wh-piece ${cls}`.trim() },
+      h('div', { class: 'meld' }, ...tiles.map(img)),
+      h('span', { class: 'wh-piece-label' }, tr(PIECE_NAMES[type] ?? type), called ? h('span', { class: 'wh-rev' }, ` · ${tr('Revealed')}`) : null, won ? h('span', { class: 'wh-won' }, ` · ${p.winFrom ? winHow(p.winFrom) : tr('Won')}`) : null),
+    );
   };
   const meldPiece = (m: Meld) => piece(m.tiles, m.type, m.concealed ? 'kong' : 'called');
   const box = h('div', { class: 'win-hand passport-hand' });
