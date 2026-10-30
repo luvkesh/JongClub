@@ -14,6 +14,7 @@ import { placementTable } from '../placement';
 import { lastTable, tableSummary } from '../lastTable';
 import { joinTable } from '../live';
 import { focusActions } from './play';
+import { dailyPrompt } from '../economySheets';
 import { luxCard, luxRow } from '../luxCard';
 import { tr } from '../../i18n';
 import type { App } from '../app';
@@ -72,11 +73,13 @@ export function homeScreen(app: App) {
     'section',
     { class: 'home-strip hx-strip' },
     stat('trophy', tr('Club Level'), String(lv.level)),
-    stat('coins', tr('Jong Points'), fmt(p.jongPoints)),
+    stat('coins', tr('Jong Points'), h('button', { class: 'link v sm', onclick: () => app.go('store') }, fmt(p.jongPoints), h('span', { class: 'hx-chev', html: icon('chevronRight') }))),
     stat('gamepad', tr('Games'), fmt(p.games)),
     stat('calendar', tr('Daily Hand'), h('button', { class: 'link v sm', onclick: () => app.go('daily') }, playedToday ? tr('Played today ✓') : tr('Play today’s hand'), h('span', { class: 'hx-chev', html: icon('chevronRight') })), 'daily'),
   );
 
+  // Once a day, the daily login reward (src/economy).
+  if (!first) window.setTimeout(() => app.screen === 'home' && !app.match && dailyPrompt(app.ctx(), () => app.go('store')), 900);
   return h(
     'div',
     { class: 'home' },

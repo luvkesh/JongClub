@@ -3,6 +3,7 @@
 import { DEFAULT_AVATAR, DEFAULT_LOADOUT, type AvatarSpec, type Loadout } from '../cosmetics/catalog';
 import { VARIATIONS } from '../engine/rules';
 import { lang, tr } from '../i18n';
+import { econOf, takeFirstWin } from '../economy/economy';
 
 // Three separate systems as the brief requires: Jong Points (currency),
 // Rating (competitive, ranked only, never purchasable) and Club Level (XP).
@@ -302,11 +303,15 @@ export interface Rewards {
 }
 
 export function applyMatch(p: Profile, m: MatchSummary): Rewards {
+  econOf(p); // a new week's challenges count from before this game
   const breakdown: { label: string; points: number }[] = [{ label: tr('Game played'), points: 50 }];
   if (m.handsWon) breakdown.push({ label: tr('Hands won × {n}', { n: m.handsWon }), points: 40 * m.handsWon });
   const place = [200, 100, 50, 0][m.placement - 1] ?? 0;
   if (place) breakdown.push({ label: tr('{place} place', { place: ordinal(m.placement) }), points: place });
   if (m.limitHand) breakdown.push({ label: tr('Limit hand'), points: 300 });
+  // The day's first win pays a bonus on top (src/economy).
+  const firstWin = m.placement === 1 ? takeFirstWin(p) : 0;
+  if (firstWin) breakdown.push({ label: tr('First win of the day'), points: firstWin });
   const jp = breakdown.reduce((a, b) => a + b.points, 0);
   const levelBefore = levelOf(p.xp).level;
   const ratingBefore = p.rating;

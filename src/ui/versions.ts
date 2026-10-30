@@ -129,9 +129,10 @@ const VERSIONS: Version[] = [
     facts: [
       [tr('Hand'), tr('13 tiles; win with 14')],
       [tr('Tiles'), tr('144 with flowers and seasons')],
-      [tr('Rounds'), tr('16 games in 4 rounds; 35,000 points each')],
-      [tr('Scoring'), tr('East round: 500, 1,000 concealed, 2,000 fully concealed; East pays and receives double')],
-      [tr('Calls'), tr('Chow from the left, Pung, Kong, Mahjong')],
+      [tr('Play styles'), tr('The full match: 16 games in 4 rounds. Or Classic: East round games without passports')],
+      [tr('Scoring'), tr('500, 1,000 concealed, 2,000 fully concealed; East pays and receives double')],
+      [tr('Sets'), tr('Chow, mixed chow, crochet, pung, kong; the pair may be a knit with a crochet')],
+      [tr('Calls'), tr('Chow from the left, Pung, Kong, Mahjong; mixed chows, crochets, knits and pairs only to win')],
     ],
     win: tr('Four sets and a pair, where a set may be a mixed chow or a crochet, or a passport with sets and a pair.'),
     mei: 'India Rules is the club game played across India. A match is sixteen games in four rounds, and each round has a game of its own: passports in the East, small cards in the South, the goulash in the West, and in the North, East chooses. East always pays and receives double, so being East is exciting!',
@@ -614,7 +615,8 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
       'dl',
       { class: 'vp-facts' },
       h('div', { class: 'wide' }, h('dt', {}, tr('Who plays it')), h('dd', {}, v.who)),
-      ...v.facts.map(([k, d]) => h('div', {}, h('dt', {}, k), h('dd', {}, d))),
+      // An odd fact out takes the full row, so the grid never shows an empty cell.
+      ...v.facts.map(([k, d], i) => h('div', { class: v.facts.length % 2 && i === v.facts.length - 1 ? 'wide' : '' }, h('dt', {}, k), h('dd', {}, d))),
       h('div', { class: 'wide' }, h('dt', {}, tr('How to win')), h('dd', {}, v.win)),
     ),
     h(

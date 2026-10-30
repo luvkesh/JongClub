@@ -42,7 +42,7 @@ export const waitsLesson: Lesson = {
           { tiles: '55p', label: 'Pair', mark: 'hl' },
           { tiles: '88s', label: 'Pair', mark: 'hl' },
         ],
-        facts: ['A 5 of Dots wins: 555p + 88s', 'An 8 of Bamboo wins: 888s + 55p'],
+        facts: ['A 5 of Rings wins: 555p + 88s', 'An 8 of Bamboo wins: 888s + 55p'],
       },
     }),
     S('Waiting on the pair', 'A single wait looks poor, only three tiles. But it’s flexible. Whenever you draw a better tile, you can swap the lonely one out. And honours make good single waits late in the hand, when others feel safe throwing them.', {
@@ -78,7 +78,7 @@ export const waitsLesson: Lesson = {
         { tiles: '5m', title: 'Middle tiles', text: 'Others hold on to these, so they come out less.' },
       ],
     }),
-    S('Your own discards', 'One more thing. In Riichi, you can never win on a tile you threw away yourself. So if you discarded a three, a three-six wait is a poor choice there. At most other tables, you still can, but other players will notice your wait more easily.', { tiles: ['3s', '45s'] }),
+    S('Your own discards', 'One more thing. In India Rules, you may still win on a tile you threw away yourself. But other players see your discards. If you threw a three and then wait on three and six, they may guess your wait, and hold on to those tiles.', { tiles: ['3s', '45s'] }),
     S('Waiting habits', 'So when you’re one step away: picture every wait you could choose, count what’s hidden, and pick the best. The waiting row at the table counts the hidden tiles for you. Shall we try your test?', {
       list: [
         { tiles: '45s', title: 'Name your waits', text: 'Two-sided, middle, edge, two pairs or single.' },
@@ -88,9 +88,9 @@ export const waitsLesson: Lesson = {
     }),
   ],
   quiz: [
-    Q('Which wait has the most tiles?', [['Two-sided, like four five', '45s'], ['Edge, like one two', '12s'], ['Middle, like four six', '46s']], 0, 'A two-sided wait takes two numbers: up to eight tiles. Edge and middle take one: four tiles.'),
+    Q('You wait on one two of Bamboo. Which tile wins?', [['Only 3 Bamboo', '3s'], ['3 or 6 Bamboo', '3s 6s'], ['1 or 2 Bamboo', '1s 2s']], 0, 'One two is an edge wait: only a three finishes the run.'),
     Q('Three four five six of Bamboo. Which tiles win?', [['3 or 6 Bamboo', '3s 6s'], ['Only 7 Bamboo', '7s'], ['2 or 7 Bamboo', '2s 7s']], 0, 'Add a three: three pair, four five six. Add a six: three four five, six pair.'),
-    Q('Four four four five of Dots. Which tiles win?', [['3, 5 or 6 Dots', '3p 5p 6p'], ['Only 5 Dots', '5p'], ['4 or 5 Dots', '4p 5p']], 0, '345 or 456 with a four pair, or four four four with a five pair.'),
+    Q('Four four four five of Rings. Which tiles win?', [['3, 5 or 6 Rings', '3p 5p 6p'], ['Only 5 Rings', '5p'], ['4 or 5 Rings', '4p 5p']], 0, '345 or 456 with a four pair, or four four four with a five pair.'),
     Q('Your wait is four five of Bamboo. Two threes and one six are on the table. How many can still win?', ['Five', 'Eight', 'Three'], 0, 'Eight to begin with. Three are showing, so five are left.'),
     Q('Two waits have about the same number of tiles. Which is better late in the hand?', ['A tile others are likely to throw', 'A middle tile everyone needs', 'It never matters'], 0, 'Late on, honours and ones and nines are thrown more often, so they come to you sooner.'),
   ],

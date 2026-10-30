@@ -45,6 +45,8 @@ import { devPanel, labsButton } from '../dev/panel';
 import { icon } from './icons';
 import { applyVolumes, musicButton } from './musicToggle';
 import { minigamesScreen } from './screens/minigames';
+import { storeScreen } from './screens/store';
+import { pointsPill } from './economySheets';
 import type { MiniApp } from '../minigames/play';
 
 
@@ -62,7 +64,7 @@ const NAV: { id: Screen; label: string }[] = [
 ];
 
 /** Screens reached from inside another tab. */
-const NAV_PARENT: Partial<Record<Screen, Screen>> = { tournaments: 'play', atelier: 'collection', seasons: 'club' };
+const NAV_PARENT: Partial<Record<Screen, Screen>> = { tournaments: 'play', atelier: 'collection', seasons: 'club', store: 'profile' };
 
 export class App {
   profile: Profile = loadProfile();
@@ -100,7 +102,7 @@ export class App {
         { class: 'topbar' },
         h('button', { class: 'wordmark-sm', onclick: () => this.go('home'), 'aria-label': 'JongClub home' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true', html: brandSvg('mark') }), brandWordmark()),
         this.navEl,
-        h('div', { class: 'topbar-tools' }, labsButton(() => this.openLabs()), musicButton(this.settings, () => persistSettings(this)), h('button', { class: 'icon-btn', 'aria-label': tr('Settings'), onclick: () => this.openSettings(), html: icon('settings') })),
+        h('div', { class: 'topbar-tools' }, pointsPill(() => this.profile, () => this.go('store')), labsButton(() => this.openLabs()), musicButton(this.settings, () => persistSettings(this)), h('button', { class: 'icon-btn', 'aria-label': tr('Settings'), onclick: () => this.openSettings(), html: icon('settings') })),
       ),
       this.phone.sub,
       this.main,
@@ -133,7 +135,7 @@ export class App {
     const hash = location.hash.slice(1) as Screen;
     // A table from an invite link (?table=CODE) or the older #join=CODE.
     const joinCode = /^join=([a-z2-9]{5})$/i.exec(location.hash.slice(1))?.[1]?.toLowerCase() ?? tableFromLink();
-    const SCREENS: Screen[] = ['home', 'play', 'versions', 'learn', 'passport', 'club', 'collection', 'profile', 'daily', 'tournaments', 'atelier', 'minigames', 'seasons'];
+    const SCREENS: Screen[] = ['home', 'play', 'versions', 'learn', 'passport', 'club', 'collection', 'profile', 'daily', 'tournaments', 'atelier', 'minigames', 'seasons', 'store'];
     // A club invite link (?club=CODE) opens the Club screen, which opens the clubs page.
     this.go(joinCode ? 'play' : takeClubInvite() ? 'club' : SCREENS.includes(hash) ? hash : 'home');
     window.addEventListener('hashchange', () => {
@@ -267,7 +269,7 @@ export class App {
     const keep = same ? this.main.scrollTop : 0;
     const m = clear(this.main);
     const c = this.ctx();
-    const view = { home: () => homeScreen(this), play: () => playScreen(this), versions: () => versionsScreen(c), learn: () => learnScreen(this), passport: () => passportScreen(c), club: () => clubScreen(c), collection: () => collectionScreen(c), profile: () => profileScreen(c), daily: () => dailyScreen(c), tournaments: () => tournamentsScreen(c), atelier: () => atelierScreen(c), seasons: () => seasonsScreen(c), minigames: () => minigamesScreen(this.miniApp()) }[screen]();
+    const view = { home: () => homeScreen(this), play: () => playScreen(this), versions: () => versionsScreen(c), learn: () => learnScreen(this), passport: () => passportScreen(c), club: () => clubScreen(c), collection: () => collectionScreen(c), profile: () => profileScreen(c), daily: () => dailyScreen(c), tournaments: () => tournamentsScreen(c), atelier: () => atelierScreen(c), seasons: () => seasonsScreen(c), minigames: () => minigamesScreen(this.miniApp()), store: () => storeScreen(c) }[screen]();
     m.append(view);
     m.scrollTop = keep;
   }
@@ -312,6 +314,8 @@ export class App {
     this.guidedTheme = theme;
     this.settings.hintDepth = 'learning';
     const base = variation === 'classic' ? DEFAULT_TABLE : tableFor(variation);
+    // India Rules is played in its Classic style for a first hand with Mei: the East round's game, no passports.
+    if (variation === 'india') base.houseRules = { ...base.houseRules, indiaRounds: 'C' };
     this.startMatch({ ...base, name: tr('Guided Game'), length: 'oneHand', difficulty: 'beginner', personalities: ['teacher', 'zen', 'teacher'], hints: true, timer: 0, pace: 'untimed' }, { tag: 'tutorial', coach: new TutorialCoach(variation, theme) });
   }
 

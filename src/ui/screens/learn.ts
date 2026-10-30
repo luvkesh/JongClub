@@ -21,6 +21,9 @@ import { placementLink, placementOffer } from '../placement';
 import { tr } from '../../i18n';
 import type { App } from '../app';
 import { DEFAULT_TABLE, tableFor, type Lesson } from './tables';
+import { canOpen, isFree, lessonPrice } from '../../economy/economy';
+import { allLessons, lockedLesson, unlockLesson } from '../economySheets';
+import { fmt } from '../dom';
 
 /** Set when the player picks a lesson from the list, so it begins at once; opening Learn shows a start card instead. */
 let autostartNext = false;
@@ -35,22 +38,25 @@ const takeAutostart = () => {
 export function learnScreen(app: App) {
   const practice = (v: Lesson, name: string): TableConfig => ({ ...(v === 'basics' ? DEFAULT_TABLE : tableFor(v)), name, length: 'oneHand', difficulty: 'beginner', personalities: ['teacher', 'zen', 'teacher'], hints: true, timer: 0, pace: 'untimed' });
   const indiaRound = (round: string, name: string): TableConfig => { const t = practice('india', name); return { ...t, houseRules: { ...t.houseRules, indiaRounds: round } }; };
+  // The Foundations and Mastery lessons teach India Rules, so they practise its Classic style: the East round's game, no passports.
+  const indiaClassic = (name: string): TableConfig => indiaRound('C', name);
   const tables: Partial<Record<Lesson, [string, TableConfig]>> = {
     basics: [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))],
     words: [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))],
-    scoring: [tr('Play a Classic hand'), practice('basics', tr('Scoring Practice'))],
-    shapes: [tr('Play a Classic hand'), practice('basics', tr('Hand Shapes Practice'))],
-    strategy: [tr('Play a Classic hand'), practice('basics', tr('Strategy Practice'))],
-    efficiency: [tr('Play a Classic hand'), practice('basics', tr('Strategy Practice'))],
-    waits: [tr('Play a Classic hand'), practice('basics', tr('Strategy Practice'))],
-    defence: [tr('Play a Classic hand'), { ...practice('basics', tr('Strategy Practice')), difficulty: 'expert' } as TableConfig],
-    value: [tr('Play an East round'), { ...practice('basics', tr('East Round Practice')), length: 'eastRound' }],
+    scoring: [tr('Play an India Rules hand'), indiaClassic(tr('Scoring Practice'))],
+    shapes: [tr('Play an India Rules hand'), indiaClassic(tr('Hand Shapes Practice'))],
+    strategy: [tr('Play an India Rules hand'), indiaClassic(tr('Strategy Practice'))],
+    efficiency: [tr('Play an India Rules hand'), indiaClassic(tr('Strategy Practice'))],
+    waits: [tr('Play an India Rules hand'), indiaClassic(tr('Strategy Practice'))],
+    defence: [tr('Play an India Rules hand'), { ...indiaClassic(tr('Strategy Practice')), difficulty: 'expert' } as TableConfig],
+    value: [tr('Play four India Rules games'), { ...indiaClassic(tr('India Rules Practice')), length: 'eastRound' }],
+    classic: [tr('Play a Classic hand'), practice('basics', tr('Classic Practice'))],
     tradition: [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))],
     riichi: [tr('Play a Riichi hand'), practice('riichi', tr('Riichi Practice'))],
     taiwanese: [tr('Play a Taiwanese hand'), practice('taiwanese', tr('Taiwanese Practice'))],
     american: [tr('Play an American hand'), practice('american', tr('American Practice'))],
     uae: [tr('Play a Dubai club hand'), practice('uae', tr('Dubai Practice'))],
-    rounds: [tr('Play an East round'), { ...practice('basics', tr('East Round Practice')), length: 'eastRound' }],
+    rounds: [tr('Play four India Rules games'), { ...indiaClassic(tr('India Rules Practice')), length: 'eastRound' }],
     vietnamese: [tr('Play a Vietnamese hand'), practice('vietnamese', tr('Vietnamese Practice'))],
     india: [tr('Play an India Rules hand'), practice('india', tr('India Rules Practice'))],
     'india-east': [tr('Play an East round hand'), indiaRound('E', tr('East Round Practice'))],
@@ -76,7 +82,12 @@ export function learnScreen(app: App) {
   const [cta, table] = tables[id] ?? [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))];
   // The current lesson's line in the level list, marked complete as soon as its test is passed.
   const state = h('span', { class: 'lv-state' }, app.profile.lessonsDone.includes(id) ? tr('Completed') : tr('In progress'));
-  const body = lessonPlayer(LESSONS[id], {
+  // Lessons after Level 3 (except every India Rules lesson) are unlocked with Jong Points, money or a bundle (src/economy).
+  const all = allLessons();
+  const opens = (l: Lesson) => canOpen(app.profile, l, all);
+  const reopen = () => app.go('learn');
+  const freeNext = app.profile.lessonsDone.includes('india') ? undefined : open('india' as Lesson);
+  const body = !opens(id) ? lockedLesson(app.ctx(), id, lt(LESSONS[id]?.title ?? id), reopen, freeNext) : lessonPlayer(LESSONS[id], {
     labels: app.settings.labels,
     practiceLabel: cta,
     onPassed: () => {
@@ -88,7 +99,7 @@ export function learnScreen(app: App) {
       window.setTimeout(() => void promptSignIn('lesson', { points: app.profile.jongPoints }), 1500);
     },
     // Basics leads to the plain guided game; Words and Tradition each have a guided game of their own.
-    onPractice: () => (id === 'basics' ? app.startGuided() : id === 'words' || id === 'tradition' ? app.startGuided('classic', id) : ((app.settings.hintDepth = 'learning'), app.startMatch(table, { tag: `lesson:${id}` }))),
+    onPractice: () => (id === 'basics' ? app.startGuided('india') : id === 'words' || id === 'tradition' ? app.startGuided('india', id) : ((app.settings.hintDepth = 'learning'), app.startMatch(table, { tag: `lesson:${id}` }))),
     nextLabel: nextAfter(app, id) ? tr('Next lesson') : undefined,
     onNext: () => {
       const n = nextAfter(app, id);
@@ -97,23 +108,25 @@ export function learnScreen(app: App) {
     onOpenLesson: (l) => open(l as Lesson)(),
     autostart: takeAutostart(),
   });
-  const open = (lesson: Lesson) => () => {
+  function open(lesson: Lesson) {
+    return () => {
     app.learnLesson = lesson;
     autostartNext = true;
     app.go('learn');
     requestAnimationFrame(() => app.scrollToLesson());
-  };
+    };
+  }
   const L = (n: number | string) => tr('Level {n}', { n: String(n) });
   const levels: Level[] = [
-    // Foundations: Levels 1 to 8 (8 is optional)
-    { n: L(1), t: tr('The Basics'), d: tr('Tiles, suits, winds, dragons, sets, pairs, calling and claim timing'), lesson: 'basics', cat: 'foundations' },
+    // Foundations: Levels 1 to 8, all India Rules (the user, 2026-10-25). Tradition (7) is optional; Words comes after it.
+    { n: L(1), t: tr('The Basics'), d: tr('Tiles, flowers and seasons, suits, sets and the Indian sets, pairs, calling and claim timing'), lesson: 'basics', cat: 'foundations' },
     { n: L(2), t: tr('Play'), d: tr('A guided game: play a real hand while Mei talks you through it'), guided: true, cat: 'foundations' },
-    { n: L(3), t: tr('Words at the table'), d: tr('Melds, terminals, self-draw, seat and round wind, and every local name for Chow, Pung, Kong and the win'), lesson: 'words', cat: 'foundations' },
-    { n: L(4), t: tr('Scoring'), d: tr('How Classic counts faan, who pays, and three worked examples'), lesson: 'scoring', cat: 'foundations' },
-    { n: L(5), t: tr('Winds and rounds'), d: tr('Seat winds, the deal, East to North rounds, and the goulash.'), lesson: 'rounds', cat: 'foundations' },
-    { n: L(6), t: tr('Hand shapes'), d: tr('Seven pairs, thirteen orphans, mixed chows and mixed pungs, and which tables allow them'), lesson: 'shapes', cat: 'foundations' },
-    { n: L(7), t: tr('Strategy'), d: tr('Tile efficiency, waits, defence, risk and reward'), lesson: 'strategy', cat: 'foundations' },
-    { n: L(8), t: tr('Tradition and etiquette'), d: tr('A little history, washing the tiles, table manners, and customs around the world'), lesson: 'tradition', cat: 'foundations', optional: true },
+    { n: L(3), t: tr('Scoring'), d: tr('What a win pays in India Rules, East’s double, flowers and seasons, and worked examples'), lesson: 'scoring', cat: 'foundations' },
+    { n: L(4), t: tr('Winds and rounds'), d: tr('Seat winds, the dice, the wall and the flower wall, and the four rounds of a match'), lesson: 'rounds', cat: 'foundations' },
+    { n: L(5), t: tr('Hand shapes'), d: tr('Building mixed chows and crochets, passports and card hands'), lesson: 'shapes', cat: 'foundations' },
+    { n: L(6), t: tr('Strategy'), d: tr('Three questions for every discard, calling wisely, and playing to your card'), lesson: 'strategy', cat: 'foundations' },
+    { n: L(7), t: tr('Tradition and etiquette'), d: tr('A little history, washing the tiles, table manners, and Mahjong in India'), lesson: 'tradition', cat: 'foundations', optional: true },
+    { n: L(8), t: tr('Words at the table'), d: tr('The words you’ll hear at an India Rules table, from minors and majors to passports and bouquets'), lesson: 'words', cat: 'foundations' },
     // Mastering Mahjong: Levels 9 to 12
     { n: L(9), t: tr('Building a fast hand'), d: tr('Blocks, steps from ready, and the tiles that help'), lesson: 'efficiency', cat: 'mastery' },
     { n: L(10), t: tr('Reading waits'), d: tr('Every winning shape, longer waits, and choosing the best one'), lesson: 'waits', cat: 'mastery' },
@@ -127,26 +140,27 @@ export function learnScreen(app: App) {
     { n: '', t: tr('West round: one double'), d: tr('Every single double on the goulash score sheet, each in a full example hand.'), lesson: 'india-west-doubles', cat: 'regional' },
     { n: '', t: tr('West round: big doubles'), d: tr('Two doubles up to the blessings, each in a full example hand.'), lesson: 'india-west-big', cat: 'regional' },
     { n: '', t: tr('North round: East’s choice'), d: tr('Jokers, the joker goulash, big cards and the qwong.'), lesson: 'india-north', cat: 'regional' },
-    { n: L(14), t: tr('Kolkata Joker Club'), d: tr('Jokers, flowers and club faan.'), lesson: 'indian', cat: 'regional' },
-    { n: L(15), t: tr('Hong Kong'), d: tr('Cantonese calls, a three-faan minimum, flowers and the half-spicy table.'), lesson: 'hongkong', cat: 'regional' },
-    { n: L(16), t: tr('Taiwanese'), d: tr('16-tile hands, flowers, tai and the dealer streak.'), lesson: 'taiwanese', cat: 'regional' },
-    { n: L(17), t: tr('Riichi'), d: tr('Yaku, riichi, dora, furiten, and han and fu.'), lesson: 'riichi', cat: 'regional' },
-    { n: L(18), t: tr('American'), d: tr('The card, jokers, the Charleston, exposures and card values.'), lesson: 'american', cat: 'regional' },
-    { n: L(19), t: tr('Dubai Asian'), d: tr('House rules, flowers, faan, who pays and the goulash.'), lesson: 'uae', cat: 'regional' },
+    { n: L(14), t: tr('Chinese Classical'), d: tr('The traditional game: 136 tiles, faan scoring, seven pairs and thirteen orphans.'), lesson: 'classic', cat: 'regional' },
+    { n: L(15), t: tr('Kolkata Joker Club'), d: tr('Jokers, flowers and club faan.'), lesson: 'indian', cat: 'regional' },
+    { n: L(16), t: tr('Hong Kong'), d: tr('Cantonese calls, a three-faan minimum, flowers and the half-spicy table.'), lesson: 'hongkong', cat: 'regional' },
+    { n: L(17), t: tr('Taiwanese'), d: tr('16-tile hands, flowers, tai and the dealer streak.'), lesson: 'taiwanese', cat: 'regional' },
+    { n: L(18), t: tr('Riichi'), d: tr('Yaku, riichi, dora, furiten, and han and fu.'), lesson: 'riichi', cat: 'regional' },
+    { n: L(19), t: tr('American'), d: tr('The card, jokers, the Charleston, exposures and card values.'), lesson: 'american', cat: 'regional' },
+    { n: L(20), t: tr('Dubai Asian'), d: tr('House rules, flowers, faan, who pays and the goulash.'), lesson: 'uae', cat: 'regional' },
     { n: '', t: tr('Dubai Taiwanese'), d: tr('The Taiwanese game with a one-tai minimum and an optional goulash.'), lesson: 'uae-taiwanese', cat: 'regional' },
     { n: '', t: tr('Dubai American'), d: tr('The American card with the goulash switched on.'), lesson: 'uae-american', cat: 'regional' },
     { n: '', t: tr('Custom UAE table'), d: tr('Every house rule is the host’s choice.'), lesson: 'uae-custom', cat: 'regional' },
-    { n: L(20), t: tr('Vietnamese'), d: tr('Khung jokers, flowers and phán.'), lesson: 'vietnamese', cat: 'regional' },
-    { n: L(21), t: tr('Singapore'), d: tr('Animals, bites, tai and shooter pays.'), lesson: 'singapore', cat: 'regional' },
-    { n: L(22), t: tr('Malaysian'), d: tr('Animals and tai, seven pairs, and a shared payment.'), lesson: 'malaysian', cat: 'regional' },
-    { n: L(23), t: tr('Sichuan'), d: tr('Three suits, the missing suit, wind and rain.'), lesson: 'sichuan', cat: 'regional' },
-    { n: L(24), t: tr('Chinese Official'), d: tr('The tournament fan list and eight fan to win.'), lesson: 'mcr', cat: 'regional' },
-    { n: L(25), t: tr('Korean'), d: tr('Three players, a smaller set, no chow calls and simple points.'), lesson: 'korean3', cat: 'regional' },
+    { n: L(21), t: tr('Vietnamese'), d: tr('Khung jokers, flowers and phán.'), lesson: 'vietnamese', cat: 'regional' },
+    { n: L(22), t: tr('Singapore'), d: tr('Animals, bites, tai and shooter pays.'), lesson: 'singapore', cat: 'regional' },
+    { n: L(23), t: tr('Malaysian'), d: tr('Animals and tai, seven pairs, and a shared payment.'), lesson: 'malaysian', cat: 'regional' },
+    { n: L(24), t: tr('Sichuan'), d: tr('Three suits, the missing suit, wind and rain.'), lesson: 'sichuan', cat: 'regional' },
+    { n: L(25), t: tr('Chinese Official'), d: tr('The tournament fan list and eight fan to win.'), lesson: 'mcr', cat: 'regional' },
+    { n: L(26), t: tr('Korean'), d: tr('Three players, a smaller set, no chow calls and simple points.'), lesson: 'korean3', cat: 'regional' },
     { n: '', t: tr('Sanma'), d: tr('Riichi for three: no chi, kita and tsumo loss.'), lesson: 'sanma', cat: 'regional' },
     { n: '', t: tr('Malaysian three-player'), d: tr('Two suits, flowers and animals, three seats.'), lesson: 'malaysian3', cat: 'regional' },
   ];
   // The newer rulesets: a lettered level under their family (SUB), or a level of their own; then any other lesson not listed yet.
-  let next = 26;
+  let next = 27;
   for (const sh of VARIATION_SHEETS) if (!levels.some((x) => x.lesson === sh.lesson)) levels.push({ n: SUB[sh.lesson as Lesson] ? '' : L(next++), t: sh.level.t, d: sh.level.d, lesson: sh.lesson as Lesson, cat: 'regional' });
   for (const l of ACADEMY_ORDER as Lesson[]) if (LESSONS[l] && !levels.some((x) => x.lesson === l)) levels.push({ n: L(next++), t: lt(LESSONS[l].title), d: '', lesson: l, cat: 'regional' });
 
@@ -174,10 +188,19 @@ export function learnScreen(app: App) {
     h(
       'section',
       { class: 'lx-current', 'aria-label': tr('Your lesson') },
+      nowLearning(levels, id),
       body,
     ),
-    learningPath(app, levels, id, open, isDone),
+    learningPath(app, levels, id, open, isDone, opens),
   );
+}
+
+/** The open lesson's level and name above the lesson card, so it's clear which lesson is on. */
+function nowLearning(levels: Level[], id: Lesson): HTMLElement | null {
+  const l = levels.find((x) => x.lesson === id);
+  if (!l) return null;
+  const tag = SUB[id]?.[1] ? tr('Level {n}', { n: SUB[id]![1] }) : l.n;
+  return h('header', { class: 'lx-now' }, h('p', { class: 'eyebrow' }, h('i', { class: 'lx-live', 'aria-hidden': 'true' }), tag ? `${tr('Now learning')} · ${tag}` : tr('Now learning')), h('h2', { class: 'lx-now-t' }, l.t));
 }
 
 type Category = 'foundations' | 'mastery' | 'regional';
@@ -203,9 +226,9 @@ const SHOWN = 6;
 /** Lettered levels: their parent lesson and their short tag. */
 const SUB: Partial<Record<Lesson, [Lesson, string]>> = {
   'india-east': ['india', '13A'], 'india-south': ['india', '13B'], 'india-west': ['india', '13C'], 'india-west-doubles': ['india', '13D'], 'india-west-big': ['india', '13E'], 'india-north': ['india', '13F'],
-  guangdong: ['hongkong', '15A'], 'zung-jung': ['hongkong', '15B'], 'riichi-tournament': ['riichi', '17A'], 'wright-patterson': ['american', '18A'],
-  'uae-taiwanese': ['uae', '19A'], 'uae-american': ['uae', '19B'], 'uae-custom': ['uae', '19C'], ema: ['mcr', '24A'],
-  sanma: ['korean3', '25A'], malaysian3: ['korean3', '25B'], korean: ['korean3', '25C'],
+  guangdong: ['hongkong', '16A'], 'zung-jung': ['hongkong', '16B'], 'riichi-tournament': ['riichi', '18A'], 'wright-patterson': ['american', '19A'],
+  'uae-taiwanese': ['uae', '20A'], 'uae-american': ['uae', '20B'], 'uae-custom': ['uae', '20C'], ema: ['mcr', '25A'],
+  sanma: ['korean3', '26A'], malaysian3: ['korean3', '26B'], korean: ['korean3', '26C'],
 } as Partial<Record<string, [Lesson, string]>>;
 /** Each lesson's own picture: a drawn icon for the Foundations and Mastery levels, the game's signature tile for a variation (a wind tile for each India Rules round). */
 const LESSON_ICON: Partial<Record<Lesson | 'guided', string>> = {
@@ -215,7 +238,7 @@ const LESSON_ICON: Partial<Record<Lesson | 'guided', string>> = {
 /** A different tile for every variation, so no two lessons share a picture. A red five is written 5m!. */
 const F = (n: number) => FLOWER_BASE + n - 1;
 const LESSON_TILE: Record<string, number | string> = {
-  india: '1p', indian: '2p', 'india-east': 'E', 'india-south': 'S', 'india-west': 'W', 'india-west-doubles': '3s', 'india-west-big': '7s', 'india-north': 'N',
+  india: '1p', classic: '6p', indian: '2p', 'india-east': 'E', 'india-south': 'S', 'india-west': 'W', 'india-west-doubles': '3s', 'india-west-big': '7s', 'india-north': 'N',
   hongkong: F(1), guangdong: 'Rd', 'zung-jung': 'Gd', taiwanese: F(5), riichi: '5m!', 'riichi-tournament': '5p!',
   american: JOKER_KIND, 'wright-patterson': F(2), uae: F(6), 'uae-taiwanese': F(7), 'uae-american': F(8), 'uae-custom': F(3),
   vietnamese: F(4), singapore: CAT, malaysian: ROOSTER, malaysian3: MOUSE, indonesian: CENTIPEDE, sichuan: '1s', mcr: 'Wd', ema: '9p',
@@ -240,7 +263,7 @@ function learnChoices(app: App, levels: Level[], open: (l: Lesson) => () => void
     art: 'learn',
     title: tr('Continue'),
     line: next ? [tag(next), next.t].filter(Boolean).join(' · ') : tr('Every lesson is done. Pick any level to review.'),
-    run: next ? (next.guided ? () => app.startGuided() : open(next.lesson!)) : () => pickCat(''),
+    run: next ? (next.guided ? () => app.startGuided('india') : open(next.lesson!)) : () => pickCat(''),
     featured: true,
   });
   const cats = CATS.filter((c) => c.id).map((c) => {
@@ -262,39 +285,50 @@ function learnChoices(app: App, levels: Level[], open: (l: Lesson) => () => void
 const path = { cat: '' as '' | Category, q: '', sort: 'level' as 'level' | 'todo' | 'done', more: false, open: new Set<string>() };
 
 /** The Academy's learning path: every level, filterable, with lettered levels folded under their parent. */
-function learningPath(app: App, levels: Level[], current: Lesson, open: (l: Lesson) => () => void, isDone: (l: Level) => boolean): HTMLElement {
+function learningPath(app: App, levels: Level[], current: Lesson, open: (l: Lesson) => () => void, isDone: (l: Level) => boolean, opens: (l: Lesson) => boolean): HTMLElement {
   const key = (l: Level) => l.lesson ?? (l.guided ? 'guided' : l.t);
   // Lettered levels (11a, 18b) fold under their parent level.
   const parentOf = (l: Level) => (l.lesson && SUB[l.lesson] ? (levels.find((p) => p.lesson === SUB[l.lesson!]![0]) ?? null) : null);
   const status = (l: Level) => (isDone(l) ? 'done' : l.lesson === current ? 'progress' : 'todo');
   const STATUS = { done: tr('Completed'), progress: tr('In progress'), todo: tr('Not started') };
 
+  // Free lessons say so; locked ones show their price.
+  const price = (l: Level) => {
+    const k = l.lesson ?? (l.guided ? 'guided' : '');
+    if (!k) return null;
+    if (isFree(k)) return h('span', { class: 'lx-free' }, tr('Free'));
+    if (opens(k as Lesson)) return null;
+    return h('span', { class: 'lx-price' }, h('span', { html: icon('lock') }), `${fmt(lessonPrice(k).jp)} JP`);
+  };
   const list = h('div', { class: 'lx-list' });
   const moreRow = h('div', { class: 'lx-more' });
 
   const action = (l: Level) =>
-    l.guided
-      ? h('button', { class: 'btn sm ghost lx-go', onclick: () => app.startGuided() }, isDone(l) ? tr('Play again') : tr('Play'), h('span', { html: icon('chevronRight') }))
+    l.lesson && !opens(l.lesson)
+      ? h('button', { class: 'btn sm ghost lx-go lx-unlock', onclick: () => unlockLesson(app.ctx(), l.lesson!, l.t, open(l.lesson!)) }, h('span', { html: icon('lock') }), tr('Unlock'))
+      : l.guided
+      ? h('button', { class: 'btn sm ghost lx-go', onclick: () => app.startGuided('india') }, isDone(l) ? tr('Play again') : tr('Play'), h('span', { html: icon('chevronRight') }))
       : h('button', { class: 'btn sm ghost lx-go', onclick: open(l.lesson!) }, isDone(l) ? tr('Review') : l.lesson === current ? tr('Continue') : tr('Start'), h('span', { html: icon('chevronRight') }));
 
   const row = (l: Level, kids: Level[], child = false) => {
     const st = status(l);
     const k = key(l);
     const cat = CATS.find((c) => c.id === l.cat)!;
-    const opened = path.open.has(k) || (!!path.q && kids.length > 0);
+    const opened = path.open.has(k) || (!!path.q && kids.length > 0) || kids.some((x) => x.lesson === current);
+    const active = l.lesson === current;
     const chev = kids.length
       ? h('button', { type: 'button', class: 'lx-chev', 'aria-expanded': String(opened), 'aria-label': opened ? tr('Hide {name}', { name: kids.map((x) => x.t).join(', ') }) : tr('Show {name}', { name: kids.map((x) => x.t).join(', ') }), html: icon('chevronDown') })
       : h('span', { class: 'lx-chev-gap' });
     const el = h(
       'div',
-      { class: `lx-row ${child ? 'child' : ''} ${st} ${opened ? 'open' : ''}`, role: 'listitem' },
+      { class: `lx-row ${child ? 'child' : ''} ${st} ${opened ? 'open' : ''} ${active ? 'active' : ''}`, role: 'listitem', 'aria-current': active ? 'true' : null },
       h(
         'div',
         { class: 'lx-main' },
         h('span', { class: 'lx-n' }, child && l.lesson && SUB[l.lesson] ? SUB[l.lesson]![1] : l.n),
         lessonIcon(l, cat.icon),
         h('div', { class: 'lx-text' }, h('p', { class: 'lx-t' }, l.t), l.d ? h('p', { class: 'lx-d' }, l.d) : null),
-        h('span', { class: 'lx-meta' }, h('span', { class: `lx-state ${st}` }, h('i', { 'aria-hidden': 'true' }), STATUS[st]), l.optional ? h('span', { class: 'lx-opt' }, tr('Optional')) : null),
+        h('span', { class: 'lx-meta' }, h('span', { class: `lx-state ${st}` }, h('i', { 'aria-hidden': 'true' }), active ? h('b', { class: 'lx-live', title: tr('Now learning') }) : null, STATUS[st]), l.optional ? h('span', { class: 'lx-opt' }, tr('Optional')) : null, price(l)),
         action(l),
         chev,
       ),
@@ -405,7 +439,8 @@ export function nextLesson(app: App): Lesson {
   // A guided game that follows a lesson (Words, Tradition) leads on to the lesson after it.
   if (app.guidedTheme) return nextAfter(app, app.guidedTheme) ?? 'riichi';
   const done = (l: Lesson) => app.profile.lessonsDone.includes(l);
-  const own = (app.guidedVariation === 'classic' ? 'basics' : app.guidedVariation) as Lesson;
+  // Level 2's guided game is an India Rules hand: it follows the Basics, so it leads on along the path, never to the India Rules course (Level 13).
+  const own = (app.guidedVariation === 'classic' || app.guidedVariation === 'india' ? 'basics' : app.guidedVariation) as Lesson;
   if (own in LESSONS && !done(own)) return own;
   return (ACADEMY_ORDER.filter((l) => !OPTIONAL_LESSONS.includes(l)) as Lesson[]).find((l) => !done(l)) ?? 'riichi';
 }

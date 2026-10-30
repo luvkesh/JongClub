@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MahjongGame } from '../src/engine/game';
 import { withHouseRules } from '../src/engine/rules';
+import { advanceRound } from '../src/engine/rounds';
 import { NORTH_CHOICES, indiaProfile, northBig } from '../src/engine/rules/india';
 import { BIG_CARDS, FL, bigComplete, bigEnvs, bigExtrasOf, bigGroups, bigHandSize, bigWins, type BigCard, type MInfo } from '../src/engine/rules/indiaBig';
 import { FLOWER_BASE, parseKinds } from '../src/engine/tiles';
@@ -205,6 +206,18 @@ describe('India Rules Big Cards at the table', () => {
       if (ph.kind === 'handOver' && ph.result.type === 'win') wins++;
     }
     expect(wins).toBeGreaterThan(12);
+  });
+});
+
+describe('India Rules deal (the user, 2026-10-25)', () => {
+  it('always passes the deal, after East wins and after a draw, in every style', () => {
+    for (const indiaRounds of ['E', 'S', 'W', 'N', 'C', 'ESWN']) {
+      const p = withHouseRules(indiaProfile, { indiaRounds });
+      expect(p.rounds.dealerRetention).toBe('never');
+      const r = { windIndex: 0, dealerSeat: 0, dealerHand: 0, handsPlayed: 0, repeat: 0, finished: false };
+      expect(advanceRound(p.rounds, r, 4, { dealerWon: true, drawn: false }).dealerSeat).toBe(1);
+      expect(advanceRound(p.rounds, r, 4, { dealerWon: false, drawn: true }).dealerSeat).toBe(1);
+    }
   });
 });
 
