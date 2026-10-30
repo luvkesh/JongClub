@@ -31,7 +31,7 @@ import { ReplayViewer } from './replay';
 import { versionsScreen } from './versions';
 import { CoachMode, withCoachMode } from './coachMode';
 import { brandSvg, brandWordmark } from '../brand';
-import { phoneNav, type PhoneNav } from './tabbar';
+import { phoneNav, tabOf, type PhoneNav } from './tabbar';
 import { ACCOUNT_EVENT } from '../auth/prompt';
 import { syncProfileDown } from '../progression/cloudSync';
 import { tr } from '../i18n';
@@ -45,24 +45,28 @@ import { devPanel, labsButton } from '../dev/panel';
 import { icon } from './icons';
 import { applyVolumes, musicButton } from './musicToggle';
 import { minigamesScreen } from './screens/minigames';
+import { storeScreen } from './screens/store';
+import { pointsPill } from './economySheets';
 import type { MiniApp } from '../minigames/play';
 
 
-const NAV: { id: Screen; label: string }[] = [
+/** The top strip. The six main tabs match the phone tab bar (tabbar.ts); the `extra` four show only
+ *  on wide desktop windows, and live as sub-tabs under their main tab everywhere else. */
+const NAV: { id: Screen; label: string; extra?: boolean }[] = [
   { id: 'home', label: tr('Home') },
   { id: 'play', label: tr('Play') },
   { id: 'minigames', label: tr('Mini-games') },
-  { id: 'versions', label: tr('Variations') },
+  { id: 'versions', label: tr('Variations'), extra: true },
   { id: 'learn', label: tr('Learn') },
-  { id: 'daily', label: tr('Daily') },
-  { id: 'passport', label: tr('World Tour') },
+  { id: 'daily', label: tr('Daily'), extra: true },
+  { id: 'passport', label: tr('World Tour'), extra: true },
   { id: 'club', label: tr('Club') },
-  { id: 'collection', label: tr('Collection') },
+  { id: 'collection', label: tr('Collection'), extra: true },
   { id: 'profile', label: tr('Profile') },
 ];
 
 /** Screens reached from inside another tab. */
-const NAV_PARENT: Partial<Record<Screen, Screen>> = { tournaments: 'play', atelier: 'collection', seasons: 'club' };
+const NAV_PARENT: Partial<Record<Screen, Screen>> = { tournaments: 'play', atelier: 'collection', seasons: 'club', store: 'profile' };
 
 export class App {
   profile: Profile = loadProfile();
@@ -78,7 +82,7 @@ export class App {
   lastOpts: MatchOptions = {};
   curTag: string | undefined;
   private navEl: HTMLElement;
-  /** Five tabs at the foot on phones (tabbar.ts). */
+  /** Six tabs at the foot on phones and tablets (tabbar.ts). */
   private phone: PhoneNav;
   club: Club | null = null;
   live: TableSession | null = null;
@@ -100,7 +104,7 @@ export class App {
         { class: 'topbar' },
         h('button', { class: 'wordmark-sm', onclick: () => this.go('home'), 'aria-label': 'JongClub home' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true', html: brandSvg('mark') }), brandWordmark()),
         this.navEl,
-        h('div', { class: 'topbar-tools' }, labsButton(() => this.openLabs()), musicButton(this.settings, () => persistSettings(this)), h('button', { class: 'icon-btn', 'aria-label': tr('Settings'), onclick: () => this.openSettings(), html: icon('settings') })),
+        h('div', { class: 'topbar-tools' }, pointsPill(() => this.profile, () => this.go('store')), labsButton(() => this.openLabs()), musicButton(this.settings, () => persistSettings(this)), h('button', { class: 'icon-btn', 'aria-label': tr('Settings'), onclick: () => this.openSettings(), html: icon('settings') })),
       ),
       this.phone.sub,
       this.main,
@@ -133,7 +137,7 @@ export class App {
     const hash = location.hash.slice(1) as Screen;
     // A table from an invite link (?table=CODE) or the older #join=CODE.
     const joinCode = /^join=([a-z2-9]{5})$/i.exec(location.hash.slice(1))?.[1]?.toLowerCase() ?? tableFromLink();
-    const SCREENS: Screen[] = ['home', 'play', 'versions', 'learn', 'passport', 'club', 'collection', 'profile', 'daily', 'tournaments', 'atelier', 'minigames', 'seasons'];
+    const SCREENS: Screen[] = ['home', 'play', 'versions', 'learn', 'passport', 'club', 'collection', 'profile', 'daily', 'tournaments', 'atelier', 'minigames', 'seasons', 'store'];
     // A club invite link (?club=CODE) opens the Club screen, which opens the clubs page.
     this.go(joinCode ? 'play' : takeClubInvite() ? 'club' : SCREENS.includes(hash) ? hash : 'home');
     window.addEventListener('hashchange', () => {
@@ -244,12 +248,15 @@ export class App {
     // Keep the tab strip where it is (rebuilding it would jump back to the start),
     // and only bring the chosen tab into view inside the strip itself.
     if (!this.navEl.childElementCount)
-      for (const n of NAV) this.navEl.append(h('button', { class: 'nav-item', 'data-screen': n.id, onclick: () => (sound.play('button'), this.go(n.id)) }, n.label));
+      for (const n of NAV) this.navEl.append(h('button', { class: `nav-item${n.extra ? ' nav-extra' : ''}`, 'data-screen': n.id, onclick: () => (sound.play('button'), this.go(n.id)) }, n.label));
     // Screens without a tab of their own light up the tab they live under.
     const tab = NAV_PARENT[screen] ?? screen;
+    // With the strip trimmed to six (tabbar.css), the main tab a screen sits under lights instead.
+    const group = tabOf(screen)?.screens[0];
     for (const b of this.navEl.querySelectorAll<HTMLElement>('.nav-item')) {
       const on = b.dataset.screen === tab;
       b.classList.toggle('on', on);
+      b.classList.toggle('on-group', !on && b.dataset.screen === group);
       if (on && tab === screen) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
       if (on) {
@@ -267,7 +274,7 @@ export class App {
     const keep = same ? this.main.scrollTop : 0;
     const m = clear(this.main);
     const c = this.ctx();
-    const view = { home: () => homeScreen(this), play: () => playScreen(this), versions: () => versionsScreen(c), learn: () => learnScreen(this), passport: () => passportScreen(c), club: () => clubScreen(c), collection: () => collectionScreen(c), profile: () => profileScreen(c), daily: () => dailyScreen(c), tournaments: () => tournamentsScreen(c), atelier: () => atelierScreen(c), seasons: () => seasonsScreen(c), minigames: () => minigamesScreen(this.miniApp()) }[screen]();
+    const view = { home: () => homeScreen(this), play: () => playScreen(this), versions: () => versionsScreen(c), learn: () => learnScreen(this), passport: () => passportScreen(c), club: () => clubScreen(c), collection: () => collectionScreen(c), profile: () => profileScreen(c), daily: () => dailyScreen(c), tournaments: () => tournamentsScreen(c), atelier: () => atelierScreen(c), seasons: () => seasonsScreen(c), minigames: () => minigamesScreen(this.miniApp()), store: () => storeScreen(c) }[screen]();
     m.append(view);
     m.scrollTop = keep;
   }
@@ -312,6 +319,8 @@ export class App {
     this.guidedTheme = theme;
     this.settings.hintDepth = 'learning';
     const base = variation === 'classic' ? DEFAULT_TABLE : tableFor(variation);
+    // India Rules is played in its Classic style for a first hand with Mei: the East round's game, no passports.
+    if (variation === 'india') base.houseRules = { ...base.houseRules, indiaRounds: 'C' };
     this.startMatch({ ...base, name: tr('Guided Game'), length: 'oneHand', difficulty: 'beginner', personalities: ['teacher', 'zen', 'teacher'], hints: true, timer: 0, pace: 'untimed' }, { tag: 'tutorial', coach: new TutorialCoach(variation, theme) });
   }
 

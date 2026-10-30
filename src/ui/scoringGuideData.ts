@@ -7,8 +7,10 @@
 
 import { MIXED_FAAN, MIXED_NAMES, MIXED_TAI, type MixedValues } from '../engine/rules/mixed';
 import { LI_GU_NAME } from '../engine/rules/taiwanese';
-import { BIG_CARD, SMALL_CARD, type CardHand } from '../engine/rules/special';
-import { GOULASH_ROUND_MIN, SPECIAL_ROUNDS, type SpecialRoundId } from '../engine/rules/windRounds';
+import { BIG_CARD, SMALL_CARD } from '../engine/rules/special';
+import { CARD_FAAN, GOULASH_ROUND_MIN, SPECIAL_ROUNDS, type SpecialRoundId } from '../engine/rules/windRounds';
+import { SMALL_CARDS } from '../engine/rules/indiaCards';
+import { BIG_CARDS } from '../engine/rules/indiaBig';
 import type { RuleProfile } from '../engine/rules/types';
 import { tr } from '../i18n';
 
@@ -79,7 +81,6 @@ function roundsSection(): GuideSection {
   return { title: tr('Special wind rounds'), closed: true, lines: winds.map(([w, id]) => L(tr(SPECIAL_ROUNDS[id].name), w, tr(SPECIAL_ROUNDS[id].rule))) };
 }
 
-const cardLines = (card: CardHand[]) => card.map((c) => L(c.name, c.value, tr(c.how)));
 
 /** The guide in a special wind round: what this round's hands are. */
 function specialRoundGuide(p: RuleProfile, unit: string): Guide {
@@ -106,8 +107,11 @@ function specialRoundGuide(p: RuleProfile, unit: string): Guide {
       ],
     });
   } else if (id === 'smallCard' || id === 'bigCard') {
-    win.push(tr('Every hand on the card is concealed: you may claim a discard only to win.'));
-    sections.push({ title: id === 'smallCard' ? tr('The Small Card') : tr('The Big Card'), lines: cardLines(id === 'smallCard' ? SMALL_CARD : BIG_CARD) });
+    // The club's cards (the Mahjong Calling rulebook): each card names its hand and its own calling rules.
+    win.push(tr('Each card names one hand and its own calling rules: some take no discard at all, not even to win.'));
+    if (id === 'smallCard') sections.push({ title: tr('The Small Cards'), closed: true, lines: SMALL_CARDS.map((c) => L(`${c.n}. ${c.name}`, typeof c.value === 'string' ? CARD_FAAN[c.value] : '', c.how)) });
+    else if (p.big) sections.push({ title: tr('This hand’s Big Card'), lines: [L(p.big.name, `${CARD_FAAN.limit} / ${CARD_FAAN.double}`, p.big.how), L(tr('Jokers'), '', p.big.jokersText), L(tr('Concealed hand'), CARD_FAAN.double, tr('Nothing claimed: the last tile may be a discard'))] });
+    else sections.push({ title: tr('The Big Cards'), closed: true, lines: BIG_CARDS.map((c) => L(`${c.n}. ${c.name}`, `${CARD_FAAN.limit} / ${CARD_FAAN.double}`, c.how)) });
   } else {
     win.push(tr('Every set is a pung or kong: no chows, not even concealed ones.'), tr('You need at least {n} {unit} to declare a win.', { n: Math.max(p.minValue, GOULASH_ROUND_MIN), unit }));
     const base = classicGuide(p, unit);

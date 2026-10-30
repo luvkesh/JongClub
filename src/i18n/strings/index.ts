@@ -34,7 +34,10 @@ import { SCREENS2 } from './screens2';
 import { TIPS } from './tips';
 import { NAMES } from './names';
 import { TARGETS } from './targets';
+import { CONTROLS } from './controls';
+import { ECONOMY } from './economy';
+import { CLUB_CARDS } from './clubCards';
 
 export type { Cell, Forms, Row } from './types';
 
-export const TABLES: Row[][] = [MATCH, APP, VARIATIONS, RULES, COSMETICS, CLUB, COMPETE, LEARN, AUTH, SCREENS, PROFILE, GUIDE, RACKS, TEA, MINIGAMES, ROUNDS, LOBBY, SCREENS2, CCP, EXPANSION, TIPS, NAMES, TARGETS, OPENING, HAND_SCORE];
+export const TABLES: Row[][] = [MATCH, APP, VARIATIONS, RULES, COSMETICS, CLUB, COMPETE, LEARN, AUTH, SCREENS, PROFILE, GUIDE, RACKS, TEA, MINIGAMES, ROUNDS, LOBBY, SCREENS2, CCP, EXPANSION, TIPS, NAMES, TARGETS, OPENING, HAND_SCORE, CONTROLS, ECONOMY, CLUB_CARDS];

@@ -266,6 +266,10 @@ export interface RuleProfile {
   dealCards?: number;
   /** India Rules East round: how the hand summary lays out a hand (its passports apart from the rest). */
   passportView?(hand: Tile[], melds: Meld[]): PassportLayout;
+  /** India Rules East round and Classic: crochets and mixed chows are sets, so hand sorting groups them. */
+  mixedSets?: boolean;
+  /** The passport is optional (India Rules East with passports not compulsory). */
+  passportOptional?: boolean;
   /** Each player is offered this many cards and keeps one after seeing their tiles (the table rule
    *  "draw 3, keep 1"). */
   cardChoice?: number;
@@ -276,6 +280,9 @@ export interface RuleProfile {
   /** India Rules North round Big Cards: one card for the whole table. Wins, the kongs, qwongs
    *  and runs a player may lay down (with their extra tiles) and the jokers all follow the card. */
   big?: BigCard;
+  /** A Big Card win in this table's own units (a ruleset playing the club's Big Cards in its
+   *  special wind rounds); absent = India Rules' 1000 / 2000. */
+  bigWinScore?(info: { concealed: boolean; selfDrawn: boolean; seatWind: Wind; flowers: number[]; house?: Record<string, string> }): HandScore;
   /** Buying (India Rules South round): the player on the discarder's right may buy the discard
    *  for this many points, into the bank the next winner collects. The tile stays concealed in hand. */
   buyFromLeft?: number;

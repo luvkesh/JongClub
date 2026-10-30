@@ -592,7 +592,9 @@ export class MahjongGame {
     if (this.profile.big) {
       if (!this.bigWinsWith(seat, extraInHand ? winKind : undefined)) return null;
       // Concealed: nothing claimed (laid-down groups came from the wall); the last tile may be a discard.
-      const score = bigScore(this.profile.big, !pl.melds.some((m) => m.from !== undefined));
+      const concealed = !pl.melds.some((m) => m.from !== undefined);
+      const own = this.profile.bigWinScore;
+      const score = own ? own({ concealed, selfDrawn, seatWind: this.state.seatWinds[seat], flowers: pl.flowers.map((t) => t.kind), house: this.profile.houseChoices }) : bigScore(this.profile.big, concealed);
       return { score, decomposition: { shape: 'special', special: this.profile.big.name, sets: [], pair: -1 } };
     }
     const counts = this.concealedCounts(seat, extraInHand && winKind < KIND_COUNT ? winKind : undefined);

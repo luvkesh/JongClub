@@ -248,6 +248,8 @@ export class AiPlayer {
     const r = this.rng.next();
     const goulash = codes.filter((c) => c >= 10 && c < 100);
     const big = codes.filter((c) => c > 100);
+    // A round that offers only Big Cards (the special wind rounds of other rulesets): any of them.
+    if (big.length === codes.length) return big[this.rng.int(big.length)];
     if (r >= 0.8 && big.length) return big[this.rng.int(big.length)];
     const pick = r < 0.45 ? codes[0] : r < 0.65 && codes.includes(2) ? 2 : goulash.length ? goulash[this.rng.int(goulash.length)] : codes[0];
     return pick;

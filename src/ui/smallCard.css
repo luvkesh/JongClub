@@ -1,19 +1,62 @@
 /* India Rules Small Cards: the card view (choice at the start of a hand, and "Your card"). */
-.small-card { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: linear-gradient(160deg, #fbf6ea, #efe4cc); color: #2a2118; border: 1px solid rgba(160, 120, 50, 0.55); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.8); text-align: left; min-width: 0; }
-.small-card.recommended { border-color: #c9a24a; box-shadow: 0 0 0 2px #c9a24a, 0 6px 18px rgba(0, 0, 0, 0.35); }
-.small-card .sc-head { display: flex; align-items: baseline; gap: 8px; border-bottom: 1px solid rgba(160, 120, 50, 0.5); padding-bottom: 4px; }
-.small-card .sc-num { font-family: Cinzel, serif; font-size: 13px; color: #8a6a2a; }
-.small-card .sc-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; line-height: 1.1; }
-.small-card .sc-value { font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.04em; color: #6b4f1d; display: flex; gap: 8px; flex-wrap: wrap; }
+/* The club's cards as printed cards (smallCard.ts, faces from cardArt.ts): ivory stock washed in the
+   card's colour, an engraved pattern, a foil double frame, corner numbers, an emblem medallion, and the
+   tiles on a recessed felt panel in the card's ink. */
+.small-card {
+  --cc-ink: #6b4a12; --cc-foil: #fbe7a6; --cc-foil2: #a8782a; --cc-wash: rgba(214, 170, 60, 0.14);
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; gap: 7px; padding: 16px 16px 26px; border-radius: 14px;
+  background: radial-gradient(120% 70% at 50% 0%, var(--cc-wash), transparent 70%), linear-gradient(165deg, #fffaf0 0%, #f6edd9 55%, #ecdfc3 100%);
+  color: #2a2118; border: 1px solid color-mix(in srgb, var(--cc-foil2) 70%, #000);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 -2px 6px rgba(120, 90, 40, 0.12) inset, 0 2px 3px rgba(0, 0, 0, 0.25), 0 12px 26px rgba(0, 0, 0, 0.38);
+  text-align: left; min-width: 0;
+}
+.small-card > * { position: relative; z-index: 1; }
+.small-card > .cc-pattern { position: absolute; inset: 0; z-index: 0; color: var(--cc-ink); opacity: 0.07; pointer-events: none; }
+.small-card > .cc-frame {
+  /* the foil double rule, inset from the edge */
+  position: absolute; inset: 5px; z-index: 0; border-radius: 10px; pointer-events: none;
+  border: 1.5px solid transparent;
+  background: linear-gradient(135deg, var(--cc-foil), var(--cc-foil2) 40%, var(--cc-foil) 60%, var(--cc-foil2)) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0);
+  box-shadow: 0 0 0 2.5px rgba(255, 255, 255, 0.35);
+}
+.small-card > .cc-frame::after { content: ''; position: absolute; inset: 3px; border-radius: 7px; border: 0.75px solid color-mix(in srgb, var(--cc-foil2) 55%, transparent); }
+.small-card > .cc-corner {
+  position: absolute; z-index: 1; font: 700 11px/1 Cinzel, serif; color: var(--cc-ink); letter-spacing: 0.02em;
+  min-width: 18px; text-align: center; opacity: 0.85;
+}
+.small-card > .cc-tl { top: 11px; right: 13px; }
+.small-card > .cc-br { bottom: 11px; right: 13px; transform: rotate(180deg); }
+.small-card.recommended { border-color: #c9a24a; box-shadow: 0 0 0 2px #e2bd62, 0 0 18px rgba(226, 189, 98, 0.45), 0 12px 26px rgba(0, 0, 0, 0.38); }
+.small-card .sc-head { display: flex; align-items: center; gap: 10px; padding: 0 22px 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--cc-foil2) 55%, transparent); }
+.small-card .cc-medal {
+  flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--cc-ink);
+  background: radial-gradient(circle at 35% 30%, #fffdf6, color-mix(in srgb, var(--cc-foil) 55%, #f3e7cc) 75%);
+  box-shadow: 0 0 0 2px var(--cc-foil), 0 0 0 3.5px var(--cc-foil2), 0 3px 6px rgba(0, 0, 0, 0.28), inset 0 -2px 4px rgba(120, 90, 40, 0.18);
+}
+.small-card .cc-medal svg { width: 34px; height: 34px; filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8)); }
+.small-card .cc-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.small-card .cc-kind { font: 600 10px/1.1 Cinzel, serif; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--cc-ink) 80%, #8a6a2a); }
+.small-card .sc-num { font: inherit; color: inherit; }
+.small-card .sc-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 21px; line-height: 1.08; color: #1f1812; overflow-wrap: anywhere; }
+.small-card .sc-value { font-family: Cinzel, serif; font-size: 12px; letter-spacing: 0.04em; color: var(--cc-ink); display: flex; gap: 8px; flex-wrap: wrap; font-weight: 600; }
 .small-card .sc-wall { color: #8b2a1e; }
-.small-card .sc-how { margin: 0; font-size: 14px; line-height: 1.35; }
-.small-card .sc-picture { display: flex; flex-wrap: wrap; gap: 2px; }
-.small-card .sc-tile { width: 26px; height: auto; }
+.small-card .sc-how { margin: 0; font-size: 14px; line-height: 1.38; color: #2e251b; }
+.small-card .sc-picture {
+  display: flex; flex-wrap: wrap; gap: 2px; padding: 7px 8px; border-radius: 8px;
+  background: radial-gradient(120% 140% at 50% 0%, color-mix(in srgb, var(--cc-ink) 78%, #fff 6%), color-mix(in srgb, var(--cc-ink) 92%, #000));
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.12), 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.small-card .sc-tile { width: 26px; height: auto; filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.45)); }
 .small-card .sc-distance { font-size: 12px; color: #5a4a35; }
-.small-card .sc-pick { font-size: 12px; font-weight: 600; color: #8a6a2a; }
+.small-card .sc-pick { font-size: 12px; font-weight: 600; color: var(--cc-ink); }
 /* The choice: three cards side by side, stacked on a phone. */
 .card-offers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
-.card-choice .small-card { padding: 10px 12px; }
+.card-choice .small-card { padding: 13px 13px 24px; }
+.card-choice .small-card .cc-medal { width: 38px; height: 38px; }
+.card-choice .small-card .cc-medal svg { width: 26px; height: 26px; }
+.card-choice .small-card .sc-name { font-size: 19px; }
 .card-choice .small-card .sc-tile { width: 22px; }
 .card-offers > button { all: unset; cursor: pointer; display: flex; border-radius: 12px; }
 .card-offers > button:focus-visible { outline: 2px solid #c9a24a; outline-offset: 2px; }
@@ -47,5 +90,5 @@
 .round-choice .rc-big-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 10px; margin-top: 8px; }
 .round-choice .rc-big-list .small-card { margin: 0; }
 .big-card .sc-jokers { font-size: 13px; color: #4a3a26; margin: 4px 0 0; }
-.big-card .sc-jokers b { color: #8a5a14; font-weight: 700; }
+.big-card .sc-jokers b { color: var(--cc-ink); font-weight: 700; }
 .big-card > .btn { margin-top: 8px; align-self: flex-start; }

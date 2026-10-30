@@ -42,13 +42,16 @@ On by default now (144 tiles). Your own flower and your own season are 1 faan ea
 - This is separate from the Goulash *mode* (a goulash after a wall game), which stays as it was.
 
 ### The cards (South and North)
-Every card hand is concealed: no calls except the tile that wins. Value = the card hand + self-drawn + flowers.
+Since 2026-10-30 (the user's choice) both card rounds use the club's own cards: the 55 Small Cards and 29 Big Cards of the Mahjong Calling rulebook, exactly as India Rules plays them (`indiaCards.ts`, `indiaBig.ts`), with each card's own calling rules and jokers.
 
-Small Card, 3 faan each: Passport Hand (one passport), Knitting, Seven Pairs, Two Dragons (two dragon pungs + two sets + pair), Three Families (the same run in all three suits + set + pair), Half Flush.
+- South: every player is dealt three Small Cards in secret after seeing their tiles, keeps one, and wins only with the hand it names. A card marked "all from the wall" takes no discard, not even to win.
+- North: before the deal East picks one Big Card and everyone plays to it (kongs, qwongs and runs laid down for extra tiles, the card's own jokers).
+- The table keeps its own faan scoring. A card's limit becomes faan so the book's 500 / 1000 / 2000 keep their ratio: half limit 3, limit 4, double limit 5. A Big Card pays 4, or 5 when nothing was claimed. Self-drawn adds 1 and flowers score as usual (on a Big Card only when the card treats flowers as bonus tiles). [reading, `CARD_FAAN` in windRounds.ts]
+- India Rules' compulsory exchange, Tic-Tac-Toe and buying stay in India Rules only. [reading]
 
-Big Card: Crochet 6, Double Passport (9 + 5 or 6 + 6) 6, Full Flush 6, Small Three Dragons 5, Small Four Winds 6, Heads and Tails (terminal and honour pungs) 7, Four Concealed Pungs 8, Thirteen Orphans 8.
+JongClub's earlier Small and Big Card lists (`SMALL_CARD`, `BIG_CARD` in special.ts) are no longer dealt; they remain as reference shapes.
 
-The user described "small and big cards" without listing the hands; the Mumbai sources say each club keeps its own deck. These two cards are JongClub's own selection, to be replaced by a club's real card when one is supplied.
+Each card has its own printed face (`src/ui/cardArt.ts`): a palette from its name and tiles, an emblem from its name, an engraved pattern, foil frame and corner numbers.
 
 ## Sources
 WebFetch was blocked; read through search extracts only.
