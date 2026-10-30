@@ -46,8 +46,8 @@ Since 2026-10-30 (the user's choice) both card rounds use the club's own cards: 
 
 - South: every player is dealt three Small Cards in secret after seeing their tiles, keeps one, and wins only with the hand it names. A card marked "all from the wall" takes no discard, not even to win.
 - North: before the deal East picks one Big Card and everyone plays to it (kongs, qwongs and runs laid down for extra tiles, the card's own jokers).
-- The table keeps its own faan scoring. A card's limit becomes faan so the book's 500 / 1000 / 2000 keep their ratio: half limit 3, limit 4, double limit 5. A Big Card pays 4, or 5 when nothing was claimed. Self-drawn adds 1 and flowers score as usual (on a Big Card only when the card treats flowers as bonus tiles). [reading, `CARD_FAAN` in windRounds.ts]
-- India Rules' compulsory exchange, Tic-Tac-Toe and buying stay in India Rules only. [reading]
+- The table keeps its own faan scoring. A card's limit becomes faan so the book's 500 / 1000 / 2000 keep their ratio: half limit 3, limit 4, double limit 5. A Big Card pays 4, or 5 when nothing was claimed. Self-drawn adds 1 and flowers score as usual (on a Big Card only when the card treats flowers as bonus tiles). (`CARD_FAAN` in windRounds.ts; confirmed by the user 2026-10-30)
+- India Rules' compulsory exchange, Tic-Tac-Toe and buying stay in India Rules only (confirmed by the user 2026-10-30).
 
 JongClub's earlier Small and Big Card lists (`SMALL_CARD`, `BIG_CARD` in special.ts) are no longer dealt; they remain as reference shapes.
 
