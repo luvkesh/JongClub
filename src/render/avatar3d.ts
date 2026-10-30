@@ -16,13 +16,19 @@ const UP = new THREE.Vector3(0, 1, 0);
 /** Head centre in figure space (feet at the floor far below; y 0 is the table top). */
 const HEAD_Y = 1.78;
 const HEAD_R = 0.42;
+/** The head group's scale on the shoulders. */
+const HEAD_SCALE = 0.9;
 /** Where the head pivots (top of the neck). */
 const NECK_Y = 1.32;
+/** Where the head's centre ends up, after HEAD_SCALE. */
+const HEAD_AT = NECK_Y + (HEAD_Y - NECK_Y) * HEAD_SCALE;
 
 /** Head scale per face shape (x, y, z); the hair scales with it so the crown always covers. */
 const FACE: Record<string, [number, number, number]> = { oval: [1, 1, 1], round: [1.07, 0.95, 1.02], long: [0.94, 1.08, 1], square: [1.08, 0.98, 1.03], heart: [1.03, 1.04, 0.99] };
 
 /** Head ellipsoid radii (x, upper y, lower y, z); the lower half tapers toward the chin. */
+/** How much the head narrows toward the chin. */
+const JAW = 0.32;
 const HEAD_AX = HEAD_R * 0.9,
   HEAD_UP = HEAD_R * 1.1,
   HEAD_DN = HEAD_R * 1.12,
@@ -39,14 +45,55 @@ const seg = (n: number) => Math.max(n, Math.round(n * DETAIL()));
 /** Texture scale: canvases are painted at 512-wide units times this. */
 const TEX = () => (leanGraphics() ? 2 : 4);
 
-function headGeometry() {
-  const g = new THREE.SphereGeometry(1, seg(28), seg(20));
+const gauss = (x: number, y: number, cx: number, cy: number, sx: number, sy: number) => Math.exp(-(((x - cx) / sx) ** 2 + ((y - cy) / sy) ** 2));
+
+/** Nose shapes for the sculpt: [tip height, tip size, width, bridge]. */
+const NOSE_SHAPE: Record<string, [number, number, number, number]> = {
+  button: [0.065, 0.06, 0.03, 0.025],
+  straight: [0.07, 0.07, 0.03, 0.04],
+  broad: [0.075, 0.068, 0.045, 0.032],
+  aquiline: [0.078, 0.072, 0.028, 0.055],
+};
+
+/**
+ * How far the face stands out from the plain egg at (x, dy), in head units:
+ * brow ridge, eye sockets, cheekbones, the nose, lips and chin, so the face
+ * has real form rather than features stuck onto a ball.
+ */
+function sculpt(x: number, dy: number, nose: string) {
+  const [tip, size, wide, bridge] = NOSE_SHAPE[nose] ?? NOSE_SHAPE.straight;
+  const ax = Math.abs(x);
+  let d = 0;
+  d += bridge * gauss(x, dy, 0, 0.0, 0.028, 0.075) * (dy < 0.06 ? 1 : 0.6);
+  d += size * gauss(x, dy, 0, -tip, 0.034, 0.03);
+  d += 0.03 * gauss(ax, dy, wide, -0.078, 0.022, 0.018);
+  d -= 0.012 * gauss(ax, dy, 0.05, -0.04, 0.02, 0.05);
+  d -= 0.026 * gauss(ax, dy, 0.145, 0.035, 0.065, 0.04);
+  d += 0.016 * gauss(ax, dy, 0.13, 0.115, 0.11, 0.028);
+  d += 0.028 * gauss(ax, dy, 0.215, -0.04, 0.07, 0.06);
+  d -= 0.01 * gauss(ax, dy, 0.2, -0.17, 0.06, 0.05);
+  d += 0.016 * gauss(x, dy, 0, -0.134, 0.058, 0.018);
+  d -= 0.006 * gauss(x, dy, 0, -0.112, 0.012, 0.012);
+  d += 0.018 * gauss(x, dy, 0, -0.171, 0.05, 0.016);
+  d -= 0.007 * gauss(x, dy, 0, -0.152, 0.07, 0.006);
+  d -= 0.01 * gauss(x, dy, 0, -0.205, 0.05, 0.02);
+  d += 0.028 * gauss(x, dy, 0, -0.285, 0.075, 0.05);
+  return d;
+}
+
+function headGeometry(nose: string) {
+  const g = new THREE.SphereGeometry(1, seg(48), seg(36));
   const p = g.attributes.position as THREE.BufferAttribute;
   for (let i = 0; i < p.count; i++) {
     const y = p.getY(i);
     // Narrow the jaw: the lower the point, the narrower the head.
-    const taper = y < 0 ? 1 - 0.22 * y * y : 1;
-    p.setXYZ(i, p.getX(i) * HEAD_AX * taper, y * (y < 0 ? HEAD_DN : HEAD_UP), p.getZ(i) * HEAD_AZ * (y < 0 ? 1 - 0.08 * y * y : 1));
+    const taper = y < 0 ? 1 - JAW * y * y : 1;
+    const hx = p.getX(i) * HEAD_AX * taper,
+      hy = y * (y < 0 ? HEAD_DN : HEAD_UP);
+    let hz = p.getZ(i) * HEAD_AZ * (y < 0 ? 1 - 0.08 * y * y : 1);
+    // Sculpt the front, fading out toward the sides.
+    if (hz > 0) hz += sculpt(hx, hy, nose) * Math.min(1, (p.getZ(i) / 0.6) ** 2);
+    p.setXYZ(i, hx, hy, hz);
   }
   g.computeVertexNormals();
   return g;
@@ -55,11 +102,14 @@ function headGeometry() {
 /** z of the face's surface at (x, dy) where dy is height above the head centre. */
 function faceZ(x: number, dy: number) {
   const ny = dy / (dy < 0 ? HEAD_DN : HEAD_UP);
-  const taper = ny < 0 ? 1 - 0.22 * ny * ny : 1;
+  const taper = ny < 0 ? 1 - JAW * ny * ny : 1;
   const nx = x / (HEAD_AX * taper);
   const k = Math.max(0, 1 - ny * ny - nx * nx);
   return Math.sqrt(k) * HEAD_AZ * (ny < 0 ? 1 - 0.08 * ny * ny : 1);
 }
+
+/** faceZ with the sculpt: the skin's surface, for setting features into it. */
+const skinZ = (x: number, dy: number, nose: string) => faceZ(x, dy) + sculpt(x, dy, nose);
 
 /** Torso outline (radius, height) turned on a lathe; flattened front to back afterwards. */
 const TORSO: [number, number][] = [
@@ -70,8 +120,8 @@ const TORSO: [number, number][] = [
   [0.78, 0.45],
   [0.86, 0.75],
   [0.84, 0.95],
-  [0.66, 1.08],
-  [0.36, 1.16],
+  [0.7, 1.08],
+  [0.42, 1.17],
   [0.14, 1.2],
   [0.0, 1.22],
 ];
@@ -86,7 +136,7 @@ interface Mats {
   outfit: THREE.MeshStandardMaterial;
   sleeve: THREE.MeshStandardMaterial;
   ink: THREE.MeshStandardMaterial;
-  pupil: THREE.MeshStandardMaterial;
+  cornea: THREE.MeshStandardMaterial;
   glint: THREE.MeshStandardMaterial;
   lash: THREE.MeshStandardMaterial;
   white: THREE.MeshStandardMaterial;
@@ -127,6 +177,15 @@ function limb(parent: THREE.Object3D, m: THREE.Material, a: THREE.Vector3, b: TH
 const std = (color: string, roughness = 0.7, metalness = 0, extra: THREE.MeshStandardMaterialParameters = {}) =>
   new THREE.MeshStandardMaterial({ color, roughness, metalness, emissive: color, emissiveIntensity: metalness > 0.5 ? 0.05 : 0.14, ...extra });
 
+/**
+ * Skin: a soft red sheen at grazing angles stands in for light scattering
+ * under the skin (lean devices keep the plain material).
+ */
+const skinMat = (color: string) =>
+  leanGraphics()
+    ? std(color, 0.6)
+    : new THREE.MeshPhysicalMaterial({ color, roughness: 0.52, metalness: 0, emissive: color, emissiveIntensity: 0.12, sheen: 0.55, sheenColor: '#ff6a50', sheenRoughness: 0.45, specularIntensity: 0.45 });
+
 // ------------------------------------------------------------ outfit painting
 
 /** v (0 bottom .. 1 top) on the lathe for a height y, following the profile's point spacing. */
@@ -143,6 +202,30 @@ function vAt(y: number) {
  * The outfit as a texture wrapped around the torso: the front (u 0.5) carries
  * collars, shirts, ties, lapels, sashes and piping.
  */
+/**
+ * Sculpt a hair shell (a unit sphere piece) into locks: soft ridges that run
+ * from the crown down, wavering a little, so hair has volume and catches light
+ * in strands rather than reading as a smooth cap.
+ */
+function locks(g: THREE.BufferGeometry, depth: number, count = 22, from = 0, to = Math.PI) {
+  const p = g.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i),
+      y = p.getY(i),
+      z = p.getZ(i);
+    const th = Math.acos(THREE.MathUtils.clamp(y, -1, 1));
+    const ph = Math.atan2(z, x);
+    const wave = Math.sin(ph * count + Math.sin(th * 4 + ph * 3) * 1.4);
+    const fine = Math.sin(ph * count * 2.7 + th * 6);
+    // Ridges grow from nothing at the crown's centre.
+    // ... and settle to a clean edge where the shell ends.
+    const k = 1 + depth * Math.min(1, th / 0.6, Math.max(0, to - th) / 0.3, Math.max(0, th - from) / 0.3 + (from === 0 ? 1 : 0)) * (0.65 * (0.5 + 0.5 * wave) ** 1.5 + 0.2 * (0.5 + 0.5 * fine));
+    p.setXYZ(i, x * k, y * k, z * k);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
 let strandTex: THREE.CanvasTexture | null = null;
 /** Fine light and dark strands (white-based, so it multiplies the hair colour). Shared by every figure. */
 function hairTexture() {
@@ -210,7 +293,7 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   const P = (dx: number, dy: number): [number, number] => {
     const ny = THREE.MathUtils.clamp(dy / (dy < 0 ? HEAD_DN : HEAD_UP), -1, 1);
     const th = Math.acos(ny);
-    const ring = Math.max(0.05, Math.sin(th)) * HEAD_AX * (ny < 0 ? 1 - 0.22 * ny * ny : 1);
+    const ring = Math.max(0.05, Math.sin(th)) * HEAD_AX * (ny < 0 ? 1 - JAW * ny * ny : 1);
     const ph = Math.asin(THREE.MathUtils.clamp(dx / ring, -1, 1));
     return [(0.25 + ph / (Math.PI * 2)) * W, (th / Math.PI) * H];
   };
@@ -247,7 +330,7 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   const deep = shade(skin, 0.3);
   // Modelling.
   for (const side of [-1, 1]) {
-    spot(side * 0.2, -0.1, 0.12, 0.085, warm, dark ? 0.16 : 0.24);
+    spot(side * 0.2, -0.1, 0.12, 0.085, warm, dark ? 0.08 : 0.2);
     spot(side * 0.145, 0.07, 0.1, 0.06, deep, 0.25);
     spot(side * 0.33, 0.05, 0.08, 0.16, deep, 0.2);
   }
@@ -262,7 +345,6 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   // Eyes: a soft crease above, a fine liner along the upper lid with a lift at the outer corner, a hint of lower lashes.
   const EYE: Record<string, [number, number]> = { almond: [1.15, 0.85], round: [1.05, 1.02], narrow: [1.22, 0.6], hooded: [1.15, 0.78], upturned: [1.18, 0.8] };
   const [ex, ey] = EYE[spec.eyes ?? 'almond'] ?? EYE.almond;
-  const liner = shade(hair, 0.45);
   g.lineCap = 'round';
   g.lineJoin = 'round';
   for (const side of [-1, 1]) {
@@ -284,19 +366,6 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
     g.strokeStyle = rgba(deep, 0.45);
     g.lineWidth = 0.006 * U;
     g.stroke();
-    path(arc(1.04, tilt, -0.1, Math.PI + 0.05));
-    g.strokeStyle = rgba(liner, 0.95);
-    g.lineWidth = 0.011 * U;
-    g.stroke();
-    // A tapered flick at the outer corner.
-    const [ox, oy] = P(cx + side * rx * 1.04, cy + tilt);
-    const [fx, fy] = P(cx + side * (rx * 1.04 + 0.022), cy + tilt + 0.012);
-    g.beginPath();
-    g.moveTo(ox, oy - 0.005 * U);
-    g.lineTo(fx, fy);
-    g.lineTo(ox, oy + 0.004 * U);
-    g.fillStyle = rgba(liner, 0.95);
-    g.fill();
     path(arc(1.02, 0, Math.PI + 0.5, Math.PI * 2 - 0.4));
     g.strokeStyle = rgba(deep, 0.35);
     g.lineWidth = 0.004 * U;
@@ -389,6 +458,26 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   g.lineWidth = 0.005 * U;
   g.stroke();
   for (const side of [-1, 1]) spot(side * lw, mouthLine(lw) + 0.002, 0.012, 0.01, deep, 0.5);
+  // A soft hairline: strands of the hair's colour fading down into the forehead, so the hair never ends in a hard cut.
+  if (spec.hair !== 'shaved' && spec.hair !== 'buzz' && spec.hair !== 'afro') {
+    for (let i = 0; i < 900; i++) {
+      const x = (rnd() - 0.5) * 0.7;
+      const edge = 0.3 - 0.9 * x * x;
+      const y0 = edge + 0.03 + rnd() * 0.03;
+      const len = 0.02 + rnd() * 0.035;
+      const [ax, ay] = P(x, y0);
+      const [bx, by] = P(x + (rnd() - 0.5) * 0.01, y0 - len);
+      const gr = g.createLinearGradient(ax, ay, bx, by);
+      gr.addColorStop(0, rgba(hair, 0.55));
+      gr.addColorStop(1, rgba(hair, 0));
+      g.strokeStyle = gr;
+      g.lineWidth = Math.max(1, 0.003 * U);
+      g.beginPath();
+      g.moveTo(ax, ay);
+      g.lineTo(bx, by);
+      g.stroke();
+    }
+  }
   // Fine grain.
   const img = g.getImageData(0, 0, W, H);
   n = 11;
@@ -403,6 +492,51 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
+  return tex;
+}
+
+const irisCache = new Map<string, THREE.CanvasTexture>();
+/** An iris: fibres radiating from a pupil, a lighter ring round it and a dark limbal edge. Shared per colour. */
+function irisTexture(col: string) {
+  const hit = irisCache.get(col);
+  if (hit) return hit;
+  const S = 64 * TEX();
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d')!;
+  const C = S / 2;
+  const base = g.createRadialGradient(C, C, S * 0.08, C, C, S / 2);
+  base.addColorStop(0, tint(col, 0.35));
+  base.addColorStop(0.45, col);
+  base.addColorStop(0.85, shade(col, 0.25));
+  base.addColorStop(1, shade(col, 0.75));
+  g.fillStyle = base;
+  g.fillRect(0, 0, S, S);
+  let n = 5;
+  const rnd = () => ((n = (n * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 220; i++) {
+    const a = rnd() * Math.PI * 2;
+    const r0 = S * (0.12 + rnd() * 0.06),
+      r1 = S * (0.3 + rnd() * 0.18);
+    g.strokeStyle = rnd() < 0.5 ? `rgba(255,240,210,${0.12 + rnd() * 0.15})` : `rgba(0,0,0,${0.12 + rnd() * 0.15})`;
+    g.lineWidth = S / 160 + rnd() * (S / 120);
+    g.beginPath();
+    g.moveTo(C + Math.cos(a) * r0, C + Math.sin(a) * r0);
+    g.lineTo(C + Math.cos(a + (rnd() - 0.5) * 0.15) * r1, C + Math.sin(a + (rnd() - 0.5) * 0.15) * r1);
+    g.stroke();
+  }
+  g.fillStyle = '#050404';
+  g.beginPath();
+  g.arc(C, C, S * 0.15, 0, Math.PI * 2);
+  g.fill();
+  g.strokeStyle = 'rgba(0,0,0,0.6)';
+  g.lineWidth = S * 0.035;
+  g.beginPath();
+  g.arc(C, C, S * 0.48, 0, Math.PI * 2);
+  g.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  irisCache.set(col, tex);
   return tex;
 }
 
@@ -611,17 +745,17 @@ export class SeatFigure {
     const sleeve = kandura ? (luma(outfit) > 0.7 ? outfit : '#f2efe8') : outfit;
     const wear = spec.wearColor || '#7a1f1b';
     this.mats = {
-      skin: std(skin, 0.62),
-      face: std('#ffffff', 0.6),
+      skin: skinMat(skin),
+      face: skinMat('#ffffff'),
       skinShade: std(shade(skin, 0.1), 0.65),
       // Matte, with fine strands: a glossy cap caught the key light and read as a bald patch.
       hair: std(shade(hair, 0.05), 0.92, 0, { side: THREE.DoubleSide, emissiveIntensity: 0.1 }),
       outfit: std('#ffffff', 0.78),
       sleeve: std(shade(sleeve, 0.08), 0.8),
       ink: std('#3a261a', 0.3),
-      pupil: std('#060505', 0.2, 0, { emissiveIntensity: 0 }),
+      cornea: std('#ffffff', 0.04, 0, { transparent: true, opacity: 0.12, emissiveIntensity: 0, depthWrite: false }),
       glint: std('#ffffff', 0.1, 0, { emissiveIntensity: 1.1 }),
-      lash: std(shade(hair, 0.35), 0.6, 0, { emissiveIntensity: 0.04 }),
+      lash: std(shade(hair, 0.55), 0.6, 0, { emissiveIntensity: 0.02 }),
       white: std('#f4f1ea', 0.35),
       lip: std(mix(skin, '#9c4a43', 0.5), 0.55),
       gold: std(GOLD, 0.32, 0.9),
@@ -638,7 +772,10 @@ export class SeatFigure {
       this.mats.hair.emissiveMap = strands;
     }
     const iris = spec.eyeColor || '';
-    if (iris) this.mats.ink.color.set(iris), this.mats.ink.emissive.set(iris);
+    this.mats.ink.color.set('#ffffff');
+    this.mats.ink.emissive.set('#ffffff');
+    this.mats.ink.emissiveIntensity = 0.12;
+    this.mats.ink.map = this.mats.ink.emissiveMap = irisTexture(iris || '#4a2e1c');
     this.mats.outfit.map = tex;
     this.mats.outfit.emissiveMap = tex;
     // Cloth weave and hair strands catch the light up close; the head carries its soft modelling.
@@ -655,6 +792,8 @@ export class SeatFigure {
     this.buildWear();
     this.group.add(this.head);
     this.head.position.set(0, NECK_Y, 0);
+    // A slightly smaller head on the shoulders: closer to real proportions.
+    this.head.scale.setScalar(HEAD_SCALE);
     // Few draw calls: everything that never moves on its own is merged per material.
     mergeStatic(this.group, new Set<THREE.Object3D>([this.head, this.torso]));
     mergeStatic(this.head, new Set<THREE.Object3D>(this.eyes));
@@ -666,7 +805,7 @@ export class SeatFigure {
     this.torso = mesh(lathe, m.outfit, this.group);
     this.torso.scale.set(TORSO_SX, 1, TORSO_SZ);
     // Neck.
-    mesh(geo('neck', () => new THREE.CylinderGeometry(0.14, 0.16, 0.42, seg(14))), m.skinShade, this.group, 0, 1.3, 0);
+    mesh(geo('neck', () => new THREE.CylinderGeometry(0.165, 0.2, 0.42, seg(14))), m.skinShade, this.group, 0, 1.3, 0);
     // Arms: upper arm down from the shoulder, forearm forward onto the rim, a hand at rest.
     for (const side of [-1, 1]) {
       const sh = new THREE.Vector3(side * 0.86, 0.86, 0);
@@ -712,38 +851,38 @@ export class SeatFigure {
     // The head: an egg, a little narrower toward the chin.
     const sp = this.spec;
     // Depth of the face's surface at (x, y) on the head, for setting features into it.
-    const fz = (x: number, y: number) => faceZ(x, y - HEAD_Y);
-    const headMesh = mesh(geo('head', () => headGeometry()), m.face, h, 0, at(HEAD_Y), 0);
+    const nose = sp.nose ?? 'straight';
+    const fz = (x: number, y: number) => skinZ(x, y - HEAD_Y, nose);
+    const headMesh = mesh(geo(`head:${nose}`, () => headGeometry(nose)), m.face, h, 0, at(HEAD_Y), 0);
     headMesh.scale.set(...(FACE[sp.face ?? 'oval'] ?? FACE.oval));
     for (const side of [-1, 1]) {
       const ear = mesh(geo('ear', () => new THREE.SphereGeometry(0.08, seg(10), seg(8))), m.skinShade, h, side * 0.38, at(HEAD_Y - 0.02), -0.02);
       ear.scale.set(0.5, 1, 0.8);
-      // Eyes: a white with a dark iris, set into the face.
+      // Eyes: a white, a painted iris under a glossy cornea, and lids of skin over and under.
       const eye = new THREE.Group();
-      eye.position.set(side * 0.145, at(HEAD_Y + 0.03), fz(side * 0.145, HEAD_Y + 0.03) - 0.025);
-      const white = mesh(geo('eyeW', () => new THREE.SphereGeometry(0.058, seg(12), seg(8))), m.white, eye);
-      const EYE: Record<string, [number, number]> = { almond: [1.15, 0.85], round: [1.05, 1.02], narrow: [1.22, 0.6], hooded: [1.15, 0.78], upturned: [1.18, 0.8] };
-      const [ex, ey] = EYE[sp.eyes ?? 'almond'] ?? EYE.almond;
-      white.scale.set(ex, ey, 0.55);
-      const irisMesh = mesh(geo('iris', () => new THREE.SphereGeometry(0.036, seg(10), seg(8))), m.ink, eye, 0, -0.004, 0.026);
-      if (sp.eyes === 'narrow') irisMesh.scale.set(1, 0.78, 1);
-      // Pupil and a catchlight from the key light (the lids and lashes are painted on the face).
-      const pupil = mesh(geo('pupil', () => new THREE.SphereGeometry(0.017, seg(8), seg(6))), m.pupil, eye, 0, -0.004, 0.0475);
-      pupil.scale.set(1, sp.eyes === 'narrow' ? 0.78 : 1, 0.45);
-      mesh(geo('glint', () => new THREE.SphereGeometry(0.0075, seg(6), seg(4))), m.glint, eye, -0.011, 0.009, 0.054).scale.set(1, 1, 0.4);
-      if (sp.eyes === 'upturned') eye.rotation.z = side * 0.2;
-      if (sp.eyes === 'hooded' || sp.eyes === 'narrow') {
-        // A soft upper lid in the skin's shade.
-        const lid = mesh(geo('lid', () => new THREE.SphereGeometry(0.062, seg(12), seg(6), 0, Math.PI * 2, 0, Math.PI / 2)), m.skinShade, eye, 0, sp.eyes === 'narrow' ? 0.006 : 0.012, 0.004);
-        lid.scale.set(ex * 1.05, 0.55, 0.62);
-      }
+      eye.position.set(side * 0.145, at(HEAD_Y + 0.03), fz(side * 0.145, HEAD_Y + 0.03) - 0.02);
+      const EYE: Record<string, [number, number, number]> = { almond: [1.12, 0.9, 0.82], round: [1.04, 1.02, 0.72], narrow: [1.18, 0.7, 1.08], hooded: [1.12, 0.84, 0.98], upturned: [1.15, 0.86, 0.82] };
+      const [ex, ey, lidCover] = EYE[sp.eyes ?? 'almond'] ?? EYE.almond;
+      const white = mesh(geo('eyeW', () => new THREE.SphereGeometry(0.06, seg(16), seg(12))), m.white, eye);
+      white.scale.set(ex, ey, 0.6);
+      const front = 0.06 * 0.6;
+      const irisDisc = mesh(geo('irisDisc', () => new THREE.CircleGeometry(0.031, seg(24))), m.ink, eye, 0, -0.002, front + 0.0006);
+      irisDisc.scale.set(1, sp.eyes === 'narrow' ? 0.85 : 1, 1);
+      const cornea = mesh(geo('cornea', () => new THREE.SphereGeometry(0.034, seg(16), seg(8), 0, Math.PI * 2, 0, 1.0)), m.cornea, eye, 0, -0.002, front - 0.026);
+      cornea.rotation.x = Math.PI / 2;
+      mesh(geo('glint', () => new THREE.SphereGeometry(0.006, seg(6), seg(4))), m.glint, eye, -0.01, 0.008, front + 0.007).scale.set(1, 1, 0.4);
+      if (sp.eyes === 'upturned') eye.rotation.z = side * 0.18;
+      const upper = mesh(geo(`lidU${lidCover}`, () => new THREE.SphereGeometry(0.064, seg(18), seg(8), 0, Math.PI * 2, 0, lidCover)), m.skin, eye, 0, 0.002, 0);
+      upper.scale.set(ex * 1.04, ey * 1.04, 0.66);
+      upper.rotation.x = 0.12;
+      // Lashes along the lid's edge (the front half of a ring at the lid's rim).
+      const lash = mesh(geo(`lash${lidCover}`, () => new THREE.TorusGeometry(0.064 * Math.sin(lidCover), 0.0042, seg(4), seg(20), Math.PI)), m.lash, upper, 0, 0.064 * Math.cos(lidCover), 0);
+      lash.rotation.x = Math.PI / 2;
+      const lower = mesh(geo('lidL', () => new THREE.SphereGeometry(0.063, seg(18), seg(6), 0, Math.PI * 2, Math.PI - 0.75, 0.75)), m.skin, eye, 0, 0, 0);
+      lower.scale.set(ex * 1.03, ey * 1.02, 0.64);
       h.add(eye);
       this.eyes.push(eye);
     }
-    const nose = mesh(geo('nose', () => new THREE.SphereGeometry(0.05, seg(10), seg(8))), m.skinShade, h, 0, at(HEAD_Y - 0.06), fz(0, HEAD_Y - 0.06) - 0.015);
-    const NOSE: Record<string, [number, number, number]> = { button: [0.72, 0.85, 0.8], straight: [0.8, 1.1, 0.9], broad: [1.2, 1.0, 0.92], aquiline: [0.74, 1.35, 1.18] };
-    nose.scale.set(...(NOSE[sp.nose ?? 'straight'] ?? NOSE.straight));
-    if (sp.nose === 'broad') for (const side of [-1, 1]) mesh(geo('nostril', () => new THREE.SphereGeometry(0.028, seg(8), seg(6))), m.skinShade, h, side * 0.045, at(HEAD_Y - 0.085), fz(side * 0.045, HEAD_Y - 0.085) - 0.004);
     this.buildFacialHair();
     if (this.spec.accessory === 'earrings') {
       const jade = std('#2f7a5c', 0.25, 0.1);
@@ -762,7 +901,7 @@ export class SeatFigure {
     const m = this.mats;
     const h = this.head;
     const at = (y: number) => y - NECK_Y;
-    const fz = (x: number, y: number) => faceZ(x, y - HEAD_Y);
+    const fz = (x: number, y: number) => skinZ(x, y - HEAD_Y, this.spec.nose ?? 'straight');
     if (fh === 'stubble' || fh === 'beard') {
       // A shadow (stubble) or a full shell (beard) over the jaw, below the mouth.
       const mat = fh === 'stubble' ? std(shade(this.spec.hairColor || '#1b1715', 0.1), 0.95, 0, { transparent: true, opacity: 0.28, depthWrite: false }) : m.hair;
@@ -798,7 +937,7 @@ export class SeatFigure {
     // The crown: a cap over the top of the head, tipped back to show the forehead.
     const close = style === 'shaved' || style === 'buzz';
     const crownTheta = close ? 1.05 : style === 'slicked' ? 1.25 : 1.15;
-    const crown = mesh(geo(`crown${crownTheta}`, () => new THREE.SphereGeometry(1, seg(26), seg(12), 0, Math.PI * 2, 0, crownTheta)), m.hair, h, 0, at(HEAD_Y), 0);
+    const crown = mesh(geo(`crown${crownTheta}:${close}`, () => locks(new THREE.SphereGeometry(1, seg(40), seg(16), 0, Math.PI * 2, 0, crownTheta), close ? 0.004 : 0.04, 22, 0, crownTheta)), m.hair, h, 0, at(HEAD_Y), 0);
     const full = style === 'curly' || style === 'afro' || style === 'sidepart' || style === 'topknot';
     const cr = close ? HEAD_R + 0.008 : full ? R + 0.015 : R;
     const [fx, fy, fzs] = FACE[this.spec.face ?? 'oval'] ?? [1, 1, 1];
@@ -825,14 +964,14 @@ export class SeatFigure {
     const sk = skirt[style];
     if (sk) {
       const [thetaEnd, gap] = sk;
-      const g = geo(`skirt${thetaEnd}:${gap}`, () => new THREE.SphereGeometry(1, seg(26), seg(10), Math.PI / 2 + gap / 2, Math.PI * 2 - gap, 0.7, thetaEnd - 0.7));
+      const g = geo(`skirt${thetaEnd}:${gap}:${close}`, () => locks(new THREE.SphereGeometry(1, seg(40), seg(14), Math.PI / 2 + gap / 2, Math.PI * 2 - gap, 0.7, thetaEnd - 0.7), close ? 0.004 : 0.05, 22, 0.7, thetaEnd));
       const o = mesh(g, m.hair, h, 0, at(HEAD_Y), -0.01);
       const sr = close ? HEAD_R + 0.006 : R;
       o.scale.set(sr * 0.96 * fx, sr * 1.1 * fy, sr * 1.04 * fzs);
     }
     if (style === 'afro') {
       // A full rounded halo, open at the face.
-      const halo = mesh(geo('afro', () => new THREE.SphereGeometry(1, seg(28), seg(16), Math.PI / 2 + 1.0, Math.PI * 2 - 2.0, 0, 2.45)), m.hair, h, 0, at(HEAD_Y + 0.08), -0.06);
+      const halo = mesh(geo('afro', () => locks(new THREE.SphereGeometry(1, seg(40), seg(22), Math.PI / 2 + 1.0, Math.PI * 2 - 2.0, 0, 2.45), 0.06, 30)), m.hair, h, 0, at(HEAD_Y + 0.08), -0.06);
       halo.scale.set(0.66, 0.64, 0.62);
     }
     if (style === 'ponytail') {
@@ -1127,9 +1266,9 @@ export function avatarPortraitUrl(spec: AvatarSpec, size = 96): string | null {
     fig.update(0, 1, null);
     // Face the camera squarely for the portrait.
     (fig as unknown as { head: THREE.Group }).head.rotation.set(0.05, 0, 0);
-    const cam = new THREE.PerspectiveCamera(24, 1, 0.1, 50);
-    cam.position.set(0, HEAD_Y + 0.05, 5.0);
-    cam.lookAt(0, HEAD_Y - 0.22, 0);
+    const cam = new THREE.PerspectiveCamera(22, 1, 0.1, 50);
+    cam.position.set(0, HEAD_AT + 0.05, 5.0);
+    cam.lookAt(0, HEAD_AT - 0.2, 0);
     portraitRenderer.render(scene, cam);
 
     const out = document.createElement('canvas');
