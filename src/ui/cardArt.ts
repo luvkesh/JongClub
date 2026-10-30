@@ -8,26 +8,37 @@ import { parseKinds } from '../engine/tiles';
 
 export interface CardPalette {
   id: string;
-  /** Dark accent: the number, the felt under the tiles, the emblem. */
+  /** Dark accent on ivory: the rule text's headings, the felt under the tiles. */
   ink: string;
-  /** Foil: light and dark ends of the metallic gradient. */
+  /** Foil: light and dark ends of the metallic gradient (kept for the older views). */
   foil: string;
   foil2: string;
-  /** A wash over the ivory stock. */
+  /** A wash over ivory. */
   wash: string;
+  /** The lacquered card stock: top and bottom of its gradient. */
+  deep: string;
+  deep2: string;
+  /** Gold foil, or platinum on the pearl cards. */
+  metal: 'gold' | 'platinum';
 }
 
 export const PALETTES: Record<string, CardPalette> = {
-  ruby: { id: 'ruby', ink: '#7a1522', foil: '#f0c38a', foil2: '#9c5a2a', wash: 'rgba(176, 38, 52, 0.13)' },
-  jade: { id: 'jade', ink: '#1d5a43', foil: '#e5d9a0', foil2: '#7a7a3a', wash: 'rgba(46, 140, 100, 0.13)' },
-  pearl: { id: 'pearl', ink: '#34465c', foil: '#eef1f4', foil2: '#8b97a6', wash: 'rgba(120, 150, 190, 0.12)' },
-  sapphire: { id: 'sapphire', ink: '#1f3b73', foil: '#e8d29a', foil2: '#8a6a32', wash: 'rgba(48, 92, 176, 0.12)' },
-  vermilion: { id: 'vermilion', ink: '#8a2c16', foil: '#f2cf8f', foil2: '#a2622a', wash: 'rgba(206, 84, 40, 0.12)' },
-  bamboo: { id: 'bamboo', ink: '#3d5a1c', foil: '#ead9a0', foil2: '#86743a', wash: 'rgba(110, 150, 50, 0.13)' },
-  indigo: { id: 'indigo', ink: '#2c2a66', foil: '#e6d4a4', foil2: '#7c6a3e', wash: 'rgba(80, 76, 170, 0.12)' },
-  gold: { id: 'gold', ink: '#6b4a12', foil: '#fbe7a6', foil2: '#a8782a', wash: 'rgba(214, 170, 60, 0.16)' },
-  rose: { id: 'rose', ink: '#7a2a52', foil: '#f3d2c0', foil2: '#a2645a', wash: 'rgba(200, 90, 140, 0.12)' },
-  onyx: { id: 'onyx', ink: '#2a2622', foil: '#e9d6a6', foil2: '#8a6e3a', wash: 'rgba(40, 36, 30, 0.1)' },
+  ruby: { id: 'ruby', ink: '#7a1522', foil: '#f0c38a', foil2: '#9c5a2a', wash: 'rgba(176, 38, 52, 0.13)', deep: '#6e1320', deep2: '#2a050b', metal: 'gold' },
+  jade: { id: 'jade', ink: '#1d5a43', foil: '#e5d9a0', foil2: '#7a7a3a', wash: 'rgba(46, 140, 100, 0.13)', deep: '#145240', deep2: '#04190f', metal: 'gold' },
+  pearl: { id: 'pearl', ink: '#34465c', foil: '#eef1f4', foil2: '#8b97a6', wash: 'rgba(120, 150, 190, 0.12)', deep: '#33465e', deep2: '#0e1520', metal: 'platinum' },
+  sapphire: { id: 'sapphire', ink: '#1f3b73', foil: '#e8d29a', foil2: '#8a6a32', wash: 'rgba(48, 92, 176, 0.12)', deep: '#1a3770', deep2: '#060f26', metal: 'gold' },
+  vermilion: { id: 'vermilion', ink: '#8a2c16', foil: '#f2cf8f', foil2: '#a2622a', wash: 'rgba(206, 84, 40, 0.12)', deep: '#7a2a12', deep2: '#2a0b04', metal: 'gold' },
+  bamboo: { id: 'bamboo', ink: '#3d5a1c', foil: '#ead9a0', foil2: '#86743a', wash: 'rgba(110, 150, 50, 0.13)', deep: '#3a5418', deep2: '#111c05', metal: 'gold' },
+  indigo: { id: 'indigo', ink: '#2c2a66', foil: '#e6d4a4', foil2: '#7c6a3e', wash: 'rgba(80, 76, 170, 0.12)', deep: '#2c2a6e', deep2: '#0b0a26', metal: 'gold' },
+  gold: { id: 'gold', ink: '#6b4a12', foil: '#fbe7a6', foil2: '#a8782a', wash: 'rgba(214, 170, 60, 0.16)', deep: '#5a3d0e', deep2: '#1e1203', metal: 'gold' },
+  rose: { id: 'rose', ink: '#7a2a52', foil: '#f3d2c0', foil2: '#a2645a', wash: 'rgba(200, 90, 140, 0.12)', deep: '#6a1f46', deep2: '#230717', metal: 'gold' },
+  onyx: { id: 'onyx', ink: '#2a2622', foil: '#e9d6a6', foil2: '#8a6e3a', wash: 'rgba(40, 36, 30, 0.1)', deep: '#2e2a26', deep2: '#0a0908', metal: 'gold' },
+};
+
+/** Foil gradient stops: gold, or platinum for the pearl cards. */
+export const METAL: Record<CardPalette['metal'], string[]> = {
+  gold: ['#fff4cf', '#e9c877', '#b8892e', '#f7e2a3', '#9c6f22'],
+  platinum: ['#ffffff', '#dfe6ee', '#9aa7b6', '#f2f5f8', '#7d8a99'],
 };
 
 const NAME_PALETTE: [RegExp, string][] = [
@@ -115,10 +126,15 @@ export function emblemOf(name: string): string {
   return 'fan';
 }
 
+/** The emblem's drawing in a 48 x 48 box: strokes, or the card's number set large for the number cards. */
+export function emblemBody(name: string, n: number, fill = 'currentColor'): string {
+  const id = emblemOf(name);
+  return id === 'number' ? `<text x="24" y="31.5" text-anchor="middle" font-family="Cinzel, serif" font-size="${n > 9 ? 17 : 20}" font-weight="700" fill="${fill}" stroke="none">${n}</text>` : E[id];
+}
+
 /** The emblem as SVG: drawn strokes, or the card's number set large for the number cards. */
 export function emblemSvg(name: string, n: number): string {
-  const id = emblemOf(name);
-  const body = id === 'number' ? `<text x="24" y="31.5" text-anchor="middle" font-family="Cinzel, serif" font-size="20" font-weight="700" fill="currentColor" stroke="none">${n}</text>` : E[id];
+  const body = emblemBody(name, n);
   return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 }
 
@@ -143,4 +159,68 @@ export function patternSvg(n: number, big: boolean): string {
   const i = (n * (big ? 5 : 7) + (big ? 3 : 0)) % PATTERNS.length;
   const id = `ccp-${big ? 'b' : 's'}${n}`;
   return `<svg class="cc-pattern" aria-hidden="true" width="100%" height="100%"><defs><pattern id="${id}" width="24" height="24" patternUnits="userSpaceOnUse"><g fill="none" stroke="currentColor" stroke-width="0.8">${PATTERNS[i]}</g></pattern></defs><rect width="100%" height="100%" fill="url(#${id})"/></svg>`;
+}
+
+// ------------------------------------------------------------------ the printed playing card
+
+let uidSeq = 0;
+const stops = (c: string[]) => c.map((x, i) => `<stop offset="${(i / (c.length - 1)).toFixed(2)}" stop-color="${x}"/>`).join('');
+
+/** A guilloché rosette (the engraving on banknotes): rotated ellipses round a centre. */
+function rosette(cx: number, cy: number, r: number, petals: number, squash: number, stroke: string, width: number, opacity: number): string {
+  let out = `<g fill="none" stroke="${stroke}" stroke-width="${width}" opacity="${opacity}">`;
+  for (let i = 0; i < petals; i++) out += `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${(r * squash).toFixed(2)}" transform="rotate(${((180 / petals) * i).toFixed(2)} ${cx} ${cy})"/>`;
+  return out + '</g>';
+}
+
+/** Art Deco corner: two nested foil brackets that hold the corner index, drawn for the top-left corner of a 500 x 700 card. */
+const DECO_CORNER = '<path d="M30 132V46a16 16 0 0 1 16-16h86"/><path d="M39 118V56a17 17 0 0 1 17-17h62"/><path d="M30 146v10M146 30h10" stroke-width="1.4"/>';
+
+/**
+ * The card stock and everything printed behind the text: lacquer in the card's colours, an engraved
+ * pattern and guilloché wash, the double foil frame with Art Deco corners. A 500 x 700 drawing
+ * (2.5 x 3.5 in), scaled whole with the card, so the print keeps its proportions at any size.
+ */
+export function cardStockSvg(pal: CardPalette, n: number, big: boolean): string {
+  const u = `cc${++uidSeq}`;
+  const m = METAL[pal.metal];
+  const pi = (n * (big ? 5 : 7) + (big ? 3 : 0)) % PATTERNS.length;
+  const corner = (t: string) => `<g transform="${t}">${DECO_CORNER}</g>`;
+  return `<svg class="cc-stock" viewBox="0 0 500 700" preserveAspectRatio="none" aria-hidden="true">
+<defs>
+<linearGradient id="${u}b" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="${pal.deep}"/><stop offset="1" stop-color="${pal.deep2}"/></linearGradient>
+<radialGradient id="${u}g" cx="0.5" cy="0.22" r="0.65"><stop offset="0" stop-color="#fff" stop-opacity="0.16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="${u}f" x1="0" y1="0" x2="1" y2="1">${stops(m)}</linearGradient>
+<pattern id="${u}p" width="24" height="24" patternUnits="userSpaceOnUse"><g fill="none" stroke="${m[1]}" stroke-width="0.7">${PATTERNS[pi]}</g></pattern>
+</defs>
+<rect width="500" height="700" fill="url(#${u}b)"/>
+<rect width="500" height="700" fill="url(#${u}p)" opacity="0.13"/>
+${rosette(250, 158, 150, 36, 0.32, m[1], 0.6, 0.12)}
+<rect width="500" height="700" fill="url(#${u}g)"/>
+<g fill="none" stroke="url(#${u}f)">
+<rect x="18" y="18" width="464" height="664" rx="22" stroke-width="3"/>
+<rect x="27" y="27" width="446" height="646" rx="16" stroke-width="1.1"/>
+<g stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${corner('')}${corner('translate(500 0) scale(-1 1)')}${corner('translate(0 700) scale(1 -1)')}${corner('translate(500 700) scale(-1 -1)')}</g>
+</g>
+</svg>`;
+}
+
+/** The medallion at the head of the card: foil rings, a guilloché rosette and the card's emblem. */
+export function medallionSvg(name: string, n: number, pal: CardPalette): string {
+  const u = `cm${++uidSeq}`;
+  const m = METAL[pal.metal];
+  return `<svg class="cc-medallion" viewBox="0 0 120 120" aria-hidden="true">
+<defs><linearGradient id="${u}f" x1="0" y1="0" x2="1" y2="1">${stops(m)}</linearGradient>
+<radialGradient id="${u}d" cx="0.45" cy="0.38" r="0.7"><stop offset="0" stop-color="${pal.deep}"/><stop offset="1" stop-color="${pal.deep2}"/></radialGradient></defs>
+<circle cx="60" cy="60" r="56" fill="url(#${u}d)" stroke="url(#${u}f)" stroke-width="3"/>
+${rosette(60, 60, 48, 24, 0.38, `url(#${u}f)`, 0.55, 0.55)}
+<circle cx="60" cy="60" r="50" fill="none" stroke="url(#${u}f)" stroke-width="0.9"/>
+<circle cx="60" cy="60" r="31" fill="url(#${u}d)" stroke="url(#${u}f)" stroke-width="1.6"/>
+<g transform="translate(36 36)" fill="none" stroke="url(#${u}f)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${emblemBody(name, n, `url(#${u}f)`)}</g>
+</svg>`;
+}
+
+/** The small emblem under a corner number (the card's "pip"). */
+export function pipSvg(name: string, n: number): string {
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${emblemBody(name, n)}</svg>`;
 }
