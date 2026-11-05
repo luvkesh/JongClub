@@ -7,7 +7,7 @@ import type { TileFinish } from '../cosmetics/catalog';
 import { currentTileSet, drawFaceSurface, tileFinishCanvas } from './tileFaces';
 import { leanGraphics } from './quality';
 
-interface Finish {
+export interface Finish {
   roughness: number;
   metalness?: number;
   clearcoat?: number;
@@ -21,21 +21,23 @@ interface Finish {
 }
 
 export const FINISH: Record<TileFinish, Finish> = {
-  ivory: { roughness: 0.36, clearcoat: 0.3, clearcoatRoughness: 0.25, sheen: 0.35, sheenColor: '#fff4e6' },
-  bone: { roughness: 0.4, clearcoat: 0.35, clearcoatRoughness: 0.22, sheen: 0.3, sheenColor: '#fbf0dc' },
-  lacquer: { roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.05, env: 1.2 },
-  jade: { roughness: 0.16, clearcoat: 0.9, clearcoatRoughness: 0.08, sheen: 0.4, sheenColor: '#c8f0d4', env: 1.2 },
-  malachite: { roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.06, env: 1.2 },
-  marble: { roughness: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.08, env: 1.1 },
-  obsidian: { roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.03, env: 1.6 },
-  pearl: { roughness: 0.26, clearcoat: 0.6, clearcoatRoughness: 0.15, iridescence: 1, sheen: 0.5, sheenColor: '#f6d8ea', env: 1.3 },
-  glass: { roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.02, opacity: 0.62, env: 1.8 },
-  gold: { roughness: 0.26, metalness: 1, clearcoat: 0.2, env: 1.4 },
-  rosegold: { roughness: 0.3, metalness: 1, clearcoat: 0.2, env: 1.3 },
-  porcelain: { roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.04, env: 1.2 },
-  wood: { roughness: 0.5, clearcoat: 0.4, clearcoatRoughness: 0.3 },
-  bamboo: { roughness: 0.5, clearcoat: 0.25, clearcoatRoughness: 0.35 },
-  amethyst: { roughness: 0.18, clearcoat: 0.9, clearcoatRoughness: 0.06, env: 1.3 },
+  // Every finish is polished the way a jeweller polishes a piece: a deep clear coat over the
+  // material, so light runs over tiles in long, clean highlights.
+  ivory: { roughness: 0.32, clearcoat: 0.85, clearcoatRoughness: 0.07, sheen: 0.35, sheenColor: '#fff4e6' },
+  bone: { roughness: 0.36, clearcoat: 0.7, clearcoatRoughness: 0.1, sheen: 0.3, sheenColor: '#fbf0dc' },
+  lacquer: { roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.03, env: 1.25 },
+  jade: { roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.05, sheen: 0.5, sheenColor: '#c8f0d4', env: 1.25 },
+  malachite: { roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.04, env: 1.25 },
+  marble: { roughness: 0.2, clearcoat: 0.95, clearcoatRoughness: 0.05, env: 1.15 },
+  obsidian: { roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.02, env: 1.6 },
+  pearl: { roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.1, iridescence: 1, sheen: 0.8, sheenColor: '#f6d8ea', env: 1.3 },
+  glass: { roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0.02, opacity: 0.62, env: 1.8 },
+  gold: { roughness: 0.22, metalness: 1, clearcoat: 0.4, clearcoatRoughness: 0.12, env: 1.4 },
+  rosegold: { roughness: 0.25, metalness: 1, clearcoat: 0.4, clearcoatRoughness: 0.12, env: 1.3 },
+  porcelain: { roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.03, env: 1.2 },
+  wood: { roughness: 0.42, clearcoat: 0.6, clearcoatRoughness: 0.14 },
+  bamboo: { roughness: 0.45, clearcoat: 0.45, clearcoatRoughness: 0.2 },
+  amethyst: { roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.04, env: 1.3 },
 };
 
 // The body slab's depth range in tile space (table3d: TD * 0.64 deep, moved TD * 0.18 forward, TD = 0.22).
@@ -67,8 +69,10 @@ export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | und
         '#include <map_fragment>',
         `#include <map_fragment>
         float slabT = ${t};
-        // The seam: a band just above the join with the back, with crisp edges.
+        // The seam: a band just above the join with the back, with crisp edges; and a fine bezel
+        // line in the same metal running round the front, where the face is set.
         float seamK = smoothstep(0.035, 0.05, slabT) * (1.0 - smoothstep(0.1, 0.115, slabT));
+        seamK = max(seamK, smoothstep(0.835, 0.845, slabT) * (1.0 - smoothstep(0.865, 0.875, slabT)));
         ${
           n
             ? `{
@@ -81,7 +85,7 @@ export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | und
         }
         diffuseColor.rgb = mix(diffuseColor.rgb, uSeam, seamK);`,
       )
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.28, seamK);')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.2, seamK);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 1.0, seamK);');
   };
   m.customProgramCacheKey = () => key;
@@ -200,18 +204,22 @@ export function applyTileFinish(bodies: THREE.MeshPhysicalMaterial[], back: THRE
     // The face is the same polished surface as the body around it: the same clear coat, so light
     // runs over face and edge as one piece instead of the face reading as a printed card.
     if (m instanceof THREE.MeshPhysicalMaterial) {
-      const cc = lowTier ? 0 : Math.max(0.35, gf.clearcoat ?? 0);
+      const cc = lowTier ? 0 : faceCoat(gf);
       if ((m.clearcoat > 0) !== (cc > 0)) m.needsUpdate = true;
       m.clearcoat = cc;
-      m.clearcoatRoughness = Math.max(0.06, gf.clearcoatRoughness ?? 0.15);
+      m.clearcoatRoughness = faceCoatRough(gf);
     }
   }
   surfaceLow = lowTier;
 }
 
+/** The face's glaze: every face is glazed like enamel, whatever its ground. */
+export const faceCoat = (gf: Finish) => Math.max(0.8, gf.clearcoat ?? 0);
+export const faceCoatRough = (gf: Finish) => Math.min(0.06, Math.max(0.03, gf.clearcoatRoughness ?? 0.06));
+
 let faceRough = 0.32;
-/** How deep the engraving reads under the room's light. */
-const BUMP = 1.4;
+/** How far the wires and bezel stand proud of the enamel under the room's light (the relief is in tileFaces). */
+export const BUMP = 2.6;
 let surfaceLow = false;
 const surfaceTex = new Map<string, THREE.CanvasTexture>();
 let surfaceSet = '';
