@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SKIN_TONES, type AvatarSpec } from '../cosmetics/catalog';
 import { FRAMES, luma, mix, shade, tint } from '../cosmetics/avatar';
+import { drawJewelFrame } from './frameArt';
 import { leanGraphics } from './quality';
 
 const GOLD = '#c8a46a';
@@ -1541,7 +1542,8 @@ export function avatarPortraitUrl(spec: AvatarSpec, size = 96): string | null {
     g.imageSmoothingQuality = 'high';
     const frame = FRAMES[spec.frame];
     const C = px / 2;
-    const R = (frame ? 0.42 : 0.47) * px;
+    // Room outside the ring for the Master's crown, the laurel and the season stone.
+    const R = (frame ? (spec.frame === 'frame-master' || spec.frame === 'frame-champion' || spec.frame.startsWith('frame-season-') ? 0.395 : 0.42) : 0.47) * px;
     const outfit = spec.outfitColor || '#1f3b33';
     const bg = g.createRadialGradient(C, px * 0.38, 0, C, px * 0.38, px * 0.7);
     bg.addColorStop(0, tint(mix(outfit, '#1a1c1b', 0.82), 0.12));
@@ -1555,15 +1557,8 @@ export function avatarPortraitUrl(spec: AvatarSpec, size = 96): string | null {
     g.drawImage(portraitRenderer.domElement, 0, 0, px, px);
     g.restore();
     if (frame) {
-      const ring = g.createLinearGradient(0, 0, px, px);
-      ring.addColorStop(0, frame[1]);
-      ring.addColorStop(0.45, frame[0]);
-      ring.addColorStop(1, frame[2]);
-      g.strokeStyle = ring;
-      g.lineWidth = px * 0.054;
-      g.beginPath();
-      g.arc(C, C, R + px * 0.034, 0, Math.PI * 2);
-      g.stroke();
+      // The frame as a piece of jewellery (frameArt.ts).
+      drawJewelFrame(g, spec.frame, frame, C, R, px);
     } else {
       g.strokeStyle = 'rgba(255,255,255,0.12)';
       g.lineWidth = px * 0.008;

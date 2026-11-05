@@ -129,6 +129,9 @@ const PACE = { minimal: 0.45, classic: 1, cinematic: 1.4 };
 /** Thinking style: quick sharks and gamblers, a teacher who considers, a zen player who takes their time. */
 const PERSONALITY_PAUSE: Record<Personality, number> = { shark: -150, gambler: -100, teacher: 150, wall: 100, zen: 200 };
 const DIFFICULTY_PAUSE: Record<Difficulty, number> = { beginner: 150, casual: 50, strategic: 0, expert: -100 };
+/** An AI turn takes about a second at the default speed (aiPause). */
+const AI_PAUSE_MIN = 800;
+const AI_PAUSE_MAX = 1250;
 
 export type SeatKind = 'local' | 'ai' | 'remote';
 
@@ -2463,18 +2466,18 @@ export class MatchController {
   }
 
   /**
-   * A person's thinking time for an AI turn: about 1.1 to 2.2 seconds at the
-   * default speed, a little quicker or slower by personality and level, and
-   * longer for a harder decision (close to winning, a kong, riichi or a joker swap).
+   * A person's thinking time for an AI turn: about 1 second at the default speed (the user's
+   * choice, 2026-10-30; it was 1.1 to 2.2 s), a touch quicker or slower by personality and
+   * level, and a little longer for a harder decision (a kong, riichi, a joker swap or a win).
    */
   private aiPause(seat: number) {
     const g = this.game;
     const ai = this.ais[seat];
     const opts = g.turnOptions(seat);
-    let ms = 1150 + Math.random() * 550 + (PERSONALITY_PAUSE[ai.personality] ?? 0) + (DIFFICULTY_PAUSE[ai.difficulty] ?? 0);
-    if (opts.kongs.length || opts.riichiDiscards.length || opts.jokerSwaps.length || opts.canWin) ms += 300;
-    else if (!g.profile.card && currentShanten(g, seat) <= 1) ms += 200;
-    return Math.min(2200, Math.max(1100, ms)) * PACE[this.settings.speed];
+    let ms = 900 + Math.random() * 200 + ((PERSONALITY_PAUSE[ai.personality] ?? 0) + (DIFFICULTY_PAUSE[ai.difficulty] ?? 0)) / 4;
+    if (opts.kongs.length || opts.riichiDiscards.length || opts.jokerSwaps.length || opts.canWin) ms += 150;
+    else if (!g.profile.card && currentShanten(g, seat) <= 1) ms += 80;
+    return Math.min(AI_PAUSE_MAX, Math.max(AI_PAUSE_MIN, ms)) * PACE[this.settings.speed];
   }
 
   /** A short beat after a discard or a call, so the tile is seen and its name heard before anyone else acts. */
@@ -3008,14 +3011,14 @@ export class MatchController {
     const o = document.getElementById('modal');
     if (!o) return;
     clear(o).hidden = false;
-    o.append(h('div', { class: 'card card-view' }, h('h3', {}, tr('Your Small Card')), smallCardView(card), h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Close')))));
+    o.append(h('div', { class: 'card card-view' }, h('h3', {}, tr('Your Small Card')), smallCardView(card, { faan: this.game.profile.specialRound === 'smallCard' }), h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Close')))));
   }
 
   private showBigCard(card: BigCard) {
     const o = document.getElementById('modal');
     if (!o) return;
     clear(o).hidden = false;
-    o.append(h('div', { class: 'card card-view' }, h('h3', {}, tr('This game’s Big Card')), bigCardView(card), h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Close')))));
+    o.append(h('div', { class: 'card card-view' }, h('h3', {}, tr('This game’s Big Card')), bigCardView(card, { faan: this.game.profile.specialRound === 'bigCard' }), h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Close')))));
   }
 
   /** India Rules North round: before the deal, East chooses the game. You get at least 30 seconds
@@ -3059,6 +3062,11 @@ export class MatchController {
               list.before(back);
             };
             const options = panel.querySelector('.rc-options') as HTMLElement;
+            // The special wind rounds of other rulesets offer only Big Cards: show the cards at once.
+            if (choices.every((c) => c.code > NORTH.big)) {
+              panel.querySelector('p.muted')!.textContent = tr('The North round plays a Big Card. Pick the card everyone plays this hand, before the tiles are dealt.');
+              options.replaceWith(h('div', { class: 'rc-big-list' }, ...BIG_CARDS.map((c) => bigCardView(c, { onPick: () => done(northBig(c.n)), recommended: northBig(c.n) === advice, faan: true }))));
+            }
             this.root.append(panel);
           },
           () => advice,
@@ -3111,7 +3119,7 @@ export class MatchController {
             { class: 'card-choice', role: 'dialog', 'aria-label': tr('Choose your Small Card') },
             h('h3', {}, tr('Choose your Small Card')),
             h('p', { class: 'muted' }, tr('Look at your tiles, then keep one of these three cards. You can only win with the hand your card names.')),
-            h('div', { class: 'card-offers' }, ...mine.map((c, i) => h('button', { onclick: () => done(c), 'aria-label': SMALL_CARDS[c].name }, smallCardView(SMALL_CARDS[c], { distance: dist[i] < 99 ? dist[i] : undefined, recommended: c === advice })))),
+            h('div', { class: 'card-offers' }, ...mine.map((c, i) => h('button', { onclick: () => done(c), 'aria-label': SMALL_CARDS[c].name }, smallCardView(SMALL_CARDS[c], { distance: dist[i] < 99 ? dist[i] : undefined, recommended: c === advice, faan: g.profile.specialRound === 'smallCard' })))),
           );
           this.root.append(panel);
         },

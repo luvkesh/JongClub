@@ -647,6 +647,20 @@ function northBigRound(base: RuleProfile, n: number): RuleProfile {
   };
 }
 
+/** The club's cards for another ruleset's special wind rounds (windRounds.ts): the South round
+ *  deals the club's Small Cards (keep one of three), the North round plays the Big Card East picks
+ *  before the deal. The card rules come from the book; the table keeps its own scoring and
+ *  payments (the caller sets `score`), and India Rules' compulsory exchange and buying stay out. */
+export function clubSmallCardRound(base: RuleProfile): RuleProfile {
+  const { indiaExchange: _x, buyFromLeft: _b, guide: _g, ...south } = southRound(base);
+  return { ...south, payments: base.payments, handPayments: base.handPayments, scoreUnit: base.scoreUnit };
+}
+
+export function clubBigCardRound(base: RuleProfile, n: number): RuleProfile {
+  const { indiaExchange: _x, buyFromLeft: _b, guide: _g, ...big } = northBigRound(base, n);
+  return { ...big, payments: base.payments, handPayments: base.handPayments, scoreUnit: base.scoreUnit };
+}
+
 function bigGuide(card: (typeof BIG_CARDS)[number]): RuleProfile['guide'] {
   const flowers = card.flowers === 'joker' ? 'Flowers and seasons are jokers on this card: kept in the hand, not replaced, not paid.' : card.flowers === 'tile' ? 'A flower or season is the 0 on this card: kept in the hand, not replaced, not paid.' : 'Flowers and seasons are set aside, replaced and paid as usual.';
   return {

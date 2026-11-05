@@ -409,9 +409,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px va
 .lesson-body { color: var(--muted); max-width: 56ch; }
 .lesson-tiles { display: flex; flex-wrap: wrap; gap: 14px; margin: 20px 0 6px; }
 .meld { display: inline-flex; gap: 2px; }
-.tile2d { width: 40px; height: auto; aspect-ratio: 3 / 4; border-radius: 5px; box-shadow: 0 2px 0 #c9b893, 0 3px 0 #1f5a46, 0 6px 12px rgba(0, 0, 0, 0.45); background: #f3ead6; }
+.tile2d { width: 40px; height: auto; aspect-ratio: 3 / 4; border-radius: 5px; box-shadow: 0 1.5px 0 var(--tile-body, #c9b893), 0 2.5px 0 var(--tile-metal, #d9b25a), 0 4px 0 var(--tile-back, #1f5a46), 0 7px 12px rgba(0, 0, 0, 0.45); background: #f3ead6; }
 .lesson .tile2d { width: 46px; }
-.tile2d.mini { width: 20px; border-radius: 3px; box-shadow: 0 1px 0 #1f5a46; }
+.tile2d.mini { width: 20px; border-radius: 3px; box-shadow: 0 1px 0 var(--tile-metal, #d9b25a), 0 2px 0 var(--tile-back, #1f5a46); }
 .levels { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s2); }
 .levels li { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line); transition: border-color 0.2s; }
 .levels li.locked { opacity: 0.62; }

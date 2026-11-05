@@ -248,5 +248,5 @@
 }
 /* A hand beside the Small Card that names it (Hand shapes, "Card hands"). */
 .hp-with-card { display: flex; align-items: center; gap: 20px; }
-.hp-with-card > .small-card { flex: 0 0 230px; }
+.hp-with-card > .small-card { flex: 0 0 auto; --cc-w: 340px; }
 @media (max-width: 700px) { .hp-with-card { flex-direction: column; align-items: stretch; } .hp-with-card > .small-card { flex: none; } }

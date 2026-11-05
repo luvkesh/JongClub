@@ -79,8 +79,9 @@ are marked **[asked]**.
   Mahjong (buying still allowed).
 - Payment per the card; East pays and receives double: Half limit 500/1000, Limit 1000/2000,
   Double limit 2000/4000, Super limit 4000/8000, Top limit 10000/20000. Flowers paid as in the East round.
-- Draw: East keeps the deal, the buy money waits for the next winner, and an extra game is played in the
-  round (another Small Card game or a Goulash game).
+- Draw: the buy money waits for the next winner. The book has East keep the deal for an extra game; the user
+  ruled 2026-10-25 that East never keeps the deal, win or draw, in every round (the game follows the user).
+  (Book: another Small Card game or a Goulash game.)
 - The 55 Small Cards (value, then the hand):
   1 Lily of the Valley, double: pungs of Green and White dragons, 2 pungs of green bamboos, pair of green bamboos.
   2 Red Lily, double: pungs of Red and White dragons, 2 pungs of red bamboos, pair of red bamboos.
