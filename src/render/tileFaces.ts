@@ -35,9 +35,9 @@ export const faceDetail = () => detail;
 /** The tile set faces are currently drawn in (mutable; follows setTileSet). */
 export const TILE_SET = {
   id: 'classic-ivory',
-  face: '#f3ead6',
-  faceCentre: '#f8f1e1',
-  faceEdge: '#e4d6b8',
+  face: '#f7f4ec',
+  faceCentre: '#fefdfa',
+  faceEdge: '#efebe2',
   back: '#1f5a46',
   ink: '#1b2430',
   red: '#b3352a',
@@ -557,7 +557,10 @@ function renderFace(kind: number, labels: boolean, red: boolean): { face: HTMLCa
   g.drawImage(halo ? knockOut(D, halo) : D, 0, 0);
   g.restore();
 
-  const { L, M } = inkLayer(g, kind, labels, red);
+  const { L, M, keepOut } = inkLayer(g, kind, labels, red);
+  // Auspicious clouds embossed tone on tone into the free corners, as carved into fine ivory.
+  const C = cloudLayer(L, M, keepOut);
+  if (C) embossClouds(g, C);
   const metal = jewelMetal();
   const gilt = style.inkStyle === 'gilded';
   // Everything that is metal on this face, at full resolution: the symbols' own metal parts,
@@ -617,6 +620,7 @@ function renderFace(kind: number, labels: boolean, red: boolean): { face: HTMLCa
   rg.drawImage(tinted(guilloche(rc.width, rc.height), '#ffffff'), 0, 0);
   rg.globalAlpha = 1;
   if (typeof rg.filter === 'string') rg.filter = `blur(${Math.max(0.5, FACE_SCALE * 0.18).toFixed(2)}px)`;
+  if (C) rg.drawImage(tinted(C, `rgb(${RELIEF.cloud},${RELIEF.cloud},${RELIEF.cloud})`), 0, 0, rc.width, rc.height);
   rg.drawImage(tinted(L, `rgb(${RELIEF.enamel},${RELIEF.enamel},${RELIEF.enamel})`), 0, 0, rc.width, rc.height);
   rg.drawImage(tinted(MM, '#ffffff'), 0, 0, rc.width, rc.height);
   if (gilt) rg.drawImage(tinted(L, '#ffffff'), 0, 0, rc.width, rc.height);
@@ -625,7 +629,100 @@ function renderFace(kind: number, labels: boolean, red: boolean): { face: HTMLCa
 }
 
 /** Relief levels (0-255): the ground (its guilloche lifts it a little), the enamel just below it, metal proud. */
-const RELIEF = { ground: 214, enamel: 186, metal: 255 };
+const RELIEF = { ground: 214, enamel: 186, metal: 255, cloud: 242 };
+
+// ------------------------------------------------------------ embossed corner clouds
+
+let cloudL: readonly [HTMLCanvasElement, CanvasRenderingContext2D] | undefined;
+/** Where the clouds sit: inset from the face's corner, and their size (face units). */
+const CLOUD_IN = 14,
+  CLOUD_S = 40;
+
+/** One cloud in a unit box: a large curl, a small one beside it and a tail sweeping under both. */
+function cloudPath(g: CanvasRenderingContext2D) {
+  const spiral = (cx: number, cy: number, r: number, a0: number, turns: number, dir: number) => {
+    const n = 48;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const a = a0 + dir * t * turns * Math.PI * 2;
+      const rr = r * (1 - t * 0.78);
+      const x = cx + Math.cos(a) * rr,
+        y = cy + Math.sin(a) * rr;
+      if (i === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+  };
+  g.beginPath();
+  spiral(0.34, 0.42, 0.24, Math.PI * 0.85, 1.15, 1);
+  g.moveTo(0.1, 0.66);
+  g.bezierCurveTo(0.3, 0.8, 0.62, 0.78, 0.8, 0.6);
+  g.bezierCurveTo(0.92, 0.48, 0.96, 0.34, 0.9, 0.22);
+  spiral(0.72, 0.3, 0.13, Math.PI * 0.15, 1.05, -1);
+  g.stroke();
+}
+
+/**
+ * The clouds for this face, at face resolution, in the corners that are free: a corner is used only when
+ * no symbol, metal part, index or marker comes near it, so the clouds never touch what the face says.
+ * Null when no corner is free or the set's own frame already decorates its corners.
+ */
+function cloudLayer(L: HTMLCanvasElement, M: HTMLCanvasElement, keepOut: Box[]): HTMLCanvasElement | null {
+  if (style.frame === 'corners' || style.frame === 'deco') return null;
+  const PW = L.width,
+    PH = L.height,
+    k = FACE_SCALE;
+  const span = CLOUD_IN + CLOUD_S + INDEX_GAP + 2;
+  const lg = L.getContext('2d')!,
+    mg = M.getContext('2d')!;
+  const busy = (x0: number, y0: number) => {
+    const box: Box = { x: x0, y: y0, w: span, h: span };
+    if (keepOut.some((b) => b.x < box.x + box.w && box.x < b.x + b.w && b.y < box.y + box.h && box.y < b.y + b.h)) return true;
+    const px = Math.round(x0 * k),
+      py = Math.round(y0 * k),
+      pw = Math.round(span * k);
+    for (const c of [lg, mg]) {
+      const d = c.getImageData(px, py, pw, pw).data;
+      for (let i = 3; i < d.length; i += 16) if (d[i] > 16) return true;
+    }
+    return false;
+  };
+  const corners = (
+    [
+      [1, 1],
+      [-1, 1],
+      [1, -1],
+      [-1, -1],
+    ] as const
+  ).filter(([sx, sy]) => !busy(sx > 0 ? 0 : FACE_W - span, sy > 0 ? 0 : FACE_H - span));
+  if (!corners.length) return null;
+  cloudL = sized(cloudL, PW, PH);
+  const [C, cg] = cloudL;
+  cg.setTransform(1, 0, 0, 1, 0, 0);
+  cg.clearRect(0, 0, PW, PH);
+  cg.strokeStyle = '#ffffff';
+  cg.lineCap = 'round';
+  cg.lineJoin = 'round';
+  for (const [sx, sy] of corners) {
+    const x = sx > 0 ? CLOUD_IN : FACE_W - CLOUD_IN,
+      y = sy > 0 ? CLOUD_IN : FACE_H - CLOUD_IN;
+    cg.setTransform(k * CLOUD_S * sx, 0, 0, k * CLOUD_S * sy, x * k, y * k);
+    cg.lineWidth = 2.8 / CLOUD_S;
+    cloudPath(cg);
+  }
+  cg.setTransform(1, 0, 0, 1, 0, 0);
+  return C;
+}
+
+/** Embosses the clouds into the ground: a pale raised body, a lit upper-left edge and a soft shade below. */
+function embossClouds(g: CanvasRenderingContext2D, C: HTMLCanvasElement) {
+  const dark = TILE_SET.dark;
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(inkEdge(C, 0.9, dark ? 'rgba(0,0,0,0.5)' : 'rgba(120,92,56,0.34)', false), 0, 0);
+  g.drawImage(tinted(C, dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.75)'), 0, 0);
+  g.drawImage(inkEdge(C, 0.6, dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.9)', true), 0, 0);
+  g.restore();
+}
 /** Below this relief level a non-metal pixel is enamel (polished glassy) rather than ground. */
 const ENAMEL_BELOW = 205;
 

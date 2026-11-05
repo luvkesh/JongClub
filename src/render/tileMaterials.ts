@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import type { TileFinish } from '../cosmetics/catalog';
 import { currentTileSet, drawFaceSurface, tileFinishCanvas } from './tileFaces';
 import { leanGraphics } from './quality';
+import { BEZEL_HH, BEZEL_HW, BEZEL_R, BEZEL_W, BODY_Z0, BODY_Z1 } from './tileShape';
 
 export interface Finish {
   roughness: number;
@@ -40,39 +41,59 @@ export const FINISH: Record<TileFinish, Finish> = {
   amethyst: { roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.04, env: 1.3 },
 };
 
-// The body slab's depth range in tile space (table3d: TD * 0.64 deep, moved TD * 0.18 forward, TD = 0.22).
-const BODY_Z0 = -0.0308,
-  BODY_Z1 = 0.11;
+const f4 = (v: number) => v.toFixed(4);
 
 /**
- * The body slab's shading, worked out per pixel from the slab's own depth so every side matches:
- * layered resin is banded through its depth (one colour per layer, the last meeting the face), and
- * every set has a fine polished seam in its trim metal where the body meets the back.
+ * The body slab's shading, worked out per pixel from the slab's own position so every side matches:
+ * layered resin is banded through its depth (one colour per layer, the last meeting the face), and the
+ * front carries the face's bezel, a polished band of the set's trim metal with a rounded profile round
+ * the face plate (sizes in tileShape.ts). No other line is drawn on the body: the sides stay clean.
+ * Geometry built at another size sets `m.userData.slabScale`.
  */
 export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | undefined, trim: string) {
   const contact = !!m.userData.contact;
-  const key = `body:${stripes?.join(',') ?? ''}:${trim}:${contact}`;
+  const k = (m.userData.slabScale as number | undefined) ?? 1;
+  const key = `body2:${stripes?.join(',') ?? ''}:${trim}:${contact}:${k}`;
   if (m.userData.body === key) return;
   m.userData.body = key;
   const cols = (stripes ?? []).map((c) => new THREE.Color(c));
   const n = cols.length;
-  const seam = new THREE.Color(trim);
-  const t = `clamp((vSlabZ - (${BODY_Z0.toFixed(4)})) / ${(BODY_Z1 - BODY_Z0).toFixed(4)}, 0.0, 0.9999)`;
+  const metal = new THREE.Color(trim);
+  const t = `clamp((vSlabP.z - (${f4(BODY_Z0 * k)})) / ${f4((BODY_Z1 - BODY_Z0) * k)}, 0.0, 0.9999)`;
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSeam = { value: seam };
+    sh.uniforms.uBezel = { value: metal };
     if (n) sh.uniforms.uStripes = { value: cols };
     if (contact) groundShade(sh);
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vSlabZ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvSlabZ = position.z;');
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vSlabP;\nvarying vec3 vSlabTx;\nvarying vec3 vSlabTy;')
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vSlabP = position;
+        {
+          vec3 tx = vec3(1.0, 0.0, 0.0), ty = vec3(0.0, 1.0, 0.0);
+          #ifdef USE_INSTANCING
+          tx = mat3(instanceMatrix) * tx; ty = mat3(instanceMatrix) * ty;
+          #endif
+          vSlabTx = normalize(normalMatrix * tx); vSlabTy = normalize(normalMatrix * ty);
+        }`,
+      );
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', `#include <common>\nvarying float vSlabZ;\nuniform vec3 uSeam;${n ? `\nuniform vec3 uStripes[${n}];` : ''}`)
+      .replace('#include <common>', `#include <common>\nvarying vec3 vSlabP;\nvarying vec3 vSlabTx;\nvarying vec3 vSlabTy;\nuniform vec3 uBezel;${n ? `\nuniform vec3 uStripes[${n}];` : ''}`)
       .replace(
         '#include <map_fragment>',
         `#include <map_fragment>
         float slabT = ${t};
-        // The seam: a band just above the join with the back, with crisp edges; and a fine bezel
-        // line in the same metal running round the front, where the face is set.
-        float seamK = smoothstep(0.035, 0.05, slabT) * (1.0 - smoothstep(0.1, 0.115, slabT));
-        seamK = max(seamK, smoothstep(0.835, 0.845, slabT) * (1.0 - smoothstep(0.865, 0.875, slabT)));
+        // The bezel: a rounded-rectangle band on the flat front, anti-aliased, with a domed profile.
+        vec2 bzP = vSlabP.xy;
+        vec2 bzQ = abs(bzP) - vec2(${f4((BEZEL_HW - BEZEL_R) * k)}, ${f4((BEZEL_HH - BEZEL_R) * k)});
+        float bzD = length(max(bzQ, 0.0)) + min(max(bzQ.x, bzQ.y), 0.0) - ${f4(BEZEL_R * k)};
+        float bzAA = max(fwidth(bzD), 1e-5);
+        float bezelK = step(${f4((BODY_Z1 - 0.0006) * k)}, vSlabP.z) * (1.0 - smoothstep(-bzAA, bzAA, bzD)) * smoothstep(${f4(-BEZEL_W * k)} - bzAA, ${f4(-BEZEL_W * k)} + bzAA, bzD);
+        vec2 bzG = (bzQ.x > 0.0 && bzQ.y > 0.0) ? normalize(bzQ) : (bzQ.x > bzQ.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
+        bzG *= sign(bzP + 1e-6);
+        float bzT = clamp((bzD + ${f4(BEZEL_W * 0.5 * k)}) / ${f4(BEZEL_W * 0.5 * k)}, -0.97, 0.97);
+        vec3 bzTilt = (vSlabTx * bzG.x + vSlabTy * bzG.y) * (bzT / sqrt(1.0 - bzT * bzT)) * 0.55 * bezelK;
         ${
           n
             ? `{
@@ -83,10 +104,12 @@ export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | und
         }`
             : ''
         }
-        diffuseColor.rgb = mix(diffuseColor.rgb, uSeam, seamK);`,
+        diffuseColor.rgb = mix(diffuseColor.rgb, uBezel, bezelK);`,
       )
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.2, seamK);')
-      .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 1.0, seamK);');
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.17, bezelK);')
+      .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 1.0, bezelK);')
+      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = normalize(normal + bzTilt);')
+      .replace('#include <clearcoat_normal_fragment_maps>', '#include <clearcoat_normal_fragment_maps>\n#ifdef USE_CLEARCOAT\nclearcoatNormal = normalize(clearcoatNormal + bzTilt);\n#endif');
   };
   m.customProgramCacheKey = () => key;
   m.needsUpdate = true;

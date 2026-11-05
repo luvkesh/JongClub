@@ -222,12 +222,18 @@
 .board-diagram.focus-turns { position: relative; }
 .bd-turns { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
 .bd-turns svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.bd-arc-bg { fill: none; stroke: rgba(234, 208, 154, 0.18); stroke-width: 1.4; stroke-dasharray: 2 2.4; }
-.bd-arc { fill: none; stroke: #ead09a; stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; opacity: 0; filter: drop-shadow(0 0 1.5px rgba(234, 190, 110, 0.8)); animation: bd-arc 4s linear infinite; animation-delay: calc(var(--t) * 1s + 0.5s); }
-@keyframes bd-arc { 0% { stroke-dashoffset: 1; opacity: 1; } 15% { stroke-dashoffset: 0; opacity: 1; } 45% { stroke-dashoffset: 0; opacity: 1; } 60%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+.bd-arc-bg { fill: none; stroke: rgba(234, 208, 154, 0.18); stroke-width: 1.6; stroke-dasharray: 4 5; }
+/* Each arrow: the line draws in 0.6 s, landing as the next seat starts to glow, and only when it has reached the end does the head
+   land on it, pointing at the centre of the next seat. Then the whole arrow fades. */
+.bd-arrow { opacity: 0; filter: drop-shadow(0 0 2px rgba(234, 190, 110, 0.8)); animation: bd-arrow 4s linear infinite; animation-delay: calc(var(--t) * 1s + 0.4s); }
+.bd-arc { fill: none; stroke: #ead09a; stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; animation: bd-arc 4s linear infinite; animation-delay: inherit; }
+.bd-tip { fill: #ead09a; opacity: 0; transform-box: fill-box; transform-origin: center; animation: bd-tip 4s linear infinite; animation-delay: inherit; }
+@keyframes bd-arrow { 0% { opacity: 1; } 45% { opacity: 1; } 60%, 100% { opacity: 0; } }
+@keyframes bd-arc { 0% { stroke-dashoffset: 1; } 15%, 100% { stroke-dashoffset: 0; } }
+@keyframes bd-tip { 0%, 15% { opacity: 0; transform: scale(0.4); } 16% { opacity: 1; transform: scale(0.4); } 19% { transform: scale(1.12); } 21%, 100% { opacity: 1; transform: none; } }
 .focus-turns .bd-seat b { animation: bd-turn 4s ease-in-out infinite; animation-delay: calc(var(--t) * 1s); }
 @keyframes bd-turn { 0%, 22% { transform: scale(1.18); border-color: var(--brass-hi); box-shadow: 0 0 0 3px rgba(234, 208, 154, 0.25), 0 0 18px rgba(234, 190, 110, 0.7); } 30%, 100% { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .bd-arc { animation: none; opacity: 1; stroke-dashoffset: 0; } .focus-turns .bd-seat b { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bd-arrow, .bd-arc, .bd-tip { animation: none; opacity: 1; stroke-dashoffset: 0; } .focus-turns .bd-seat b { animation: none; } }
 
 /* The calling demo: face-up tiles fly between the seats, the centre and your sets. */
 .demo-call .xt.up { width: 5.6cqw; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4)); }

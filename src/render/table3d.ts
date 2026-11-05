@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { tileGeometry } from './tileShape';
 import type { GameState } from '../engine/state';
 import { TILE_ID_COUNT, kindOfTileId, WINDS, compareTiles, type HandSort, type Tile, type Wind } from '../engine/tiles';
 import { feltMotif, feltWeave } from './feltPattern';
@@ -798,12 +799,8 @@ export class TableRenderer {
   }
 
   private buildTiles() {
-    const ivory = new RoundedBoxGeometry(TW, TH, TD * 0.64, 3, 0.035);
-    ivory.translate(0, 0, TD * 0.18);
-    const jade = new RoundedBoxGeometry(TW, TH, TD * 0.4, 3, 0.035);
-    jade.translate(0, 0, -TD * 0.3);
-    const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-    face.translate(0, 0, TD / 2 + 0.0015);
+    // The shared tile shape (tileShape.ts): the Atelier, the mini-games and the website show the same tile.
+    const { body: ivory, back: jade, face } = tileGeometry(3);
     const jadeMat = new THREE.MeshPhysicalMaterial({ color: TILE_SET.back, roughness: 0.25, metalness: 0.05, clearcoatRoughness: 0.1 });
     this.backMat = jadeMat;
     // Tiles on the felt get contact shading (tileMaterials.ts).

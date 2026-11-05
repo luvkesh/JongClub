@@ -11,6 +11,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { TD, TH, TW } from '../render/table3d';
 import { currentTileSet, drawFace } from '../render/tileFaces';
 import { applyTileFinish } from '../render/tileMaterials';
+import { tileGeometry } from '../render/tileShape';
 import type { MiniGameDef } from './types';
 
 /** Card icon size in CSS pixels (minigames.css: .mini-medal). */
@@ -207,12 +208,7 @@ function render(def: MiniGameDef): string {
     }
     return m;
   };
-  const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, 3, 0.035);
-  body.translate(0, 0, TD * 0.18);
-  const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, 3, 0.035);
-  back.translate(0, 0, -TD * 0.3);
-  const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-  face.translate(0, 0, TD / 2 + 0.0015);
+  const { body, back, face } = tileGeometry(3);
   const C = TW * 1.1;
   const cubeBody = new RoundedBoxGeometry(C, C, C, 3, C * 0.12);
   const cubeFace = new THREE.PlaneGeometry(C * 0.66, C * 0.86);

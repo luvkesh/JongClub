@@ -8,7 +8,7 @@ declare const __BUILD_ID__: string | undefined;
 const DB = 'jongclub-faces';
 const STORE = 'faces';
 /** Faces from another build may be drawn differently: they are never reused. */
-export const FACE_STORE_VERSION = `${typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev'}.4`;
+export const FACE_STORE_VERSION = `${typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev'}.5`;
 
 let dbP: Promise<IDBDatabase | null> | null = null;
 

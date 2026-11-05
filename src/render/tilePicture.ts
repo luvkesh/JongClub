@@ -5,14 +5,11 @@
 // whose painted portrait stays as the fallback.
 
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { currentTileSet, drawBackOnce, drawBodyOnce, drawFaceOnce, mix, setTilePicture3d, withTileSet } from './tileFaces';
 import { BUMP, FINISH, apply, faceCoat, faceCoatRough, shadeBody } from './tileMaterials';
 import { previewRenderer } from './rackPreview';
+import { TD, TH, tileGeometry } from './tileShape';
 
-const TW = 0.3,
-  TH = 0.4,
-  TD = 0.22;
 /** Red dragon, a five of dots and a nine of characters stand; one more lies face down to show the back. */
 const KINDS = [31, 13, 8];
 
@@ -120,22 +117,19 @@ export function jewelStudio(w: number, h: number, stage: string, opts: { scale?:
  * The current set's tiles as at the table: body and back finishes, engraved faces with their relief,
  * metal and clear coat. `tile(kind)` builds one standing tile (null: no face); `dispose()` frees them.
  */
-export function jewelTiles() {
+export function jewelTiles(opts: { seg?: number; faceScale?: number; anisotropy?: number } = {}) {
+  const seg = opts.seg ?? 4,
+    faceScale = opts.faceScale ?? 2;
   const st = currentTileSet();
   const textures: THREE.Texture[] = [];
   const tex = (c: HTMLCanvasElement, color = true) => {
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = color ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-    t.anisotropy = 8;
+    t.anisotropy = opts.anisotropy ?? 8;
     textures.push(t);
     return t;
   };
-  const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, 4, 0.035);
-  body.translate(0, 0, TD * 0.18);
-  const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, 4, 0.035);
-  back.translate(0, 0, -TD * 0.3);
-  const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-  face.translate(0, 0, TD / 2 + 0.0015);
+  const { body, back, face } = tileGeometry(seg);
   const bodyMat = new THREE.MeshPhysicalMaterial();
   apply(bodyMat, FINISH[st.bodyFinish], st.stripes ? null : tex(drawBodyOnce()), false);
   shadeBody(bodyMat, st.stripes, st.trim);
@@ -148,7 +142,7 @@ export function jewelTiles() {
   const faceMat = (k: number) => {
     let m = faceMats.get(k);
     if (m) return m;
-    const { face: f, surface } = drawFaceOnce(k, 2, rough);
+    const { face: f, surface } = drawFaceOnce(k, faceScale, rough);
     const map = tex(f);
     const s = tex(surface, false);
     m = new THREE.MeshPhysicalMaterial({ map, emissiveMap: map, emissive: '#ffffff', emissiveIntensity: 0.1, metalnessMap: s, roughnessMap: s, bumpMap: s, bumpScale: BUMP, metalness: 1, roughness: 1, clearcoat: faceCoat(gf), clearcoatRoughness: faceCoatRough(gf), envMapIntensity: gf.env ?? 1 });

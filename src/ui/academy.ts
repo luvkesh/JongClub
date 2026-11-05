@@ -380,7 +380,7 @@ export const OPTIONAL_LESSONS: LessonId[] = ['tradition'];
 
 // ------------------------------------------------------------------ player
 
-function boardDiagram(focus: 'seats' | 'wall' | 'centre' | 'turns') {
+export function boardDiagram(focus: 'seats' | 'wall' | 'centre' | 'turns') {
   const seat = (w: string, pos: string, you = false) => h('div', { class: `bd-seat bd-${pos} ${focus === 'seats' ? 'on' : ''}`, style: focus === 'turns' ? `--t:${'ESWN'.indexOf(w)}` : null }, h('b', {}, w), h('span', {}, you ? tr('You') : pos === 'top' ? tr('Across') : pos === 'left' ? tr('Left') : tr('Right')));
   const board = h(
     'div',
@@ -392,9 +392,10 @@ function boardDiagram(focus: 'seats' | 'wall' | 'centre' | 'turns') {
     seat('E', 'bottom', true),
     h('div', { class: `bd-wall ${focus === 'wall' ? 'on' : ''}` }, h('div', { class: `bd-centre ${focus === 'centre' ? 'on' : ''}` }, focus === 'centre' ? tr('Discards') : '')),
     // The turn order: a gold arrow draws from each seat to the next, East, South, West, North, and round again.
-    focus === 'turns' ? h('span', { class: 'bd-turns', 'aria-hidden': 'true', html: TURN_ARCS }) : null,
+    focus === 'turns' ? h('span', { class: 'bd-turns', 'aria-hidden': 'true' }) : null,
   );
   if (focus !== 'turns') return board;
+  drawTurnArcs(board);
   // The turn order, with two ways to remember it: the first letters spell East, South, West, North.
   const phrase = (words: string[]) => h('span', { class: 'bd-phrase' }, ...words.flatMap((w, i) => [i ? ' ' : '', h('b', {}, w[0]), w.slice(1)]));
   return h(
@@ -405,8 +406,92 @@ function boardDiagram(focus: 'seats' | 'wall' | 'centre' | 'turns') {
   );
 }
 
-const TURN_PATHS = ['M58 79 Q77 77 79 58', 'M79 42 Q77 23 58 21', 'M42 21 Q23 23 21 42', 'M21 58 Q23 77 42 79'];
-const TURN_ARCS = `<svg viewBox="0 0 100 100"><defs><marker id="bd-tip" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#ead09a"/></marker></defs>${TURN_PATHS.map((d) => `<path class="bd-arc-bg" d="${d}"/>`).join('')}${TURN_PATHS.map((d, i) => `<path class="bd-arc" style="--t:${i}" d="${d}" pathLength="1" marker-end="url(#bd-tip)"/>`).join('')}</svg>`;
+// The turn arrows are measured from the seat circles as they sit on screen, so each curve
+// leaves its seat aiming outward and lands pointing straight at the centre of the next
+// seat, its tip stopping just short of the circle's edge. The head is drawn as its own
+// triangle (no SVG marker) so it can wait until the line has finished drawing.
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function drawTurnArcs(board: HTMLElement) {
+  const layer = board.querySelector<HTMLElement>('.bd-turns');
+  if (!layer) return;
+  const draw = () => {
+    const w = board.clientWidth, hgt = board.clientHeight;
+    if (!w || !hgt) return;
+    const box = board.getBoundingClientRect();
+    const k = w / (box.width || w);
+    // Circle centres in board pixels, read from the seats (which only translate) plus the
+    // circle's own offset inside its seat, so the glowing scale on the circle doesn't skew it.
+    const seats = 'ESWN'.split('').map((wind) => {
+      const seat = [...board.querySelectorAll<HTMLElement>('.bd-seat')].find((el) => el.querySelector('b')?.textContent === wind);
+      const b = seat?.querySelector<HTMLElement>('b');
+      if (!seat || !b) return null;
+      const r = seat.getBoundingClientRect();
+      const ox = (r.left - box.left) * k, oy = (r.top - box.top) * k;
+      const name = seat.querySelector<HTMLElement>('span');
+      const label = name ? { x0: ox + name.offsetLeft - 3, y0: oy + name.offsetTop - 2, x1: ox + name.offsetLeft + name.offsetWidth + 3, y1: oy + name.offsetTop + name.offsetHeight + 2 } : null;
+      return { x: ox + b.offsetLeft + b.offsetWidth / 2, y: oy + b.offsetTop + b.offsetHeight / 2, r: b.offsetWidth / 2, label };
+    });
+    if (seats.some((c) => !c)) return;
+    type Seat = { x: number; y: number; r: number; label: { x0: number; y0: number; x1: number; y1: number } | null };
+    const c = seats as Seat[];
+    const mid = { x: c.reduce((a, p) => a + p.x, 0) / 4, y: c.reduce((a, p) => a + p.y, 0) / 4 };
+    // The gap clears the glow ring and the 1.18 scale the seat takes when its turn comes.
+    const head = Math.max(8, w * 0.034), wide = head * 0.6, gap = (r: number) => r * 0.2 + 5;
+    // How far out from a seat's centre a line in direction (vx, vy) must start or stop: past
+    // the circle, and past the seat's name if the line would cross it, so no arrow runs
+    // through a label while it still aims at the centre.
+    const clear = (p: Seat, vx: number, vy: number) => {
+      let d = p.r + gap(p.r);
+      const L = p.label;
+      if (L) {
+        let t0 = -Infinity, t1 = Infinity;
+        for (const [o, v, lo, hi] of [[p.x, vx, L.x0, L.x1], [p.y, vy, L.y0, L.y1]]) {
+          if (Math.abs(v) < 1e-6) { if (o < lo || o > hi) { t0 = Infinity; } continue; }
+          const ta = (lo - o) / v, tb = (hi - o) / v;
+          t0 = Math.max(t0, Math.min(ta, tb)); t1 = Math.min(t1, Math.max(ta, tb));
+        }
+        if (t0 <= t1 && t1 > 0) d = Math.max(d, t1 + 3);
+      }
+      return d;
+    };
+    const unit = (x: number, y: number) => { const l = Math.hypot(x, y) || 1; return { x: x / l, y: y / l }; };
+    const f = (n: number) => n.toFixed(1);
+    const arcs = c.map((a, i) => {
+      const b = c[(i + 1) % 4];
+      // The bend: the corner between the two seats, pulled toward the middle so each arrow
+      // meets its seat on the diagonal, clear of the seat names under the circles.
+      const q = { x: a.x + b.x - mid.x, y: a.y + b.y - mid.y };
+      const qa = { x: mid.x + (q.x - mid.x) * 0.62, y: mid.y + (q.y - mid.y) * 0.62 };
+      const out = unit(qa.x - a.x, qa.y - a.y), inn = unit(b.x - qa.x, b.y - qa.y);
+      const da = clear(a, out.x, out.y), db = clear(b, -inn.x, -inn.y);
+      const s0 = { x: a.x + out.x * da, y: a.y + out.y * da };
+      const tip = { x: b.x - inn.x * db, y: b.y - inn.y * db };
+      // The line stops at the base of the head; since the base lies on the line from the
+      // bend to the target, the curve's last direction runs through the target's centre.
+      const base = { x: tip.x - inn.x * head, y: tip.y - inn.y * head };
+      const d = `M${f(s0.x)} ${f(s0.y)} Q${f(qa.x)} ${f(qa.y)} ${f(base.x)} ${f(base.y)}`;
+      const nx = -inn.y, ny = inn.x;
+      const tri = `M${f(tip.x)} ${f(tip.y)} L${f(base.x + nx * wide)} ${f(base.y + ny * wide)} L${f(base.x - inn.x * head * 0.18)} ${f(base.y - inn.y * head * 0.18)} L${f(base.x - nx * wide)} ${f(base.y - ny * wide)} Z`;
+      return { d, tri, i };
+    });
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${w} ${hgt}`);
+    svg.innerHTML = arcs.map((a) => `<path class="bd-arc-bg" d="${a.d}"/>`).join('')
+      + arcs.map((a) => `<g class="bd-arrow" style="--t:${a.i}"><path class="bd-arc" d="${a.d}" pathLength="1"/><path class="bd-tip" d="${a.tri}"/></g>`).join('');
+    layer.replaceChildren(svg);
+  };
+  let last = '';
+  const ro = new ResizeObserver(() => {
+    const key = `${board.clientWidth}x${board.clientHeight}`;
+    if (key === last) return;
+    last = key;
+    draw();
+  });
+  ro.observe(board);
+  // Fonts and labels settle after the first frame; measure again once they have.
+  requestAnimationFrame(() => requestAnimationFrame(draw));
+  document.fonts?.ready.then(() => { if (board.isConnected) draw(); });
+}
 
 function sceneVisual(v: Visual, labels: boolean): HTMLElement {
   if ('board' in v) return boardDiagram(v.board);
