@@ -166,6 +166,12 @@ p { margin: 0; }
 .num { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; border-left: 1px solid var(--line-strong); }
 .num b { font: 600 clamp(56px, 8vw, 112px)/0.9 var(--display); background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .num span { font: 500 13px/1.4 var(--ui); letter-spacing: 0.22em; text-transform: uppercase; color: var(--text); }
+/* A rendered 3D icon over each number (website/tools/staticons.*). */
+.num-ic { display: block; width: clamp(108px, 11vw, 156px); height: auto; aspect-ratio: 1; margin: -10px 0 0 -14px; transition: transform 0.6s cubic-bezier(.2,.7,.2,1); }
+.num:hover .num-ic { transform: translateY(-4px) rotate(-2deg); }
+[dir="rtl"] .num-ic { margin: -10px -14px 0 0; }
+@media (max-width: 640px) { .num-ic { width: 100px; margin: -6px 0 0 -10px; } [dir="rtl"] .num-ic { margin: -6px -10px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .num-ic { transition: none; } .num:hover .num-ic { transform: none; } }
 
 /* ---------- companions */
 .cast { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -326,6 +332,7 @@ p, li span { text-wrap: pretty; }
 .subhead { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
 .subhead h3 { font: 600 clamp(30px, 3.6vw, 48px)/1.1 var(--serif); color: var(--ivory); }
 .subhead p { max-width: 54ch; color: var(--muted); }
+#earn { display: flex; flex-direction: column; gap: clamp(48px, 6vw, 80px); }
 .earn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .earn .pending { margin-top: auto; }
 .earn article { padding: 26px 24px; border: 1px solid var(--line); border-radius: 8px; background: rgba(20, 18, 12, 0.6); display: flex; flex-direction: column; gap: 12px; }
@@ -887,7 +894,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <div class="vcard"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>Wright-Patterson</b><small>House rules · US club game</small></div></div>
         <div class="vcard"><span class="flag" aria-hidden="true">🇦🇪</span><div><b>UAE / Dubai Rules</b><small>House rules</small></div></div>
       </div>
-      <div class="vtour">
+      <div class="vtour" id="world-tour">
         <div class="vt-text">
           <p class="kicker"><span class="ring"><span class="icon">{{ICON:globe}}</span></span>Passport</p>
           <h3>World Tour</h3>
@@ -904,7 +911,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <p class="kicker"><span class="ring"><span class="icon">{{ICON:puzzle}}</span></span>Games for one</p>
         <h2 class="title">Mini-games</h2>
         <div class="rule"></div>
-        <p class="sub">Twelve solo games in 3D, on your own tiles, table and room.</p>
+        <p class="sub">Twenty solo games in 3D, on your own tiles, table and room.</p>
       </div>
       <div class="mg-mosaic">
         <figure class="shot main"><img src="minigames/solitaire-1800.jpg" srcset="minigames/solitaire-1800.jpg 1800w, minigames/solitaire.jpg 2880w" sizes="(max-width: 960px) 100vw, 64vw" loading="lazy" alt="Mahjong Solitaire laid out in the Turtle layout on Gilded Porcelain tiles, on the club table."></figure>
@@ -936,16 +943,24 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <li><span class="gicon" style="background-image:url(minigames/sheet-match3.webp)" aria-hidden="true"></span><div><b>Mahjong Match-3</b><span>Swap tiles to line up three of a kind. Four makes a Dragon.</span></div></li>
         <li><span class="gicon" style="background-image:url(minigames/sheet-timed.webp)" aria-hidden="true"></span><div><b>Timed Mahjong</b><span>Beat the clock. Every pair wins back a few seconds.</span></div></li>
         <li><span class="gicon" style="background-image:url(minigames/sheet-blitz.webp)" aria-hidden="true"></span><div><b>Mahjong Blitz</b><span>Ninety seconds. Clear as many pairs as you can.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-hex.webp)" aria-hidden="true"></span><div><b>Mahjong Hex</b><span>A honeycomb of tiles. A tile is free with three open sides in a row.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-colour.webp)" aria-hidden="true"></span><div><b>Mahjong Colour Match</b><span>Sort mixed rows until each one holds a single suit.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-survival.webp)" aria-hidden="true"></span><div><b>Mahjong Survival</b><span>Rows creep toward you. Match the free ends and hold the line.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-treasure.webp)" aria-hidden="true"></span><div><b>Mahjong Treasure Hunt</b><span>Read the Dots clues to dig up hidden flowers and seasons.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-boss.webp)" aria-hidden="true"></span><div><b>Mahjong Boss Challenge</b><span>Match pairs to strike a giant tile before it strikes back.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-chain.webp)" aria-hidden="true"></span><div><b>Mahjong Chain Reaction</b><span>Clear touching groups of one suit. Bigger groups score more.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-rush.webp)" aria-hidden="true"></span><div><b>Mahjong Puzzle Rush</b><span>Pick the tile that makes a pung or a run, against the clock.</span></div></li>
+        <li><span class="gicon" style="background-image:url(minigames/sheet-dungeon.webp)" aria-hidden="true"></span><div><b>Mahjong Dungeon</b><span>Lead the Red Dragon past monsters to the key and the door.</span></div></li>
       </ul>
     </div>
   </section>
 
   <section class="numerals" aria-label="The club in numbers">
     <div class="wrap">
-      <div class="num"><b>30</b><span>Variations</span></div>
-      <div class="num"><b>18</b><span>Destinations</span></div>
-      <div class="num"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
-      <div class="num"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/variations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>30</b><span>Variations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/destinations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>18</b><span>Destinations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/tilesets.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/rooms.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
     </div>
   </section>
 
@@ -975,6 +990,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
       </div>
       </div>
 
+      <div id="earn">
       <div class="subhead">
         <p class="kicker"><span class="ring"><span class="icon">{{ICON:coins}}</span></span>How pieces are earned</p>
         <h3>Play for It</h3>
@@ -986,6 +1002,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <article><span class="badge"><span class="icon">{{ICON:wallet}}</span></span><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></article>
       </div>
       <p class="promise"><span class="icon">{{ICON:shield-check}}</span>Nothing in the Atelier changes gameplay or your rating.</p>
+      </div>
     </div>
   </section>
 
