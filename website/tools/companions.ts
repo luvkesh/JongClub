@@ -101,10 +101,10 @@ export function portrait(name: string, size = 640, ss = 2, o: Opts = {}): string
   fig.group.traverse((x) => x.scale.y < 0.5 && x.scale.y > 0 && x.scale.x === 1 && (x.scale.y = 1));
   // No table in front: hide the forearms and hands that rest on its rim.
   fig.group.updateMatrixWorld(true);
-  fig.group.children.forEach((o) => new THREE.Box3().setFromObject(o).max.y < 0.45 && (o.visible = false));
+  fig.group.children.flatMap((c) => (c.children.length && c.type === 'Group' && c.scale.x !== 1 ? c.children : [])).forEach((o) => new THREE.Box3().setFromObject(o).max.y < 0.45 && (o.visible = false));
   const cam = new THREE.PerspectiveCamera(20, 1, 0.1, 50);
-  cam.position.set(0, 1.8, 6.4);
-  cam.lookAt(0, 1.56, 0);
+  cam.position.set(0, 1.86, 5.7);
+  cam.lookAt(0, 1.64, 0);
   r.render(scene, cam);
 
   const out = document.createElement('canvas');
@@ -126,9 +126,9 @@ export function portrait(name: string, size = 640, ss = 2, o: Opts = {}): string
 
 /** Three friends for the "Your Friends" card: player looks from the avatar shop, side by side. */
 export const FRIENDS: AvatarSpec[] = [
-  { ...DEFAULT_AVATAR, face: 'round', eyes: 'round', nose: 'button', skin: 7, hair: 'long', hairColor: '#3b2a20', hairPart: 'centre', hairBun: 'top', outfit: 'sweater', outfitColor: '#a3242c', eyeColor: '#4a2c1a' },
-  { ...DEFAULT_AVATAR, face: 'round', eyes: 'round', nose: 'button', skin: 3, hair: 'short', hairColor: '#1b1715', outfit: 'blazer', outfitColor: '#1d2a4e', eyewear: 'sunglasses', eyeColor: '#2a1a12' },
-  { ...DEFAULT_AVATAR, face: 'round', eyes: 'round', nose: 'button', skin: 0, hair: 'bob', hairColor: '#a37b4c', hairPart: 'centre', outfit: 'qipao', outfitColor: '#245a3e', eyeColor: '#4a2c1a' },
+  { ...DEFAULT_AVATAR, face: 'oval', eyes: 'round', nose: 'button', skin: 7, hair: 'long', hairColor: '#3b2a20', hairPart: 'centre', hairBun: 'top', outfit: 'sweater', outfitColor: '#a3242c', eyeColor: '#4a2c1a' },
+  { ...DEFAULT_AVATAR, face: 'oval', eyes: 'round', nose: 'button', skin: 3, hair: 'short', hairColor: '#1b1715', outfit: 'blazer', outfitColor: '#1d2a4e', eyewear: 'sunglasses', eyeColor: '#2a1a12' },
+  { ...DEFAULT_AVATAR, face: 'oval', eyes: 'round', nose: 'button', skin: 0, hair: 'bob', hairColor: '#a37b4c', hairPart: 'centre', outfit: 'qipao', outfitColor: '#245a3e', eyeColor: '#4a2c1a' },
 ];
 
 /** A group portrait of FRIENDS, the middle one a step forward, the others turned in toward them. */
@@ -150,7 +150,7 @@ export function friends(size = 640, ss = 2, exposure = 1.0): string {
     fig.group.traverse((o) => o.scale.y < 0.5 && o.scale.y > 0 && o.scale.x === 1 && (o.scale.y = 1));
     // No table in front of them: hide the forearms and hands that rest on its rim.
     fig.group.updateMatrixWorld(true);
-    fig.group.children.forEach((o) => new THREE.Box3().setFromObject(o).max.y - fig.group.position.y < 0.45 && (o.visible = false));
+    fig.group.children.flatMap((c) => (c.children.length && c.type === 'Group' && c.scale.x !== 1 ? c.children : [])).forEach((o) => new THREE.Box3().setFromObject(o).max.y - fig.group.position.y < 0.45 && (o.visible = false));
     return fig;
   });
   const cam = new THREE.PerspectiveCamera(26, 1, 0.1, 50);

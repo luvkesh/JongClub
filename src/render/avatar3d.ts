@@ -15,10 +15,10 @@ const GOLD = '#c8a46a';
 const UP = new THREE.Vector3(0, 1, 0);
 
 /** Head centre in figure space (feet at the floor far below; y 0 is the table top). */
-const HEAD_Y = 1.6;
+const HEAD_Y = 1.7;
 const HEAD_R = 0.42;
 /** The head group's scale on the shoulders: a big, friendly head, as stylised characters wear it. */
-const HEAD_SCALE = 1.12;
+const HEAD_SCALE = 1.02;
 /** Where the head pivots (top of the neck). */
 const NECK_Y = 1.14;
 /** Where the head's centre ends up, after HEAD_SCALE. */
@@ -29,17 +29,17 @@ const FACE: Record<string, [number, number, number]> = { oval: [1, 1, 1], round:
 
 /** Head ellipsoid radii (x, upper y, lower y, z); the lower half tapers toward the chin. */
 /** How much the head narrows toward the chin. */
-const JAW = 0.2;
-const HEAD_AX = HEAD_R * 0.97,
-  HEAD_UP = HEAD_R * 1.06,
-  HEAD_DN = HEAD_R * 0.98,
-  HEAD_AZ = HEAD_R * 0.97;
+const JAW = 0.36;
+const HEAD_AX = HEAD_R * 0.88,
+  HEAD_UP = HEAD_R * 1.08,
+  HEAD_DN = HEAD_R * 1.06,
+  HEAD_AZ = HEAD_R * 0.95;
 
 /** Eye centre (x either side, height above the head centre): big eyes set low and wide. */
-const EYE_X = 0.158,
-  EYE_Y = -0.012;
+const EYE_X = 0.145,
+  EYE_Y = -0.005;
 /** Eyeball radius. */
-const EYE_R = 0.092;
+const EYE_R = 0.085;
 
 /**
  * Mesh and texture detail, fixed for the session: smooth silhouettes and fine
@@ -80,7 +80,7 @@ function sculpt(x: number, dy: number, nose: string) {
   // A gentle brow.
   d += 0.008 * gauss(ax, dy, 0.14, 0.12, 0.1, 0.03);
   // Full, round cheeks.
-  d += 0.034 * gauss(ax, dy, 0.2, -0.12, 0.085, 0.07);
+  d += 0.012 * gauss(ax, dy, 0.19, -0.1, 0.07, 0.06);
   // A small round chin.
   d += 0.016 * gauss(x, dy, 0, -0.29, 0.07, 0.045);
   return d;
@@ -866,6 +866,11 @@ export class SeatFigure {
     // Few draw calls: everything that never moves on its own is merged per material.
     mergeStatic(this.group, new Set<THREE.Object3D>([this.head, this.torso]));
     mergeStatic(this.head, new Set<THREE.Object3D>(this.eyes));
+    // A slender build: the body (not the head) narrowed across the shoulders and front to back.
+    const body = new THREE.Group();
+    for (const c of [...this.group.children]) if (c !== this.head) body.add(c);
+    body.scale.set(0.74, 1, 0.86);
+    this.group.add(body);
   }
 
   private buildBody() {
@@ -874,7 +879,7 @@ export class SeatFigure {
     this.torso = mesh(lathe, m.outfit, this.group);
     this.torso.scale.set(TORSO_SX, 1, TORSO_SZ);
     // Neck.
-    mesh(geo('neck', () => new THREE.CylinderGeometry(0.19, 0.22, 0.34, seg(14))), m.skinShade, this.group, 0, 1.22, 0);
+    mesh(geo('neck', () => new THREE.CylinderGeometry(0.145, 0.17, 0.4, seg(14))), m.skinShade, this.group, 0, 1.25, 0);
     // Arms: upper arm down from the shoulder, forearm forward onto the rim, a hand at rest.
     for (const side of [-1, 1]) {
       const sh = new THREE.Vector3(side * 0.86, 0.86, 0);
