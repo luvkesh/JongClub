@@ -1,6 +1,7 @@
 // Small pieces every mini-game shares: which tiles match, building decks,
 // an undo stack, a game clock and time formatting.
 
+import * as THREE from 'three';
 import { FLOWER_BASE, KIND_COUNT } from '../engine/tiles';
 import type { Rng } from '../engine/rng';
 import type { TileLook } from './board';
@@ -110,4 +111,35 @@ export function fmtClock(sec: number): string {
 /** A tile's resting look in a layered game: free tiles gold-edged, blocked ones shaded (when the setting is on). */
 export function freeLook(isFree: boolean, on = highlightFree()): TileLook {
   return on ? (isFree ? 'free' : 'blocked') : 'normal';
+}
+
+/**
+ * A tile's family for the suit games (Colour Match, Chain Reaction): 0 Characters,
+ * 1 Dots, 2 Bamboo, 3 Winds, 4 Dragons, 5 Flowers, 6 Seasons.
+ */
+export function family(kind: number): number {
+  if (kind < 27) return Math.floor(kind / 9);
+  if (kind < 31) return 3;
+  if (kind < 34) return 4;
+  return kind < FLOWER_BASE + 4 ? 5 : 6;
+}
+/** The kinds in each family, in the order of family(). */
+export const FAMILY_KINDS: number[][] = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8],
+  [9, 10, 11, 12, 13, 14, 15, 16, 17],
+  [18, 19, 20, 21, 22, 23, 24, 25, 26],
+  [27, 28, 29, 30],
+  [31, 32, 33],
+  FLOWER_KINDS,
+  SEASON_KINDS,
+];
+
+/** A small wooden lane or tray laid on the felt under tiles (Colour Match rows, Dungeon floor). */
+export function woodMaterial(color = '#5b321b') {
+  return new THREE.MeshPhysicalMaterial({ color, roughness: 0.42, clearcoat: 0.7, clearcoatRoughness: 0.25 });
+}
+
+/** A bar of gold light on the felt: paths, danger lines, Boss strikes. */
+export function goldMaterial(opacity = 1) {
+  return new THREE.MeshStandardMaterial({ color: '#f3d48a', emissive: '#c79a3c', emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.3, transparent: opacity < 1, opacity });
 }

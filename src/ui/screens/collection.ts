@@ -4,7 +4,8 @@
 
 import { CATALOG, CATEGORY_LABELS, type Cosmetic, type CosmeticCategory } from '../../cosmetics/catalog';
 import { saveProfile } from '../../progression/profile';
-import { buy, equip, equipped, owns, preview } from '../atelier';
+import { buy, equip, equipped, owns, picture, preview } from '../atelier';
+import { tablePreview } from '../../render/tablePreview';
 import type { AppCtx } from '../ctx';
 import { fmt, h } from '../dom';
 import { glyph } from '../glyphs';
@@ -179,7 +180,7 @@ function autoTableCard(ctx: AppCtx) {
   return h(
     'article',
     { class: `cc-card owned ${on ? 'equipped' : ''}` },
-    h('div', { class: 'cc-prev' }, h('div', { class: 'item-prev felt auto', style: { background: 'conic-gradient(#17402f, #1a2440, #0f4a46, #3a2a1c, #5a4321, #17402f)' } }), on ? h('span', { class: 'cc-badge' }, h('span', { class: 'cc-state-ico', html: glyph('check') }), tr('Equipped')) : null),
+    h('div', { class: 'cc-prev' }, picture('table-prev auto', () => tablePreview('classic-green'), 'conic-gradient(#17402f, #1a2440, #0f4a46, #3a2a1c, #5a4321, #17402f)'), on ? h('span', { class: 'cc-badge' }, h('span', { class: 'cc-state-ico', html: glyph('check') }), tr('Equipped')) : null),
     h(
       'div',
       { class: 'cc-body' },
