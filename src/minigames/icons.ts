@@ -328,6 +328,80 @@ function render(def: MiniGameDef): string {
       tiltX = 0.22;
       break;
     }
+    case 'lanes': {
+      // Colour Match: three short wooden lanes, the middle one sorted to one suit.
+      const wood = new THREE.MeshPhysicalMaterial({ color: '#5b321b', roughness: 0.4, clearcoat: 0.7 });
+      mats.push(wood);
+      const laneG = new THREE.BoxGeometry(TW + 0.05, 0.02, (TH + 0.012) * 3 + 0.05);
+      geos.push(laneG);
+      [-1, 0, 1].forEach((l, n) => {
+        const lane = new THREE.Mesh(laneG, wood);
+        lane.position.set(l * (TW + 0.11), 0.01, 0);
+        model.add(lane);
+        for (let s = 0; s < (l === 1 ? 2 : 3); s++) tile(l === 0 ? k(1) + s : k(n * 2 + s), l * (TW + 0.11), 0.02 + TD / 2, (s - 1) * (TH + 0.012), flat);
+      });
+      tiltX = 0.85;
+      break;
+    }
+    case 'rows':
+      // Survival: staggered rows creeping toward a gold line.
+      for (let r = 0; r < 3; r++) for (let x = 0; x < 4 - (r === 0 ? 1 : 0); x++) tile(k(r * 3 + x), (x - 1.5 + (r === 0 ? 0.5 : 0)) * (TW + 0.012), TD / 2, (r - 1.2) * (TH + 0.03), flat);
+      {
+        const gold = new THREE.MeshStandardMaterial({ color: '#f0cf7e', emissive: '#a77d2c', emissiveIntensity: 0.8, metalness: 0.6, roughness: 0.3 });
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(TW * 4.4, 0.012, 0.025), gold);
+        bar.position.set(0, 0.006, 1.3 * (TH + 0.03));
+        model.add(bar);
+        mats.push(gold);
+        geos.push(bar.geometry);
+      }
+      tiltX = 0.85;
+      break;
+    case 'chest':
+      // Treasure Hunt: face-down tiles with a flower and its Dots clue turned up.
+      for (let x = 0; x < 3; x++)
+        for (let y = 0; y < 2; y++) {
+          const up = (x === 0 && y === 1) || (x === 1 && y === 0) || (x === 2 && y === 1);
+          tile(up ? k(x + y) : k(0), (x - 1) * (TW + 0.015), TD / 2 + (x === 1 && y === 0 ? 0.03 : 0), (y - 0.5) * (TH + 0.015), up ? flat : -flat, 0, up ? 0 : Math.PI);
+        }
+      tiltX = 0.8;
+      break;
+    case 'duel':
+      // Boss Challenge: a great tile looming over a small wall.
+      tile(k(0), 0, TH * 0.9, -TH * 0.55, 0, 0, 0).scale.setScalar(1.8);
+      for (let i = 0; i < 4; i++) tile(k(i + 1), (i - 1.5) * (TW + 0.012), TD / 2, TH * 0.75, flat);
+      tiltX = 0.3;
+      break;
+    case 'burst':
+      // Chain Reaction: an L-shaped group of one suit lifting off together.
+      [[0, 0], [1, 0], [2, 0], [0, 1]].forEach(([x, y], n) => tile(k(n), (x - 1) * (TW + 0.015), TD / 2 + 0.05 + n * 0.012, (y - 0.5) * (TH + 0.015), flat));
+      tile(k(4), 1 * (TW + 0.015) - TW - 0.015, TD / 2, 0.5 * (TH + 0.015), flat, 0, 0);
+      tile(k(5), 1 * (TW + 0.015), TD / 2, 0.5 * (TH + 0.015), flat);
+      tiltX = 0.8;
+      break;
+    case 'quiz':
+      // Puzzle Rush: two tiles of a run and the third flying in.
+      tile(k(0), -TW * 1.05, TH / 2, 0, -0.08);
+      tile(k(1), 0, TH / 2, 0, -0.08);
+      tile(k(2), TW * 1.15, TH / 2 + 0.06, 0.06, -0.08, -0.3, -0.18);
+      tiltX = 0.2;
+      break;
+    case 'hex':
+      // Hex: a small honeycomb of seven tiles.
+      [[0, 0], [1, 0], [-1, 0], [0.5, -1], [-0.5, -1], [0.5, 1], [-0.5, 1]].forEach(([x, y], n) => tile(k(n), x * (TW + 0.02), TD / 2, y * (TH + 0.015), flat));
+      tiltX = 0.85;
+      break;
+    case 'dungeon': {
+      // Dungeon: the Red Dragon hero standing on a floor of tiles.
+      const floor = new THREE.MeshPhysicalMaterial({ color: '#3c2416', roughness: 0.45, clearcoat: 0.6 });
+      mats.push(floor);
+      const fg = new THREE.BoxGeometry((TW + 0.05) * 3 + 0.04, 0.02, (TH + 0.05) * 2 + 0.04);
+      geos.push(fg);
+      model.add(new THREE.Mesh(fg, floor));
+      for (let x = 0; x < 3; x++) for (let y = 0; y < 2; y++) if (!(x === 1 && y === 1)) tile(k(1 + x + y * 3), (x - 1) * (TW + 0.05), 0.02 + TD / 2, (y - 0.5) * (TH + 0.05), flat);
+      tile(k(0), 0, TH / 2 + 0.02, 0.5 * (TH + 0.05), 0, 0, 0);
+      tiltX = 0.55;
+      break;
+    }
     case 'grid':
     case 'path': {
       const w = TW + 0.015,

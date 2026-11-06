@@ -456,11 +456,12 @@ export class MiniPlay {
     const today = earnedToday(this.def.id);
     const row = (k: string, v: string) => h('div', { class: 'stat' }, h('span', { class: 'k' }, k), h('span', { class: 'v' }, v));
     const mins = `${Math.floor(r.seconds / 60)}:${String(Math.round(r.seconds) % 60).padStart(2, '0')}`;
-    const title = r.won ? (this.start.daily ? tr('Daily puzzle solved') : tr('Board cleared')) : tr('Good try');
+    const title = r.won ? (this.start.daily ? tr('Daily puzzle solved') : r.headline ?? tr('Board cleared')) : tr('Good try');
+    const tally = r.tally === undefined ? { label: tr('Tiles cleared'), text: `${r.cleared} / ${r.total}` } : r.tally;
     this.sheet(
       h('p', { class: 'eyebrow' }, this.def.title),
       h('h2', { class: 'results-title' }, title),
-      h('div', { class: 'mini-result-stats' }, row(tr('Score'), fmt(r.score)), row(tr('Time'), mins), row(tr('Tiles cleared'), `${r.cleared} / ${r.total}`)),
+      h('div', { class: 'mini-result-stats' }, row(tr('Score'), fmt(r.score)), row(tr('Time'), mins), tally ? row(tally.label, tally.text) : null),
       bestScore || bestTime ? h('p', { class: 'mini-best' }, bestScore ? tr('New best score') : tr('New best time')) : null,
       r.notes?.length ? h('ul', { class: 'mini-notes' }, ...r.notes.map((n) => h('li', {}, n))) : null,
       r.hints + r.undos + r.shuffles ? h('p', { class: 'muted small' }, tr('Hints {h} · Undos {u} · Shuffles {s}', { h: r.hints, u: r.undos, s: r.shuffles })) : null,
