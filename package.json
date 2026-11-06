@@ -11,7 +11,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "server": "node server/index.js",
-    "check:layout": "node scripts/check-layout.mjs"
+    "check:layout": "node scripts/check-layout.mjs",
+    "i18n:review": "node scripts/i18n-review.mjs",
+    "i18n:apply": "node scripts/i18n-apply.mjs"
   },
   "dependencies": {
     "three": "0.169.0"
