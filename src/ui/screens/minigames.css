@@ -28,10 +28,11 @@
     radial-gradient(70% 160% at 12% 50%, rgba(86, 170, 122, 0.35), transparent 70%),
     linear-gradient(100deg, #12382a, #0d2a1f 55%, #0f3225);
   box-shadow: var(--hi), 0 0 0 1px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25); }
+.mini-daily { cursor: pointer; }
 .mini-daily::before, .mini-daily::after { content: '✦'; position: absolute; color: #f6dfa4; font-size: 12px; line-height: 1; opacity: 0.8; pointer-events: none; text-shadow: 0 0 6px rgba(246, 223, 164, 0.8); }
 .mini-daily::before { left: 12px; top: 9px; }
 .mini-daily::after { right: 12px; bottom: 8px; font-size: 10px; }
-.mini-daily-medal { --sz: 108px; width: 116px; height: 92px; margin: -2px 0; flex: none; }
+.mini-daily .mini-daily-medal { --sz: 108px; width: 116px; height: 92px; margin: -2px 0; flex: none; }
 .mini-daily-text { flex: 1 1 auto; min-width: 0; }
 .mini-daily-text h3 { margin: 0; font-size: 24px; }
 .mini-daily-text p { margin: 2px 0 0; color: rgba(244, 236, 218, 0.82); font-size: 14.5px; }
@@ -101,7 +102,7 @@
   .mini-stat-txt .k { font-size: 9.5px; letter-spacing: 0.12em; }
   .mini-stat-txt .v { font-size: 17px; }
   .mini-daily { flex-wrap: wrap; padding: 10px 12px; gap: 8px 12px; }
-  .mini-daily-medal { --sz: 80px; width: 84px; height: 70px; }
+  .mini-daily .mini-daily-medal { --sz: 80px; width: 84px; height: 70px; }
   .mini-daily-text { flex: 1 1 calc(100% - 96px); }
   .mini-daily-text h3 { font-size: 20px; }
   .mini-daily-text p { font-size: 13px; }

@@ -12,6 +12,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { TD, TH, TW } from '../render/table3d';
 import { drawFace, hasFace } from '../render/tileFaces';
 import { applyTileFinish, dressFace } from '../render/tileMaterials';
+import { tileGeometry } from '../render/tileShape';
 
 export type TileLook = 'normal' | 'free' | 'hover' | 'selected' | 'hint' | 'dim' | 'blocked' | 'locked';
 
@@ -220,12 +221,9 @@ export class TileBoard {
       this.h = TH * s;
       this.d = TD * s;
       // The same two-part tile as the main table: ivory face block and coloured back.
-      const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, 3, 0.035);
-      body.translate(0, 0, TD * 0.18);
-      const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, 3, 0.035);
-      back.translate(0, 0, -TD * 0.3);
-      const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-      face.translate(0, 0, TD / 2 + 0.0015);
+      // The shared tile shape (tileShape.ts); the body's bezel shading follows the board's scale.
+      const { body, back, face } = tileGeometry(3);
+      this.bodyMat.userData.slabScale = s;
       // A gold halo a touch larger than the tile, just under its top: it shows as a
       // bright edge all round a free tile and never covers the face.
       const rim = new RoundedBoxGeometry(TW * 1.075, TH * 1.06, TD * 0.72, 3, 0.04);
@@ -569,6 +567,17 @@ export class TileBoard {
     this.moveTo(id, { pos: end, scale: 0.001 }, { dur: o.dur ?? 0.32, done: o.done });
   }
 
+  /** Take a tile off the board at once, with no animation (tiles waiting to come in later). */
+  hide(id: number) {
+    const t = this.tiles.get(id);
+    if (!t) return;
+    t.alive = false;
+    t.queue = [];
+    t.tween = undefined;
+    t.pose.scale = 0.001;
+    this.dirty.add(id);
+  }
+
   /** Bring a removed tile back where it was (undo). */
   restore(id: number, pose: Pose) {
     const t = this.tiles.get(id);
@@ -700,6 +709,17 @@ export class TileBoard {
       for (const t of this.tiles.values()) if (t.i === hit.instanceId && t.alive) return t.id;
     }
     return null;
+  }
+
+  /** The board point (board space, on the felt) under a client position, or null when it misses. */
+  feltPoint(clientX: number, clientY: number, camera: THREE.Camera, el: HTMLElement): THREE.Vector3 | null {
+    const r = el.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, camera);
+    this.root.updateMatrixWorld();
+    const inv = this.root.matrixWorld.clone().invert();
+    const ray = this.raycaster.ray.clone().applyMatrix4(inv);
+    return ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3());
   }
 
   /**

@@ -67,7 +67,7 @@ const GLYPH = {
 const glyph = (k: keyof typeof GLYPH, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${GLYPH[k]}</svg>`;
 
 /** Hub filters: what kind of puzzle each game is. */
-type MiniFilter = 'all' | 'solo' | 'connect' | '3d' | 'match';
+type MiniFilter = 'all' | 'solo' | 'connect' | '3d' | 'match' | 'quest';
 const KIND: Record<string, MiniFilter[]> = {
   solitaire: ['solo'],
   tower: ['solo'],
@@ -81,6 +81,14 @@ const KIND: Record<string, MiniFilter[]> = {
   triple: ['match'],
   match3: ['match'],
   memory: ['match'],
+  colour: ['match'],
+  chain: ['match'],
+  rush: ['match'],
+  hex: ['solo'],
+  survival: ['solo'],
+  treasure: ['quest'],
+  boss: ['quest', 'connect'],
+  dungeon: ['quest'],
 };
 type MiniSort = 'recommended' | 'az' | 'quick' | 'played';
 /** The hub's search, filter and sort, kept while the app is open. */
@@ -105,7 +113,8 @@ export function minigamesScreen(app: MiniApp & { go(s: 'minigames'): void }): HT
     const line = dres ? (dres.won ? tr('Solved in {time} with {n} points.', { time: fmtClock(dres.seconds), n: fmt(dres.score) }) : tr('Not solved yet. You can try again.')) : tr('Today: {game}. Everyone in the club gets the same board.', { game: daily.title });
     dailyCard = h(
       'section',
-      { class: `mini-daily ${dres?.won ? 'done' : ''}` },
+      // The whole card starts the puzzle, not just its button.
+      { class: `mini-daily ${dres?.won ? 'done' : ''}`, onclick: (e: MouseEvent) => !(e.target as HTMLElement).closest('button') && play(app, daily, dailyStart(daily)) },
       h('span', { class: 'mini-medal mini-daily-medal' }, dIcon),
       h('div', { class: 'mini-daily-text' }, h('h3', {}, tr('Daily puzzle')), h('p', {}, line), streak ? h('p', { class: 'muted small' }, tr('Daily streak: {n}', { n: streak })) : null),
       h('span', { class: 'mini-daily-bonus' }, dres?.won ? tr('Solved') : tr('+{n} JP bonus', { n: DAILY_PUZZLE_BONUS })),
@@ -172,6 +181,7 @@ export function minigamesScreen(app: MiniApp & { go(s: 'minigames'): void }): HT
     { id: 'connect', label: tr('Connect') },
     { id: '3d', label: tr('3D') },
     { id: 'match', label: tr('Match') },
+    { id: 'quest', label: tr('Quests') },
   ];
   const chips = h('div', { class: 'mini-chips', role: 'group', 'aria-label': tr('Filter') });
   const drawChips = () =>
