@@ -124,14 +124,14 @@
     },
     {
       "t": 4.16,
-      "text": "There are twelve of them, from Solitaire to Match-3, all in 3D on your own tiles, table and room."
+      "text": "There are twenty of them, from Solitaire to Treasure Hunt, all in 3D on your own tiles, table and room."
     },
     {
-      "t": 10.47,
+      "t": 10.49,
       "text": "Every win earns Jong Points for the Atelier, and the daily puzzle gives the whole club the same board."
     },
     {
-      "t": 16.85,
+      "t": 16.88,
       "text": "None of them touch your rating."
     }
   ],
@@ -179,6 +179,36 @@
     {
       "t": 9.91,
       "text": "They all add style and flair to your play."
+    }
+  ],
+  "earn": [
+    {
+      "t": 0.12,
+      "text": "So how is a piece earned?"
+    },
+    {
+      "t": 2.28,
+      "text": "You play for it."
+    },
+    {
+      "t": 4.06,
+      "text": "Hands, lessons, challenges and Mini-games all pay Jong Points."
+    },
+    {
+      "t": 8.7,
+      "text": "Each season brings a reward track of its own, and nothing on it is for sale."
+    },
+    {
+      "t": 13.57,
+      "text": "World Tour stamps open a destination's table cloth, and three stamps open a city's own room."
+    },
+    {
+      "t": 20.05,
+      "text": "In a hurry?"
+    },
+    {
+      "t": 21.65,
+      "text": "You can top up your Jong Points, but season rewards are only ever earned."
     }
   ],
   "interlude": [
