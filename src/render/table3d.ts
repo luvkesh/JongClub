@@ -4,10 +4,12 @@
 
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { tileGeometry } from './tileShape';
 import type { GameState } from '../engine/state';
 import { TILE_ID_COUNT, kindOfTileId, WINDS, compareTiles, type HandSort, type Tile, type Wind } from '../engine/tiles';
-import { feltMotif, feltWeave, paintFeltPattern } from './feltPattern';
-import { TILE_SET, drawFace, faceDetail, faceUrl, luma, mix, setFaceDetail, setTileSet as setFaceSet, warmFaceUrls } from './tileFaces';
+import { feltMotif, feltWeave } from './feltPattern';
+import { finishRim, paintFelt } from './tableLook';
+import { TILE_SET, drawFace, faceDetail, faceUrl, mix, setFaceDetail, setTileSet as setFaceSet, warmFaceUrls } from './tileFaces';
 import { handTileScale, reduceMotionSetting } from './tileAccess';
 import { environmentStyle, tableStyle, type AvatarSpec, type EnvironmentStyle } from '../cosmetics/catalog';
 import { SeatFigure } from './avatar3d';
@@ -781,42 +783,7 @@ export class TableRenderer {
     this.feltColor = color;
     this.feltMotif = motif;
     this.racks?.setFelt(color);
-    const S = this.q.paint === 2 ? 1024 : 512;
-    const tc = document.createElement('canvas');
-    tc.width = tc.height = S;
-    const tg = tc.getContext('2d')!;
-    tg.fillStyle = color;
-    tg.fillRect(0, 0, S, S);
-    const img = tg.getImageData(0, 0, S, S);
-    const d = img.data;
-    for (let y = 0; y < S; y++) {
-      for (let x = 0; x < S; x++) {
-        const i = (y * S + x) * 4;
-        // Weave: a faint twill diagonal plus fibre noise.
-        const n = (Math.random() - 0.5) * 12 + (((x + y) & 3) === 0 ? 3 : 0) - (((x - y) & 7) === 0 ? 2 : 0);
-        d[i] += n;
-        d[i + 1] += n;
-        d[i + 2] += n;
-      }
-    }
-    tg.putImageData(img, 0, 0);
-    // The lamp's falloff: bright and even over the rivers, only darkening near the rim.
-    const vg = tg.createRadialGradient(S / 2, S / 2, S * 0.36, S / 2, S / 2, S * 0.72);
-    vg.addColorStop(0, 'rgba(255,240,200,0.04)');
-    vg.addColorStop(0.5, 'rgba(0,0,0,0.06)');
-    vg.addColorStop(1, 'rgba(0,0,0,0.3)');
-    tg.fillStyle = vg;
-    tg.fillRect(0, 0, S, S);
-    // Gold-thread border, inset from the rim.
-    const inset = S * 0.018;
-    tg.strokeStyle = 'rgba(214,180,112,0.5)';
-    tg.lineWidth = 2;
-    tg.strokeRect(inset, inset, S - inset * 2, S - inset * 2);
-    tg.strokeStyle = 'rgba(214,180,112,0.22)';
-    tg.lineWidth = 1;
-    tg.strokeRect(inset + 6, inset + 6, S - inset * 2 - 12, S - inset * 2 - 12);
-    // The table's own tone-on-tone motif and border band (feltPattern.ts).
-    paintFeltPattern(tg, S, color, motif, inset);
+    const tc = paintFelt(color, motif, this.q.paint === 2 ? 1024 : 512);
     const tex = new THREE.CanvasTexture(tc);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
@@ -832,12 +799,8 @@ export class TableRenderer {
   }
 
   private buildTiles() {
-    const ivory = new RoundedBoxGeometry(TW, TH, TD * 0.64, 3, 0.035);
-    ivory.translate(0, 0, TD * 0.18);
-    const jade = new RoundedBoxGeometry(TW, TH, TD * 0.4, 3, 0.035);
-    jade.translate(0, 0, -TD * 0.3);
-    const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-    face.translate(0, 0, TD / 2 + 0.0015);
+    // The shared tile shape (tileShape.ts): the Atelier, the mini-games and the website show the same tile.
+    const { body: ivory, back: jade, face } = tileGeometry(3);
     const jadeMat = new THREE.MeshPhysicalMaterial({ color: TILE_SET.back, roughness: 0.25, metalness: 0.05, clearcoatRoughness: 0.1 });
     this.backMat = jadeMat;
     // Tiles on the felt get contact shading (tileMaterials.ts).
@@ -1036,26 +999,7 @@ export class TableRenderer {
     const t = tableStyle(id);
     this.tableId = t.id;
     this.setFelt(t.felt);
-    const hsl = { h: 0, s: 0, l: 0 };
-    new THREE.Color(t.rim).getHSL(hsl);
-    const gilded = t.rimGloss >= 0.75 && hsl.s > 0.3 && hsl.h > 0.08 && hsl.h < 0.16;
-    const stone = !gilded && t.rimGloss >= 0.75 && luma(t.rim) > 0.55;
-    const wood = !gilded && !stone && t.rimGloss < 0.5;
-    const m = this.rimMat;
-    m.map?.dispose();
-    m.map = stone ? marbleTexture(t.rim, true) : wood ? woodTexture(t.rim) : null;
-    m.color.set(m.map ? '#ffffff' : t.rim);
-    // Every rim is finished: oiled wood gets a satin coat, lacquer and stone a deep gloss, gilt a brushed sheen.
-    m.roughness = gilded ? 0.32 : Math.max(0.14, 0.55 - t.rimGloss * 0.45);
-    m.metalness = gilded ? 0.9 : 0.02;
-    m.clearcoat = gilded ? 0.15 : wood ? 0.55 : 1;
-    m.clearcoatRoughness = wood ? 0.22 : 0.07;
-    m.envMapIntensity = gilded ? 1.1 : 0.9;
-    m.needsUpdate = true;
-    // Brass inlay everywhere except on a gilded rim, which gets a black lacquer line instead.
-    this.trimMat.color.set(gilded ? '#120c08' : '#c9a46a');
-    this.trimMat.metalness = gilded ? 0.1 : 1;
-    this.trimMat.roughness = gilded ? 0.2 : 0.3;
+    finishRim(this.rimMat, this.trimMat, t);
   }
 
   /** The equipped table id ('' until setTableStyle is called). */
@@ -3707,56 +3651,6 @@ function frameGlowTexture() {
   g.stroke();
   g.stroke();
   return new THREE.CanvasTexture(c);
-}
-
-/** Polished stone with soft veins, for marble tile backs and table rims. */
-function marbleTexture(base: string, light = false) {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  const g = c.getContext('2d')!;
-  g.fillStyle = base;
-  g.fillRect(0, 0, 256, 256);
-  let s = 97;
-  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  const vein = light ? 'rgba(90,86,80,' : 'rgba(235,230,220,';
-  for (let i = 0; i < 9; i++) {
-    g.strokeStyle = `${vein}${0.05 + r() * 0.12})`;
-    g.lineWidth = 0.6 + r() * 1.6;
-    g.beginPath();
-    let x = r() * 256,
-      y = r() * 256;
-    g.moveTo(x, y);
-    for (let k = 0; k < 6; k++) {
-      const nx = x + (r() - 0.3) * 90,
-        ny = y + (r() - 0.5) * 90;
-      g.quadraticCurveTo(x + (r() - 0.5) * 60, y + (r() - 0.5) * 60, nx, ny);
-      x = nx;
-      y = ny;
-    }
-    g.stroke();
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
-/** Fine, quiet wood grain. */
-function woodTexture(base: string) {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  const g = c.getContext('2d')!;
-  g.fillStyle = base;
-  g.fillRect(0, 0, 256, 256);
-  let s = 31;
-  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  for (let y = 0; y < 256; y += 2) {
-    const a = r() * 0.07;
-    g.fillStyle = r() < 0.5 ? `rgba(0,0,0,${a})` : `rgba(255,220,180,${a * 0.6})`;
-    g.fillRect(0, y + Math.sin(y * 0.08) * 1.5, 256, 1 + r() * 2);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
 }
 
 /** The winning hand's slots: its concealed sets in order, a set's width of space apart; any tile not in a set goes last. */

@@ -11,6 +11,7 @@ import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import { currentTileSet, drawBackOnce, drawBodyOnce, drawFace, luma, mix, setTileSet } from '../../src/render/tileFaces';
 import { applyTileFinish, dressFace } from '../../src/render/tileMaterials';
+import { jewelTiles } from '../../src/render/tilePicture';
 import { rackStyle } from '../../src/cosmetics/racks';
 import { HAND_LEAN, HAND_RAISE, rackSegment, type HumanRackFit } from '../../src/render/racks';
 import { disposeRackMaterials, rackMaterials } from '../../src/render/rackLook';
@@ -94,93 +95,25 @@ function engraveMap(face: HTMLCanvasElement) {
   return c2;
 }
 
-/** One tile of the equipped set, upright with its face toward +z, standing on y = 0. */
-function makeTile(kind: number, faceUp: boolean, own: { geo: THREE.BufferGeometry[]; mat: THREE.Material[]; tex: THREE.Texture[] }, hi = false) {
-  const st = currentTileSet();
-  // The close-up product shots (hi) get smoother bodies and finer finishes; racks keep the game's look.
-  const seg = hi ? 10 : 5;
-  const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, seg, 0.035);
-  body.translate(0, 0, TD * 0.18);
-  const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, seg, 0.035);
-  back.translate(0, 0, -TD * 0.3);
-  own.geo.push(body, back);
-  const bodyMat = new THREE.MeshPhysicalMaterial();
-  const backMat = new THREE.MeshPhysicalMaterial();
-  const faceMat = new THREE.MeshPhysicalMaterial({ transparent: true });
-  applyTileFinish([bodyMat], backMat, [faceMat]);
-  own.mat.push(bodyMat, backMat, faceMat);
-  if (hi) {
-    const bt = tex(drawBackOnce(768, 1024));
-    own.tex.push(bt);
-    backMat.map = bt;
-    if (!st.stripes) {
-      const yt = tex(drawBodyOnce());
-      own.tex.push(yt);
-      bodyMat.map = yt;
-    }
-    // A polished lacquer over body and back: the bevel catches a clean highlight.
-    for (const m of [bodyMat, backMat]) {
-      m.clearcoat = Math.max(m.clearcoat, 0.6);
-      m.clearcoatRoughness = Math.min(m.clearcoatRoughness, 0.08);
-    }
-  }
-  const g = new THREE.Group();
-  const a = new THREE.Mesh(body, bodyMat);
-  const b = new THREE.Mesh(back, backMat);
-  a.castShadow = b.castShadow = true;
-  a.receiveShadow = b.receiveShadow = true;
-  g.add(a, b);
-  if (faceUp) {
-    const fs = hi ? HI_FACE_SCALE : FACE_SCALE;
-    const fc = drawFace(kind, false, false, fs);
-    const ft = tex(fc);
-    own.tex.push(ft);
-    faceMat.map = ft;
-    // The game's own engraving (relief, foil metal); a touch deeper for the close-up.
-    dressFace(faceMat, kind, false, false, 16, fs);
-    faceMat.bumpScale *= 1.8;
-    // A thin glaze over the engraving, as on polished resin.
-    faceMat.clearcoat = 0.55;
-    faceMat.clearcoatRoughness = 0.12;
-    faceMat.emissiveMap = ft;
-    faceMat.emissive.set('#ffffff');
-    faceMat.emissiveIntensity = 0.02;
-    const face = new THREE.Mesh(new RoundedFace(TW * 0.94, TH * 0.95, 0.03), faceMat);
-    own.geo.push(face.geometry);
-    face.position.z = TD / 2 + 0.0012;
-    face.receiveShadow = true;
-    g.add(face);
-  } else {
-    g.rotation.y = Math.PI;
-  }
+/** The game's own tile kits made for the picture being rendered, freed with it. */
+const kits: { dispose(): void }[] = [];
+const freeKits = () => kits.splice(0).forEach((k) => k.dispose());
+
+/**
+ * One tile of the equipped set, upright with its face toward +z, standing on y = 0: the game's own tile
+ * (tilePicture.ts jewelTiles: the shared shape, finishes, bezel and engraved faces), so the website
+ * shows exactly the tiles the game does. The close-up product shots (hi) draw the faces in finer detail.
+ */
+function makeTile(kind: number, faceUp: boolean, _own: { geo: THREE.BufferGeometry[]; mat: THREE.Material[]; tex: THREE.Texture[] }, hi = false) {
+  const kit = jewelTiles({ seg: hi ? 10 : 5, faceScale: hi ? HI_FACE_SCALE : FACE_SCALE, anisotropy: 16 });
+  kits.push(kit);
+  const g = kit.tile(faceUp ? kind : null);
+  if (!faceUp) g.rotation.y = Math.PI;
   g.userData.inner = true;
   const outer = new THREE.Group();
   outer.add(g);
   g.position.y = TH / 2;
-  void st;
   return outer;
-}
-
-/** A rounded-rectangle plane with 0..1 UVs, so the face fits the tile's rounded corners. */
-class RoundedFace extends THREE.ShapeGeometry {
-  constructor(w: number, h: number, r: number) {
-    const s = new THREE.Shape();
-    const x = -w / 2,
-      y = -h / 2;
-    s.moveTo(x + r, y);
-    s.lineTo(x + w - r, y);
-    s.quadraticCurveTo(x + w, y, x + w, y + r);
-    s.lineTo(x + w, y + h - r);
-    s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    s.lineTo(x + r, y + h);
-    s.quadraticCurveTo(x, y + h, x, y + h - r);
-    s.lineTo(x, y + r);
-    s.quadraticCurveTo(x, y, x + r, y);
-    super(s, 12);
-    const p = this.attributes.position;
-    const uv = this.attributes.uv;
-    for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) - x) / w, (p.getY(i) - y) / h);
-  }
 }
 
 /** Seeded random numbers for the procedural textures. */
@@ -797,6 +730,7 @@ export async function tileShowcase(id: string, w = 1440, h = 600, dpr = 2, mode:
     const m = o as THREE.Mesh;
     if (m.isMesh && !own.geo.includes(m.geometry)) m.geometry.dispose();
   });
+  freeKits();
   for (const g of own.geo) g.dispose();
   for (const m of own.mat) m.dispose();
   for (const t of own.tex) t.dispose();
@@ -949,6 +883,7 @@ export function rackShowcase(id: string, tileSet = 'classic-ivory', w = 1440, h 
     const m = o as THREE.Mesh;
     if (m.isMesh && !own.geo.includes(m.geometry)) m.geometry.dispose();
   });
+  freeKits();
   for (const g of own.geo) g.dispose();
   for (const m of own.mat) m.dispose();
   for (const t of own.tex) t.dispose();
@@ -986,6 +921,7 @@ export function singleTile(kind: number, tileSet = 'classic-ivory', w = 360, h =
   const url = r.domElement.toDataURL('image/png');
   r.setClearColor(0x000000, 1);
   catcher.geometry.dispose();
+  freeKits();
   for (const g of own.geo) g.dispose();
   for (const m of own.mat) m.dispose();
   for (const x of own.tex) x.dispose();
