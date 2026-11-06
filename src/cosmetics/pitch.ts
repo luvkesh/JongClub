@@ -2,7 +2,7 @@
 // Tile sets, racks and rooms use the website tour's lines verbatim; she never says prices.
 // Recorded with scripts/record-narration.py (OUT=src/audio/pitch.gen.ts).
 export const PITCH: Record<string, string> = {
-  "tileSet:classic-ivory": "Every great collection begins somewhere, and ours begins here. Classic Ivory is hand-finished to a soft, warm glow, each glyph cut crisp and filled by hand, set against deep jade lacquer. Timeless, and it never goes out of style.",
+  "tileSet:classic-ivory": "Every great collection begins somewhere, and ours begins here. Classic Ivory is hand-finished to a pure, bright white, each glyph cut crisp and filled by hand, set against deep jade lacquer. Timeless, and it never goes out of style.",
   "tileSet:jade": "Feel the weight of these. Imperial Jade is carved from mottled stone, every glyph brushed by hand and a cloud engraved into each back. No two tiles carry quite the same markings. It is a set people notice from across the room.",
   "tileSet:obsidian": "This is one of my favourites. Obsidian and Gold is polished volcanic glass, with glyphs laid in real gold leaf and kintsugi veins traced by hand across every back. Dramatic, a little dangerous, and utterly unforgettable at the table.",
   "tileSet:pearl": "Turn one slowly in the light. Mother of Pearl is meticulously cut from iridescent shell, so every face shifts from rose to lilac as it moves, with scalloped backs to match. It is the most romantic set in the atelier.",

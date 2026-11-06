@@ -9,6 +9,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { drawFace, setTileSet } from '../../src/render/tileFaces';
 import { applyTileFinish, dressFace } from '../../src/render/tileMaterials';
+import { jewelTiles } from '../../src/render/tilePicture';
 
 export type Key = 'table' | 'frame' | 'avatar' | 'accessory' | 'winAnimation' | 'tableEffect' | 'sound';
 
@@ -881,58 +882,17 @@ function buildAccessory(root: THREE.Group) {
 /** The game's own ivory tile with 發, in swirling golden light. */
 function buildWin(root: THREE.Group, own: THREE.Texture[]) {
   setTileSet('classic-ivory');
-  const TW = 0.42,
-    TH = 0.56,
-    TD = 0.3;
-  const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, 5, 0.045);
-  body.translate(0, 0, TD * 0.18);
-  const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, 5, 0.045);
-  back.translate(0, 0, -TD * 0.3);
-  const bodyMat = new THREE.MeshPhysicalMaterial();
-  const backMat = new THREE.MeshPhysicalMaterial();
-  const faceMat = new THREE.MeshPhysicalMaterial({ transparent: true });
-  applyTileFinish([bodyMat], backMat, [faceMat]);
+  // The game's own tile (tilePicture.ts jewelTiles), 1.4 times the table's size.
+  const kit = jewelTiles({ seg: 8, faceScale: 4, anisotropy: 16 });
   const tile = new THREE.Group();
-  const a = new THREE.Mesh(body, bodyMat);
-  const b = new THREE.Mesh(back, backMat);
-  a.castShadow = b.castShadow = true;
-  tile.add(a, b);
-  const fc = drawFace(32, false, false, 4);
-  const ft = tex(fc);
-  own.push(ft);
-  faceMat.map = ft;
-  dressFace(faceMat, 32, false, false, 16, 4);
-  faceMat.bumpScale *= 1.8;
-  faceMat.clearcoat = 0.55;
-  faceMat.clearcoatRoughness = 0.12;
-  const fs = new THREE.Shape();
-  {
-    const w = TW * 0.94,
-      h = TH * 0.95,
-      r = 0.04,
-      x = -w / 2,
-      y = -h / 2;
-    fs.moveTo(x + r, y);
-    fs.lineTo(x + w - r, y);
-    fs.quadraticCurveTo(x + w, y, x + w, y + r);
-    fs.lineTo(x + w, y + h - r);
-    fs.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    fs.lineTo(x + r, y + h);
-    fs.quadraticCurveTo(x, y + h, x, y + h - r);
-    fs.lineTo(x, y + r);
-    fs.quadraticCurveTo(x, y, x + r, y);
-    const fg = new THREE.ShapeGeometry(fs, 12);
-    const p = fg.attributes.position,
-      uv = fg.attributes.uv;
-    for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) - x) / w, (p.getY(i) - y) / h);
-    const face = new THREE.Mesh(fg, faceMat);
-    face.position.z = TD / 2 + 0.0015;
-    tile.add(face);
-  }
-  tile.rotation.set(0.1, -0.38, 0.1);
-  tile.position.set(0, -0.02, 0.42);
-  tile.scale.setScalar(1.25);
-  root.add(tile);
+  tile.add(kit.tile(32));
+  tile.scale.setScalar(1.4);
+  const holder = new THREE.Group();
+  holder.add(tile);
+  holder.rotation.set(0.1, -0.38, 0.1);
+  holder.position.set(0, -0.02, 0.42);
+  holder.scale.setScalar(1.25);
+  root.add(holder);
   // Light trails: ribbons of gold light spiralling round the tile.
   const fade = (() => {
     const [c, g] = canvas(512, 4);

@@ -21,6 +21,7 @@ import { seasonsScreen } from './seasons';
 import { ambience } from '../audio/ambience';
 import { DEFAULT_AVATAR, HAIR_COLORS, SKIN_TONES, VARIATION_TABLE, tileSetStyle, type AvatarSpec } from '../cosmetics/catalog';
 import { withBotAccessories } from '../cosmetics/avatar';
+import { castLook } from '../cosmetics/cast';
 import { clear, h } from './dom';
 import { MatchController, type MatchOptions, type TableConfig } from './match';
 import { renameMe, type ReplayRecord } from '../net/replay';
@@ -31,7 +32,7 @@ import { ReplayViewer } from './replay';
 import { versionsScreen } from './versions';
 import { CoachMode, withCoachMode } from './coachMode';
 import { brandSvg, brandWordmark } from '../brand';
-import { phoneNav, type PhoneNav } from './tabbar';
+import { phoneNav, tabOf, type PhoneNav } from './tabbar';
 import { ACCOUNT_EVENT } from '../auth/prompt';
 import { syncProfileDown } from '../progression/cloudSync';
 import { tr } from '../i18n';
@@ -50,16 +51,18 @@ import { pointsPill } from './economySheets';
 import type { MiniApp } from '../minigames/play';
 
 
-const NAV: { id: Screen; label: string }[] = [
+/** The top strip. The six main tabs match the phone tab bar (tabbar.ts); the `extra` four show only
+ *  on wide desktop windows, and live as sub-tabs under their main tab everywhere else. */
+const NAV: { id: Screen; label: string; extra?: boolean }[] = [
   { id: 'home', label: tr('Home') },
   { id: 'play', label: tr('Play') },
   { id: 'minigames', label: tr('Mini-games') },
-  { id: 'versions', label: tr('Variations') },
+  { id: 'versions', label: tr('Variations'), extra: true },
   { id: 'learn', label: tr('Learn') },
-  { id: 'daily', label: tr('Daily') },
-  { id: 'passport', label: tr('World Tour') },
+  { id: 'daily', label: tr('Daily'), extra: true },
+  { id: 'passport', label: tr('World Tour'), extra: true },
   { id: 'club', label: tr('Club') },
-  { id: 'collection', label: tr('Collection') },
+  { id: 'collection', label: tr('Collection'), extra: true },
   { id: 'profile', label: tr('Profile') },
 ];
 
@@ -80,7 +83,7 @@ export class App {
   lastOpts: MatchOptions = {};
   curTag: string | undefined;
   private navEl: HTMLElement;
-  /** Five tabs at the foot on phones (tabbar.ts). */
+  /** Six tabs at the foot on phones and tablets (tabbar.ts). */
   private phone: PhoneNav;
   club: Club | null = null;
   live: TableSession | null = null;
@@ -246,12 +249,15 @@ export class App {
     // Keep the tab strip where it is (rebuilding it would jump back to the start),
     // and only bring the chosen tab into view inside the strip itself.
     if (!this.navEl.childElementCount)
-      for (const n of NAV) this.navEl.append(h('button', { class: 'nav-item', 'data-screen': n.id, onclick: () => (sound.play('button'), this.go(n.id)) }, n.label));
+      for (const n of NAV) this.navEl.append(h('button', { class: `nav-item${n.extra ? ' nav-extra' : ''}`, 'data-screen': n.id, onclick: () => (sound.play('button'), this.go(n.id)) }, n.label));
     // Screens without a tab of their own light up the tab they live under.
     const tab = NAV_PARENT[screen] ?? screen;
+    // With the strip trimmed to six (tabbar.css), the main tab a screen sits under lights instead.
+    const group = tabOf(screen)?.screens[0];
     for (const b of this.navEl.querySelectorAll<HTMLElement>('.nav-item')) {
       const on = b.dataset.screen === tab;
       b.classList.toggle('on', on);
+      b.classList.toggle('on-group', !on && b.dataset.screen === group);
       if (on && tab === screen) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
       if (on) {
@@ -391,7 +397,7 @@ export class App {
     }, opts);
     if (opts.coach instanceof CoachMode) opts.coach.attach(this.match.game, this.match.me, cfg.hints);
     this.applyLoadout(cfg.variation);
-    this.match.avatars = this.match.seats.map((x, i) => (i === this.match!.me ? this.profile.avatar : x.kind === 'ai' ? withBotAccessories(x.avatar ?? avatarForName(x.name), x.name) : (x.avatar ?? avatarForName(x.name))));
+    this.match.avatars = this.match.seats.map((x, i) => (i === this.match!.me ? this.profile.avatar : x.kind === 'ai' ? (x.avatar ? withBotAccessories(x.avatar, x.name) : (castLook(x.name) ?? withBotAccessories(avatarForName(x.name), x.name))) : (x.avatar ?? avatarForName(x.name))));
     this.table.setSeatAvatars(this.match.avatars.map((a, i) => (i === this.match!.me ? null : a)));
     this.match.run();
   }
