@@ -8,7 +8,7 @@ import wordmarkUrl from '../brand/jongclub-wordmark-embossed.svg?inline';
 import tileSvg from '../brand/jongclub-tile.svg?raw';
 import meiFace from '../brand/mei-face-256.webp?inline';
 
-// Mei's face (cut from her portrait, AI-upscaled 4x, see brand/README.md) fills every round narrator mark.
+// Mei's face, rendered from her 3D table figure (website/tools/companions.ts face()), fills every round narrator mark.
 if (typeof document !== 'undefined') document.documentElement.style.setProperty('--mei-face', `url("${meiFace}")`);
 
 export type BrandMark = 'mark' | 'crest' | 'tile';

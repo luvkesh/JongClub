@@ -46,6 +46,10 @@ export interface MiniResult {
   shuffles: number;
   /** Extra lines for the result sheet, e.g. "Longest combo ×4". */
   notes?: string[];
+  /** The result sheet's heading on a win, when "Board cleared" doesn't fit the game. */
+  headline?: string;
+  /** The third read-out on the result sheet in place of "Tiles cleared"; null leaves it out. */
+  tally?: { label: string; text: string } | null;
 }
 
 /** What a running game may use. One host per game played. */
@@ -124,7 +128,7 @@ export interface MiniGameDef {
   /** Hub ordering and grouping. */
   order: number;
   /** Tile kinds shown in the card's 3D icon, and how they stand. */
-  icon: { kinds: number[]; shape: 'stack' | 'pair' | 'cube' | 'tray' | 'grid' | 'tower' | 'fan' | 'path' | 'hourglass' };
+  icon: { kinds: number[]; shape: 'stack' | 'pair' | 'cube' | 'tray' | 'grid' | 'tower' | 'fan' | 'path' | 'hourglass' | 'lanes' | 'rows' | 'chest' | 'duel' | 'burst' | 'quiz' | 'hex' | 'dungeon' };
   levels: MiniLevel[];
   options?: MiniOption[];
   /** How to play, a few short lines; Mei reads them on the help sheet. */

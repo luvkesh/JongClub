@@ -89,7 +89,9 @@ function oppShape() {
     [R.z0 + 0.012, lipY],
     [R.shelfZ - 0.006, lipY],
     [R.shelfZ, R.shelfY],
-    [R.stepZ, shelfHeight(R.stepZ)],
+    // stepY is the shelf's height at stepZ, so one point turns the corner. Listing it twice made a
+    // zero-length edge that skewed the bevel: the shelf's top then rose off parallel (+12 mm at the lip,
+    // +17 mm at the step) and buried the lining and the carved band, which flickered through it.
     [R.stepZ, R.stepY],
     [R.z1 - 0.02, R.stepY],
     [R.z1, R.stepY - 0.02],
@@ -98,8 +100,19 @@ function oppShape() {
   return new THREE.Shape(pts.map(([z, y]) => new THREE.Vector2(-z, y)));
 }
 
+/** The profile's bevel (oppExtrude's default grow) and how far above it the shelf's lining and carved bands sit. */
+const OPP_BEVEL = 0.012;
+/** Height of the bevelled wood's top above shelfHeight(), straight up. */
+const OPP_BEVEL_RISE = OPP_BEVEL / Math.cos(OPP_RACK.slope);
+/**
+ * Clear gaps over that wood: wide enough that the depth buffer always tells the two surfaces apart at
+ * table distance (1.5 mm made a stripe that pulsed as the camera moved), too thin to see as a step.
+ */
+const LINING_LIFT = OPP_BEVEL_RISE + 0.003;
+const BAND_LIFT = OPP_BEVEL_RISE + 0.002;
+
 /** The profile extruded along the table edge, `length` long and centred; `grow` widens the outline (end caps). */
-function oppExtrude(length: number, grow = 0.012, bevel = 0.025) {
+function oppExtrude(length: number, grow = OPP_BEVEL, bevel = 0.025) {
   const geo = new THREE.ExtrudeGeometry(oppShape(), { depth: length, bevelEnabled: true, bevelThickness: bevel, bevelSize: grow, bevelSegments: 2, steps: 1, curveSegments: 4 });
   geo.translate(0, 0, -length / 2);
   // Shape (x, y, extrusion) -> seat (extrusion, y, -x).
@@ -241,7 +254,7 @@ function oppRackParts(st: RackStyle, length: number, seg: number): Parts {
     const zc = (z0 + z1) / 2;
     const pl = new THREE.PlaneGeometry(length - 0.5, (z1 - z0) / Math.cos(R.slope));
     pl.rotateX(-Math.PI / 2 - R.slope);
-    pl.translate(0, shelfHeight(zc) + 0.0135, zc); // above the profile's 0.012 bevel
+    pl.translate(0, shelfHeight(zc) + LINING_LIFT, zc);
     P.lining.push(pl);
   }
   // Carved bands in the wood either side of the lining, seen from every seat.
@@ -250,7 +263,7 @@ function oppRackParts(st: RackStyle, length: number, seg: number): Parts {
     [R.stepZ - 0.11, R.stepZ - 0.008],
   ]) {
     const zc = (a + b) / 2;
-    P.frieze.push(decalFlat(length - 0.3, b - a, 0, shelfHeight(zc) + 0.0125, zc, R.slope));
+    P.frieze.push(decalFlat(length - 0.3, b - a, 0, shelfHeight(zc) + BAND_LIFT, zc, R.slope));
   }
   // A front band in the second wood, for two-tone racks.
   if (st.accent) P.accent.push(box(length, lipY - 0.03, 0.014, 0, (lipY + 0.03) / 2 + 0.005, front - 0.006, 0.005));
@@ -514,6 +527,8 @@ export class Racks {
         const copy = new THREE.Mesh(m.geometry, m.material);
         copy.castShadow = m.castShadow;
         copy.receiveShadow = m.receiveShadow;
+        copy.renderOrder = m.renderOrder;
+        copy.userData.rackSlot = m.userData.rackSlot;
         g.add(copy);
       }
     }

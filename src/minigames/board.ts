@@ -567,6 +567,17 @@ export class TileBoard {
     this.moveTo(id, { pos: end, scale: 0.001 }, { dur: o.dur ?? 0.32, done: o.done });
   }
 
+  /** Take a tile off the board at once, with no animation (tiles waiting to come in later). */
+  hide(id: number) {
+    const t = this.tiles.get(id);
+    if (!t) return;
+    t.alive = false;
+    t.queue = [];
+    t.tween = undefined;
+    t.pose.scale = 0.001;
+    this.dirty.add(id);
+  }
+
   /** Bring a removed tile back where it was (undo). */
   restore(id: number, pose: Pose) {
     const t = this.tiles.get(id);
@@ -698,6 +709,17 @@ export class TileBoard {
       for (const t of this.tiles.values()) if (t.i === hit.instanceId && t.alive) return t.id;
     }
     return null;
+  }
+
+  /** The board point (board space, on the felt) under a client position, or null when it misses. */
+  feltPoint(clientX: number, clientY: number, camera: THREE.Camera, el: HTMLElement): THREE.Vector3 | null {
+    const r = el.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, camera);
+    this.root.updateMatrixWorld();
+    const inv = this.root.matrixWorld.clone().invert();
+    const ray = this.raycaster.ray.clone().applyMatrix4(inv);
+    return ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3());
   }
 
   /**
