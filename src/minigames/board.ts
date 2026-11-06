@@ -12,6 +12,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { TD, TH, TW } from '../render/table3d';
 import { drawFace, hasFace } from '../render/tileFaces';
 import { applyTileFinish, dressFace } from '../render/tileMaterials';
+import { tileGeometry } from '../render/tileShape';
 
 export type TileLook = 'normal' | 'free' | 'hover' | 'selected' | 'hint' | 'dim' | 'blocked' | 'locked';
 
@@ -220,12 +221,9 @@ export class TileBoard {
       this.h = TH * s;
       this.d = TD * s;
       // The same two-part tile as the main table: ivory face block and coloured back.
-      const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, 3, 0.035);
-      body.translate(0, 0, TD * 0.18);
-      const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, 3, 0.035);
-      back.translate(0, 0, -TD * 0.3);
-      const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-      face.translate(0, 0, TD / 2 + 0.0015);
+      // The shared tile shape (tileShape.ts); the body's bezel shading follows the board's scale.
+      const { body, back, face } = tileGeometry(3);
+      this.bodyMat.userData.slabScale = s;
       // A gold halo a touch larger than the tile, just under its top: it shows as a
       // bright edge all round a free tile and never covers the face.
       const rim = new RoundedBoxGeometry(TW * 1.075, TH * 1.06, TD * 0.72, 3, 0.04);

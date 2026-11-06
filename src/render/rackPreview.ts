@@ -4,12 +4,12 @@
 // preview and is released when the screen stops asking for them.
 
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { rackStyle } from '../cosmetics/racks';
 import { HAND_LEAN, HAND_RAISE, rackSegment, type HumanRackFit } from './racks';
 import { disposeRackMaterials, rackMaterials } from './rackLook';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { currentTileSet, drawFace } from './tileFaces';
+import { currentTileSet, mix } from './tileFaces';
+import { jewelStudio, jewelTiles } from './tilePicture';
 import { detectQuality } from './quality';
 
 const W = 480,
@@ -79,16 +79,13 @@ export function rackPreview(id: string): string {
 function render(id: string) {
   const r = getRenderer();
   const st = rackStyle(id);
-  const ts = currentTileSet();
   const felt = '#17402f';
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#0a0d0b');
-  scene.environment = env;
-  scene.environmentIntensity = 0.6;
   const tier = detectQuality(r.getContext()) === 'low' ? 'medium' : 'high';
+  // The rack in the jeweller's window the tile sets use (tilePicture.ts), before velvet of its own lining.
+  const studio = jewelStudio(W, H, mix(st.lining || felt, '#0b0d0c', 0.35), { scale: 1.8, floor: 0.7, shine: 0.2, fog: [3.6, 6.2] });
   // The table's own wood, for the table-matched rack.
-  const tableWood = new THREE.MeshPhysicalMaterial({ color: '#3b2416', roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.2 });
-  const tableTrim = new THREE.MeshStandardMaterial({ color: '#c9a46a', metalness: 1, roughness: 0.3 });
+  const tableWood = new THREE.MeshPhysicalMaterial({ color: '#3b2416', roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06 });
+  const tableTrim = new THREE.MeshStandardMaterial({ color: '#c9a46a', metalness: 1, roughness: 0.22, envMapIntensity: 1.3 });
   const mats = rackMaterials(st, tier, { wood: tableWood, trim: tableTrim, felt }, 8);
   const s = 1.32,
     z = 3.98;
@@ -96,73 +93,29 @@ function render(id: string) {
   const length = KINDS.length * (TW * s + 0.012) + 0.3;
   const rack = rackSegment(st, mats, 'human', length, fit);
   rack.position.z = -z;
-  scene.add(rack);
-  // Felt under the rack.
-  const feltMat = new THREE.MeshStandardMaterial({ color: felt, roughness: 0.95 });
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(12, 8), feltMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-  // Your tiles standing on it, leaning back as at the table.
-  const body = new RoundedBoxGeometry(TW, TH, TD * 0.64, 3, 0.035);
-  body.translate(0, 0, TD * 0.18);
-  const back = new RoundedBoxGeometry(TW, TH, TD * 0.4, 3, 0.035);
-  back.translate(0, 0, -TD * 0.3);
-  const face = new THREE.PlaneGeometry(TW * 0.84, TH * 0.86);
-  face.translate(0, 0, TD / 2 + 0.0015);
-  const bodyMat = new THREE.MeshPhysicalMaterial({ color: ts.body, roughness: 0.3, clearcoat: 0.5 });
-  const backMat = new THREE.MeshPhysicalMaterial({ color: ts.back, roughness: 0.25, clearcoat: 0.8 });
-  const faceTex: THREE.Texture[] = [];
-  const faceMats: THREE.Material[] = [];
+  rack.traverse((o) => (o.castShadow = o.receiveShadow = true));
+  studio.show(rack);
+  // Your tiles standing on it, leaning back as at the table, in their full finish.
+  const tiles = jewelTiles();
   const step = TW * s + 0.012;
   KINDS.forEach((k, i) => {
-    const t = new THREE.CanvasTexture(drawFace(k, false));
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 8;
-    faceTex.push(t);
-    const fm = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: 0, roughness: 0.32 });
-    faceMats.push(fm);
-    const g = new THREE.Group();
-    const a = new THREE.Mesh(body, bodyMat);
-    const b = new THREE.Mesh(back, backMat);
-    a.castShadow = b.castShadow = true;
-    g.add(a, b, new THREE.Mesh(face, fm));
+    const g = tiles.tile(k);
     g.scale.setScalar(s);
     g.rotation.x = -HAND_LEAN;
     g.position.set((i - (KINDS.length - 1) / 2) * step, (TH * s) / 2 + 0.03 + HAND_RAISE, 0);
-    scene.add(g);
+    studio.show(g);
   });
-  // A warm key from above left, a cool rim from behind and a soft fill.
-  const key = new THREE.DirectionalLight('#ffe2b8', 2.6);
-  key.position.set(-2.5, 4, 3);
-  key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
-  const sc = key.shadow.camera as THREE.OrthographicCamera;
-  sc.left = sc.bottom = -2.5;
-  sc.right = sc.top = 2.5;
-  key.shadow.bias = -0.0005;
-  scene.add(key);
-  const rim = new THREE.DirectionalLight('#9fc7ff', 0.8);
-  rim.position.set(2, 2, -3);
-  scene.add(rim);
-  const fill = new THREE.DirectionalLight('#fff0dc', 1.1);
-  fill.position.set(-1, 0.6, 4);
-  scene.add(fill);
-  scene.add(new THREE.AmbientLight('#ffffff', 0.25));
-  const cam = new THREE.PerspectiveCamera(32, W / H, 0.05, 50);
-  cam.position.set(-2.35, 0.62, 1.55);
-  cam.lookAt(-0.25, 0.16, 0.12);
-  r.render(scene, cam);
-  const url = r.domElement.toDataURL('image/webp', 0.9);
+  const cam = new THREE.PerspectiveCamera(30, W / H, 0.05, 50);
+  cam.position.set(-2.75, 1.05, 2.1);
+  cam.lookAt(-0.12, 0.2, 0.02);
+  const url = studio.shoot(cam);
   // Free everything this picture made.
-  scene.traverse((o) => {
+  rack.traverse((o) => {
     const m = o as THREE.Mesh;
-    if (m.isMesh && m.parent === rack) m.geometry.dispose();
+    if (m.isMesh) m.geometry.dispose();
   });
-  for (const g of [body, back, face, ground.geometry]) g.dispose();
-  for (const m of [bodyMat, backMat, feltMat, tableWood, tableTrim, ...faceMats]) m.dispose();
-  for (const t of faceTex) t.dispose();
+  for (const m of [tableWood, tableTrim]) m.dispose();
+  tiles.dispose();
   disposeRackMaterials(mats);
-  key.shadow.map?.dispose();
   return url;
 }
