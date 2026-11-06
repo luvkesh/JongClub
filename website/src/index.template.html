@@ -166,6 +166,12 @@ p { margin: 0; }
 .num { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; border-left: 1px solid var(--line-strong); }
 .num b { font: 600 clamp(56px, 8vw, 112px)/0.9 var(--display); background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .num span { font: 500 13px/1.4 var(--ui); letter-spacing: 0.22em; text-transform: uppercase; color: var(--text); }
+/* A rendered 3D icon over each number (website/tools/staticons.*). */
+.num-ic { display: block; width: clamp(108px, 11vw, 156px); height: auto; aspect-ratio: 1; margin: -10px 0 0 -14px; transition: transform 0.6s cubic-bezier(.2,.7,.2,1); }
+.num:hover .num-ic { transform: translateY(-4px) rotate(-2deg); }
+[dir="rtl"] .num-ic { margin: -10px -14px 0 0; }
+@media (max-width: 640px) { .num-ic { width: 100px; margin: -6px 0 0 -10px; } [dir="rtl"] .num-ic { margin: -6px -10px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .num-ic { transition: none; } .num:hover .num-ic { transform: none; } }
 
 /* ---------- companions */
 .cast { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -912,10 +918,10 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
 
   <section class="numerals" aria-label="The club in numbers">
     <div class="wrap">
-      <div class="num"><b>30</b><span>Variations</span></div>
-      <div class="num"><b>18</b><span>Destinations</span></div>
-      <div class="num"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
-      <div class="num"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/variations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>30</b><span>Variations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/destinations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>18</b><span>Destinations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/tilesets.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/rooms.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
     </div>
   </section>
 
