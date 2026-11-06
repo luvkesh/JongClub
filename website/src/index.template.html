@@ -166,6 +166,12 @@ p { margin: 0; }
 .num { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; border-left: 1px solid var(--line-strong); }
 .num b { font: 600 clamp(56px, 8vw, 112px)/0.9 var(--display); background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .num span { font: 500 13px/1.4 var(--ui); letter-spacing: 0.22em; text-transform: uppercase; color: var(--text); }
+/* A rendered 3D icon over each number (website/tools/staticons.*). */
+.num-ic { display: block; width: clamp(108px, 11vw, 156px); height: auto; aspect-ratio: 1; margin: -10px 0 0 -14px; transition: transform 0.6s cubic-bezier(.2,.7,.2,1); }
+.num:hover .num-ic { transform: translateY(-4px) rotate(-2deg); }
+[dir="rtl"] .num-ic { margin: -10px -14px 0 0; }
+@media (max-width: 640px) { .num-ic { width: 100px; margin: -6px 0 0 -10px; } [dir="rtl"] .num-ic { margin: -6px -10px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .num-ic { transition: none; } .num:hover .num-ic { transform: none; } }
 
 /* ---------- companions */
 .cast { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -271,6 +277,12 @@ p, li span { text-wrap: pretty; }
 .vcard .flag { font-size: 30px; line-height: 1; }
 .vcard b { display: block; font: 600 18px/1.2 var(--serif); color: var(--ivory); }
 .vcard small { display: block; font: 500 10.5px/1.4 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+/* India Rules, the club's main game, leads on a row of its own so the other thirty keep even rows. */
+.vcard.home-game { grid-column: 1 / -1; padding: 18px 22px; border-color: var(--line-strong); background: radial-gradient(70% 160% at 0% 50%, rgba(207, 169, 95, 0.14), transparent 70%), rgba(11, 21, 18, 0.6); }
+.vcard.home-game .flag { font-size: 38px; }
+.vcard.home-game b { font-size: 24px; }
+/* Phone sizes, after the base card rules so they apply (the 700px block above comes first and loses to them). */
+@media (max-width: 700px) { .vcard { padding: 12px; gap: 10px; } .vcard .flag { font-size: 24px; } .vcard b { font-size: 16px; } .vcard small { letter-spacing: 0.1em; } .vcard.home-game { padding: 14px 16px; } .vcard.home-game .flag { font-size: 32px; } .vcard.home-game b { font-size: 21px; } }
 
 /* ---------- the Atelier: pieces shown like jewellery */
 .atelier { background: radial-gradient(70% 50% at 50% 0%, #1d1a12, var(--velvet) 70%); border-top: 1px solid var(--line); }
@@ -803,7 +815,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
       <div class="split flip">
         <div class="head">
           <p class="kicker"><span class="ring"><span class="icon">{{ICON:layers}}</span></span>The Mahjong family</p>
-          <div class="vhead"><span class="big">30</span><p>ways to play, from Hong Kong to Riichi to Dubai.</p></div>
+          <div class="vhead"><span class="big">31</span><p>ways to play, from India to Hong Kong, Riichi and Dubai.</p></div>
           <div class="rule"></div>
           <div class="story">
             <p>Every version played properly, with its own scoring, lesson and cheat sheet.</p>
@@ -826,6 +838,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         </figure>
       </div>
       <div class="vgrid">
+        <div class="vcard home-game"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>India Rules</b><small>The club’s main game · four rounds</small></div></div>
         <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Chinese Classical</b><small>Regional</small></div></div>
         <div class="vcard"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Hong Kong</b><small>Regional</small></div></div>
         <div class="vcard"><span class="flag" aria-hidden="true">🇹🇼</span><div><b>Taiwanese</b><small>Regional · 16 tiles</small></div></div>
@@ -912,10 +925,10 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
 
   <section class="numerals" aria-label="The club in numbers">
     <div class="wrap">
-      <div class="num"><b>30</b><span>Variations</span></div>
-      <div class="num"><b>18</b><span>Destinations</span></div>
-      <div class="num"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
-      <div class="num"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/variations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>31</b><span>Variations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/destinations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>18</b><span>Destinations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/tilesets.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/rooms.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
     </div>
   </section>
 
