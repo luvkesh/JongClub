@@ -166,6 +166,12 @@ p { margin: 0; }
 .num { display: flex; flex-direction: column; gap: 8px; padding-left: 20px; border-left: 1px solid var(--line-strong); }
 .num b { font: 600 clamp(56px, 8vw, 112px)/0.9 var(--display); background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .num span { font: 500 13px/1.4 var(--ui); letter-spacing: 0.22em; text-transform: uppercase; color: var(--text); }
+/* A rendered 3D icon over each number (website/tools/staticons.*). */
+.num-ic { display: block; width: clamp(108px, 11vw, 156px); height: auto; aspect-ratio: 1; margin: -10px 0 0 -14px; transition: transform 0.6s cubic-bezier(.2,.7,.2,1); }
+.num:hover .num-ic { transform: translateY(-4px) rotate(-2deg); }
+[dir="rtl"] .num-ic { margin: -10px -14px 0 0; }
+@media (max-width: 640px) { .num-ic { width: 100px; margin: -6px 0 0 -10px; } [dir="rtl"] .num-ic { margin: -6px -10px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .num-ic { transition: none; } .num:hover .num-ic { transform: none; } }
 
 /* ---------- companions */
 .cast { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -190,6 +196,36 @@ p { margin: 0; }
 .company-side .cast h4 { font-size: 20px; }
 .company-side .cast em { font-size: 10.5px; }
 .company-side .cast p { font-size: 13.5px; }
+/* The cast as lux character cards (the user's "At the table" design, 2026-11-06): a gold-edged card,
+   the role in a gold pill, and a gold emblem beside each line. */
+.side-h.crowned { justify-content: center; gap: 16px; font: 600 15px/1 var(--display); letter-spacing: 0.3em; color: var(--gold); margin-bottom: 6px; }
+.side-h.crowned::before { content: ""; flex: 0 1 180px; height: 1px; background: linear-gradient(270deg, var(--line-strong), transparent); }
+.side-h.crowned::after { flex: 0 1 180px; }
+.side-h .crown { display: inline-flex; width: 22px; height: 22px; margin-left: -4px; color: var(--gold-hi); filter: drop-shadow(0 0 6px rgba(240, 217, 160, 0.35)); }
+.side-h .crown svg { width: 100%; height: 100%; }
+.company-side .cast { gap: 14px; }
+.company-side .cast article { padding: 14px 16px 18px; gap: 10px; border: 1px solid rgba(207, 169, 95, 0.55); border-radius: 16px; background: radial-gradient(120% 60% at 50% 0%, rgba(46, 86, 66, 0.35), transparent 70%), linear-gradient(180deg, #11231c, #0a1511); box-shadow: inset 0 1px 0 rgba(255, 232, 186, 0.1), inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 14px 34px rgba(0, 0, 0, 0.38); }
+.company-side .cast .portrait { margin: -14px -16px 4px; border-radius: 15px 15px 0 0; border-bottom: 1px solid rgba(207, 169, 95, 0.5); background: radial-gradient(60% 65% at 50% 40%, rgba(120, 170, 120, 0.28), rgba(30, 70, 50, 0.18) 55%, transparent 85%), linear-gradient(180deg, #17352a, #0c1a15); }
+.company-side .cast h4 { font-size: 26px; line-height: 1; }
+.cast em { align-self: flex-start; padding: 6px 16px 5px; border: 1px solid var(--gold); border-radius: 999px; font: 600 11px/1 var(--display); letter-spacing: 0.2em; color: var(--gold-hi); background: linear-gradient(180deg, rgba(207, 169, 95, 0.2), rgba(207, 169, 95, 0.05)); box-shadow: inset 0 1px 0 rgba(255, 236, 196, 0.22), inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 14px rgba(207, 169, 95, 0.14); text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.company-side .cast em { font-size: 10.5px; }
+.cast .trait { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
+.cast .ticon { flex: none; width: 32px; height: 32px; color: var(--gold); filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.55)) drop-shadow(0 0 8px rgba(207, 169, 95, 0.2)); }
+.cast .ticon svg { width: 100%; height: 100%; }
+.cast .trait p { padding-left: 12px; border-left: 1px solid var(--line-strong); color: var(--text); text-wrap: pretty; }
+.company-side .cast em { letter-spacing: 0.15em; padding: 6px 12px 5px; }
+@media (max-width: 640px) {
+  .side-h.crowned { font-size: 13px; letter-spacing: 0.2em; gap: 10px; white-space: nowrap; }
+  .side-h.crowned::before, .side-h.crowned::after { flex-basis: 56px; }
+  .company-side .cast { gap: 10px; }
+  .company-side .cast article { padding: 12px 12px 14px; gap: 8px; }
+  .company-side .cast .portrait { margin: -12px -12px 4px; }
+  .company-side .cast h4 { font-size: 22px; }
+  .company-side .cast em { font-size: 9px; letter-spacing: 0.1em; padding: 5px 9px 4px; }
+  .cast .trait { gap: 8px; }
+  .cast .ticon { width: 24px; height: 24px; }
+  .cast .trait p { padding-left: 9px; }
+}
 .rooms3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .rooms3 figure { margin: 0; min-width: 0; }
 .rooms3 img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
@@ -271,6 +307,12 @@ p, li span { text-wrap: pretty; }
 .vcard .flag { font-size: 30px; line-height: 1; }
 .vcard b { display: block; font: 600 18px/1.2 var(--serif); color: var(--ivory); }
 .vcard small { display: block; font: 500 10.5px/1.4 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+/* India Rules, the club's main game, leads on a row of its own so the other thirty keep even rows. */
+.vcard.home-game { grid-column: 1 / -1; padding: 18px 22px; border-color: var(--line-strong); background: radial-gradient(70% 160% at 0% 50%, rgba(207, 169, 95, 0.14), transparent 70%), rgba(11, 21, 18, 0.6); }
+.vcard.home-game .flag { font-size: 38px; }
+.vcard.home-game b { font-size: 24px; }
+/* Phone sizes, after the base card rules so they apply (the 700px block above comes first and loses to them). */
+@media (max-width: 700px) { .vcard { padding: 12px; gap: 10px; } .vcard .flag { font-size: 24px; } .vcard b { font-size: 16px; } .vcard small { letter-spacing: 0.1em; } .vcard.home-game { padding: 14px 16px; } .vcard.home-game .flag { font-size: 32px; } .vcard.home-game b { font-size: 21px; } }
 
 /* ---------- the Atelier: pieces shown like jewellery */
 .atelier { background: radial-gradient(70% 50% at 50% 0%, #1d1a12, var(--velvet) 70%); border-top: 1px solid var(--line); }
@@ -622,6 +664,368 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } .js .rv, .js .rule { opacity: 1 !important; transform: none !important; } .band > img, .band > video { transform: none !important; } .hero h1::after { display: none; } }
 @media (max-width: 640px) { .company-side .cast { grid-template-columns: 1fr 1fr; } .company-side .rooms3 { grid-template-columns: repeat(3, 1fr); gap: 8px; } .company-side .rooms3 figcaption { font-size: 9.5px; letter-spacing: 0.1em; } .wind .tile3d { width: 128%; } }
 @media (max-width: 640px) { .subhead.orn .kicker::before, .subhead.orn .kicker::after { display: none; } .extras { grid-template-columns: 1fr; } .extra .medal, .extra:nth-child(n + 5) .medal { width: 84px; height: 84px; } }
+
+/* =====================================================================================
+   EMERALD SKIN (2026-11-06, the user's sixteen section references): deep emerald rooms lit
+   by lanterns, ivory Cinzel titles with a gold knot rule, italic Cormorant sub-lines,
+   gold-edged glass cards with a light along the top edge, quatrefoil badges, plinths
+   under the pieces, drawn cherry blossom in the corners. Real content only.
+   ===================================================================================== */
+:root {
+  --felt: #08201a;
+  --felt-2: #0a251d;
+  --felt-3: #12352a;
+  --velvet: #061812;
+  --emerald: #0f3a2c;
+  --card: linear-gradient(180deg, rgba(22, 56, 44, 0.72), rgba(8, 26, 20, 0.86));
+  --card-edge: rgba(214, 178, 106, 0.42);
+  --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e3c27c' stroke-width='1.25'%3E%3Ccircle cx='12' cy='7.6' r='4.1'/%3E%3Ccircle cx='12' cy='16.4' r='4.1'/%3E%3Ccircle cx='7.6' cy='12' r='4.1'/%3E%3Ccircle cx='16.4' cy='12' r='4.1'/%3E%3Ccircle cx='12' cy='12' r='1.3' fill='%23e3c27c' stroke='none'/%3E%3C/svg%3E");
+  --cloud: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6e2ab'/%3E%3Cstop offset='.45' stop-color='%23c9a053'/%3E%3Cstop offset='.7' stop-color='%23f0d595'/%3E%3Cstop offset='1' stop-color='%23977030'/%3E%3C/linearGradient%3E%3CradialGradient id='f' cx='.38' cy='.32'%3E%3Cstop offset='0' stop-color='%23214a39'/%3E%3Cstop offset='1' stop-color='%23071a13'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='url(%23g)'%3E%3Ccircle cx='50' cy='27' r='24'/%3E%3Ccircle cx='73' cy='50' r='24'/%3E%3Ccircle cx='50' cy='73' r='24'/%3E%3Ccircle cx='27' cy='50' r='24'/%3E%3C/g%3E%3Cg fill='%23081c15'%3E%3Ccircle cx='50' cy='27' r='22.4'/%3E%3Ccircle cx='73' cy='50' r='22.4'/%3E%3Ccircle cx='50' cy='73' r='22.4'/%3E%3Ccircle cx='27' cy='50' r='22.4'/%3E%3C/g%3E%3Cg fill='url(%23g)' opacity='.75'%3E%3Ccircle cx='50' cy='31' r='19.6'/%3E%3Ccircle cx='69' cy='50' r='19.6'/%3E%3Ccircle cx='50' cy='69' r='19.6'/%3E%3Ccircle cx='31' cy='50' r='19.6'/%3E%3C/g%3E%3Cg fill='url(%23f)'%3E%3Ccircle cx='50' cy='31' r='18.8'/%3E%3Ccircle cx='69' cy='50' r='18.8'/%3E%3Ccircle cx='50' cy='69' r='18.8'/%3E%3Ccircle cx='31' cy='50' r='18.8'/%3E%3C/g%3E%3C/svg%3E");
+}
+body { background: var(--velvet); }
+
+/* ---------- rooms: every section is an emerald room with lantern light, not a flat panel */
+.chapter, .chapter.alt, .atelier, .numerals, .final, .ritual { position: relative; overflow: hidden; border-top: 0; isolation: isolate; }
+.chapter { background: radial-gradient(70% 55% at 82% 8%, rgba(214, 160, 82, 0.10), transparent 60%), radial-gradient(90% 80% at 10% 100%, rgba(18, 70, 52, 0.55), transparent 70%), linear-gradient(180deg, #0a251d, #071d16); }
+.chapter.alt { background: radial-gradient(60% 50% at 12% 6%, rgba(214, 160, 82, 0.09), transparent 60%), radial-gradient(90% 80% at 90% 100%, rgba(20, 78, 58, 0.5), transparent 70%), linear-gradient(180deg, #0c2a21, #08201a); }
+/* a soft hairline of gold between rooms, brightest in the middle */
+.chapter::after, .atelier::after, .numerals::after, .final::after { content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(214, 178, 106, 0.38) 30%, rgba(240, 217, 160, 0.6) 50%, rgba(214, 178, 106, 0.38) 70%, transparent); pointer-events: none; }
+/* window light falling in from the top right, like the references */
+.chapter::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(118deg, transparent 58%, rgba(255, 226, 170, 0.035) 64%, transparent 70%, rgba(255, 226, 170, 0.03) 76%, transparent 82%); }
+.chapter > .wrap, .atelier > .wrap, .numerals > .wrap, .final > .wrap { position: relative; z-index: 1; }
+
+/* the drawn cherry branch in a corner; it never covers the words */
+.deco.blossom { position: absolute; top: -8px; left: -10px; z-index: 0; width: clamp(240px, 30vw, 460px); height: auto; pointer-events: none; opacity: 0.95; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.35)); }
+.deco.blossom.flip { left: auto; right: -10px; transform: scaleX(-1); }
+.hero .deco.blossom { z-index: 1; width: clamp(260px, 34vw, 560px); top: 0; }
+.chapter .deco.blossom { opacity: 0.85; }
+@media (max-width: 760px) { .deco.blossom { width: 200px; opacity: 0.6 !important; top: -14px; } .hero .deco.blossom { width: 220px; } }
+
+/* ---------- headings: kicker with a ring and a trailing line, ivory Cinzel, a knot rule, italic gold sub-line */
+.kicker { color: var(--gold-hi); letter-spacing: 0.32em; font-weight: 500; }
+.head > .kicker::after, .vt-text .kicker::after { content: ""; flex: 0 1 140px; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); }
+.ring { width: 48px; height: 48px; border: 1px solid rgba(227, 194, 124, 0.7); background: radial-gradient(circle at 35% 30%, rgba(240, 217, 160, 0.22), rgba(8, 28, 21, 0.9) 70%); box-shadow: inset 0 0 0 3px rgba(6, 22, 17, 0.9), inset 0 0 0 4px rgba(227, 194, 124, 0.25), 0 0 18px rgba(214, 178, 106, 0.18); }
+.title { background: linear-gradient(180deg, #fbf3df 20%, #e6d3a8 80%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 3px 14px rgba(0, 0, 0, 0.45)); letter-spacing: 0.035em; padding-block: 0.06em; }
+.rule { width: min(280px, 70%); height: 18px; background: var(--knot) 50% 50% / 18px 18px no-repeat, linear-gradient(90deg, var(--gold) 0, var(--gold-hi) 40%, transparent 44%, transparent 56%, var(--gold-hi) 60%, transparent) 50% 50% / 100% 1px no-repeat; }
+.atelier .head .rule, .final .rule, .rule.knot, .subhead .rule, .mg-head .rule, #minigames .head .rule { width: min(300px, 70%); background: var(--knot) 50% 50% / 18px 18px no-repeat, linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold-hi) 42%, transparent 44%, transparent 56%, var(--gold-hi) 58%, var(--gold) 80%, transparent) 50% 50% / 100% 1px no-repeat; }
+.sub { font: italic 500 clamp(24px, 2.6vw, 34px)/1.25 var(--serif); color: var(--gold-hi); background: linear-gradient(180deg, #f6e2ab, #d4ab5e); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0.06em 0.12em 0.1em 0; }
+.story p { color: #ddd8c8; }
+.subhead h3 { background: linear-gradient(180deg, #fbf3df 20%, #e6d3a8 80%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.subhead.orn h3, #details .subhead h3 { font-family: var(--display); letter-spacing: 0.04em; }
+.subhead.orn h3::after { width: 220px; height: 18px; margin-top: 12px; background: var(--knot) 50% 50% / 18px 18px no-repeat, linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold-hi) 42%, transparent 45%, transparent 55%, var(--gold-hi) 58%, var(--gold) 80%, transparent) 50% 50% / 100% 1px no-repeat; }
+
+/* ---------- buttons: pills, the gold one glowing */
+.btn { border-radius: 999px; min-height: 54px; padding: 0 34px; letter-spacing: 0.18em; }
+.btn.gold { background: linear-gradient(180deg, #fbe7b4, #e3c27c 45%, #c69b4f 80%, #a97e39); color: #1c1609; box-shadow: 0 0 0 1px rgba(255, 236, 190, 0.5) inset, 0 -2px 0 rgba(120, 84, 30, 0.45) inset, 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 34px rgba(227, 194, 124, 0.28); }
+.btn.gold:hover { box-shadow: 0 0 0 1px rgba(255, 236, 190, 0.6) inset, 0 -2px 0 rgba(120, 84, 30, 0.45) inset, 0 16px 34px rgba(0, 0, 0, 0.45), 0 0 46px rgba(227, 194, 124, 0.42); }
+.btn.ghost { background: linear-gradient(180deg, rgba(16, 52, 40, 0.85), rgba(6, 26, 19, 0.9)); border: 1px solid rgba(227, 194, 124, 0.7); color: #f2dfae; box-shadow: inset 0 1px 0 rgba(255, 236, 190, 0.12), 0 10px 26px rgba(0, 0, 0, 0.35); }
+.top .btn { min-height: 42px; padding: 0 22px; }
+.top { background: rgba(6, 24, 18, 0.88); border-bottom: 1px solid rgba(214, 178, 106, 0.32); }
+.top nav a { color: #e9e1cc; }
+.tool { border-color: rgba(214, 178, 106, 0.4); background: rgba(10, 34, 26, 0.6); }
+
+/* ---------- the lux card: gold hairline, green glass, a light along the top edge */
+.notes li, .ritual-notes article, .families li, .vkit, .vcard, .vtour, .games li, .extra, .earn article, .company-side .cast article, .mg-feat li, .club-notes li {
+  position: relative; border: 1px solid var(--card-edge); border-radius: 16px; background: var(--card);
+  box-shadow: inset 0 1px 0 rgba(255, 236, 196, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.3), 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.notes li::before, .ritual-notes article::before, .families li::before, .vkit::before, .vtour::before, .extra::before, .earn article::before, .company-side .cast article::before, .games li::before, .vcard::before {
+  content: ""; position: absolute; top: -1px; left: 18%; right: 18%; height: 1px; pointer-events: none; z-index: 1;
+  background: linear-gradient(90deg, transparent, rgba(255, 233, 186, 0.95), transparent); box-shadow: 0 0 10px 1px rgba(240, 210, 140, 0.35);
+}
+.notes li::after, .families li::after, .vkit::after, .extra::after, .earn article::after { content: ""; position: absolute; bottom: -1px; left: 25%; right: 25%; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(227, 194, 124, 0.6), transparent); transform: none; width: auto; }
+.notes li, .ritual-notes article, .families li, .games li, .vcard { transition: transform 0.4s cubic-bezier(.2, .7, .2, 1), border-color 0.4s, box-shadow 0.4s; }
+.notes li:hover, .ritual-notes article:hover, .families li:hover, .games li:hover, .vcard:hover { transform: translateY(-3px); border-color: rgba(240, 217, 160, 0.75); box-shadow: inset 0 1px 0 rgba(255, 236, 196, 0.16), 0 24px 46px rgba(0, 0, 0, 0.45), 0 0 26px rgba(214, 178, 106, 0.14); }
+.badge { width: 54px; height: 54px; border: 1px solid rgba(227, 194, 124, 0.75); background: radial-gradient(circle at 35% 30%, rgba(240, 217, 160, 0.28), rgba(8, 28, 21, 0.95) 72%); box-shadow: inset 0 0 0 3px rgba(6, 22, 17, 0.85), inset 0 0 0 4px rgba(227, 194, 124, 0.3), 0 0 16px rgba(214, 178, 106, 0.2); color: #f6e2ab; }
+.badge .icon { width: 24px; height: 24px; }
+.notes li > div > b { font: 600 21px/1.2 var(--serif); letter-spacing: 0.01em; }
+.notes li { padding: 18px 22px; gap: 18px; }
+
+/* quatrefoil badges, as the references draw them under Learn and around the table */
+.timeline .dot, .ritual-notes .badge, .mg-feat .badge { border: 0; border-radius: 0; background: var(--cloud) center / contain no-repeat; box-shadow: none; filter: drop-shadow(0 0 12px rgba(214, 178, 106, 0.28)) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.4)); color: #f6e2ab; }
+
+/* ---------- hero */
+.hero { background: radial-gradient(60% 70% at 50% 30%, #18402f, var(--velvet) 75%); }
+.hero .wrap { gap: 18px; padding-block: 48px 92px; }
+.hero .rule.knot { margin: -4px 0 -2px; }
+.tagline { font: italic 500 clamp(36px, 5vw, 64px)/1.08 var(--serif); letter-spacing: 0.02em; background: linear-gradient(180deg, #fbe7b4, #d6b066 70%, #b98f45); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 18px rgba(0, 0, 0, 0.6)); padding: 0.04em 0.14em 0.1em; }
+.hero .lead { color: #f1ead8; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.75); }
+.motto { align-items: center; gap: 0.9em; letter-spacing: 0.4em; font-size: 14px; }
+.motto span + span::before { content: "·"; margin-right: 0.9em; color: var(--gold); letter-spacing: 0; }
+.motto { font-weight: 500; }
+.hero .motto, .final .motto { gap: 0; }
+.hero .motto span + span::before, .final .motto span + span::before { margin: 0 0.75em 0 0.35em; }
+.hero .motto::before, .hero .motto::after, .final .motto::before, .final .motto::after { content: ""; width: clamp(40px, 12vw, 180px); height: 1px; margin: 0 22px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.hero .motto::after, .final .motto::after { background: linear-gradient(90deg, var(--gold), transparent); }
+/* the full stops of "Learn. Play. Master." stay in the text for translations; the dots take their place visually */
+.hero-cta { gap: 18px; margin-top: 12px; }
+
+/* ---------- picture bands: the quote with a gold mark and a knot rule */
+.band .quote .icon { color: var(--gold-hi); width: 44px; height: 44px; }
+.band .rule.knot { margin-top: 26px; width: 300px; background: var(--knot) 50% 50% / 18px 18px no-repeat, linear-gradient(90deg, var(--gold), var(--gold-hi) 44%, transparent 46%, transparent 54%, var(--gold-hi) 56%, transparent) 50% 50% / 100% 1px no-repeat; }
+.band::after { background: linear-gradient(180deg, rgba(6, 22, 17, 0) 30%, rgba(6, 22, 17, 0.55) 62%, rgba(6, 22, 17, 0.94) 100%), linear-gradient(90deg, rgba(6, 22, 17, 0.55), transparent 55%); }
+
+/* ---------- The Regulars: framed portraits in a lit niche */
+#arrive .company-side .cast article { border-radius: 18px; border-color: rgba(227, 194, 124, 0.62); text-align: center; align-items: center; padding-bottom: 22px; box-shadow: inset 0 0 0 4px rgba(6, 22, 17, 0.85), inset 0 0 0 5px rgba(227, 194, 124, 0.2), 0 22px 44px rgba(0, 0, 0, 0.45); }
+#arrive .company-side .cast .portrait { align-self: stretch; border-radius: 17px 17px 0 0; background: radial-gradient(60% 60% at 50% 40%, rgba(240, 200, 130, 0.25), rgba(30, 80, 60, 0.25) 55%, transparent 85%), linear-gradient(180deg, #1b4334, #0b2219); }
+#arrive .cast em { align-self: center; }
+#arrive .cast .trait { flex-direction: column; gap: 8px; }
+#arrive .cast .trait p { padding: 0; border: 0; text-align: center; }
+#arrive .cast article::after { content: ""; display: block; width: 70%; height: 14px; margin-top: auto; background: var(--knot) 50% 50% / 14px 14px no-repeat, linear-gradient(90deg, transparent, var(--gold) 30%, transparent 44%, transparent 56%, var(--gold) 70%, transparent) 50% 50% / 100% 1px no-repeat; opacity: 0.85; }
+#arrive .company-side .cast h4 { font-size: 28px; }
+
+/* ---------- Learn: the Academy on a laptop, the steps on a gold line */
+.device { position: relative; }
+.device img { border-radius: 0; border: 0; box-shadow: none; }
+.device.laptop { padding: 0 6% 0; }
+.device.laptop img { padding: 14px 14px 18px; background: #060807; border-radius: 18px 18px 6px 6px; box-shadow: 0 0 0 1px rgba(214, 178, 106, 0.55), 0 0 0 5px #1a1d1c, 0 0 0 6px rgba(214, 178, 106, 0.25), 0 40px 80px rgba(0, 0, 0, 0.6); }
+.device.laptop .base { display: block; height: 18px; margin: 0 -6%; border-radius: 0 0 22px 22px / 0 0 14px 14px; background: linear-gradient(180deg, #c9ccd0, #8e9296 40%, #4a4d50); box-shadow: 0 18px 30px rgba(0, 0, 0, 0.55); position: relative; }
+.device.laptop .base::before { content: ""; position: absolute; left: 50%; top: 0; width: 16%; height: 7px; transform: translateX(-50%); border-radius: 0 0 10px 10px; background: linear-gradient(180deg, #6d7174, #9a9ea2); }
+.timeline::before { top: 40px; background: linear-gradient(90deg, transparent, var(--gold) 8%, var(--gold-hi) 50%, var(--gold) 92%, transparent); opacity: 0.8; }
+.timeline li { align-items: center; text-align: center; padding: 0 10px; }
+.timeline .dot { width: 82px; height: 82px; }
+.timeline .dot .icon { width: 30px; height: 30px; }
+.timeline h4 { font-size: 27px; margin-top: 6px; }
+.timeline p { color: #d6d0bf; font-size: 16.5px; }
+
+/* ---------- Play: the table in a gilt frame with engraved corners */
+.shot.framed { position: relative; padding: 10px; border-radius: 22px; background: linear-gradient(140deg, #f6e2ab, #9a7334 22%, #e9cd88 45%, #7d5a24 70%, #f0d595); box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6), 0 0 60px rgba(214, 178, 106, 0.16); }
+.shot.framed img { border-radius: 14px; border: 0; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4); }
+.shot.framed::after { content: ""; position: absolute; inset: 20px; pointer-events: none; border-radius: 8px;
+  background: linear-gradient(var(--gold-hi), var(--gold-hi)) top left / 34px 2px no-repeat, linear-gradient(var(--gold-hi), var(--gold-hi)) top left / 2px 34px no-repeat,
+  linear-gradient(var(--gold-hi), var(--gold-hi)) top right / 34px 2px no-repeat, linear-gradient(var(--gold-hi), var(--gold-hi)) top right / 2px 34px no-repeat,
+  linear-gradient(var(--gold-hi), var(--gold-hi)) bottom left / 34px 2px no-repeat, linear-gradient(var(--gold-hi), var(--gold-hi)) bottom left / 2px 34px no-repeat,
+  linear-gradient(var(--gold-hi), var(--gold-hi)) bottom right / 34px 2px no-repeat, linear-gradient(var(--gold-hi), var(--gold-hi)) bottom right / 2px 34px no-repeat; opacity: 0.85; filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.6)); }
+#play .notes { grid-template-columns: 1fr 1fr; }
+#play .notes li:first-child { border-color: rgba(240, 217, 160, 0.8); background: linear-gradient(180deg, rgba(34, 84, 62, 0.85), rgba(10, 34, 26, 0.9)); }
+
+/* ---------- Rounds: the four winds on a lacquered stand, each with its plaque */
+.wind-row.plinth { position: relative; padding: 0 4% 34px; max-width: 700px; }
+.wind-row.plinth::before { content: ""; position: absolute; left: -2%; right: -2%; bottom: 0; height: 46%; z-index: -1; border-radius: 50%; background: radial-gradient(60% 60% at 50% 40%, rgba(32, 96, 70, 0.9), #0b2c21 70%); box-shadow: 0 0 0 2px #6b3d1f, 0 0 0 3px rgba(227, 194, 124, 0.7), 0 14px 0 -2px #3a1d0e, 0 14px 0 0 rgba(227, 194, 124, 0.45), 0 40px 60px rgba(0, 0, 0, 0.55); }
+.wind-row.plinth { isolation: isolate; }
+.wind b { padding: 9px 18px 8px; border: 1px solid rgba(227, 194, 124, 0.8); border-radius: 8px; background: linear-gradient(180deg, rgba(20, 60, 46, 0.95), rgba(6, 26, 19, 0.95)); font: 600 12px/1 var(--display); letter-spacing: 0.3em; color: #f2dfae; box-shadow: inset 0 0 0 2px rgba(6, 22, 17, 0.9), inset 0 0 0 3px rgba(227, 194, 124, 0.25), 0 8px 16px rgba(0, 0, 0, 0.4); margin-top: 4px; }
+.wind .tile3d { filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.5)); }
+
+/* ---------- Tea, gold and dice */
+.ritual { background: radial-gradient(60% 70% at 78% 30%, rgba(200, 130, 60, 0.16), transparent 65%), linear-gradient(180deg, #0a241c, #071c15); }
+.ritual-row .shot img { border-radius: 18px; border-color: rgba(227, 194, 124, 0.55); }
+.ritual-notes article { padding: 16px 20px; gap: 18px; }
+.ritual-notes .badge { width: 62px; height: 62px; }
+.ritual-notes h4 { font-style: italic; font-weight: 500; font-size: 23px; }
+
+/* ---------- Variations */
+.vhead { align-items: center; gap: 22px; }
+#variations .vhead .big { font-size: clamp(110px, 12vw, 170px); filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5)); }
+.vhead p { font: italic 500 clamp(24px, 2.4vw, 32px)/1.25 var(--serif); color: #f2dfae; max-width: 18ch; padding-bottom: 0; }
+.families { gap: 14px; }
+.families li { padding: 18px 26px; gap: 22px; }
+.families b { width: 64px; font-size: 54px; padding-right: 18px; border-right: 1px solid rgba(227, 194, 124, 0.45); box-sizing: content-box; }
+.families h4 { font-size: 27px; }
+.vkit { border-radius: 18px; }
+.vk-head { border-bottom-color: rgba(227, 194, 124, 0.3); background: radial-gradient(80% 140% at 0% 50%, rgba(214, 178, 106, 0.14), transparent 70%); }
+.vk-head span { font: 600 clamp(22px, 2vw, 28px)/1.2 var(--serif); letter-spacing: 0.01em; text-transform: none; color: #f2dfae; }
+.vkit li + li { border-top-color: rgba(227, 194, 124, 0.2); }
+.vtabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px; padding-bottom: 12px; border-bottom: 1px solid rgba(227, 194, 124, 0.25); margin-bottom: -12px; }
+.vtabs[hidden], .mg-tabs[hidden], .vmore[hidden] { display: none; }
+.vtabs button, .mg-tabs button { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 22px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: #ddd8c8; font: 500 15.5px/1 var(--ui); letter-spacing: 0.02em; cursor: pointer; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+.vtabs button:hover, .mg-tabs button:hover { color: var(--gold-hi); }
+.vtabs button[aria-selected="true"], .mg-tabs button[aria-selected="true"] { background: linear-gradient(180deg, #fbe7b4, #e3c27c 50%, #c69b4f); color: #1c1609; font-weight: 600; box-shadow: 0 0 22px rgba(227, 194, 124, 0.3); }
+.vgrid { align-items: stretch; }
+.vcard[hidden], .vgroup[hidden], .games li[hidden] { display: none !important; }
+.vgroup { grid-column: 1 / -1; margin: 14px 0 -2px; display: flex; align-items: center; gap: 14px; font: 600 12.5px/1 var(--ui); letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold-hi); }
+.vgroup::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(227, 194, 124, 0.45), transparent); }
+.vcard { border-radius: 14px; }
+/* Featured: six tall cards with the flag on top, as in the reference */
+.vgrid[data-mode="featured"] { grid-template-columns: repeat(6, 1fr); }
+.vgrid[data-mode="featured"] .vcard { flex-direction: column; justify-content: center; text-align: center; gap: 12px; padding: 22px 12px 20px; }
+.vgrid[data-mode="featured"] .vcard.home-game { grid-column: auto; padding: 22px 12px 20px; }
+.vgrid[data-mode="featured"] .vcard .flag, .vgrid[data-mode="featured"] .vcard.home-game .flag { font-size: 46px; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45)); }
+.vgrid[data-mode="featured"] .vcard b, .vgrid[data-mode="featured"] .vcard.home-game b { font-size: 22px; }
+.vgrid[data-mode="featured"] .vcard small { margin-top: 6px; }
+.vmore { display: flex; justify-content: center; margin-top: -8px; }
+.vmore .btn { min-width: min(100%, 320px); }
+.vmore .btn .icon { width: 18px; height: 18px; }
+.vmore [data-more="0"] .icon { transform: rotate(180deg); }
+.vtour { border-radius: 18px; padding: clamp(24px, 3vw, 40px) clamp(22px, 3.4vw, 48px); }
+.vtour h3 { font-family: var(--display); font-size: clamp(32px, 3.4vw, 48px); background: linear-gradient(180deg, #fbf3df 20%, #e6d3a8 80%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pstamp { width: 92px; height: 92px; border: 1.5px solid rgba(227, 194, 124, 0.8); box-shadow: inset 0 0 0 4px rgba(8, 28, 21, 0.95), inset 0 0 0 5px rgba(227, 194, 124, 0.4), 0 0 0 4px rgba(8, 28, 21, 0.6), 0 0 0 5px rgba(227, 194, 124, 0.25), 0 10px 20px rgba(0, 0, 0, 0.4); background: radial-gradient(circle at 40% 30%, rgba(240, 217, 160, 0.14), rgba(8, 28, 21, 0.9) 70%); }
+@media (max-width: 1100px) { .vgrid[data-mode="featured"] { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px) { .vgrid[data-mode="featured"] { grid-template-columns: 1fr 1fr; } .vtabs button { padding: 0 14px; font-size: 14px; } .families b { font-size: 42px; width: 48px; padding-right: 12px; } .families h4 { font-size: 22px; } .families li { padding: 14px 16px; gap: 14px; } }
+
+/* ---------- Mini-games: a centred head, captions on the pictures, the full list with tabs */
+#minigames .head { align-items: center; text-align: center; }
+#minigames .head > .kicker::before { content: ""; flex: 0 1 140px; height: 1px; background: linear-gradient(270deg, var(--gold), transparent); order: -1; }
+#minigames .head .sub { max-width: none; font-size: clamp(22px, 2.2vw, 28px); }
+#minigames .head { position: relative; }
+#minigames::before { background: radial-gradient(40% 30% at 6% 8%, rgba(220, 70, 50, 0.16), transparent 70%), radial-gradient(40% 30% at 94% 8%, rgba(220, 70, 50, 0.16), transparent 70%); }
+.mg-mosaic .shot { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid rgba(227, 194, 124, 0.6); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.3); }
+.mg-mosaic .shot img { border: 0; border-radius: 0; box-shadow: none; }
+.mg-mosaic figcaption { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 48px clamp(14px, 2vw, 26px) clamp(12px, 1.6vw, 22px); background: linear-gradient(180deg, transparent, rgba(4, 16, 12, 0.88)); color: var(--ivory); }
+.mg-name b { display: block; font: 600 clamp(19px, 1.8vw, 30px)/1.15 var(--serif); color: #fbf3df; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7); }
+.mg-name em { display: block; margin-top: 6px; font: 600 11px/1 var(--ui); font-style: normal; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold-hi); }
+.mg-play { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--gold-hi); border: 1.5px solid rgba(227, 194, 124, 0.85); background: rgba(6, 22, 17, 0.6); transition: background 0.3s, transform 0.3s; }
+.mg-play:hover { background: rgba(227, 194, 124, 0.2); transform: scale(1.06); }
+.mg-play .icon { width: 18px; height: 18px; margin-left: 3px; }
+#minigames .split { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 30px; }
+#minigames .split .story { align-items: center; max-width: 64ch; }
+#minigames .split .story p { font-size: 19px; }
+#minigames .split .notes { width: 100%; grid-template-columns: repeat(4, 1fr); text-align: start; }
+.mg-explore { display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: -6px; }
+.mg-explore::before, .mg-explore::after { content: ""; width: clamp(40px, 14vw, 220px); height: 18px; background: var(--knot) 100% 50% / 16px 16px no-repeat, linear-gradient(90deg, transparent, var(--gold)) 0 50% / calc(100% - 22px) 1px no-repeat; }
+.mg-explore::after { transform: scaleX(-1); }
+.mg-explore .icon { width: 18px; height: 18px; }
+.games-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; margin-top: clamp(30px, 4vw, 56px); scroll-margin-top: 90px; }
+.games-head .subhead { align-items: flex-start; text-align: start; }
+.mg-tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+.mg-tabs button { border-color: rgba(227, 194, 124, 0.55); min-height: 48px; padding: 0 22px; }
+.mg-tabs button .icon { width: 20px; height: 20px; }
+.games { margin-top: 0; gap: 16px; }
+.games li { border-radius: 14px; padding: 18px 18px 20px; }
+@media (max-width: 1080px) { #minigames .split .notes { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { #minigames .split .notes { grid-template-columns: 1fr; } .mg-tabs button { padding: 0 14px; min-height: 42px; font-size: 14px; } .mg-explore::before, .mg-explore::after { display: none; } .mg-play { width: 38px; height: 38px; } .mg-mosaic figcaption { padding-top: 30px; } }
+
+/* ---------- the numbers: each 3D piece in a lit arch, on a gold stand */
+.numerals { background: radial-gradient(50% 80% at 50% 110%, rgba(214, 160, 82, 0.12), transparent 70%), linear-gradient(180deg, #071d16, #06170f); }
+.numerals .wrap { gap: clamp(14px, 2.4vw, 34px); padding-block: clamp(64px, 8vw, 110px); }
+.num { position: relative; align-items: center; text-align: center; padding: clamp(20px, 2vw, 30px) 10px 24px; border: 0; }
+.num::before { content: ""; position: absolute; inset: 0 4% 32%; z-index: -1; border: 1px solid rgba(227, 194, 124, 0.55); border-bottom: 0; border-radius: 50% 50% 0 0 / 34% 34% 0 0; -webkit-mask: linear-gradient(180deg, #000 55%, transparent); mask: linear-gradient(180deg, #000 55%, transparent); background: radial-gradient(60% 50% at 50% 30%, rgba(214, 178, 106, 0.08), transparent 70%); }
+.num-ic, [dir="rtl"] .num-ic { margin: 0 auto -4px; width: clamp(110px, 12vw, 170px); position: relative; z-index: 1; }
+.num .num-ic + b { position: relative; }
+.num > b::before { content: ""; position: absolute; left: 50%; top: -0.36em; width: clamp(120px, 12vw, 180px); height: 16px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(50% 50% at 50% 50%, rgba(255, 220, 150, 0.5), rgba(214, 178, 106, 0.22) 55%, transparent 72%); }
+.num b { font-size: clamp(60px, 7vw, 100px); margin-top: 16px; }
+.num span { letter-spacing: 0.32em; color: #f1ead8; }
+.num span::after { content: ""; display: block; width: 130px; height: 14px; margin: 14px auto 0; background: var(--knot) 50% 50% / 14px 14px no-repeat, linear-gradient(90deg, transparent, var(--gold) 30%, transparent 44%, transparent 56%, var(--gold) 70%, transparent) 50% 50% / 100% 1px no-repeat; }
+.numerals::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; z-index: 0; pointer-events: none; background: url(assets/deco/waves.svg) left bottom / 46% 100% no-repeat, url(assets/deco/waves.svg) right bottom / 46% 100% no-repeat; opacity: 0.55; }
+.numerals::before { background: url(assets/deco/waves.svg) left bottom / 46% 100% no-repeat; }
+.numerals .wrap::after { content: ""; position: absolute; right: calc(50% - 50vw); bottom: 0; width: 46vw; height: 40%; pointer-events: none; z-index: -1; background: url(assets/deco/waves.svg) center / 100% 100% no-repeat; transform: scaleX(-1); opacity: 0.55; }
+@media (max-width: 860px) { .numerals .wrap { grid-template-columns: 1fr 1fr; row-gap: 26px; } }
+
+/* ---------- the Atelier, the details and Play for It */
+.atelier { background: radial-gradient(60% 40% at 50% 0%, rgba(214, 160, 82, 0.12), transparent 70%), linear-gradient(180deg, #0a251d, #071c15); }
+.atelier .head .kicker::before, .atelier .head .kicker::after, #earn .subhead .kicker::before, #earn .subhead .kicker::after { content: ""; flex: 0 1 120px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.atelier .head .kicker::after, #earn .subhead .kicker::after { background: linear-gradient(90deg, var(--gold), transparent); }
+.atelier .head .kicker::before, #earn .subhead .kicker::before { order: -1; }
+.car-tabs { border-color: rgba(227, 194, 124, 0.55); background: rgba(6, 26, 19, 0.75); }
+.car-info { border-color: rgba(227, 194, 124, 0.6); border-radius: 16px; background: linear-gradient(180deg, rgba(20, 54, 42, 0.85), rgba(6, 24, 18, 0.92)); box-shadow: inset 0 0 0 4px rgba(6, 22, 17, 0.9), inset 0 0 0 5px rgba(227, 194, 124, 0.25), 0 24px 50px rgba(0, 0, 0, 0.45); }
+.tstrip { background: linear-gradient(180deg, rgba(16, 46, 36, 0.8), rgba(6, 22, 17, 0.85)); border-color: rgba(227, 194, 124, 0.5); border-radius: 14px; }
+.car-nav button { background: rgba(6, 26, 19, 0.75); }
+#details { background: radial-gradient(60% 50% at 50% 0%, rgba(214, 178, 106, 0.08), transparent 70%); }
+.extra { border-radius: 16px; padding: 18px 20px 18px 14px; gap: 18px; }
+.extra .medal { filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(214, 178, 106, 0.12)); }
+.extra > div { padding-inline-start: 18px; border-inline-start: 1px solid rgba(227, 194, 124, 0.4); }
+.extra b { font-size: clamp(21px, 1.7vw, 25px); }
+.earn { gap: 18px; }
+.earn article { align-items: center; text-align: center; padding: 34px 26px 30px; gap: 14px; }
+.earn .badge { width: 92px; height: 92px; margin-bottom: 18px; position: relative; overflow: visible; }
+.earn .badge .icon { width: 40px; height: 40px; }
+.earn .badge::after { content: ""; position: absolute; left: 50%; bottom: -22px; width: 150px; height: 22px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(50% 50% at 50% 40%, rgba(46, 110, 82, 0.9), rgba(12, 40, 30, 0.9) 70%, transparent 72%); box-shadow: 0 0 0 1px rgba(227, 194, 124, 0.7), 0 6px 0 -1px #5a3a18, 0 6px 0 0 rgba(227, 194, 124, 0.45), 0 14px 20px rgba(0, 0, 0, 0.45); z-index: -1; }
+.earn h4 { font-size: 27px; }
+.earn p { color: #d6d0bf; }
+.promise { gap: 16px; }
+.promise::before, .promise::after { content: ""; flex: 0 1 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.promise::after { background: linear-gradient(90deg, var(--gold), transparent); order: 3; }
+
+/* ---------- The Club: the club screen on a tablet on a gold stand */
+.device.tablet { padding: 0 0 26px; }
+.device.tablet img { padding: 12px; border-radius: 26px; background: #050706; box-shadow: 0 0 0 1px rgba(240, 217, 160, 0.9), 0 0 0 4px #2b2416, 0 0 0 5px rgba(227, 194, 124, 0.6), 0 0 40px rgba(214, 178, 106, 0.25), 0 40px 80px rgba(0, 0, 0, 0.6); }
+.device.tablet::after { content: ""; position: absolute; left: -4%; right: -4%; bottom: 0; height: 34px; z-index: -1; border-radius: 50%; background: radial-gradient(50% 50% at 50% 40%, #1c3d30, #071a13 70%); box-shadow: 0 0 0 1px rgba(227, 194, 124, 0.8), 0 8px 0 -1px #4a2f12, 0 8px 0 0 rgba(227, 194, 124, 0.5), 0 0 50px rgba(214, 178, 106, 0.25), 0 30px 40px rgba(0, 0, 0, 0.5); }
+#club .split { isolation: isolate; }
+#club .notes li { padding: 22px 24px; }
+#club .notes .badge { width: 62px; height: 62px; }
+#club .notes li > div { padding-inline-start: 18px; border-inline-start: 1px solid rgba(227, 194, 124, 0.4); }
+#club .notes li > div > b { font-size: 25px; }
+#club .notes li > div > span { font-size: 16px; }
+#club .sub { font-style: normal; font-family: var(--ui); font-weight: 400; font-size: clamp(22px, 2.2vw, 28px); }
+
+/* ---------- the closing invitation */
+.final { background: radial-gradient(50% 60% at 50% 38%, rgba(30, 90, 66, 0.55), transparent 70%), radial-gradient(40% 40% at 90% 10%, rgba(255, 220, 160, 0.08), transparent 70%), linear-gradient(180deg, #0a2a20, #061811); }
+.final::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: url(assets/deco/waves.svg) left bottom / 44% 46% no-repeat; opacity: 0.6; }
+.final .wrap::after { content: ""; position: absolute; right: calc(50% - 50vw); bottom: 0; width: 44vw; height: 46%; z-index: -1; pointer-events: none; background: url(assets/deco/waves.svg) center / 100% 100% no-repeat; transform: scaleX(-1); opacity: 0.6; }
+.final .wrap { gap: 20px; padding-block: clamp(90px, 11vw, 150px); }
+.final .crest-md { width: 190px; height: 190px; filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(214, 178, 106, 0.2)); }
+.final h2 { font-family: var(--serif); font-size: clamp(46px, 6.4vw, 90px); background: linear-gradient(180deg, #fbf3df 20%, #e6d3a8 80%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-block: 0.04em; }
+.final h2 + p { font-size: 20px; color: #f1ead8; }
+.final h2::after { content: ""; display: block; width: 300px; max-width: 70vw; height: 18px; margin: 18px auto 0; background: var(--knot) 50% 50% / 18px 18px no-repeat, linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold-hi) 42%, transparent 45%, transparent 55%, var(--gold-hi) 58%, var(--gold) 80%, transparent) 50% 50% / 100% 1px no-repeat; }
+.final .btn { margin-top: 8px; min-width: min(100%, 340px); min-height: 62px; font-size: 14px; }
+.final .btn::after { content: ""; position: absolute; }
+
+/* ---------- The House and the footer */
+#about { background: radial-gradient(60% 60% at 90% 90%, rgba(214, 160, 82, 0.1), transparent 70%), linear-gradient(180deg, #0a251d, #071c15); }
+#about .head .kicker::after { content: ""; flex: 0 1 140px; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); }
+.house { position: relative; }
+.house-tile { position: absolute; right: 0; bottom: -40px; width: clamp(150px, 16vw, 230px); height: auto; pointer-events: none; filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.55)); }
+.house-contact { border-left-color: rgba(227, 194, 124, 0.45); padding-bottom: clamp(120px, 14vw, 200px); }
+.house-contact .contact-list .icon { color: var(--gold-hi); }
+.house-story .house-lede { color: #fbf3df; }
+footer { border-top: 1px solid rgba(227, 194, 124, 0.35); background: #051510; }
+footer .wrap { padding-block: 28px; font-size: 14px; color: #e9e1cc; }
+.foot-motto { font: 500 13px/1 var(--ui); letter-spacing: 0.36em; text-transform: uppercase; color: var(--gold-hi); }
+@media (max-width: 760px) { .house-tile { display: none; } .house-contact { padding-bottom: 0; } footer .wrap { justify-content: center; text-align: center; } }
+
+/* ---------- phones and tablets */
+@media (max-width: 960px) {
+  .device.laptop { padding: 0 4%; }
+  .timeline .dot { width: 70px; height: 70px; }
+  .timeline::before { top: 34px; }
+}
+@media (max-width: 640px) {
+  .timeline li { align-items: flex-start; text-align: start; }
+  .hero .motto::before, .hero .motto::after, .final .motto::before, .final .motto::after { width: 24px; margin: 0 10px; }
+  .motto { letter-spacing: 0.26em; font-size: 12px; }
+  #play .notes { grid-template-columns: 1fr; }
+  .shot.framed { padding: 6px; border-radius: 14px; }
+  .shot.framed img { border-radius: 9px; }
+  .shot.framed::after { inset: 12px; background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px, 20px 2px, 2px 20px, 20px 2px, 2px 20px; }
+  .wind b { padding: 7px 10px 6px; letter-spacing: 0.16em; font-size: 10px; }
+  .earn article { padding: 26px 18px 22px; }
+  .promise { letter-spacing: 0.08em; font-size: 13px; }
+  .promise::before, .promise::after { display: none; }
+  .btn { padding: 0 24px; }
+  .vtabs { justify-content: center; }
+  .extra > div { padding-inline-start: 14px; }
+  .numerals .num span::after { width: 90px; }
+}
+@media (prefers-reduced-motion: reduce) { .notes li:hover, .ritual-notes article:hover, .families li:hover, .games li:hover, .vcard:hover { transform: none; } }
+
+/* skin fixes */
+.vmore [hidden] { display: none !important; }
+.motto span + span::before { content: none; }
+.hero .motto span + span::before, .final .motto span + span::before { content: none; }
+.hero .motto span + span, .final .motto span + span { margin-left: 0.9em; }
+#minigames .head > .kicker, .atelier .head .kicker, #earn .subhead .kicker, .subhead.orn .kicker, .games-head .kicker { white-space: nowrap; }
+.kicker::before, .kicker::after { min-width: 16px; }
+#minigames::before { background: radial-gradient(14% 12% at 4% 6%, rgba(230, 90, 60, 0.14), transparent 70%), radial-gradient(14% 12% at 96% 6%, rgba(230, 90, 60, 0.14), transparent 70%); }
+.sub { max-width: 30ch; }
+#play .head .sub { max-width: none; }
+#about .sub.script, .sub.script { font-family: var(--script); font-style: normal; font-weight: 400; }
+.extra .medal { width: 86px; height: 86px; }
+.extra:nth-child(n + 5) .medal { width: 100px; height: 100px; }
+#minigames .split .notes li { padding: 16px 18px; gap: 14px; }
+#minigames .split .notes .badge { width: 48px; height: 48px; }
+#minigames .split .notes li > div > b { font-size: 19px; }
+@media (max-width: 1080px) and (min-width: 641px) { .extra, .extra:nth-child(n + 5) { grid-column: span 6; } .extra:last-child { grid-column: 4 / span 6; } #club .notes { grid-template-columns: 1fr 1fr; } }
+.kicker { white-space: nowrap; }
+.kicker::after, .kicker::before { min-width: 0 !important; }
+html:not([lang="en"]) .kicker { white-space: normal; }
+@media (max-width: 640px) { .kicker { letter-spacing: 0.2em; font-size: 12px; gap: 12px; } .mg-name b { font-size: 15px; } .mg-name em { font-size: 9.5px; } .mg-mosaic figcaption { padding: 26px 10px 10px; } }
+/* 3D objects on their stands (website/tools/featicons.*) in Play for It and The Club */
+.feat-ic { display: block; flex: none; height: auto; filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.45)); transition: transform 0.6s cubic-bezier(.2, .7, .2, 1); }
+.earn .feat-ic { width: clamp(150px, 13vw, 190px); margin: -14px auto -6px; }
+#club .notes .feat-ic { width: 92px; margin: -14px -6px -14px -10px; }
+.earn article:hover .feat-ic, #club .notes li:hover .feat-ic { transform: translateY(-4px); }
+@media (max-width: 640px) { #club .notes .feat-ic { width: 80px; } }
+@media (prefers-reduced-motion: reduce) { .feat-ic { transition: none; } .earn article:hover .feat-ic, #club .notes li:hover .feat-ic { transform: none; } }
+#club .notes li { padding: 16px 18px; gap: 12px; }
+#club .notes .feat-ic { width: 84px; margin: -12px -4px -12px -8px; }
+#club .notes li > div { padding-inline-start: 14px; }
+#club .notes li > div > b { font-size: 23px; }
+#club .notes li > div > span { font-size: 15px; }
+.hero .crest-lg { width: min(60vw, 290px); }
+.hero h1 img { width: min(86vw, 700px); }
+.hero .wrap { padding-block: 36px 84px; gap: 16px; }
+.vt-stamps { max-width: 720px; }
+@media (min-width: 861px) { .pstamp { width: 84px; height: 84px; } }
+@media (max-width: 640px) { .mg-tabs { gap: 6px; } .mg-tabs button { padding: 0 11px; gap: 6px; font-size: 13.5px; } .mg-tabs button .icon { width: 16px; height: 16px; } }
 </style>
 
 <header class="top">
@@ -657,10 +1061,12 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
 
 <main id="top">
   <section class="hero" id="welcome">
+    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420">
     <div class="hero-media" aria-hidden="true"><video id="hero-video" muted loop playsinline preload="auto" poster="video/hero-poster.jpg"><source src="video/hero.mp4" type="video/mp4"></video></div>
     <div class="wrap">
       <img class="crest-lg" src="{{CREST_LG}}" alt="The JongClub crest: an ivory East wind tile inside a gold fret-work medallion">
       <h1 style="--wm: url({{WORDMARK}})"><img src="{{WORDMARK}}" alt="JongClub"></h1>
+      <div class="rule knot" aria-hidden="true"></div>
       <p class="tagline">The Table Awaits.</p>
       <p class="lead">A private mahjong club, a teacher at your side, and tiles made like jewellery.</p>
       <p class="motto"><span>Learn.</span><span>Play.</span><span>Master.</span></p>
@@ -675,11 +1081,13 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
     {{BAND_OPENING}}
     <div class="wrap">
       <p class="quote"><span class="icon">{{ICON:quote}}</span>Every great evening begins with tiles on felt and a seat pulled out for you.</p>
+      <div class="rule knot" aria-hidden="true"></div>
     </div>
   </section>
 
   <!-- I. The Regulars: AI players -->
   <section class="chapter" id="arrive">
+    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
       <div class="split company">
         <div class="head">
@@ -693,14 +1101,14 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
           </div>
         </div>
         <div class="company-side">
-          <h3 class="side-h">At the table</h3>
+          <h3 class="side-h crowned"><span>At the table</span><span class="crown">{{ICON:crown}}</span></h3>
           <div class="cast">
-            <article><span class="portrait"><img src="assets/companions/mei.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Mei</h4><em>The Teacher</em><p>Explains every move as she plays.</p></article>
-            <article><span class="portrait"><img src="assets/companions/rex.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Rex</h4><em>The Shark</em><p>Quick and aggressive. Leave a gap, he takes it.</p></article>
-            <article><span class="portrait"><img src="assets/companions/hiro.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Hiro</h4><em>The Wall</em><p>Patient. Gives nothing away.</p></article>
-            <article><span class="portrait"><img src="assets/companions/lucky.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Lucky</h4><em>The Gambler</em><p>Chases big hands, and sometimes lands them.</p></article>
-            <article><span class="portrait"><img src="assets/companions/amara.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Amara</h4><em>The Zen Player</em><p>Calm and conservative. Rarely rattled.</p></article>
-            <article class="friends"><span class="portrait"><img src="assets/companions/friends.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Your Friends</h4><em>Always welcome</em><p>Start a table, share the link, and play together in seconds.</p></article>
+            <article><span class="portrait"><img src="assets/companions/mei.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Mei</h4><em>The Teacher</em><div class="trait"><span class="ticon">{{ICON:cast-book}}</span><p>Explains every move as she plays.</p></div></article>
+            <article><span class="portrait"><img src="assets/companions/rex.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Rex</h4><em>The Shark</em><div class="trait"><span class="ticon">{{ICON:cast-fin}}</span><p>Quick and aggressive. Leave a gap, he takes it.</p></div></article>
+            <article><span class="portrait"><img src="assets/companions/hiro.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Hiro</h4><em>The Wall</em><div class="trait"><span class="ticon">{{ICON:cast-rook}}</span><p>Patient. Gives nothing away.</p></div></article>
+            <article><span class="portrait"><img src="assets/companions/lucky.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Lucky</h4><em>The Gambler</em><div class="trait"><span class="ticon">{{ICON:cast-dice}}</span><p>Chases big hands, and sometimes lands them.</p></div></article>
+            <article><span class="portrait"><img src="assets/companions/amara.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Amara</h4><em>The Zen Player</em><div class="trait"><span class="ticon">{{ICON:cast-lotus}}</span><p>Calm and conservative. Rarely rattled.</p></div></article>
+            <article class="friends"><span class="portrait"><img src="assets/companions/friends.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Your Friends</h4><em>Always welcome</em><div class="trait"><span class="ticon">{{ICON:cast-friends}}</span><p>Start a table, share the link, and play together in seconds.</p></div></article>
           </div>
         </div>
       </div>
@@ -709,6 +1117,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
 
   <!-- II. Learn -->
   <section class="chapter alt" id="learn">
+    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
       <div class="split flip">
         <div class="head">
@@ -721,7 +1130,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
             <p>Then the Academy takes you from your first pung to reading the whole table, one short voiced lesson at a time.</p>
           </div>
         </div>
-        <figure class="shot"><img src="shots/learn-1800.jpg" srcset="shots/learn-1800.jpg 1800w, shots/learn.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Academy: Mei welcomes you to the club in the first lesson."></figure>
+        <figure class="shot device laptop"><img src="shots/learn-1800.jpg" srcset="shots/learn-1800.jpg 1800w, shots/learn.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Academy: Mei welcomes you to the club in the first lesson."><span class="base" aria-hidden="true"></span></figure>
       </div>
       <ol class="timeline">
         <li><span class="dot"><span class="icon">{{ICON:hand-helping}}</span></span><h4>Guided game</h4><p>A real hand, with Mei beside you.</p></li>
@@ -742,7 +1151,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <div class="rule"></div>
         <p class="sub">The real game, on a 3D table you can lean into.</p>
       </div>
-      <figure class="shot"><img src="shots/table-1800.jpg" srcset="shots/table-1800.jpg 1800w, shots/table.jpg 3600w" sizes="100vw" width="3600" height="2250" alt="A hand in play on Cinnabar Lacquer tiles in the Taipei room: the discards are filling the table, and Mei is coaching."></figure>
+      <figure class="shot framed"><img src="shots/table-1800.jpg" srcset="shots/table-1800.jpg 1800w, shots/table.jpg 3600w" sizes="100vw" width="3600" height="2250" alt="A hand in play on Cinnabar Lacquer tiles in the Taipei room: the discards are filling the table, and Mei is coaching."></figure>
       <div class="split">
         <div class="story">
           <p>Every discard is called aloud. Claims, kongs and wins play out on the felt as the camera follows.</p>
@@ -759,6 +1168,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
   </section>
 
   <section class="chapter alt" id="rounds">
+    <img class="deco blossom flip" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
       <div class="split">
         <div class="head">
@@ -770,7 +1180,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
             <p>Four rounds, East to North. The deal passes on, and the prevailing wind changes what scores. Play one round over coffee, or all four.</p>
           </div>
         </div>
-        <div class="wind-row" role="list">
+        <div class="wind-row plinth" role="list">
           <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-east.webp" alt="" width="560" height="358" loading="lazy"><b>East</b></div>
           <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-south.webp" alt="" width="560" height="358" loading="lazy"><b>South</b></div>
           <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-west.webp" alt="" width="560" height="358" loading="lazy"><b>West</b></div>
@@ -787,6 +1197,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <div class="head">
           <p class="kicker"><span class="ring"><span class="icon">{{ICON:coffee}}</span></span>Around the table</p>
           <h2 class="title">Tea, Gold &amp; Dice</h2>
+          <div class="rule"></div>
           <p class="sub">A side table at every corner, as fine clubs lay it.</p>
         </div>
         <figure class="shot"><img src="rituals/ritual-dice-1800.jpg" srcset="rituals/ritual-dice-1800.jpg 1800w, rituals/ritual-dice.jpg 2880w" sizes="(max-width: 960px) 100vw, 40vw" loading="lazy" alt="A corner side table with bone dice on a brass tray, a tea bowl and gold coins with ingots."></figure>
@@ -804,7 +1215,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
       <div class="split flip">
         <div class="head">
           <p class="kicker"><span class="ring"><span class="icon">{{ICON:layers}}</span></span>The Mahjong family</p>
-          <div class="vhead"><span class="big">30</span><p>ways to play, from Hong Kong to Riichi to Dubai.</p></div>
+          <div class="vhead"><span class="big">31</span><p>ways to play, from India to Hong Kong, Riichi and Dubai.</p></div>
           <div class="rule"></div>
           <div class="story">
             <p>Every version played properly, with its own scoring, lesson and cheat sheet.</p>
@@ -826,38 +1237,53 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
           </ul>
         </figure>
       </div>
-      <div class="vgrid">
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Chinese Classical</b><small>Regional</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Hong Kong</b><small>Regional</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇹🇼</span><div><b>Taiwanese</b><small>Regional · 16 tiles</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Chinese Official</b><small>Formal · MCR</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Sichuan</b><small>Regional · Blood Battle</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇻🇳</span><div><b>Vietnamese</b><small>Regional</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Riichi</b><small>Formal</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Sanma</b><small>Formal · 3 players</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇰🇷</span><div><b>Korean</b><small>Regional · 3 players</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>American</b><small>Formal · our own card</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇸🇬</span><div><b>Singaporean</b><small>Regional · animals</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional · 3 players</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>Indian Club</b><small>House rules</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Riichi tournament</b><small>Formal · league rules</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇪🇺</span><div><b>EMA</b><small>Formal · European MCR</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Zung Jung</b><small>Formal · Alan Kwan</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇰🇷</span><div><b>Korean</b><small>Regional · 4 players</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Guangdong</b><small>Regional · push-down</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Shanghai</b><small>Regional · baida wilds</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Beijing</b><small>Regional · hun’er wild</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Wuhan</b><small>Regional · laizi wild</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Fujian</b><small>Regional · 16 tiles, golds</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Dongbei</b><small>Regional · Northeast China</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇹🇭</span><div><b>Thai</b><small>Regional</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇵🇭</span><div><b>Filipino</b><small>Regional · 16 tiles</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇮🇩</span><div><b>Indonesian</b><small>Regional</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇬🇧</span><div><b>European Classical</b><small>House rules · Britain</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>Wright-Patterson</b><small>House rules · US club game</small></div></div>
-        <div class="vcard"><span class="flag" aria-hidden="true">🇦🇪</span><div><b>UAE / Dubai Rules</b><small>House rules</small></div></div>
+      <div class="vtabs" role="tablist" aria-label="Variations" hidden>
+        <button type="button" role="tab" data-v="featured" aria-selected="true">Featured</button>
+        <button type="button" role="tab" data-v="region" aria-selected="false">By region</button>
+        <button type="button" role="tab" data-v="type" aria-selected="false">By rule type</button>
+        <button type="button" role="tab" data-v="az" aria-selected="false">A–Z</button>
       </div>
+      <div class="vgrid">
+        <p class="vgroup" data-g="r-ea" hidden>East Asia</p>
+        <p class="vgroup" data-g="r-sea" hidden>Southeast Asia</p>
+        <p class="vgroup" data-g="r-in" hidden>India and the Gulf</p>
+        <p class="vgroup" data-g="r-west" hidden>Europe and the Americas</p>
+        <p class="vgroup" data-g="t-formal" hidden>Formal rulesets</p>
+        <p class="vgroup" data-g="t-regional" hidden>Regional families</p>
+        <p class="vgroup" data-g="t-house" hidden>House-rule traditions</p>
+        <div class="vcard home-game" data-r="lead" data-t="lead" data-f="0"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>India Rules</b><small>The club’s main game · four rounds</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Chinese Classical</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional" data-f="1"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Hong Kong</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional" data-f="3"><span class="flag" aria-hidden="true">🇹🇼</span><div><b>Taiwanese</b><small>Regional · 16 tiles</small></div></div>
+        <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Chinese Official</b><small>Formal · MCR</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Sichuan</b><small>Regional · Blood Battle</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇻🇳</span><div><b>Vietnamese</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="ea" data-t="formal" data-f="2"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Riichi</b><small>Formal</small></div></div>
+        <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Sanma</b><small>Formal · 3 players</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇰🇷</span><div><b>Korean</b><small>Regional · 3 players</small></div></div>
+        <div class="vcard" data-r="west" data-t="formal" data-f="4"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>American</b><small>Formal · our own card</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇸🇬</span><div><b>Singaporean</b><small>Regional · animals</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional · 3 players</small></div></div>
+        <div class="vcard" data-r="in" data-t="house"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>Indian Club</b><small>House rules</small></div></div>
+        <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Riichi tournament</b><small>Formal · league rules</small></div></div>
+        <div class="vcard" data-r="west" data-t="formal"><span class="flag" aria-hidden="true">🇪🇺</span><div><b>EMA</b><small>Formal · European MCR</small></div></div>
+        <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Zung Jung</b><small>Formal · Alan Kwan</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇰🇷</span><div><b>Korean</b><small>Regional · 4 players</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Guangdong</b><small>Regional · push-down</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Shanghai</b><small>Regional · baida wilds</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Beijing</b><small>Regional · hun’er wild</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Wuhan</b><small>Regional · laizi wild</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Fujian</b><small>Regional · 16 tiles, golds</small></div></div>
+        <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Dongbei</b><small>Regional · Northeast China</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇹🇭</span><div><b>Thai</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇵🇭</span><div><b>Filipino</b><small>Regional · 16 tiles</small></div></div>
+        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇮🇩</span><div><b>Indonesian</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="west" data-t="house"><span class="flag" aria-hidden="true">🇬🇧</span><div><b>European Classical</b><small>House rules · Britain</small></div></div>
+        <div class="vcard" data-r="west" data-t="house"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>Wright-Patterson</b><small>House rules · US club game</small></div></div>
+        <div class="vcard" data-r="in" data-t="house" data-f="5"><span class="flag" aria-hidden="true">🇦🇪</span><div><b>UAE / Dubai Rules</b><small>House rules</small></div></div>
+      </div>
+      <div class="vmore" hidden><button type="button" class="btn ghost" data-more="1"><span>View all 31 variations</span><span class="icon">{{ICON:chevron-down}}</span></button><button type="button" class="btn ghost" data-more="0" hidden><span>Show fewer</span><span class="icon">{{ICON:chevron-down}}</span></button></div>
       <div class="vtour" id="world-tour">
         <div class="vt-text">
           <p class="kicker"><span class="ring"><span class="icon">{{ICON:globe}}</span></span>Passport</p>
@@ -875,12 +1301,12 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <p class="kicker"><span class="ring"><span class="icon">{{ICON:puzzle}}</span></span>Games for one</p>
         <h2 class="title">Mini-games</h2>
         <div class="rule"></div>
-        <p class="sub">Twelve solo games in 3D, on your own tiles, table and room.</p>
+        <p class="sub">Twenty solo games in 3D, on your own tiles, table and room.</p>
       </div>
       <div class="mg-mosaic">
-        <figure class="shot main"><img src="minigames/solitaire-1800.jpg" srcset="minigames/solitaire-1800.jpg 1800w, minigames/solitaire.jpg 2880w" sizes="(max-width: 960px) 100vw, 64vw" loading="lazy" alt="Mahjong Solitaire laid out in the Turtle layout on Gilded Porcelain tiles, on the club table."></figure>
-        <figure class="shot"><img src="minigames/dimensions-1800.jpg" srcset="minigames/dimensions-1800.jpg 1800w, minigames/dimensions.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="3D Mahjong Dimensions: a block of obsidian tile cubes turned on the table to show free pairs."></figure>
-        <figure class="shot"><img src="minigames/triple-1800.jpg" srcset="minigames/triple-1800.jpg 1800w, minigames/triple.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="Mahjong Triple Match with jade tiles gathering in a seven-place lacquered tray."></figure>
+        <figure class="shot main"><img src="minigames/solitaire-1800.jpg" srcset="minigames/solitaire-1800.jpg 1800w, minigames/solitaire.jpg 2880w" sizes="(max-width: 960px) 100vw, 64vw" loading="lazy" alt="Mahjong Solitaire laid out in the Turtle layout on Gilded Porcelain tiles, on the club table."><figcaption><span class="mg-name"><b>Mahjong Solitaire</b><em>Featured</em></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
+        <figure class="shot"><img src="minigames/dimensions-1800.jpg" srcset="minigames/dimensions-1800.jpg 1800w, minigames/dimensions.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="3D Mahjong Dimensions: a block of obsidian tile cubes turned on the table to show free pairs."><figcaption><span class="mg-name"><b>3D Mahjong Dimensions</b></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
+        <figure class="shot"><img src="minigames/triple-1800.jpg" srcset="minigames/triple-1800.jpg 1800w, minigames/triple.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="Mahjong Triple Match with jade tiles gathering in a seven-place lacquered tray."><figcaption><span class="mg-name"><b>Mahjong Triple Match</b></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
       </div>
       <div class="split">
         <div class="story">
@@ -894,29 +1320,50 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
           <li><span class="badge"><span class="icon">{{ICON:shield-check}}</span></span><div><b>Rating untouched</b><span>Mini-games never change it</span></div></li>
         </ul>
       </div>
+      <p class="mg-explore"><button type="button" class="btn gold" id="mg-explore"><span>Explore all 20 games</span><span class="icon">{{ICON:chevron-down}}</span></button></p>
+      <div class="games-head">
+        <div class="subhead">
+          <p class="kicker"><span class="ring"><span class="icon">{{ICON:puzzle}}</span></span>All mini-games</p>
+        </div>
+        <div class="mg-tabs" role="tablist" aria-label="Mini-games" hidden>
+          <button type="button" role="tab" data-c="all" aria-selected="true"><span class="icon">{{ICON:star}}</span>All</button>
+          <button type="button" role="tab" data-c="logic" aria-selected="false"><span class="icon">{{ICON:brain}}</span>Logic</button>
+          <button type="button" role="tab" data-c="speed" aria-selected="false"><span class="icon">{{ICON:zap}}</span>Speed</button>
+          <button type="button" role="tab" data-c="spatial" aria-selected="false"><span class="icon">{{ICON:box}}</span>Spatial</button>
+        </div>
+      </div>
       <ul class="games">
-        <li><span class="gicon" style="background-image:url(minigames/sheet-solitaire.webp)" aria-hidden="true"></span><div><b>Mahjong Solitaire</b><span>Match free pairs. Six layouts, from Turtle to Garden.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-connect.webp)" aria-hidden="true"></span><div><b>Mahjong Connect</b><span>Join pairs with a path of two turns or fewer.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-cascade.webp)" aria-hidden="true"></span><div><b>Mahjong Cascade</b><span>Connect with gravity. Tiles fall and set up chains.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-dimensions.webp)" aria-hidden="true"></span><div><b>3D Mahjong Dimensions</b><span>Turn a block of tile cubes to find free pairs.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-triple.webp)" aria-hidden="true"></span><div><b>Mahjong Triple Match</b><span>Collect three of a kind in a seven-place lacquered tray.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-slide.webp)" aria-hidden="true"></span><div><b>Mahjong Slide</b><span>Slide rows and columns to bring pairs face to face.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-tower.webp)" aria-hidden="true"></span><div><b>Mahjong Tower</b><span>Take a tall tower apart from the top.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-shuffle.webp)" aria-hidden="true"></span><div><b>Mahjong Shuffle</b><span>Solitaire where the tiles change places every few pairs.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-memory.webp)" aria-hidden="true"></span><div><b>Mahjong Memory</b><span>Find every pair in as few turns as you can.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-match3.webp)" aria-hidden="true"></span><div><b>Mahjong Match-3</b><span>Swap tiles to line up three of a kind. Four makes a Dragon.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-timed.webp)" aria-hidden="true"></span><div><b>Timed Mahjong</b><span>Beat the clock. Every pair wins back a few seconds.</span></div></li>
-        <li><span class="gicon" style="background-image:url(minigames/sheet-blitz.webp)" aria-hidden="true"></span><div><b>Mahjong Blitz</b><span>Ninety seconds. Clear as many pairs as you can.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-solitaire.webp)" aria-hidden="true"></span><div><b>Mahjong Solitaire</b><span>Match free pairs. Six layouts, from Turtle to Garden.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-connect.webp)" aria-hidden="true"></span><div><b>Mahjong Connect</b><span>Join pairs with a path of two turns or fewer.</span></div></li>
+        <li data-c="spatial"><span class="gicon" style="background-image:url(minigames/sheet-cascade.webp)" aria-hidden="true"></span><div><b>Mahjong Cascade</b><span>Connect with gravity. Tiles fall and set up chains.</span></div></li>
+        <li data-c="spatial"><span class="gicon" style="background-image:url(minigames/sheet-dimensions.webp)" aria-hidden="true"></span><div><b>3D Mahjong Dimensions</b><span>Turn a block of tile cubes to find free pairs.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-triple.webp)" aria-hidden="true"></span><div><b>Mahjong Triple Match</b><span>Collect three of a kind in a seven-place lacquered tray.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-slide.webp)" aria-hidden="true"></span><div><b>Mahjong Slide</b><span>Slide rows and columns to bring pairs face to face.</span></div></li>
+        <li data-c="spatial"><span class="gicon" style="background-image:url(minigames/sheet-tower.webp)" aria-hidden="true"></span><div><b>Mahjong Tower</b><span>Take a tall tower apart from the top.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-shuffle.webp)" aria-hidden="true"></span><div><b>Mahjong Shuffle</b><span>Solitaire where the tiles change places every few pairs.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-memory.webp)" aria-hidden="true"></span><div><b>Mahjong Memory</b><span>Find every pair in as few turns as you can.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-match3.webp)" aria-hidden="true"></span><div><b>Mahjong Match-3</b><span>Swap tiles to line up three of a kind. Four makes a Dragon.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-timed.webp)" aria-hidden="true"></span><div><b>Timed Mahjong</b><span>Beat the clock. Every pair wins back a few seconds.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-blitz.webp)" aria-hidden="true"></span><div><b>Mahjong Blitz</b><span>Ninety seconds. Clear as many pairs as you can.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-hex.webp)" aria-hidden="true"></span><div><b>Mahjong Hex</b><span>A honeycomb of tiles. A tile is free with three open sides in a row.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-colour.webp)" aria-hidden="true"></span><div><b>Mahjong Colour Match</b><span>Sort mixed rows until each one holds a single suit.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-survival.webp)" aria-hidden="true"></span><div><b>Mahjong Survival</b><span>Rows creep toward you. Match the free ends and hold the line.</span></div></li>
+        <li data-c="logic"><span class="gicon" style="background-image:url(minigames/sheet-treasure.webp)" aria-hidden="true"></span><div><b>Mahjong Treasure Hunt</b><span>Read the Dots clues to dig up hidden flowers and seasons.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-boss.webp)" aria-hidden="true"></span><div><b>Mahjong Boss Challenge</b><span>Match pairs to strike a giant tile before it strikes back.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-chain.webp)" aria-hidden="true"></span><div><b>Mahjong Chain Reaction</b><span>Clear touching groups of one suit. Bigger groups score more.</span></div></li>
+        <li data-c="speed"><span class="gicon" style="background-image:url(minigames/sheet-rush.webp)" aria-hidden="true"></span><div><b>Mahjong Puzzle Rush</b><span>Pick the tile that makes a pung or a run, against the clock.</span></div></li>
+        <li data-c="spatial"><span class="gicon" style="background-image:url(minigames/sheet-dungeon.webp)" aria-hidden="true"></span><div><b>Mahjong Dungeon</b><span>Lead the Red Dragon past monsters to the key and the door.</span></div></li>
       </ul>
     </div>
   </section>
 
   <section class="numerals" aria-label="The club in numbers">
+    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
-      <div class="num"><b>30</b><span>Variations</span></div>
-      <div class="num"><b>18</b><span>Destinations</span></div>
-      <div class="num"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
-      <div class="num"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/variations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>31</b><span>Variations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/destinations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>18</b><span>Destinations</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/tilesets.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_TILESETS}}</b><span>Tile sets</span></div>
+      <div class="num"><img class="num-ic" src="assets/stats/rooms.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>{{N_ROOMS}}</b><span>Rooms</span></div>
     </div>
   </section>
 
@@ -947,15 +1394,15 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
       </div>
 
       <div id="earn">
-      <div class="subhead">
+      <div class="subhead orn">
         <p class="kicker"><span class="ring"><span class="icon">{{ICON:coins}}</span></span>How pieces are earned</p>
         <h3>Play for It</h3>
       </div>
       <div class="earn">
-        <article><span class="badge"><span class="icon">{{ICON:coins}}</span></span><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></article>
-        <article><span class="badge"><span class="icon">{{ICON:route}}</span></span><h4>The season track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></article>
-        <article><span class="badge"><span class="icon">{{ICON:stamp}}</span></span><h4>World Tour stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></article>
-        <article><span class="badge"><span class="icon">{{ICON:wallet}}</span></span><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></article>
+        <article><img class="feat-ic" src="assets/feat/coins.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></article>
+        <article><img class="feat-ic" src="assets/feat/calendar.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>The season track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></article>
+        <article><img class="feat-ic" src="assets/feat/stamp.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>World Tour stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></article>
+        <article><img class="feat-ic" src="assets/feat/tag.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></article>
       </div>
       <p class="promise"><span class="icon">{{ICON:shield-check}}</span>Nothing in the Atelier changes gameplay or your rating.</p>
       </div>
@@ -971,6 +1418,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
 
   <!-- VI. Compete -->
   <section class="chapter alt" id="club">
+    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
       <div class="split flip">
         <div class="head">
@@ -983,18 +1431,19 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
             <p>Or start a private club for your own circle.</p>
           </div>
         </div>
-        <figure class="shot"><img src="shots/club-1800.jpg" srcset="shots/club-1800.jpg 1800w, shots/club.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Club: seasons, ranked play, tournaments and members to follow."></figure>
+        <figure class="shot device tablet"><img src="shots/club-1800.jpg" srcset="shots/club-1800.jpg 1800w, shots/club.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Club: seasons, ranked play, tournaments and members to follow."></figure>
       </div>
       <ul class="notes">
-        <li><span class="badge"><span class="icon">{{ICON:chart-line}}</span></span><div><b>Ratings</b><span>One per variation</span></div></li>
-        <li><span class="badge"><span class="icon">{{ICON:medal}}</span></span><div><b>Seasons</b><span>Six weeks, one city</span></div></li>
-        <li><span class="badge"><span class="icon">{{ICON:trophy}}</span></span><div><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
-        <li><span class="badge"><span class="icon">{{ICON:users}}</span></span><div><b>Private clubs</b><span>Your own weekly league</span></div></li>
+        <li><img class="feat-ic" src="assets/feat/chart.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Ratings</b><span>One per variation</span></div></li>
+        <li><img class="feat-ic" src="assets/feat/lantern.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Seasons</b><span>Six weeks, one city</span></div></li>
+        <li><img class="feat-ic" src="assets/feat/trophy.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
+        <li><img class="feat-ic" src="assets/feat/people.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Private clubs</b><span>Your own weekly league</span></div></li>
       </ul>
     </div>
   </section>
 
   <section class="final" id="final">
+    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
       <img class="crest-md" src="{{CREST_SM}}" alt="">
       <h2>The Table Awaits.</h2>
@@ -1005,6 +1454,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
   </section>
 
   <section class="chapter alt" id="about">
+    <img class="deco blossom flip" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
     <div class="wrap">
       <div class="head">
         <p class="kicker"><span class="ring"><span class="icon">{{ICON:info}}</span></span>The studio</p>
@@ -1019,6 +1469,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
           <p>So we built a premium club. From Hong Kong and Tokyo to Dubai, we brought together authentic rules and scoring, created Mei, a host who guides you along the way, and made every tile and table beautiful—because a game you love should feel precious.</p>
           <img class="studio-logo" src="assets/chacklate-logo.svg" alt="Chacklate Experiences" width="640" height="160">
         </div>
+        <img class="house-tile" src="winds/wind-east.webp" alt="" aria-hidden="true" width="560" height="358" loading="lazy">
         <aside class="house-contact" id="contact">
           <h3 class="script">Contact</h3>
           <ul class="contact-list">
@@ -1459,11 +1910,62 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
   const heroV = document.getElementById('hero-video');
   if (heroV && !matchMedia('(prefers-reduced-motion: reduce)').matches) { heroV.addEventListener('playing', () => heroV.parentElement.classList.add('ready'), { once: true }); heroV.play().catch(() => {}); }
 </script>
+<script>
+(() => {
+  // Variations: Featured six by default; region, rule type or A–Z show all thirty-one. India Rules,
+  // the club's main game, leads every full view on a row of its own. Without JS every card shows.
+  const vg = document.querySelector('.vgrid'), vtabs = document.querySelector('.vtabs'), vmore = document.querySelector('.vmore');
+  if (vg && vtabs) {
+    const cards = [...vg.querySelectorAll('.vcard')], groups = [...vg.querySelectorAll('.vgroup')];
+    const R = ['ea', 'sea', 'in', 'west'], T = ['formal', 'regional', 'house'];
+    const show = (mode) => {
+      vg.dataset.mode = mode;
+      vtabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === mode)));
+      const az = [...cards].sort((a, b) => a.querySelector('b').textContent.localeCompare(b.querySelector('b').textContent, document.documentElement.lang));
+      cards.forEach((c, i) => {
+        let o = i, on = true;
+        if (c.dataset.r === 'lead') o = mode === 'featured' ? 0 : -1;
+        else if (mode === 'featured') { on = c.dataset.f != null; o = +c.dataset.f; }
+        else if (mode === 'region') o = (R.indexOf(c.dataset.r) + 1) * 100 + i;
+        else if (mode === 'type') o = (T.indexOf(c.dataset.t) + 1) * 100 + i;
+        else o = az.indexOf(c);
+        c.style.order = o; c.hidden = !on;
+      });
+      groups.forEach((g) => {
+        const [k, v] = g.dataset.g.split('-');
+        const list = k === 'r' ? R : T;
+        g.hidden = !((mode === 'region' && k === 'r') || (mode === 'type' && k === 't'));
+        g.style.order = (list.indexOf(v) + 1) * 100 - 1;
+      });
+      if (vmore) { vmore.querySelector('[data-more="1"]').hidden = mode !== 'featured'; vmore.querySelector('[data-more="0"]').hidden = mode === 'featured'; }
+    };
+    vtabs.hidden = false; if (vmore) vmore.hidden = false;
+    vtabs.addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) show(b.dataset.v); });
+    vmore && vmore.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-more]'); if (!b) return;
+      if (b.dataset.more === '1') show('region');
+      else { show('featured'); vtabs.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+    });
+    show('featured');
+  }
+  // Mini-games: Explore takes you down to the full list; the tabs filter it by the kind of game.
+  const list = document.querySelector('.games'), mtabs = document.querySelector('.mg-tabs'), ex = document.getElementById('mg-explore');
+  if (list && mtabs) {
+    mtabs.hidden = false;
+    mtabs.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-c]'); if (!b) return;
+      mtabs.querySelectorAll('button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+      list.querySelectorAll('li').forEach((li) => { li.hidden = b.dataset.c !== 'all' && li.dataset.c !== b.dataset.c; });
+    });
+  }
+  ex && ex.addEventListener('click', () => document.querySelector('.games-head').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+})();
+</script>
 
 <footer>
   <div class="wrap">
     <span>JongClub.com</span>
-    <span>Learn. Play. Master.</span>
+    <span class="foot-motto">Learn. Play. Master.</span>
     <span class="foot-studio"><img src="assets/chacklate-mark.svg" alt="" width="28" height="28">© 2026 {{COMPANY}}</span>
   </div>
 </footer>

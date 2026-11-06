@@ -12,6 +12,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { SeatFigure } from '../../src/render/avatar3d';
 import { withBotAccessories } from '../../src/cosmetics/avatar';
 import { DEFAULT_AVATAR, HAIR_COLORS, SKIN_TONES, type AvatarSpec } from '../../src/cosmetics/catalog';
+import { castLook } from '../../src/cosmetics/cast';
 
 /** Copy of avatarForName in src/ui/app.ts: a stable look for a bot without a chosen avatar. */
 export function avatarForName(name: string): AvatarSpec {
@@ -27,7 +28,7 @@ export function avatarForName(name: string): AvatarSpec {
 (window as unknown as { __pinnedSalt?: number }).__pinnedSalt = undefined;
 
 /** The look the table gives this bot this session. */
-export const tableLook = (name: string) => withBotAccessories(avatarForName(name), name);
+export const tableLook = (name: string) => castLook(name) ?? withBotAccessories(avatarForName(name), name);
 
 let renderer: THREE.WebGLRenderer | null = null;
 let env: THREE.Texture | null = null;
@@ -97,10 +98,13 @@ export function portrait(name: string, size = 640, ss = 2, o: Opts = {}): string
   // Head back toward the camera a little, chin level: a relaxed three-quarter.
   (fig as unknown as { head: THREE.Group }).head.rotation.set(0.04, turn * 0.2, 0, 'YXZ');
   // Eyes open (update may have started a blink).
-  fig.group.traverse((x) => x.scale.y < 0.5 && x.scale.y > 0 && (x.scale.y = 1));
+  fig.group.traverse((x) => x.scale.y < 0.5 && x.scale.y > 0 && x.scale.x === 1 && (x.scale.y = 1));
+  // No table in front: hide the forearms and hands that rest on its rim.
+  fig.group.updateMatrixWorld(true);
+  fig.group.children.flatMap((c) => (c.children.length && c.type === 'Group' && c.scale.x !== 1 ? c.children : [])).forEach((o) => new THREE.Box3().setFromObject(o).max.y < 0.45 && (o.visible = false));
   const cam = new THREE.PerspectiveCamera(20, 1, 0.1, 50);
-  cam.position.set(0, 1.92, 5.9);
-  cam.lookAt(0, 1.76, 0);
+  cam.position.set(0, 1.86, 5.7);
+  cam.lookAt(0, 1.64, 0);
   r.render(scene, cam);
 
   const out = document.createElement('canvas');
@@ -122,9 +126,9 @@ export function portrait(name: string, size = 640, ss = 2, o: Opts = {}): string
 
 /** Three friends for the "Your Friends" card: player looks from the avatar shop, side by side. */
 export const FRIENDS: AvatarSpec[] = [
-  { ...DEFAULT_AVATAR, skin: 7, hair: 'wavy', hairColor: '#3b2a20', outfit: 'sweater', outfitColor: '#7a1f1b', accessory: 'earrings', lips: 'full' as AvatarSpec['lips'] },
-  { ...DEFAULT_AVATAR, skin: 3, hair: 'short', hairColor: '#1b1715', outfit: 'blazer', outfitColor: '#1a2440', accessory: 'aviators' },
-  { ...DEFAULT_AVATAR, skin: 6, hair: 'bob', hairColor: '#a37b4c', outfit: 'qipao', outfitColor: '#1f3b33', accessory: 'pearls' },
+  { ...DEFAULT_AVATAR, face: 'oval', eyes: 'round', nose: 'button', skin: 7, hair: 'long', hairColor: '#3b2a20', hairPart: 'centre', hairBun: 'top', outfit: 'sweater', outfitColor: '#a3242c', eyeColor: '#4a2c1a' },
+  { ...DEFAULT_AVATAR, face: 'oval', eyes: 'round', nose: 'button', skin: 3, hair: 'short', hairColor: '#1b1715', outfit: 'blazer', outfitColor: '#1d2a4e', eyewear: 'sunglasses', eyeColor: '#2a1a12' },
+  { ...DEFAULT_AVATAR, face: 'oval', eyes: 'round', nose: 'button', skin: 0, hair: 'bob', hairColor: '#a37b4c', hairPart: 'centre', outfit: 'qipao', outfitColor: '#245a3e', eyeColor: '#4a2c1a' },
 ];
 
 /** A group portrait of FRIENDS, the middle one a step forward, the others turned in toward them. */
@@ -143,15 +147,15 @@ export function friends(size = 640, ss = 2, exposure = 1.0): string {
     fig.group.position.set(x, 0, z);
     fig.group.rotation.y = -turn;
     (fig as unknown as { head: THREE.Group }).head.rotation.set(0.04, turn * 0.5, 0, 'YXZ');
-    fig.group.traverse((o) => o.scale.y < 0.5 && o.scale.y > 0 && (o.scale.y = 1));
+    fig.group.traverse((o) => o.scale.y < 0.5 && o.scale.y > 0 && o.scale.x === 1 && (o.scale.y = 1));
     // No table in front of them: hide the forearms and hands that rest on its rim.
     fig.group.updateMatrixWorld(true);
-    fig.group.children.forEach((o) => new THREE.Box3().setFromObject(o).max.y - fig.group.position.y < 0.45 && (o.visible = false));
+    fig.group.children.flatMap((c) => (c.children.length && c.type === 'Group' && c.scale.x !== 1 ? c.children : [])).forEach((o) => new THREE.Box3().setFromObject(o).max.y - fig.group.position.y < 0.45 && (o.visible = false));
     return fig;
   });
   const cam = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
-  cam.position.set(0, 1.9, 7.4);
-  cam.lookAt(0, 1.42, 0);
+  cam.position.set(0, 1.75, 7.4);
+  cam.lookAt(0, 1.28, 0);
   r.render(scene, cam);
   const out = document.createElement('canvas');
   out.width = out.height = size;
@@ -166,5 +170,41 @@ export function friends(size = 640, ss = 2, exposure = 1.0): string {
   g.fillStyle = fade;
   g.fillRect(0, 0, size, size);
   figs.forEach((f) => f.dispose());
+  return out.toDataURL('image/png');
+}
+
+/**
+ * A close, nearly front-on head portrait (for Mei's round narrator mark):
+ * square, on a soft dark-jade ground so it reads in any circle.
+ */
+export function face(name: string, size = 512, ss = 2): string {
+  const spec = tableLook(name);
+  const px = size * ss;
+  const r = getRenderer(px);
+  r.toneMappingExposure = 1.05;
+  const scene = new THREE.Scene();
+  studio(scene);
+  const fig = new SeatFigure(spec);
+  scene.add(fig.group);
+  fig.update(0, 1, null);
+  fig.group.rotation.y = -0.18;
+  (fig as unknown as { head: THREE.Group }).head.rotation.set(0.02, 0.1, 0, 'YXZ');
+  fig.group.traverse((x) => x.scale.y < 0.5 && x.scale.y > 0 && x.scale.x === 1 && (x.scale.y = 1));
+  const cam = new THREE.PerspectiveCamera(20, 1, 0.1, 50);
+  cam.position.set(0, 1.76, 4.6);
+  cam.lookAt(0, 1.68, 0);
+  r.render(scene, cam);
+  const out = document.createElement('canvas');
+  out.width = out.height = size;
+  const g = out.getContext('2d')!;
+  const bg = g.createRadialGradient(size / 2, size * 0.38, 0, size / 2, size * 0.45, size * 0.75);
+  bg.addColorStop(0, '#2c4a3d');
+  bg.addColorStop(1, '#0d1814');
+  g.fillStyle = bg;
+  g.fillRect(0, 0, size, size);
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(r.domElement, 0, 0, size, size);
+  fig.dispose();
   return out.toDataURL('image/png');
 }

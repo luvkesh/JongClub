@@ -13,3 +13,5 @@ __pycache__/
 /desk.png
 /phone.png
 /src/audio/narration.gen.ts
+reviews/i18n/cache/
+reviews/i18n/log-*.txt
