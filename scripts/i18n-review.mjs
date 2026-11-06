@@ -30,7 +30,7 @@ const NATIVE = {
   'zh-Hant': 'Traditional Chinese as written in Taiwan and Hong Kong',
   ja: 'Japanese',
   ar: 'Modern Standard Arabic as used in Gulf (UAE) apps',
-  hi: 'Hindi as used in modern Indian apps (natural Hinglish loanwords such as टाइल, गेम, ऐप are fine where Indian players use them)',
+  hi: 'Hindi as used in modern Indian apps. The owner chose pure Hindi words (हाथ, अभ्यास, खेल): do NOT suggest English loanwords such as हैंड, प्रैक्टिस, गेम, डिस्कार्ड in their place; keep existing loanwords like टाइल and ऐप',
 };
 
 const GLOSSARY = `Mahjong context. JongClub is a premium online mahjong club and game, made for India first.
