@@ -296,6 +296,7 @@ p, li span { text-wrap: pretty; }
 .subhead { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
 .subhead h3 { font: 600 clamp(30px, 3.6vw, 48px)/1.1 var(--serif); color: var(--ivory); }
 .subhead p { max-width: 54ch; color: var(--muted); }
+#earn { display: flex; flex-direction: column; gap: clamp(48px, 6vw, 80px); }
 .earn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .earn .pending { margin-top: auto; }
 .earn article { padding: 26px 24px; border: 1px solid var(--line); border-radius: 8px; background: rgba(20, 18, 12, 0.6); display: flex; flex-direction: column; gap: 12px; }
@@ -857,7 +858,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <div class="vcard"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>Wright-Patterson</b><small>House rules · US club game</small></div></div>
         <div class="vcard"><span class="flag" aria-hidden="true">🇦🇪</span><div><b>UAE / Dubai Rules</b><small>House rules</small></div></div>
       </div>
-      <div class="vtour">
+      <div class="vtour" id="world-tour">
         <div class="vt-text">
           <p class="kicker"><span class="ring"><span class="icon">{{ICON:globe}}</span></span>Passport</p>
           <h3>World Tour</h3>
@@ -945,6 +946,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
       </div>
       </div>
 
+      <div id="earn">
       <div class="subhead">
         <p class="kicker"><span class="ring"><span class="icon">{{ICON:coins}}</span></span>How pieces are earned</p>
         <h3>Play for It</h3>
@@ -956,6 +958,7 @@ footer .wrap { padding-block: 24px; display: flex; flex-wrap: wrap; gap: 10px 24
         <article><span class="badge"><span class="icon">{{ICON:wallet}}</span></span><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></article>
       </div>
       <p class="promise"><span class="icon">{{ICON:shield-check}}</span>Nothing in the Atelier changes gameplay or your rating.</p>
+      </div>
     </div>
   </section>
 
