@@ -1,0 +1,614 @@
+{
+ "models": [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-flash-latest"
+ ],
+ "lang": "ja",
+ "reviewed": 3935,
+ "suggestions": [
+  {
+   "id": 443,
+   "file": "club.ts",
+   "en": "Flowers and seasons",
+   "current": "花と季節の牌",
+   "verdict": "unnatural",
+   "suggested": "花牌と季節牌",
+   "reason": "Use standard Japanese mahjong terminology for flower and season tiles.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 468,
+   "file": "club.ts",
+   "en": "The roots of the game and its many regional branches.",
+   "current": "麻雀のルーツと、その多くの地域の枝。",
+   "verdict": "unnatural",
+   "suggested": "麻雀のルーツと、地域ごとの様々な派生。",
+   "reason": "'地域の枝' is a literal translation of 'regional branches'.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 480,
+   "file": "club.ts",
+   "en": "A regional profile of the rules played in the Emirates.",
+   "current": "首長国で打たれているルールの地域プロフィール。",
+   "verdict": "unnatural",
+   "suggested": "首長国で打たれているルールの地域別概要。",
+   "reason": "'地域プロフィール' is a literal machine translation of 'regional profile'.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 774,
+   "file": "club.ts",
+   "en": "{blurb} Or open it free with the World Tour stamp: {stamp}.",
+   "current": "{blurb}ワールドツアーのスタンプでも無料で開放できます：{stamp}。",
+   "verdict": "typo",
+   "suggested": "{blurb}ワールドツアーのスタンプでも無料で解放できます：{stamp}。",
+   "reason": "Use '解放' (unlock content) instead of '開放'.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 995,
+   "file": "compete.ts",
+   "en": "Standings: 4, 2, 1, 0 points by place",
+   "current": "順位表：順位により 4、2、1、0 点",
+   "verdict": "wrong",
+   "suggested": "順位点：順位により 4、2、1、0 点",
+   "reason": "'Standings' here refers to placement/standings points, not a leaderboard table ('順位表').",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1023,
+   "file": "compete.ts",
+   "en": "Saved link",
+   "current": "同期リンク",
+   "verdict": "wrong",
+   "suggested": "保存済みリンク",
+   "reason": "The current translation '同期' means 'Sync', whereas 'Saved' should be '保存済み'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1070,
+   "file": "compete.ts",
+   "en": "Inaccuracy",
+   "current": "不正確",
+   "verdict": "unnatural",
+   "suggested": "疑問手",
+   "reason": "'疑問手' is the standard terminology for 'Inaccuracy' in game analysis contexts.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1083,
+   "file": "compete.ts",
+   "en": "You deal. Every hand is shown face up.",
+   "current": "あなたが配ります。全員の手牌を表示しています。",
+   "verdict": "wrong",
+   "suggested": "あなたが親です。全員の手牌を表示しています。",
+   "reason": "In mahjong, 'dealing' refers to being the dealer ('親'), not the physical act of distributing tiles.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1084,
+   "file": "compete.ts",
+   "en": "{name} deals. Every hand is shown face up.",
+   "current": "{name} が配ります。全員の手牌を表示しています。",
+   "verdict": "wrong",
+   "suggested": "{name} が親です。全員の手牌を表示しています。",
+   "reason": "In mahjong, 'dealing' refers to being the dealer ('親'), not the physical act of distributing tiles.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1256,
+   "file": "cosmetics.ts",
+   "en": "Tiny lights drifting around the room.",
+   "current": "小さな光が部屋を漂います。",
+   "verdict": "unnatural",
+   "suggested": "部屋を漂う小さな光。",
+   "reason": "Matches the noun-ending style of other descriptions in the same category.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1258,
+   "file": "cosmetics.ts",
+   "en": "Each tile set has its own click.",
+   "current": "牌セットごとに固有の音があります。",
+   "verdict": "unnatural",
+   "suggested": "牌セットごとに固有の音。",
+   "reason": "Matches the noun-ending style of other descriptions in the same category.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1295,
+   "file": "economy.ts",
+   "en": "Play 5 games",
+   "current": "5局プレイする",
+   "verdict": "wrong",
+   "suggested": "5対局プレイする",
+   "reason": "In mahjong, 'game' usually refers to a match (対局), while '局' refers to a single hand.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1296,
+   "file": "economy.ts",
+   "en": "Win 3 games",
+   "current": "3局勝つ",
+   "verdict": "wrong",
+   "suggested": "3対局勝つ",
+   "reason": "In mahjong, 'game' usually refers to a match (対局), while '局' refers to a single hand.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1305,
+   "file": "economy.ts",
+   "en": "Every variation lesson from beyond India: Chinese Classical, Hong Kong, Riichi, Taiwanese, American and the rest.",
+   "current": "インド以外のすべてのバリエーションのレッスン：中国クラシック、香港、Riichi、台湾、アメリカンなど。",
+   "verdict": "inconsistent",
+   "suggested": "インド以外のすべてのバリエーションのレッスン：中国クラシック、香港、リーチ、台湾、アメリカンなど。",
+   "reason": "Use 'リーチ' for consistency with other rows and naturalness in Japanese.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1306,
+   "file": "economy.ts",
+   "en": "Complete Academy",
+   "current": "アカデミー全部",
+   "verdict": "unnatural",
+   "suggested": "アカデミー全レッスン",
+   "reason": "The current phrasing '全部' is too colloquial for a bundle title.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1342,
+   "file": "economy.ts",
+   "en": "Every game pays 50 JP, each hand you win 40, first place 200 and a limit hand 300. Your first win each day adds {n}.",
+   "current": "毎局50 JP、和了1回ごとに40、1位で200、役満級の手で300。その日の初勝利でさらに{n}。",
+   "verdict": "wrong",
+   "suggested": "対局ごとに50 JP、和了1回ごとに40、1位で200、役満級の手で300。その日の初勝利でさらに{n}。",
+   "reason": "In mahjong, 'game' usually refers to a match (対局), while '毎局' means every hand.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1759,
+   "file": "guide.ts",
+   "en": "Special hands that also win, fully concealed: {list}.",
+   "current": "門前で和了できる特殊な形：{list}。",
+   "verdict": "unnatural",
+   "suggested": "門前のみの特殊な和了形：{list}。",
+   "reason": "The source implies a requirement for these hands, so 'のみ' (only) is more accurate than 'できる' (can).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1897,
+   "file": "handScore.ts",
+   "en": "No score until the hand is a tile from winning. Open the calculator to try a finished hand.",
+   "current": "あと一枚で和了になるまで点数は出ません。電卓で完成形を試せます。",
+   "verdict": "inconsistent",
+   "suggested": "あと一枚で和了になるまで点数は出ません。点数計算機で完成形を試せます。",
+   "reason": "Uses '点数計算機' to be consistent with the term used in other UI strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1916,
+   "file": "handScore.ts",
+   "en": "A winning shape, but it doesn’t score enough to win at this table (no scoring pattern, or under the minimum). Open the rule book to see what counts.",
+   "current": "和了の形ですが、この卓では点数が足りません（役がない、または最低点未満）。ルールブックで数えるものを確認できます。",
+   "verdict": "unnatural",
+   "suggested": "和了の形ですが、この卓では点数が足りません（役がない、または最低点未満）。ルールブックで得点条件を確認できます。",
+   "reason": "'得点条件' (scoring conditions) is more natural than the literal '数えるもの' (things to count).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1927,
+   "file": "handScore.ts",
+   "en": "Scored with this table’s rules for your seat this hand: your seat and round wind, dealer, bonus tiles and house rules.",
+   "current": "この卓のルールで、この局のあなたの席として計算します：自風と場風、親、花牌、ハウスルール。",
+   "verdict": "inconsistent",
+   "suggested": "この卓のルールで、この局のあなたの席として計算します：自風と場風、親、ボーナス牌、ハウスルール。",
+   "reason": "Uses 'ボーナス牌' to be consistent with the glossary and other strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2072,
+   "file": "learn.ts",
+   "en": "{place} place",
+   "current": "{place}",
+   "verdict": "unnatural",
+   "suggested": "{place}位",
+   "reason": "Missing the rank suffix '位' which is necessary for 'place' in Japanese.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2151,
+   "file": "learn.ts",
+   "en": "Trend after 2 games",
+   "current": "2局後に傾向を表示",
+   "verdict": "inconsistent",
+   "suggested": "2対局後に傾向を表示",
+   "reason": "In Mahjong, 'game' usually refers to a full match (対局), while '局' refers to a single hand.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2152,
+   "file": "learn.ts",
+   "en": "{n} games measured",
+   "current": "計測済み {n}局",
+   "verdict": "inconsistent",
+   "suggested": "計測済み {n}対局",
+   "reason": "Consistency with the term for 'game' as '対局'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2154,
+   "file": "learn.ts",
+   "en": "{skill} over your last {n} games",
+   "current": "直近{n}局の{skill}",
+   "verdict": "inconsistent",
+   "suggested": "直近{n}対局の{skill}",
+   "reason": "Consistency with the term for 'game' as '対局'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2204,
+   "file": "learn.ts",
+   "en": "Play four India Rules games",
+   "current": "インディア・ルールを 4 局",
+   "verdict": "inconsistent",
+   "suggested": "インディア・ルールを 4 対局",
+   "reason": "Consistency with the term for 'game' as '対局'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2312,
+   "file": "match.ts",
+   "en": "Two winds: eight or more hands",
+   "current": "二つの場：八局以上",
+   "verdict": "unnatural",
+   "suggested": "東南戦：八局以上",
+   "reason": "\"Two winds\" refers to the East and South rounds, which is standardly called \"東南戦\" in Japanese mahjong.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2452,
+   "file": "match.ts",
+   "en": "A Mah Jongg is paid by the others: the player who threw the winning tile pays double, and everyone pays double for a self-drawn win.",
+   "current": "マージャンは他の全員が支払います。和了牌を捨てた人は倍額、ツモなら全員が倍額です。",
+   "verdict": "unnatural",
+   "suggested": "和了の際は他の全員が支払います。和了牌を捨てた人は倍額、ツモなら全員が倍額です。",
+   "reason": "\"Mah Jongg\" in this context refers to the win itself; \"和了\" is the correct mahjong term.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2536,
+   "file": "match.ts",
+   "en": "Pick 3 tiles to pass {dir}",
+   "current": "{dir}渡す牌を3枚選ぶ",
+   "verdict": "wrong",
+   "suggested": "{dir}へ渡す牌を3枚選ぶ",
+   "reason": "Missing a particle makes the direction and action connection unnatural.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2537,
+   "file": "match.ts",
+   "en": "Pass {dir}",
+   "current": "{dir}渡す",
+   "verdict": "wrong",
+   "suggested": "{dir}へ渡す",
+   "reason": "Missing a particle makes the direction and action connection unnatural.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2541,
+   "file": "match.ts",
+   "en": "Everyone must agree to pass again: left, across, then right. Stop if your hand already fits a card hand.",
+   "current": "全員が同意した場合のみもう一度渡します：左、対面、右の順。手牌がすでにカードの手に合っていれば止めましょう。",
+   "verdict": "unnatural",
+   "suggested": "全員が同意した場合のみもう一度渡します：左、対面、右の順。手牌がすでにカードの役に合っていれば止めましょう。",
+   "reason": "Using '役' (yaku) is more standard for mahjong patterns than '手' (hand).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2550,
+   "file": "match.ts",
+   "en": "by robbing {whose} kong",
+   "current": "搶槓（{whose}のカン）",
+   "verdict": "wrong",
+   "suggested": "槍槓（{whose}のカン）",
+   "reason": "The standard Japanese mahjong kanji for this term is 槍槓, not 搶槓.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2587,
+   "file": "match.ts",
+   "en": "{name} bite",
+   "current": "{name}（食い）",
+   "verdict": "wrong",
+   "suggested": "{name}の捕食",
+   "reason": "Avoids confusion with 'kui' (calling/melding) in mahjong; '捕食' is the standard term for animal tiles.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2613,
+   "file": "match.ts",
+   "en": "Look around the table: drag to circle it, scroll to zoom. W A S D or the arrow keys move, Q and E turn, R goes back.",
+   "current": "卓を見回せます。ドラッグで卓の周りを回り、スクロールでズーム。W A S D か矢印キーで移動、Q と E で向きを変え、R で元に戻ります。",
+   "verdict": "unnatural",
+   "suggested": "卓を見回せます。ドラッグで回転、スクロールでズーム。W A S D か矢印キーで移動、Q と E で向きを変え、R で元に戻ります。",
+   "reason": "Uses more natural and standard UI terminology for camera rotation.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2614,
+   "file": "match.ts",
+   "en": "Look around the table: drag to circle it, two fingers to slide, pinch to zoom.",
+   "current": "卓を見回せます。ドラッグで卓の周りを回り、2本指で移動、ピンチでズーム。",
+   "verdict": "unnatural",
+   "suggested": "卓を見回せます。ドラッグで回転、2本指で移動、ピンチでズーム。",
+   "reason": "Uses more natural and standard UI terminology for camera rotation.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2834,
+   "file": "minigames.ts",
+   "en": "A new wall rises!",
+   "current": "新しい壁が現れました！",
+   "verdict": "unnatural",
+   "suggested": "新しい牌山が現れました！",
+   "reason": "In mahjong, 'wall' should be translated as '牌山' or '山', not '壁' (physical wall).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2836,
+   "file": "minigames.ts",
+   "en": "{boss} scrambles the wall!",
+   "current": "{boss}が壁をかき混ぜました！",
+   "verdict": "unnatural",
+   "suggested": "{boss}が牌山をかき混ぜました！",
+   "reason": "In mahjong, 'wall' should be translated as '牌山' or '山', not '壁' (physical wall).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2841,
+   "file": "minigames.ts",
+   "en": "{n} walls dealt",
+   "current": "壁を {n} 回配りました",
+   "verdict": "unnatural",
+   "suggested": "牌山を {n} 回配りました",
+   "reason": "In mahjong, 'wall' should be translated as '牌山' or '山', not '壁' (physical wall).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2843,
+   "file": "minigames.ts",
+   "en": "A giant tile guards the table. Match pairs to strike it before it locks and scrambles your wall.",
+   "current": "巨大な牌が卓を守っています。壁をロックされたりかき混ぜられたりする前に、ペアをそろえて攻撃しましょう。",
+   "verdict": "unnatural",
+   "suggested": "巨大な牌が卓を守っています。牌山をロックされたりかき混ぜられたりする前に、ペアをそろえて攻撃しましょう。",
+   "reason": "In mahjong, 'wall' should be translated as '牌山' or '山', not '壁' (physical wall).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2847,
+   "file": "minigames.ts",
+   "en": "The boss fights back: it locks tiles for a few seconds, scrambles the wall or heals itself.",
+   "current": "ボスも反撃します。牌を数秒ロックしたり、壁をかき混ぜたり、自分を回復したりします。",
+   "verdict": "unnatural",
+   "suggested": "ボスも反撃します。牌を数秒ロックしたり、牌山をかき混ぜたり、自分を回復したりします。",
+   "reason": "In mahjong, 'wall' should be translated as '牌山' or '山', not '壁' (physical wall).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2848,
+   "file": "minigames.ts",
+   "en": "Bring its health to zero before the clock runs out. A cleared wall is dealt again.",
+   "current": "時間切れになる前に体力をゼロにしましょう。壁を消し切ると新しく配られます。",
+   "verdict": "unnatural",
+   "suggested": "時間切れになる前に体力をゼロにしましょう。牌山を消し切ると新しく配られます。",
+   "reason": "In mahjong, 'wall' should be translated as '牌山' or '山', not '壁' (physical wall).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3002,
+   "file": "opening.ts",
+   "en": "{name} throws {total} too: {count} stacks from the right",
+   "current": "{name}さんも{total}：右から{count}幢",
+   "verdict": "unnatural",
+   "suggested": "{name}さんも{total}を振りました：右から{count}幢",
+   "reason": "The current translation is missing a verb for rolling the dice, making it sound like a machine-translated log.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3008,
+   "file": "opening.ts",
+   "en": "The two stacks at the break are the loose tiles",
+   "current": "割れ目の2幢が補充牌です",
+   "verdict": "wrong",
+   "suggested": "割れ目の2幢が嶺上牌です",
+   "reason": "In mahjong, 'loose tiles' used for replacements are called '嶺上牌' (rinshanpai), not '補充牌'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3014,
+   "file": "opening.ts",
+   "en": "Loose tiles",
+   "current": "補充牌",
+   "verdict": "wrong",
+   "suggested": "嶺上牌",
+   "reason": "Standard mahjong terminology for replacement tiles is '嶺上牌'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3024,
+   "file": "racks.ts",
+   "en": "Your sets",
+   "current": "あなたの副露",
+   "verdict": "inconsistent",
+   "suggested": "あなたの面子",
+   "reason": "Using '面子' (mentsu) is more consistent with other strings and covers both concealed and exposed sets.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3324,
+   "file": "rules.ts",
+   "en": "Each player draws a secret Small Card and wins only with the hand it names. East pays and receives double.",
+   "current": "各プレイヤーは秘密のスモールカードを1枚引き、そのカードが示す手でしか和了できません。親は2倍払い、2倍受け取ります。",
+   "verdict": "inconsistent",
+   "suggested": "各プレイヤーは秘密のスモールカードを1枚引き、そのカードが示す手でしか和了できません。東家は倍払い・倍受け取り。",
+   "reason": "Used '親' instead of '東家' and inconsistent phrasing for double payment.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3334,
+   "file": "rules.ts",
+   "en": "Tic-Tac-Toe: everyone gives one tile to each other player. Wall exchange: everyone swaps three tiles with the wall, and the tiles go back into the wall. Call none, one or three of each.",
+   "current": "三目並べ：各自が他の全員に1枚ずつ渡します。山との交換：各自が山と3枚交換し、出した牌は山に戻ります。それぞれ0回、1回、3回から選べます。",
+   "verdict": "inconsistent",
+   "suggested": "ティックタックトー：各自が他の全員に1枚ずつ渡します。山との交換：各自が山と3枚交換し、出した牌は山に戻ります。それぞれ0回、1回、3回から選べます。",
+   "reason": "Inconsistent translation of 'Tic-Tac-Toe' compared to earlier rows.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3335,
+   "file": "rules.ts",
+   "en": "Tic-Tac-Toe",
+   "current": "三目並べ",
+   "verdict": "inconsistent",
+   "suggested": "ティックタックトー",
+   "reason": "Inconsistent translation of 'Tic-Tac-Toe'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3337,
+   "file": "rules.ts",
+   "en": "{name} called {p} Tic-Tac-Toe and {w} wall exchanges",
+   "current": "{name}：三目並べ {p} 回、山との交換 {w} 回",
+   "verdict": "inconsistent",
+   "suggested": "{name}：ティックタックトー {p} 回、山との交換 {w} 回",
+   "reason": "Inconsistent translation of 'Tic-Tac-Toe'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3339,
+   "file": "rules.ts",
+   "en": "TIC-TAC-TOE",
+   "current": "三目並べ",
+   "verdict": "inconsistent",
+   "suggested": "ティックタックトー",
+   "reason": "Inconsistent translation of 'Tic-Tac-Toe'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3423,
+   "file": "rules.ts",
+   "en": "Four sets and a pair. A set may be a pung, a kong, a chow, a mixed chow or a crochet. No passports.",
+   "current": "4面子1雀頭。面子はポン、カン、チー、ミックスチー、クロッシェのどれでも可。パスポートなし。",
+   "verdict": "inconsistent",
+   "suggested": "4面子1雀頭。面子は刻子、槓子、順子、ミックス順子、クロシェのどれでも可。パスポートなし。",
+   "reason": "Inconsistent mahjong terminology and typo in 'crochet'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3424,
+   "file": "rules.ts",
+   "en": "Pairs, mixed chows, knits and crochets are never called from a discard: they come from the hand or the wall, except the tile that makes Mahjong.",
+   "current": "対子、ミックスチー、ニット、クロッシェは捨て牌から鳴けません。手牌か壁から作ります。和了牌だけは例外です。",
+   "verdict": "inconsistent",
+   "suggested": "対子、ミックス順子、ニット、クロシェは捨て牌から鳴けません。手牌か山から作ります。和了牌だけは例外です。",
+   "reason": "Inconsistent terminology for 'mixed chow' and 'wall'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3458,
+   "file": "rules.ts",
+   "en": "Chow, mixed chow, crochet, pung, kong; the pair may be a knit with a crochet",
+   "current": "順子、三色の順子、クロシェ、刻子、槓子。クロシェがあれば対子はニットでも可",
+   "verdict": "inconsistent",
+   "suggested": "順子、ミックス順子、クロシェ、刻子、槓子。クロシェがあれば対子はニットでも可",
+   "reason": "Inconsistent terminology for 'mixed chow'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3459,
+   "file": "rules.ts",
+   "en": "Chow from the left, Pung, Kong, Mahjong; mixed chows, crochets, knits and pairs only to win",
+   "current": "上家からチー、ポン、カン、和了。三色の順子、クロシェ、ニット、対子は和了のときだけ",
+   "verdict": "inconsistent",
+   "suggested": "上家からチー、ポン、カン、和了。ミックス順子、クロシェ、ニット、対子は和了のときだけ",
+   "reason": "Inconsistent terminology for 'mixed chow'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3508,
+   "file": "screens.ts",
+   "en": "Your browser has 3D graphics switched off or blocked. Turn on WebGL or hardware acceleration in its settings, or try another browser, then reload.",
+   "current": "ブラウザの 3D グラフィックスがオフかブロックされています。設定で WebGL かハードウェアアクセラレーションをオンにするか、別のブラウザで開き直してください。",
+   "verdict": "wrong",
+   "suggested": "ブラウザの 3D グラフィックスがオフかブロックされています。設定で WebGL かハードウェアアクセラレーションをオンにするか、別のブラウザを試してから、再読み込みしてください。",
+   "reason": "The term 'reload' should be translated as '再読み込み', and '開き直す' is an unnatural word choice here.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3521,
+   "file": "screens2.ts",
+   "en": "Build your skills, one level at a time. {done} of {total} completed.",
+   "current": "一段ずつ腕を磨きましょう。{total}中{done}完了。",
+   "verdict": "unnatural",
+   "suggested": "一段ずつ腕を磨きましょう。{done} / {total} 完了。",
+   "reason": "The current phrasing is clipped; using a slash is more natural for mobile game progress indicators.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3525,
+   "file": "screens2.ts",
+   "en": "Testing tools for this device: Jong Points, unlocks, faster AI and animations, opponents’ hands shown, and resets.",
+   "current": "この端末用のテストツール：ジャンポイント、アンロック、AIとアニメーションの高速化、相手の手牌表示、リセット。",
+   "verdict": "inconsistent",
+   "suggested": "この端末用のテストツール：Jong Points、アンロック、AIとアニメーションの高速化、相手の手牌表示、リセット。",
+   "reason": "Jong Points is a brand name and should remain in Latin script as per instructions.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3527,
+   "file": "screens2.ts",
+   "en": "Standings scoring: each table awards 4, 2, 1 and 0 points by place, added up across rounds. Ties are broken by total score change.",
+   "current": "順位ポイント：各卓で順位に応じて4・2・1・0点を獲得し、全ラウンドで合計します。同点は合計得点差で決まります。",
+   "verdict": "unnatural",
+   "suggested": "順位ポイント：各卓で順位に応じて4・2・1・0点を獲得し、全ラウンドで合計します。同点は得失点差で決まります。",
+   "reason": "'得失点差' is the standard Japanese term for total score change/difference in games.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3630,
+   "file": "targets.ts",
+   "en": "Clean hands that reach 3 doubles",
+   "current": "3倍に届くきれいな手",
+   "verdict": "wrong",
+   "suggested": "3 飜に届くきれいな手",
+   "reason": "In a mahjong context, 'doubles' refers to the scoring unit '飜' (han), not a literal multiplication.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3721,
+   "file": "tips.ts",
+   "en": "The fan a hand must score to win. Official MCR needs 8.",
+   "current": "和了に必要な番数。公式の中国麻将（MCR）は 8 番。",
+   "verdict": "inconsistent",
+   "suggested": "和了に必要な飜数。公式の中国麻将（MCR）は 8 飜。",
+   "reason": "Using '飜' to be consistent with the translation of 'Faan' in row 3749.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3723,
+   "file": "tips.ts",
+   "en": "What a self-drawn win adds: one more base payment, or one more fan.",
+   "current": "ツモ和了で加わるもの：基本の支払い 1 つ分、または 1 番。",
+   "verdict": "inconsistent",
+   "suggested": "ツモ和了で加わるもの：基本の支払い 1 つ分、または 1 飜。",
+   "reason": "Using '飜' to be consistent with the translation of 'Faan' in row 3749.",
+   "model": "gemini-3-flash-preview"
+  }
+ ]
+}
