@@ -1,0 +1,904 @@
+{
+ "models": [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-flash-latest"
+ ],
+ "lang": "zh-Hant",
+ "reviewed": 3935,
+ "suggestions": [
+  {
+   "id": 42,
+   "file": "app.ts",
+   "en": "A small corner index on every tile: the number and a suit sign, such as 5● for dots, 3║ for bamboo and 7万 for characters.",
+   "current": "每張牌角上都有一個小標記：數字加花色符號，例如筒子 5●、索子 3║、萬子 7万。",
+   "verdict": "typo",
+   "suggested": "每張牌角上都有一個小標記：數字加花色符號，例如筒子 5●、索子 3║、萬子 7萬。",
+   "reason": "Use Traditional Chinese character '萬' instead of Simplified Chinese '万'.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 167,
+   "file": "app.ts",
+   "en": "Yaku, riichi, dora, furiten, and han and fu.",
+   "current": "役、立直、寶牌、振聽，以及翻和符。",
+   "verdict": "inconsistent",
+   "suggested": "役、立直、寶牌、振聽，以及番和符。",
+   "reason": "Use '番' instead of '翻' for han/fan consistency across Mahjong terms.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 203,
+   "file": "app.ts",
+   "en": "NEWS MATCH COMPLETE",
+   "current": "東南西北全莊結束",
+   "verdict": "unnatural",
+   "suggested": "東南西北圈賽結束",
+   "reason": "'全莊' is an unnatural translation for a NEWS (North-East-West-South) round match.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 222,
+   "file": "app.ts",
+   "en": "I finished {place} of 4, best hand {n} pts.",
+   "current": "我在 4 人中獲得{place}，最佳一手 {n} 分。",
+   "verdict": "unnatural",
+   "suggested": "我在 4 人中獲得{place}，最佳手牌 {n} 分。",
+   "reason": "'最佳一手' sounds unnatural for 'best hand'; '最佳手牌' is more appropriate in Mahjong.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 330,
+   "file": "ccp.ts",
+   "en": "League",
+   "current": "段位",
+   "verdict": "wrong",
+   "suggested": "聯賽",
+   "reason": "League refers to competitive leagues, whereas 段位 refers to ranks or dan grades.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 345,
+   "file": "ccp.ts",
+   "en": "Within your points",
+   "current": "點數夠用",
+   "verdict": "inconsistent",
+   "suggested": "積分足夠",
+   "reason": "The currency is established as Jong 積分 throughout, so 積分足夠 is consistent and fits a filter label.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 392,
+   "file": "ccp.ts",
+   "en": "Slicked back",
+   "current": "背頭",
+   "verdict": "unnatural",
+   "suggested": "油頭",
+   "reason": "背頭 is mainland Chinese phrasing, whereas 油頭 is the standard term in Taiwan and Hong Kong.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 485,
+   "file": "club.ts",
+   "en": "The Taiwanese game with a one-tai minimum and an optional goulash.",
+   "current": "台灣麻將，一台起和，可選古拉什。",
+   "verdict": "wrong",
+   "suggested": "台灣麻將，一台起胡，可選古拉什。",
+   "reason": "Taiwanese mahjong terminology uses 起胡 rather than 起和.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 497,
+   "file": "club.ts",
+   "en": "The first hand anyone wins ends the match",
+   "current": "第一個有人和牌的一局即結束比賽",
+   "verdict": "unnatural",
+   "suggested": "只要有人胡牌，比賽即結束",
+   "reason": "The translation is an awkward word-for-word calque, and winning should be expressed naturally as 胡牌.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 595,
+   "file": "club.ts",
+   "en": "Give the club a name.",
+   "current": "給俱樂部起個名字。",
+   "verdict": "unnatural",
+   "suggested": "為俱樂部取個名字。",
+   "reason": "起名字 is a Mainland Mandarin expression; 取名字 is standard in Traditional Chinese for Taiwan and Hong Kong.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 669,
+   "file": "club.ts",
+   "en": "Win a hand",
+   "current": "贏一手牌",
+   "verdict": "wrong",
+   "suggested": "和牌一次",
+   "reason": "In mahjong, hand refers to a deal/round; 手牌 means tiles held in hand, so 贏一手牌 is a mistranslation for winning a hand.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 689,
+   "file": "club.ts",
+   "en": "{n} of {total} hands won.",
+   "current": "贏了 {total} 手中的 {n} 手。",
+   "verdict": "wrong",
+   "suggested": "在 {total} 局中和牌 {n} 次。",
+   "reason": "Translating mahjong hands as 手 is a literal translation error; deals/hands in mahjong are counted as 局 and wins as 和牌.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 695,
+   "file": "club.ts",
+   "en": "Hands won",
+   "current": "勝局手數",
+   "verdict": "wrong",
+   "suggested": "和牌次數",
+   "reason": "手數 refers to move counts in board games like Go; hands won in mahjong is 和牌次數.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 704,
+   "file": "club.ts",
+   "en": "Avg win",
+   "current": "平均和牌",
+   "verdict": "unnatural",
+   "suggested": "平均和牌點數",
+   "reason": "Avg win in mahjong statistics refers to average score per winning hand, which requires 點數 or 打點 rather than the truncated 平均和牌.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 735,
+   "file": "club.ts",
+   "en": "Frame",
+   "current": "相框",
+   "verdict": "inconsistent",
+   "suggested": "頭像框",
+   "reason": "In avatar customization, Frame refers to an avatar frame (頭像框), not a photo frame (相框), consistent with row 741.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 876,
+   "file": "compete.ts",
+   "en": "Your Own Wind",
+   "current": "你自己的風",
+   "verdict": "wrong",
+   "suggested": "門風",
+   "reason": "In mahjong terminology, seat wind is termed 門風 (matching 圈風 in row 882), not a literal '你自己的風'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 955,
+   "file": "compete.ts",
+   "en": "JongBot is off and turns are timed (20 seconds).",
+   "current": "JongBot 關閉，每輪限時（20 秒）。",
+   "verdict": "wrong",
+   "suggested": "JongBot 關閉，每次出牌限時（20 秒）。",
+   "reason": "'Turns' refers to a player's discard turn rather than a match or tournament round (輪).",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 981,
+   "file": "compete.ts",
+   "en": "a frame",
+   "current": "一個相框",
+   "verdict": "inconsistent",
+   "suggested": "一個頭像框",
+   "reason": "The cosmetic reward is an avatar frame (頭像框, as in row 822), not a photo frame (相框).",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 998,
+   "file": "compete.ts",
+   "en": "Tournaments are played against the club’s members. Prizes are Jong Points, trophies and frames.",
+   "current": "錦標賽與俱樂部會員對戰。獎品是 Jong 積分、獎盃和相框。",
+   "verdict": "inconsistent",
+   "suggested": "錦標賽與俱樂部會員對戰。獎品是 Jong 積分、獎盃和頭像框。",
+   "reason": "The cosmetic reward is an avatar frame (頭像框, as in row 822), not a photo frame (相框).",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1008,
+   "file": "compete.ts",
+   "en": "{n}s turns",
+   "current": "每輪 {n} 秒",
+   "verdict": "wrong",
+   "suggested": "每回合 {n} 秒",
+   "reason": "In mahjong and game UI, a player's individual turn is '回合', whereas '輪' refers to an entire round around the table.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1023,
+   "file": "compete.ts",
+   "en": "Saved link",
+   "current": "同步連線",
+   "verdict": "wrong",
+   "suggested": "已儲存連線",
+   "reason": "'Saved' means stored/saved, not synchronized ('同步').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1049,
+   "file": "compete.ts",
+   "en": "Formal rulesets, regional families and house-rule traditions are labelled as such.",
+   "current": "正式規則、地區家族和房規傳統均已標註。",
+   "verdict": "unnatural",
+   "suggested": "正式規則、地區牌系和房規傳統均已標註。",
+   "reason": "'地區家族' is an unnatural literal translation of rule families; mahjong rule groupings are called '牌系' or '體系'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1068,
+   "file": "compete.ts",
+   "en": "Best move",
+   "current": "最佳著法",
+   "verdict": "unnatural",
+   "suggested": "最佳打法",
+   "reason": "'著法' is strictly a chess/Go term; mahjong plays and discards are called '打法'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1074,
+   "file": "compete.ts",
+   "en": "Replay · every hand shown",
+   "current": "回放 · 所有手牌明示",
+   "verdict": "unnatural",
+   "suggested": "回放 · 所有手牌公開",
+   "reason": "'明示' means to explicitly indicate; hands shown face up in mahjong are described as '公開'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1083,
+   "file": "compete.ts",
+   "en": "You deal. Every hand is shown face up.",
+   "current": "你發牌。所有手牌明示。",
+   "verdict": "unnatural",
+   "suggested": "你發牌。所有手牌公開。",
+   "reason": "'手牌明示' is a mistranslation of 'shown face up'; the natural term is '手牌公開'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1084,
+   "file": "compete.ts",
+   "en": "{name} deals. Every hand is shown face up.",
+   "current": "{name} 發牌。所有手牌明示。",
+   "verdict": "unnatural",
+   "suggested": "{name} 發牌。所有手牌公開。",
+   "reason": "'手牌明示' is a mistranslation of 'shown face up'; the natural term is '手牌公開'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1089,
+   "file": "compete.ts",
+   "en": "You call {claim} on {tile}.",
+   "current": "你對{tile}叫{claim}。",
+   "verdict": "unnatural",
+   "suggested": "你對{tile}宣告{claim}。",
+   "reason": "In mahjong, '叫' means ready hand (tenpai); '宣告' is the standard term for claiming a meld.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1090,
+   "file": "compete.ts",
+   "en": "{name} calls {claim} on {tile}.",
+   "current": "{name} 對{tile}叫{claim}。",
+   "verdict": "unnatural",
+   "suggested": "{name} 對{tile}宣告{claim}。",
+   "reason": "In mahjong, '叫' means ready hand (tenpai); '宣告' is the standard term for claiming a meld.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1115,
+   "file": "controls.ts",
+   "en": "Mei’s guide is open",
+   "current": "小美的指導已打開",
+   "verdict": "wrong",
+   "suggested": "Mei 的指導已開啟",
+   "reason": "The character name 'Mei' must remain in Latin script as instructed.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1126,
+   "file": "controls.ts",
+   "en": "Drag to move this card. Double-tap to put it back.",
+   "current": "拖動可移動此卡片，雙擊放回原處。",
+   "verdict": "unnatural",
+   "suggested": "拖曳可移動此卡片，點兩下放回原處。",
+   "reason": "'雙擊' is Mainland terminology; Traditional Chinese (TW/HK) uses '點兩下' for double-tap and '拖曳' for drag.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1136,
+   "file": "cosmetics.ts",
+   "en": "Frames",
+   "current": "相框",
+   "verdict": "unnatural",
+   "suggested": "頭像框",
+   "reason": "In game customization menus, 'Frames' refers to avatar frames ('頭像框'), not physical photo frames ('相框').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1297,
+   "file": "economy.ts",
+   "en": "Win 10 hands",
+   "current": "和 10 手牌",
+   "verdict": "wrong",
+   "suggested": "胡 10 把",
+   "reason": "'手牌' refers to tiles in hand rather than a deal/round, and '胡' is the standard term in Traditional Chinese.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1299,
+   "file": "economy.ts",
+   "en": "Play the Daily Hand on 3 days",
+   "current": "在 3 天裡玩每日一手",
+   "verdict": "unnatural",
+   "suggested": "玩 3 天每日牌局",
+   "reason": "'Daily Hand' refers to the daily deal feature ('每日牌局', consistent with row 1350), not literal '每日一手'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1342,
+   "file": "economy.ts",
+   "en": "Every game pays 50 JP, each hand you win 40, first place 200 and a limit hand 300. Your first win each day adds {n}.",
+   "current": "每局得 50 JP，每和一手得 40，第一名得 200，滿貫手得 300。每天首勝再加 {n}。",
+   "verdict": "unnatural",
+   "suggested": "每局得 50 JP，每胡一把得 40，第一名得 200，滿貫牌得 300。每天首勝再加 {n}。",
+   "reason": "Use standard Traditional Chinese mahjong terms: '胡' instead of '和', '一把' for a winning round, and '滿貫牌' for limit hand.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1426,
+   "file": "expansion.ts",
+   "en": "Two pungs you never claimed",
+   "current": "兩組未吃碰的暗刻",
+   "verdict": "unnatural",
+   "suggested": "兩組暗刻",
+   "reason": "'暗刻' already means an unclaimed concealed pung, and a pung cannot be claimed by chow ('吃').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1427,
+   "file": "expansion.ts",
+   "en": "Three pungs you never claimed",
+   "current": "三組未吃碰的暗刻",
+   "verdict": "unnatural",
+   "suggested": "三組暗刻",
+   "reason": "'暗刻' already means an unclaimed concealed pung, and a pung cannot be claimed by chow ('吃').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1428,
+   "file": "expansion.ts",
+   "en": "Four pungs you never claimed",
+   "current": "四組未吃碰的暗刻",
+   "verdict": "unnatural",
+   "suggested": "四組暗刻",
+   "reason": "'暗刻' already means an unclaimed concealed pung, and a pung cannot be claimed by chow ('吃').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1453,
+   "file": "expansion.ts",
+   "en": "Mah-Jong",
+   "current": "和",
+   "verdict": "inconsistent",
+   "suggested": "胡",
+   "reason": "Inconsistent with row 1392 ('胡') and the rest of the app, where '胡' is used for winning.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1595,
+   "file": "expansion.ts",
+   "en": "Zung Jung",
+   "current": "Zung Jung",
+   "verdict": "inconsistent",
+   "suggested": "中庸麻將",
+   "reason": "All other mahjong variant names are localized into Chinese; Zung Jung is widely known as 中庸麻將 in Chinese.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1631,
+   "file": "expansion.ts",
+   "en": "The hun’er: a tile is turned up after the deal, and the next tile in order is wild in your concealed hand",
+   "current": "混兒：發牌後翻開一張牌，按順序的下一張牌在你的暗手中可作萬能牌",
+   "verdict": "unnatural",
+   "suggested": "混兒：發牌後翻開一張牌，按順序的下一張牌在手牌中可作萬能牌",
+   "reason": "'暗手' is a literal, unnatural translation of 'concealed hand'; tiles in hand are called '手牌'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1638,
+   "file": "expansion.ts",
+   "en": "The hun’er works only in your concealed hand, never in a claimed set. A hun’er standing for itself, as its own tile, still counts as a plain win.",
+   "current": "混兒只在你的暗手中起作用，不能用於吃碰槓的牌組。混兒當作它本身使用時，仍算素胡。",
+   "verdict": "unnatural",
+   "suggested": "混兒只在手牌中起作用，不能用於吃碰槓的牌組。混兒當作它本身使用時，仍算素胡。",
+   "reason": "'暗手' is an unnatural translation of 'concealed hand'; '手牌' is the correct term for unmelded tiles in hand.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1725,
+   "file": "expansion.ts",
+   "en": "Wild this hand: stands for any tile in your concealed hand, never in a claimed set. A thrown wild is dead.",
+   "current": "本局萬能牌：在你的暗手中可代替任何牌，但不能用於吃碰槓的牌組。打出的萬能牌是死牌。",
+   "verdict": "unnatural",
+   "suggested": "本局萬能牌：在手牌中可代替任何牌，但不能用於吃碰槓的牌組。打出的萬能牌是死牌。",
+   "reason": "'暗手' is unnatural machine translation; '手牌' should be used for tiles in hand.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1738,
+   "file": "guide.ts",
+   "en": "Sets and a pair",
+   "current": "組合加一對",
+   "verdict": "unnatural",
+   "suggested": "面子加對子",
+   "reason": "'組合加一對' fails to use standard mahjong terminology, where sets and pairs are called '面子加對子'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1749,
+   "file": "guide.ts",
+   "en": "Collect {sets} sets and a pair: {tiles} tiles once you add the winning tile.",
+   "current": "湊齊 {sets} 組加一對：加上胡牌的那張共 {tiles} 張。",
+   "verdict": "unnatural",
+   "suggested": "湊齊 {sets} 個面子加一個對子：加上胡牌的那張共 {tiles} 張。",
+   "reason": "'{sets} 組加一對' sounds unnatural and lacks proper mahjong terms ('面子' and '對子').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 1820,
+   "file": "guide.ts",
+   "en": "Only green tiles: 2, 3, 4, 6, 8 Bamboo and the green dragon",
+   "current": "只有綠色牌：條子 2、3、4、6、8 和發",
+   "verdict": "inconsistent",
+   "suggested": "只有綠色牌：索子 2、3、4、6、8 和發",
+   "reason": "Use '索子' for Bamboo tiles to maintain consistency with other rows.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1909,
+   "file": "handScore.ts",
+   "en": "Winning tile: tap to take it out",
+   "current": "和牌張：點一下拿掉",
+   "verdict": "unnatural",
+   "suggested": "胡牌張：點一下拿掉",
+   "reason": "Use '胡牌張' instead of '和牌張' to align with standard mahjong terminology in Taiwan and Hong Kong.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1911,
+   "file": "handScore.ts",
+   "en": "Tap tiles below to build a hand. The last tile you add is the winning tile.",
+   "current": "點下面的牌來拼一手牌。最後加入的那張就是和牌張。",
+   "verdict": "unnatural",
+   "suggested": "點下面的牌來拼一手牌。最後加入的那張就是胡牌張。",
+   "reason": "Use '胡牌張' instead of '和牌張' to align with standard mahjong terminology in Taiwan and Hong Kong.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1917,
+   "file": "handScore.ts",
+   "en": "Not a winning hand with this winning tile.",
+   "current": "用這張和牌張不能胡。",
+   "verdict": "unnatural",
+   "suggested": "用這張胡牌張不能胡。",
+   "reason": "Use '胡牌張' instead of '和牌張' to align with standard mahjong terminology in Taiwan and Hong Kong.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1984,
+   "file": "learn.ts",
+   "en": "This hand is one tile from winning. Which tiles complete it?",
+   "current": "這手牌差一張就能和。哪些牌能完成它？",
+   "verdict": "unnatural",
+   "suggested": "這手牌差一張就能胡。哪些牌能完成它？",
+   "reason": "Use '胡' instead of '和' for winning in mahjong terminology.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1988,
+   "file": "learn.ts",
+   "en": "Which tile would you discard to win fastest?",
+   "current": "打出哪張牌能最快和牌？",
+   "verdict": "unnatural",
+   "suggested": "打出哪張牌能最快胡牌？",
+   "reason": "Use '胡牌' instead of '和牌' for winning in mahjong terminology.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1992,
+   "file": "learn.ts",
+   "en": "Riichi · their discards are below, with the riichi tile marked. A riichi hand can’t win on a tile it has discarded.",
+   "current": "立直 · 他們的棄牌在下方，立直宣言牌已標出。立直的手牌不能和自己打過的牌。",
+   "verdict": "unnatural",
+   "suggested": "立直 · 他們的棄牌在下方，立直宣言牌已標出。立直的手牌不能胡自己打過的牌。",
+   "reason": "Use '胡' instead of '和' for winning in mahjong terminology.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 1999,
+   "file": "learn.ts",
+   "en": "won on a discard",
+   "current": "點炮和牌",
+   "verdict": "inconsistent",
+   "suggested": "放槍胡牌",
+   "reason": "Use '放槍胡牌' to maintain consistency with other rows.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2033,
+   "file": "learn.ts",
+   "en": "In Riichi, your hand is complete but has no yaku. Can you win?",
+   "current": "在立直麻將中，你的牌已和但沒有役。能和牌嗎？",
+   "verdict": "wrong",
+   "suggested": "在立直麻將中，你的牌型已完成但沒有役。能和牌嗎？",
+   "reason": "'已和' means already won, whereas 'complete hand' here means having four sets and a pair assembled.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2071,
+   "file": "learn.ts",
+   "en": "Hands won × {n}",
+   "current": "勝局手數 × {n}",
+   "verdict": "unnatural",
+   "suggested": "勝局數 × {n}",
+   "reason": "'手數' is a literal translation of mahjong 'hands'; '局數' is the correct term for rounds or deals.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2149,
+   "file": "learn.ts",
+   "en": "Hands where you called a set",
+   "current": "你吃碰過面子的手數",
+   "verdict": "unnatural",
+   "suggested": "你吃碰過面子的局數",
+   "reason": "'手數' is a literal translation of 'hands'; '局數' should be used for mahjong deals.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2183,
+   "file": "learn.ts",
+   "en": "Pungs and kongs, clean hands, doubles, the goulash chart and the penalty.",
+   "current": "碰和槓、清一手、翻倍、Goulash 計分表和罰則。",
+   "verdict": "wrong",
+   "suggested": "碰和槓、清一色、翻倍、Goulash 計分表和罰則。",
+   "reason": "'Clean hands' refers to the flush hand pattern ('清一色') in mahjong, not '清一手'.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2250,
+   "file": "lobby.ts",
+   "en": "Skill",
+   "current": "水平",
+   "verdict": "unnatural",
+   "suggested": "牌技",
+   "reason": "\"水平\" is PRC usage; \"牌技\" or \"程度\" is standard in Taiwan and Hong Kong.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2251,
+   "file": "lobby.ts",
+   "en": "Any skill",
+   "current": "任意水平",
+   "verdict": "unnatural",
+   "suggested": "不限牌技",
+   "reason": "\"任意水平\" is unnatural in Traditional Chinese UI; \"不限牌技\" or \"不限程度\" is standard.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2331,
+   "file": "match.ts",
+   "en": "{n} Character",
+   "current": "{cn}萬",
+   "verdict": "inconsistent",
+   "suggested": "{n}萬",
+   "reason": "The placeholder {n} was incorrectly changed to {cn}.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2332,
+   "file": "match.ts",
+   "en": "{n} Dot",
+   "current": "{cn}筒",
+   "verdict": "inconsistent",
+   "suggested": "{n}筒",
+   "reason": "The placeholder {n} was incorrectly changed to {cn}.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2333,
+   "file": "match.ts",
+   "en": "{n} Bamboo",
+   "current": "{cn}索",
+   "verdict": "inconsistent",
+   "suggested": "{n}索",
+   "reason": "The placeholder {n} was incorrectly changed to {cn}.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2500,
+   "file": "match.ts",
+   "en": "ABORTIVE DRAW",
+   "current": "流局（途中流局）",
+   "verdict": "unnatural",
+   "suggested": "途中流局",
+   "reason": "The standard Mahjong term for an abortive draw is 途中流局.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2507,
+   "file": "match.ts",
+   "en": "A lone {tile} can only become a pair or pung, so I let it go early.",
+   "current": "單張的{tile}只能湊成對子或碰，所以我早早打掉。",
+   "verdict": "unnatural",
+   "suggested": "單張的{tile}只能湊成對子或刻子，所以我早早打掉。",
+   "reason": "In Mahjong terminology, a set of three of a kind in hand is called 刻子, whereas 碰 refers to the action of claiming it.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2513,
+   "file": "match.ts",
+   "en": "Passed for you",
+   "current": "已替你選擇過",
+   "verdict": "wrong",
+   "suggested": "已替你過牌",
+   "reason": "Passed refers to skipping a tile claim in Mahjong (過牌), not a past-tense action of selecting.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2797,
+   "file": "minigames.ts",
+   "en": "You have reached today’s {n} Jong Points from this game. More tomorrow.",
+   "current": "你今天已從此遊戲獲得 {n} Jong 積分上限。明天再來。",
+   "verdict": "unnatural",
+   "suggested": "你今天從此遊戲獲得的 Jong 積分已達 {n} 點上限。明天再來。",
+   "reason": "The original phrasing unnaturally treats the cap as an item obtained rather than a maximum reached.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 2845,
+   "file": "minigames.ts",
+   "en": "Match tiles a path of up to two turns can join, as in Mahjong Connect. Every pair strikes the boss.",
+   "current": "和麻將連連看一樣，連接能用最多兩次轉彎的通路相連的相同牌。每消一對都會攻擊頭目。",
+   "verdict": "unnatural",
+   "suggested": "與麻將連連看一樣，配對經最多兩次轉彎通路相連的牌。每消一對都會攻擊頭目。",
+   "reason": "The sentence structure '連接能用...相連的相同牌' is redundant and clumsy.",
+   "model": "gemini-3.5-flash"
+  },
+  {
+   "id": 3085,
+   "file": "rounds.ts",
+   "en": "Crochet: the same number once in each suit, like 5 Characters, 5 Dots, 5 Bamboo. Concealed, each one",
+   "current": "鉤織：同一數字每種花色各一張，例如五萬、五筒、五條。須暗手，每組計",
+   "verdict": "wrong",
+   "suggested": "鉤織：同一數字每種花色各一張，例如五萬、五筒、五條。每組均須暗手",
+   "reason": "'每組計' is a truncated, broken phrase; it should state that each set must be concealed.",
+   "model": "gemini-flash-latest"
+  },
+  {
+   "id": 3099,
+   "file": "rounds.ts",
+   "en": "Every hand on the card is concealed: you may claim a discard only to win.",
+   "current": "牌卡上的牌型都須暗手：只有胡牌時才能吃別人打出的牌。",
+   "verdict": "wrong",
+   "suggested": "牌卡上的牌型都須暗手：只有胡牌時才能吃碰別人打出的牌。",
+   "reason": "Translating 'claim' as '吃' incorrectly limits claiming discards to chows, and is inconsistent with rows 3055 and 3059.",
+   "model": "gemini-flash-latest"
+  },
+  {
+   "id": 3146,
+   "file": "rules.ts",
+   "en": "Head bump: first in turn wins",
+   "current": "截和：按順序最先者胡",
+   "verdict": "wrong",
+   "suggested": "頭跳：按順序最先者和牌",
+   "reason": "In Riichi mahjong, head bump is standardly termed '頭跳' rather than '截和', and winning is called '和牌'.",
+   "model": "gemini-flash-latest"
+  },
+  {
+   "id": 3320,
+   "file": "rules.ts",
+   "en": "From a discard",
+   "current": "放槍",
+   "verdict": "wrong",
+   "suggested": "來自棄牌",
+   "reason": "'放槍' means dealing in (discarding a winning tile to an opponent), which is the opposite of winning from a discard.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3425,
+   "file": "rules.ts",
+   "en": "Goulash: call a pung",
+   "current": "雜錦：碰牌",
+   "verdict": "inconsistent",
+   "suggested": "古拉什：碰牌",
+   "reason": "'Goulash' is translated as '古拉什' everywhere else in the game.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3427,
+   "file": "rules.ts",
+   "en": "Goulash: other sets",
+   "current": "雜錦：其他組合",
+   "verdict": "inconsistent",
+   "suggested": "古拉什：其他組合",
+   "reason": "'Goulash' is translated as '古拉什' everywhere else in the game.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3429,
+   "file": "rules.ts",
+   "en": "Small Cards",
+   "current": "小卡",
+   "verdict": "inconsistent",
+   "suggested": "小牌卡",
+   "reason": "'Small Cards' should be '小牌卡' for consistency with other strings and '大牌卡'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3434,
+   "file": "rules.ts",
+   "en": "East names a number before the deal, before seeing any tiles: that number in each suit is a joker, one of each per player. A set or pair may use two jokers but keeps at least one real tile. West round rules and scoring.",
+   "current": "East在發牌前、看牌之前報一個數字：三門中該數字都是百搭，每人每門一張。一組牌或對子可用兩張百搭，但至少保留一張真牌。規則和計分同西風圈。",
+   "verdict": "typo",
+   "suggested": "東家在發牌前、看牌之前報一個數字：三門中該數字都是百搭，每人每門一張。一組牌或對子可用兩張百搭，但至少保留一張真牌。規則和計分同西風圈。",
+   "reason": "The word 'East' was accidentally left untranslated; it should be '東家'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3656,
+   "file": "tips.ts",
+   "en": "Changes every menu, button and message. Lessons and Mei’s voice stay in English. The club reloads to switch; at a table, the change waits until you leave.",
+   "current": "更改所有選單、按鈕和訊息。課程和Mei 的語音仍為英語。俱樂部會重新載入以切換；在牌桌上時，等你離開後才生效。",
+   "verdict": "typo",
+   "suggested": "更改所有選單、按鈕和訊息。課程和 Mei 的語音仍為英語。俱樂部會重新載入以切換；在牌桌上時，等你離開後才生效。",
+   "reason": "Add missing space before the English name 'Mei'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3684,
+   "file": "tips.ts",
+   "en": "Turns Mei’s spoken voice on or off. The choice is remembered on this device.",
+   "current": "開啟或關閉Mei 的語音。此裝置會記住你的選擇。",
+   "verdict": "typo",
+   "suggested": "開啟或關閉 Mei 的語音。此裝置會記住你的選擇。",
+   "reason": "Add missing space before the English name 'Mei'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3693,
+   "file": "tips.ts",
+   "en": "Which India Rules rounds the match plays: East with passports, South with Small Cards, West with goulash, North East’s choice, or Classic: sets and a pair without passports in every round.",
+   "current": "比賽打印度規則的哪些圈：東圈打護照，南圈打小牌卡，西圈打古拉什，北圈由東家選擇；或經典玩法：每圈都是四組加一對，不用護照。",
+   "verdict": "inconsistent",
+   "suggested": "比賽打印度規則的哪些圈：東圈打護照，南圈打小卡，西圈打古拉什，北圈由東家選擇；或經典玩法：每圈都是四組加一對，不用護照。",
+   "reason": "Use '小卡' to match 'Small Card' consistently across the game.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3698,
+   "file": "tips.ts",
+   "en": "Whether a set may mix suits. Allowed adds mixed pungs (crochet), mixed chows and knitted sets, in a concealed hand only.",
+   "current": "牌組能否混合花色。允許時，可組成混色碰、混色吃和組合龍，僅限門清牌。",
+   "verdict": "wrong",
+   "suggested": "牌組能否混合花色。允許時，可組成混色刻子（crochet）、混色順子和編織牌組，僅限門清牌。",
+   "reason": "Pungs and chows are sets (刻子, 順子) rather than call actions (碰, 吃); knitted sets are 編織牌組, and (crochet) was missing.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3700,
+   "file": "tips.ts",
+   "en": "Gives each wind round its own hands: passports in East, the Small Card in South, goulash in West and the Big Card in North. The rules explain each one.",
+   "current": "每個風圈有自己的牌型：東圈護照、南圈小牌卡、西圈古拉什、北圈大牌卡。規則中有詳細說明。",
+   "verdict": "inconsistent",
+   "suggested": "每個風圈有自己的牌型：東圈護照、南圈小卡、西圈古拉什、北圈大卡。規則中有詳細說明。",
+   "reason": "Use '小卡' and '大卡' to match Small Card and Big Card consistently.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3704,
+   "file": "tips.ts",
+   "en": "At each wall game every player puts this much into a pot, and the next winner takes it all.",
+   "current": "每次荒莊，每位玩家向獎池投入這麼多，下一位和牌者全部拿走。",
+   "verdict": "inconsistent",
+   "suggested": "每次流局，每位玩家向獎池投入這麼多，下一位和牌者全部拿走。",
+   "reason": "Use standard mahjong term '流局' consistently for a wall game/draw instead of the regional Mainland term '荒莊'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3709,
+   "file": "tips.ts",
+   "en": "At a drawn hand, a player who discarded only terminals and honours, none of them called, is paid as for a mangan.",
+   "current": "荒牌時，只打出么九牌且無一被吃碰的玩家，按滿貫收取。",
+   "verdict": "inconsistent",
+   "suggested": "流局時，只打出么九牌且無一被吃碰的玩家，按滿貫收取。",
+   "reason": "Use '流局' for drawn hands in Riichi mahjong instead of '荒牌'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3722,
+   "file": "tips.ts",
+   "en": "The most a single hand can score. Anything above counts as the cap.",
+   "current": "單手牌最多能得的分。超過的部分按上限計。",
+   "verdict": "unnatural",
+   "suggested": "單次和牌最高得分。超過的部分按上限計。",
+   "reason": "'單手牌' is an unnatural literal translation; '單次和牌' correctly refers to a scoring hand.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3727,
+   "file": "tips.ts",
+   "en": "The most a single hand can score.",
+   "current": "單手牌最多能得的分。",
+   "verdict": "unnatural",
+   "suggested": "單次和牌最高得分。",
+   "reason": "'單手牌' is an unnatural literal translation; use '單次和牌' in mahjong context.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3736,
+   "file": "variations.ts",
+   "en": "UAE",
+   "current": "阿聯酋",
+   "verdict": "unnatural",
+   "suggested": "阿聯",
+   "reason": "'阿聯' is the standard Traditional Chinese abbreviation in Taiwan and Hong Kong, whereas '阿聯酋' is Mainland Chinese usage.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3746,
+   "file": "variations.ts",
+   "en": "136: three suits, winds and dragons",
+   "current": "136 張：三門花色、風牌和箭牌",
+   "verdict": "inconsistent",
+   "suggested": "136 張：三門花色、風牌和三元牌",
+   "reason": "Use '三元牌' consistently for dragon tiles to match the rest of the app instead of '箭牌'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3756,
+   "file": "variations.ts",
+   "en": "Dora indicators and red fives add value",
+   "current": "寶牌指示牌和赤五可增加價值",
+   "verdict": "unnatural",
+   "suggested": "寶牌指示牌和赤五可增加翻數",
+   "reason": "'增加價值' is a literal translation of 'add value'; in Riichi Mahjong, dora tiles add han (翻數).",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3810,
+   "file": "variations.ts",
+   "en": "Teahouses and homes across Sichuan, and players of the hugely popular Blood Battle apps. A regional family with many local versions.",
+   "current": "四川各地的茶館和家庭，以及風靡一時的血戰到底應用程式玩家。一個擁有眾多地方版本的地區大家族。",
+   "verdict": "wrong",
+   "suggested": "四川各地的茶館和家庭，以及極受歡迎的血戰到底應用程式玩家。一個擁有眾多地方版本的地區大家族。",
+   "reason": "'風靡一時' means popular in the past, mistranslating 'hugely popular' which indicates current popularity.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3827,
+   "file": "variations.ts",
+   "en": "Four sets and a pair, seven pairs or thirteen orphans, worth at least two points. Self-draw: both others pay. Discard: the discarder pays both shares.",
+   "current": "四個面子加一個對子、七對或十三么，至少兩分。自摸：另外兩人都付；點炮：放槍者付兩份。",
+   "verdict": "inconsistent",
+   "suggested": "四個面子加一個對子、七對或十三么，至少兩分。自摸：另外兩人都付；放槍：放槍者付兩份。",
+   "reason": "Inconsistent terminology within the sentence; '放槍' aligns with '放槍者' and standard Traditional Chinese usage.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3886,
+   "file": "variations.ts",
+   "en": "Declare riichi, chase dora, mind furiten. Every win needs a yaku.",
+   "current": "宣佈立直，追逐寶牌，留意振聽。每次和牌都需要役。",
+   "verdict": "unnatural",
+   "suggested": "宣告立直，追逐寶牌，留意振聽。每次和牌都需要役。",
+   "reason": "In Riichi Mahjong, declaring riichi is standardly called 宣告立直 rather than 宣佈立直.",
+   "model": "gemini-3.8-flash"
+  }
+ ]
+}
