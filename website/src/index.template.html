@@ -1026,6 +1026,78 @@ html:not([lang="en"]) .kicker { white-space: normal; }
 .vt-stamps { max-width: 720px; }
 @media (min-width: 861px) { .pstamp { width: 84px; height: 84px; } }
 @media (max-width: 640px) { .mg-tabs { gap: 6px; } .mg-tabs button { padding: 0 11px; gap: 6px; font-size: 13.5px; } .mg-tabs button .icon { width: 16px; height: 16px; } }
+
+/* =====================================================================================
+   V52 (2026-11-12): the earlier video-led site, with the parts of the user's references
+   that can be drawn for real: gold titles, tighter rooms, lantern light, compact portrait
+   cards, title-case card names. Nothing here is a pasted or cropped picture.
+   ===================================================================================== */
+.chapter > .wrap { padding-block: clamp(56px, 6.2vw, 92px); gap: clamp(28px, 3.2vw, 46px); }
+.title, .subhead.orn h3, #details .subhead h3, .vtour h3, .final h2 { background: linear-gradient(180deg, #fff6dc 6%, #f6e2ab 36%, #d9b061 64%, #b98a3e 80%, #ecd08f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* lantern light at the edges of each room and a faint glow on the floor */
+.chapter::before { background:
+  radial-gradient(220px 220px at 0% 38%, rgba(255, 168, 84, 0.13), transparent 70%),
+  radial-gradient(160px 160px at 100% 70%, rgba(255, 150, 70, 0.10), transparent 70%),
+  radial-gradient(46% 110px at 50% 100%, rgba(214, 160, 82, 0.10), transparent 72%),
+  linear-gradient(118deg, transparent 58%, rgba(255, 226, 170, 0.035) 64%, transparent 70%, rgba(255, 226, 170, 0.03) 76%, transparent 82%); }
+.chapter.alt::before { background:
+  radial-gradient(220px 220px at 100% 34%, rgba(255, 168, 84, 0.13), transparent 70%),
+  radial-gradient(160px 160px at 0% 74%, rgba(255, 150, 70, 0.10), transparent 70%),
+  radial-gradient(46% 110px at 50% 100%, rgba(214, 160, 82, 0.10), transparent 72%),
+  linear-gradient(118deg, transparent 58%, rgba(255, 226, 170, 0.035) 64%, transparent 70%, rgba(255, 226, 170, 0.03) 76%, transparent 82%); }
+
+/* ---------- The Regulars: the portrait fills the card, a short plate under it */
+.split.company { align-items: center; }
+#arrive .company-side .cast article { padding: 0 0 12px; gap: 6px; }
+#arrive .company-side .cast .portrait { margin: 0; aspect-ratio: 1 / 0.84; }
+#arrive .cast .portrait img { object-position: 50% 24%; }
+#arrive .company-side .cast h4 { margin-top: 10px; font-size: 27px; }
+#arrive .company-side .cast em { padding: 0; border: 0; background: none; box-shadow: none; font: 600 10.5px/1.2 var(--ui); letter-spacing: 0.26em; color: var(--gold-hi); overflow: visible; white-space: normal; text-align: center; }
+#arrive .cast .ticon { display: none; }
+#arrive .cast .trait { margin: 0; }
+#arrive .cast .trait p { padding: 0 14px; font-size: 14px; line-height: 1.4; color: #ddd8c8; }
+#arrive .cast article::after { margin-top: auto; width: 56%; }
+
+/* ---------- Rounds: larger tiles on the stand */
+.wind-row.plinth { max-width: 760px; }
+
+/* ---------- The House: the tile on a lacquer stand */
+div.house-tile { filter: none; width: clamp(190px, 20vw, 290px); bottom: -34px; display: grid; justify-items: center; isolation: isolate; }
+div.house-tile img { width: 62%; height: auto; margin-bottom: 9%; filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.5)); }
+div.house-tile::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34%; z-index: -1; border-radius: 50%; background: radial-gradient(60% 60% at 50% 40%, rgba(32, 96, 70, 0.9), #0b2c21 70%); box-shadow: 0 0 0 2px #6b3d1f, 0 0 0 3px rgba(227, 194, 124, 0.7), 0 12px 0 -2px #3a1d0e, 0 12px 0 0 rgba(227, 194, 124, 0.45), 0 34px 50px rgba(0, 0, 0, 0.55); }
+
+/* ---------- Mei's tour never sits on top of the page.
+   The invitation is part of the opening scene; while she guides, her words run in a bar along the
+   bottom edge and the page is given that much room underneath. */
+.hero .mei-invite { position: static; margin-top: 6px; max-width: 100%; }
+.hero .mei-invite[hidden] { display: flex; visibility: hidden; }
+.hero .mei-invite .mei-face { box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5); }
+.mei-dot, .mei-dot.placed { position: fixed; z-index: 20; left: 0; right: 0; top: auto !important; bottom: 0; flex-direction: row; justify-content: center; align-items: center; gap: 12px; pointer-events: auto;
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: #051510; border-top: 1px solid rgba(214, 178, 106, 0.5); box-shadow: 0 -14px 34px rgba(0, 0, 0, 0.45); transition: none; }
+.mei-dot .mei-orb { width: 44px; height: 44px; cursor: pointer; animation: none; box-shadow: none; touch-action: auto; }
+.mei-dot .mei-bubble, .mei-dot.show .mei-bubble { flex: 0 1 820px; min-width: 0; max-width: none; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; opacity: 1; visibility: visible; transform: none; transition: none; font-size: 15px; line-height: 1.4; }
+.mei-dot .mei-caption { flex: 1; min-width: 0; min-height: 2.8em; display: flex; align-items: center; color: #f1ead8; }
+.mei-dot.nocap .mei-bubble { flex: 0 0 auto; padding: 0; }
+.mei-dot.nocap .mei-caption { display: none; }
+.mei-dot .mei-next { position: static; flex: none; transform: none; opacity: 1; padding: 0 14px 0 16px; min-height: 36px; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; transition: none; }
+.mei-dot .mei-next[hidden] { display: none; }
+body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + env(safe-area-inset-bottom, 0px))); }
+@media (max-width: 640px) {
+  .mei-dot, .mei-dot.placed { gap: 8px; padding-inline: 10px; }
+  .mei-dot .mei-orb { width: 38px; height: 38px; }
+  .mei-dot .mei-bubble, .mei-dot.show .mei-bubble { font-size: 13px; line-height: 1.35; gap: 6px; }
+  .mei-dot .mei-caption { min-height: 4.05em; }
+  .mei-dot .mei-next { padding: 0; width: 34px; min-height: 34px; justify-content: center; border-radius: 50%; }
+  .mei-dot .mei-next > span:first-child { display: none; }
+  .mei-dot .mei-x { width: 30px; height: 30px; }
+  .hero .mei-invite { margin-top: 2px; }
+}
+/* the crest never rides up under the top bar on short screens */
+.hero .crest-lg { width: min(60vw, 290px, 30vh); }
+.hero .wrap { padding-block: 44px 56px; }
+@media (max-width: 760px) { div.house-tile { display: grid; position: relative; right: auto; bottom: auto; order: 3; margin: 30px auto 6px; width: 210px; } }
+.side-h.crowned > span:first-child { white-space: nowrap; }
 </style>
 
 <header class="top">
@@ -1074,6 +1146,14 @@ html:not([lang="en"]) .kicker { white-space: normal; }
         <a class="btn gold" href="{{GAME}}" target="_blank" rel="noopener"><span class="icon">{{ICON:play}}</span>Sit at the table</a>
         <a class="btn ghost" href="#arrive">Spend an evening</a>
       </div>
+      <aside class="mei-invite" id="mei-invite" hidden aria-label="Guided tour">
+        <div class="mi-pill">
+          <b>Let Mei show you around.</b>
+          <button type="button" class="mi-start" id="mei-yes"><span class="icon">{{ICON:volume-2}}</span>Start</button>
+          <button type="button" class="mi-no" id="mei-no" aria-label="No thanks" title="No thanks"><span class="icon">{{ICON:volume-x}}</span></button>
+        </div>
+        <span class="mei-face"><img src="tour/mei.webp" alt=""><span class="m">M</span></span>
+      </aside>
     </div>
   </section>
 
@@ -1133,11 +1213,11 @@ html:not([lang="en"]) .kicker { white-space: normal; }
         <figure class="shot device laptop"><img src="shots/learn-1800.jpg" srcset="shots/learn-1800.jpg 1800w, shots/learn.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Academy: Mei welcomes you to the club in the first lesson."><span class="base" aria-hidden="true"></span></figure>
       </div>
       <ol class="timeline">
-        <li><span class="dot"><span class="icon">{{ICON:hand-helping}}</span></span><h4>Guided game</h4><p>A real hand, with Mei beside you.</p></li>
-        <li><span class="dot"><span class="icon">{{ICON:mic}}</span></span><h4>Voiced lessons</h4><p>Captioned lessons, each with a quick test.</p></li>
+        <li><span class="dot"><span class="icon">{{ICON:hand-helping}}</span></span><h4>Guided Game</h4><p>A real hand, with Mei beside you.</p></li>
+        <li><span class="dot"><span class="icon">{{ICON:mic}}</span></span><h4>Voiced Lessons</h4><p>Captioned lessons, each with a quick test.</p></li>
         <li><span class="dot"><span class="icon">{{ICON:target}}</span></span><h4>Placement</h4><p>Already play? A short test finds your level.</p></li>
-        <li><span class="dot"><span class="icon">{{ICON:calendar-check}}</span></span><h4>Daily drills</h4><p>Five fresh challenges a day.</p></li>
-        <li><span class="dot"><span class="icon">{{ICON:chart-line}}</span></span><h4>Game analysis</h4><p>See what went right and wrong.</p></li>
+        <li><span class="dot"><span class="icon">{{ICON:calendar-check}}</span></span><h4>Daily Drills</h4><p>Five fresh challenges a day.</p></li>
+        <li><span class="dot"><span class="icon">{{ICON:chart-line}}</span></span><h4>Game Analysis</h4><p>See what went right and wrong.</p></li>
       </ol>
     </div>
   </section>
@@ -1151,16 +1231,16 @@ html:not([lang="en"]) .kicker { white-space: normal; }
         <div class="rule"></div>
         <p class="sub">The real game, on a 3D table you can lean into.</p>
       </div>
-      <figure class="shot framed"><img src="shots/table-1800.jpg" srcset="shots/table-1800.jpg 1800w, shots/table.jpg 3600w" sizes="100vw" width="3600" height="2250" alt="A hand in play on Cinnabar Lacquer tiles in the Taipei room: the discards are filling the table, and Mei is coaching."></figure>
+      <figure class="shot framed"><img src="shots/table-1800.jpg" srcset="shots/table-1800.jpg 1800w, shots/table.jpg 2400w" sizes="100vw" width="2400" height="1500" alt="A hand of India Rules in play on Classic Ivory tiles: the discards are filling the green felt, and Mei, Rex and Amara are at the table."></figure>
       <div class="split">
         <div class="story">
           <p>Every discard is called aloud. Claims, kongs and wins play out on the felt as the camera follows.</p>
           <p>Stuck? JongBot suggests a play and explains why. Turn hints off when you're ready.</p>
         </div>
         <ul class="notes">
-          <li><span class="badge"><span class="icon">{{ICON:lightbulb}}</span></span><div><b>JongBot hints</b><span>What to play, and why</span></div></li>
-          <li><span class="badge"><span class="icon">{{ICON:volume-2}}</span></span><div><b>Table callers</b><span>Every pung, out loud</span></div></li>
-          <li><span class="badge"><span class="icon">{{ICON:rotate-3d}}</span></span><div><b>Free camera</b><span>Zoom, tilt and turn</span></div></li>
+          <li><span class="badge"><span class="icon">{{ICON:lightbulb}}</span></span><div><b>JongBot Hints</b><span>What to play, and why</span></div></li>
+          <li><span class="badge"><span class="icon">{{ICON:volume-2}}</span></span><div><b>Table Callers</b><span>Every pung, out loud</span></div></li>
+          <li><span class="badge"><span class="icon">{{ICON:rotate-3d}}</span></span><div><b>Free Camera</b><span>Zoom, tilt and turn</span></div></li>
           <li><span class="badge"><span class="icon">{{ICON:repeat}}</span></span><div><b>Replays</b><span>Review your key moments</span></div></li>
         </ul>
       </div>
@@ -1203,9 +1283,9 @@ html:not([lang="en"]) .kicker { white-space: normal; }
         <figure class="shot"><img src="rituals/ritual-dice-1800.jpg" srcset="rituals/ritual-dice-1800.jpg 1800w, rituals/ritual-dice.jpg 2880w" sizes="(max-width: 960px) 100vw, 40vw" loading="lazy" alt="A corner side table with bone dice on a brass tray, a tea bowl and gold coins with ingots."></figure>
       </div>
       <div class="ritual-notes">
-        <article><span class="badge"><span class="icon">{{ICON:coffee}}</span></span><div><h4>Pass the tea</h4><p>Once a hand, pour a bowl for another player.</p></div></article>
-        <article><span class="badge"><span class="icon">{{ICON:coins}}</span></span><div><h4>Your score, in gold</h4><p>Coins and ingots rise and fall with your score.</p></div></article>
-        <article><span class="badge"><span class="icon">{{ICON:dices}}</span></span><div><h4>The dice tray</h4><p>Two or three dice, rolled to break the wall.</p></div></article>
+        <article><span class="badge"><span class="icon">{{ICON:coffee}}</span></span><div><h4>Pass the Tea</h4><p>Once a hand, pour a bowl for another player.</p></div></article>
+        <article><span class="badge"><span class="icon">{{ICON:coins}}</span></span><div><h4>Your Score, in Gold</h4><p>Coins and ingots rise and fall with your score.</p></div></article>
+        <article><span class="badge"><span class="icon">{{ICON:dices}}</span></span><div><h4>The Dice Tray</h4><p>Two or three dice, rolled to break the wall.</p></div></article>
       </div>
     </div>
   </section>
@@ -1221,9 +1301,9 @@ html:not([lang="en"]) .kicker { white-space: normal; }
             <p>Every version played properly, with its own scoring, lesson and cheat sheet.</p>
           </div>
           <ul class="families">
-            <li><b>7</b><div><h4>Formal rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div></li>
-            <li><b>19</b><div><h4>Regional families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div></li>
-            <li><b>4</b><div><h4>House-rule traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div></li>
+            <li><b>7</b><div><h4>Formal Rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div></li>
+            <li><b>19</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div></li>
+            <li><b>4</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div></li>
           </ul>
         </div>
         <figure class="vkit" aria-label="Every variation comes with its own rules, a voiced lesson, a scoring guide, AI players who know it and a one-page cheat sheet.">
@@ -1314,10 +1394,10 @@ html:not([lang="en"]) .kicker { white-space: normal; }
           <p>Each has a short how-to, your best scores, and Easy, Medium and Hard levels.</p>
         </div>
         <ul class="notes">
-          <li><span class="badge"><span class="icon">{{ICON:calendar-days}}</span></span><div><b>The daily puzzle</b><span>One board for all, +150 JP</span></div></li>
+          <li><span class="badge"><span class="icon">{{ICON:calendar-days}}</span></span><div><b>The Daily Puzzle</b><span>One board for all, +150 JP</span></div></li>
           <li><span class="badge"><span class="icon">{{ICON:coins}}</span></span><div><b>Jong Points</b><span>Up to 600 JP a day per game</span></div></li>
-          <li><span class="badge"><span class="icon">{{ICON:gauge}}</span></span><div><b>Three levels</b><span>Harder boards pay more</span></div></li>
-          <li><span class="badge"><span class="icon">{{ICON:shield-check}}</span></span><div><b>Rating untouched</b><span>Mini-games never change it</span></div></li>
+          <li><span class="badge"><span class="icon">{{ICON:gauge}}</span></span><div><b>Three Levels</b><span>Harder boards pay more</span></div></li>
+          <li><span class="badge"><span class="icon">{{ICON:shield-check}}</span></span><div><b>Rating Untouched</b><span>Mini-games never change it</span></div></li>
         </ul>
       </div>
       <p class="mg-explore"><button type="button" class="btn gold" id="mg-explore"><span>Explore all 20 games</span><span class="icon">{{ICON:chevron-down}}</span></button></p>
@@ -1400,8 +1480,8 @@ html:not([lang="en"]) .kicker { white-space: normal; }
       </div>
       <div class="earn">
         <article><img class="feat-ic" src="assets/feat/coins.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></article>
-        <article><img class="feat-ic" src="assets/feat/calendar.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>The season track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></article>
-        <article><img class="feat-ic" src="assets/feat/stamp.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>World Tour stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></article>
+        <article><img class="feat-ic" src="assets/feat/calendar.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>The Season Track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></article>
+        <article><img class="feat-ic" src="assets/feat/stamp.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>World Tour Stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></article>
         <article><img class="feat-ic" src="assets/feat/tag.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></article>
       </div>
       <p class="promise"><span class="icon">{{ICON:shield-check}}</span>Nothing in the Atelier changes gameplay or your rating.</p>
@@ -1437,7 +1517,7 @@ html:not([lang="en"]) .kicker { white-space: normal; }
         <li><img class="feat-ic" src="assets/feat/chart.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Ratings</b><span>One per variation</span></div></li>
         <li><img class="feat-ic" src="assets/feat/lantern.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Seasons</b><span>Six weeks, one city</span></div></li>
         <li><img class="feat-ic" src="assets/feat/trophy.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
-        <li><img class="feat-ic" src="assets/feat/people.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Private clubs</b><span>Your own weekly league</span></div></li>
+        <li><img class="feat-ic" src="assets/feat/people.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Private Clubs</b><span>Your own weekly league</span></div></li>
       </ul>
     </div>
   </section>
@@ -1469,7 +1549,7 @@ html:not([lang="en"]) .kicker { white-space: normal; }
           <p>So we built a premium club. From Hong Kong and Tokyo to Dubai, we brought together authentic rules and scoring, created Mei, a host who guides you along the way, and made every tile and table beautiful—because a game you love should feel precious.</p>
           <img class="studio-logo" src="assets/chacklate-logo.svg" alt="Chacklate Experiences" width="640" height="160">
         </div>
-        <img class="house-tile" src="winds/wind-east.webp" alt="" aria-hidden="true" width="560" height="358" loading="lazy">
+        <div class="house-tile" aria-hidden="true"><img src="winds/wind-east.webp" alt="" width="560" height="358" loading="lazy"></div>
         <aside class="house-contact" id="contact">
           <h3 class="script">Contact</h3>
           <ul class="contact-list">
@@ -1483,15 +1563,6 @@ html:not([lang="en"]) .kicker { white-space: normal; }
 </main>
 
 
-<aside class="mei-invite" id="mei-invite" hidden aria-label="Guided tour">
-  <div class="mi-pill">
-    <b>Let Mei show you around.</b>
-    <button type="button" class="mi-start" id="mei-yes"><span class="icon">{{ICON:volume-2}}</span>Start</button>
-    <button type="button" class="mi-no" id="mei-no" aria-label="No thanks" title="No thanks"><span class="icon">{{ICON:volume-x}}</span></button>
-  </div>
-  <span class="mei-face"><img src="tour/mei.webp" alt=""><span class="m">M</span></span>
-</aside>
-<button type="button" class="mei-next" id="mei-next" hidden><span>Continue</span><span class="icon">{{ICON:chevron-down}}</span></button>
 <div class="mei-dot" id="mei-live" hidden>
   <button type="button" class="mei-orb" id="mei-orb" aria-label="Mei is guiding you. Tap to pause." aria-describedby="mei-caption"><img src="tour/mei.webp" alt=""><span class="m">M</span><span class="ring"></span><span class="pz" aria-hidden="true"></span></button>
   <div class="mei-bubble" id="mei-bubble" role="status">
@@ -1499,6 +1570,7 @@ html:not([lang="en"]) .kicker { white-space: normal; }
     <button type="button" class="mei-x mei-cc" id="mei-cc" aria-pressed="true" aria-label="Captions" title="Captions"><span class="icon cc-on">{{ICON:captions}}</span><span class="icon cc-off">{{ICON:captions-off}}</span></button>
     <button type="button" class="mei-x" id="mei-stop" aria-label="End the tour" title="End the tour"><span class="icon">{{ICON:volume-x}}</span></button>
   </div>
+  <button type="button" class="mei-next" id="mei-next" hidden><span>Continue</span><span class="icon">{{ICON:chevron-down}}</span></button>
 </div>
 <script>{{ZEN}}</script>
 <script>
@@ -1680,6 +1752,8 @@ html:not([lang="en"]) .kicker { white-space: normal; }
   // When Mei has finished a section, a cue invites the visitor on to the next; any scroll hides it.
   const nextBtn = document.getElementById('mei-next');
   let nextTo = null, cueAt = 0;
+  // Mei's bar is given its exact height under the page, so it never lies over the last lines.
+  if (window.ResizeObserver) new ResizeObserver(() => { const h = live.offsetHeight; if (h) document.body.style.setProperty('--mei-bar', h + 'px'); }).observe(live);
   const hideCue = () => { if (!nextTo) return; nextTo = null; nextBtn.classList.remove('show'); setTimeout(() => { if (!nextTo) nextBtn.hidden = true; }, 500); };
   const showCue = (key) => {
     const i = sections.findIndex((s) => s.id === key), nx = sections[i + 1];

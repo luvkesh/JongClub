@@ -226,7 +226,7 @@ cats = [
 ]
 tabs = "".join(f'<button type="button" role="tab" aria-controls="car-{k}" aria-selected="{"true" if n == 0 else "false"}"><span class="icon">{icon(ic)}</span>{label}<small>{len(items)}</small></button>' for n, (k, label, ic, items) in enumerate(cats))
 carousel = f'<div class="car"><div class="car-tabs" role="tablist" aria-label="The collection">{tabs}</div>' + "".join(panel(k, label, ic, items, n == 0) for n, (k, label, ic, items) in enumerate(cats)) + "</div>"
-groups = [("table", "Table cloths"), ("frame", "Portrait frames"), ("avatar", "Outfits"), ("accessory", "Accessories"), ("winAnimation", "Win animations"), ("tableEffect", "Table effects"), ("sound", "Sounds")]
+groups = [("table", "Table Cloths"), ("frame", "Portrait Frames"), ("avatar", "Outfits"), ("accessory", "Accessories"), ("winAnimation", "Win Animations"), ("tableEffect", "Table Effects"), ("sound", "Sounds")]
 extras = []
 for key, label in groups:
     items = [r for r in cat["rest"] if r["cat"] == key and r["id"] not in ("none", "fx-none")]
@@ -235,7 +235,7 @@ for key, label in groups:
     medal = os.path.join(SITE, "assets", "details", key + ".webp")
     art = (f'<img class="medal" src="assets/details/{key}.webp" alt="" width="360" height="360">' if os.path.exists(medal)
            else f'<span class="swatch" style="background:conic-gradient({sw[0]} 0 45%, {sw[1]} 0 80%, {sw[2]} 0)"></span>')
-    n, word = len(items), label.lower()
+    n, word = len(items), label
     extras.append(f'<div class="extra">{art}<div><b>{n} {word}</b><span>{html.escape(names)} and more</span></div></div>')
 
 page = open(os.path.join(HERE, "index.template.html")).read()
