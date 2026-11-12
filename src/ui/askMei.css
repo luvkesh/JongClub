@@ -1,0 +1,79 @@
+/* Ask Mei: the conversation card on the Learn screen (src/ui/askMei.ts). */
+.lx-ask { margin: 0 0 26px; padding: 18px 20px 16px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--hi), 0 18px 40px rgba(0, 0, 0, 0.35); position: relative; overflow: hidden; }
+.lx-ask::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 80% at 100% 0%, rgba(201, 165, 107, 0.09), transparent 60%); }
+.lx-ask > * { position: relative; }
+.am-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.am-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.am-portrait .narrator { flex: none; width: 56px; height: 56px; font-size: 24px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(201, 165, 107, 0.28), 0 10px 24px rgba(0, 0, 0, 0.4); }
+.am-head-text { flex: 1 1 auto; min-width: 0; }
+.am-head-text .eyebrow { margin-bottom: 6px; }
+.am-title { margin: 0 0 6px; font: 600 clamp(19px, 2vw, 24px)/1.2 var(--display-title, var(--inscr)); letter-spacing: 0.02em; color: var(--ivory); text-transform: none; }
+.am-sub { margin: 0; color: var(--muted); font: 400 14px/1.5 var(--ui); max-width: 62ch; }
+.am-tools { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.am-source { font: 500 var(--fs-xs)/1.3 var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); text-align: end; }
+.am-forget { background: none; border: 0; padding: 0; color: var(--faint); font: 400 12.5px/1.3 var(--ui); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.am-forget:hover { color: var(--brass-hi); }
+
+.am-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.am-chip { min-height: 36px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: rgba(201, 165, 107, 0.06); color: var(--ivory); font: 400 13.5px/1.3 var(--ui); cursor: pointer; text-align: start; transition: border-color 0.15s, background 0.15s; }
+.am-chip:hover { border-color: var(--line-strong); background: rgba(201, 165, 107, 0.12); }
+
+.am-thread { display: flex; flex-direction: column; gap: 12px; margin: 0 0 14px; max-height: min(52vh, 560px); overflow-y: auto; overscroll-behavior: contain; padding-inline-end: 4px; scrollbar-width: thin; scrollbar-color: var(--brass-lo) transparent; }
+.am-msg { display: flex; gap: 12px; align-items: flex-start; max-width: 100%; }
+.am-msg.you { justify-content: flex-end; }
+.am-msg.you p { margin: 0; max-width: min(78%, 60ch); padding: 10px 14px; border-radius: 14px 14px 4px 14px; background: linear-gradient(180deg, rgba(201, 165, 107, 0.22), rgba(201, 165, 107, 0.14)); border: 1px solid var(--line); color: var(--ivory); font: 400 15px/1.5 var(--ui); white-space: pre-wrap; overflow-wrap: anywhere; }
+.am-msg.mei .narrator { margin-top: 2px; }
+.am-say { max-width: min(86%, 68ch); padding: 11px 15px; border-radius: 4px 14px 14px 14px; background: var(--sunken); border: 1px solid var(--line-soft); color: var(--ivory); font: 400 15px/1.6 var(--ui); box-shadow: inset 0 1px 0 rgba(234, 208, 154, 0.05); }
+.am-say p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.am-say p:last-child, .am-say ul:last-child { margin-bottom: 0; }
+.am-say ul { margin: 0 0 8px; padding-inline-start: 20px; }
+.am-say li { margin: 0 0 4px; }
+.am-say li::marker { color: var(--brass); }
+.am-say b { color: var(--brass-hi); font-weight: 600; }
+.am-msg.failed .am-say { border-color: rgba(234, 149, 126, 0.35); color: var(--muted); }
+.am-msg.failed .btn { margin-top: 8px; }
+.am-lesson { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; min-height: 36px; padding: 6px 14px 6px 12px; border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(201, 165, 107, 0.1); color: var(--brass-hi); font: 500 13px/1.2 var(--ui); letter-spacing: 0.04em; cursor: pointer; }
+.am-lesson:hover { background: rgba(201, 165, 107, 0.18); }
+.am-lesson svg { width: 16px; height: 16px; }
+
+.am-dots { display: inline-flex; gap: 5px; align-items: center; height: 18px; }
+.am-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); opacity: 0.4; animation: am-dot 1.2s ease-in-out infinite; }
+.am-dots i:nth-child(2) { animation-delay: 0.2s; }
+.am-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes am-dot { 30% { opacity: 1; transform: translateY(-3px); } }
+
+.am-composer { display: flex; align-items: flex-end; gap: 10px; }
+.am-input { flex: 1 1 auto; min-width: 0; min-height: 46px; max-height: 140px; resize: none; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background-color: var(--sunken); color: var(--ivory); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45); font: 400 15px/1.4 var(--ui); overflow-y: auto; }
+.am-input::placeholder { color: var(--faint); }
+.am-input:focus-visible { outline: none; border-color: var(--brass-hi); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(234, 208, 154, 0.18); }
+.am-send { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 1px solid #b48a4e; background: linear-gradient(180deg, #ead09a 0%, #c9a56b 55%, #a8803f 100%); color: var(--brass-ink); display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35); transition: transform 0.15s, opacity 0.15s; }
+.am-send svg { width: 20px; height: 20px; }
+.am-send:hover:not(:disabled) { transform: translateY(-1px); }
+.am-send:disabled { opacity: 0.45; cursor: default; }
+.am-stop { flex: none; }
+.am-status { margin: 8px 0 0; min-height: 0; color: var(--up); font: 400 13px/1.3 var(--ui); }
+.am-status:empty { display: none; }
+.am-note { margin: 10px 0 0; color: var(--faint); font: 400 12.5px/1.4 var(--ui); }
+
+.am-key { padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r); background: var(--sunken); }
+.am-keytitle { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font: 600 18px/1.2 var(--display-title, var(--inscr)); color: var(--brass-hi); text-transform: none; letter-spacing: 0.02em; }
+.am-keytitle svg { width: 20px; height: 20px; color: var(--brass); }
+.am-key p { margin: 0 0 12px; color: var(--muted); font: 400 14px/1.5 var(--ui); max-width: 70ch; }
+.am-keyrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.am-keyfield { flex: 1 1 260px; min-width: 0; padding: 10px 12px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.04em; }
+.am-keynote { color: var(--down) !important; }
+.am-keynote:empty { display: none; }
+
+@media (max-width: 640px) {
+  .lx-ask { padding: 16px 14px 14px; }
+  .am-head { flex-wrap: wrap; gap: 12px; }
+  .am-portrait .narrator { width: 44px; height: 44px; font-size: 19px; }
+  .am-head-text { flex-basis: calc(100% - 56px); }
+  .am-tools { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 14px; width: 100%; }
+  .am-source { flex: 1 1 100%; text-align: start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .am-forget { white-space: nowrap; }
+  .am-source:empty { display: none; }
+  .am-msg.you p, .am-say { max-width: 92%; }
+  .am-thread { max-height: 60vh; }
+}

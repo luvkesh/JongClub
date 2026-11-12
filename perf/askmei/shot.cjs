@@ -1,0 +1,33 @@
+// Ask Mei screenshots: node perf/askmei/shot.cjs URL OUTDIR W H  (Learn with the key card, then a mocked chat)
+const pw = require('/opt/node-tools/node_modules/playwright');
+const fs = require('fs');
+const [url, out, W = '1440', H = '900'] = process.argv.slice(2);
+fs.mkdirSync(out, { recursive: true });
+(async () => {
+  const browser = await pw.chromium.launch({ args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const ctx = await browser.newContext({ viewport: { width: +W, height: +H }, deviceScaleFactor: 1, hasTouch: +W < 1000, isMobile: +W < 600 });
+  const page = await ctx.newPage();
+  await page.route(/fonts\.(googleapis|gstatic)\.com|ipapi|ipwho/, (r) => r.abort());
+  page.on('pageerror', (e) => console.log('PAGEERR', e.message));
+  page.on('console', (m) => m.type() === 'error' && !/ERR_TUNNEL|Failed to load resource|ERR_FAILED/.test(m.text()) && console.log('CONSOLE', m.text().slice(0, 300)));
+  await page.addInitScript(() => { localStorage.setItem('jongclub.quality.v1', 'low'); localStorage.setItem('jongclub.onboarded', '1'); });
+  const reply = 'A **passport** is a fixed hand shape you must hold in the East round. Think of it as your ticket: no passport, no Mahjong.\n- Every passport is listed on the East round score sheet.\n- Build it concealed where you can; the summary shows it first.\nNo passport in your hand yet? Start with the pairs you already hold.\n[[lesson:india-east]]';
+  await page.route(/generativelanguage\.googleapis\.com/, async (r) => { await new Promise((x) => setTimeout(x, 900)); r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ candidates: [{ content: { parts: [{ text: reply }] }, finishReason: 'STOP' }] }) }); });
+  await page.goto(url + '#learn', { timeout: 300000 }); await page.waitForTimeout(3500);
+  const sec = await page.$('.lx-ask');
+  await sec.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
+  await sec.screenshot({ path: `${out}/01-needs-key-${W}.png` });
+  await page.evaluate(() => localStorage.setItem('jongclub.askmei.key.v1', 'AIzaSyA-0123456789abcdefghijklmnopqrstu'));
+  await page.reload({ timeout: 300000 }); await page.waitForTimeout(3000);
+  const sec2 = await page.$('.lx-ask'); await sec2.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
+  await sec2.screenshot({ path: `${out}/02-ready-${W}.png` });
+  await page.click('.am-chip'); await page.waitForTimeout(300);
+  await (await page.$('.lx-ask')).screenshot({ path: `${out}/03-thinking-${W}.png` });
+  await page.waitForTimeout(1500);
+  await page.fill('.am-input', 'And how many can I hold?'); await page.waitForTimeout(100);
+  await (await page.$('.lx-ask')).screenshot({ path: `${out}/04-reply-${W}.png` });
+  console.log('lesson button:', await page.evaluate(() => document.querySelector('.am-lesson')?.textContent));
+  console.log('bullets:', await page.evaluate(() => document.querySelectorAll('.am-say li').length));
+  console.log('page scroll width ok:', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  await browser.close();
+})();

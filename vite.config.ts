@@ -12,6 +12,8 @@ export default defineConfig(({ mode }) => ({
   // `id=` (an esbuild-renamed variable), which the preview host mistakes for a review page and refuses.
   esbuild: mode === 'artifact' ? { minifyWhitespace: false } : undefined,
   // Faces kept on the device (src/render/faceStore.ts) are only reused within the same build.
-  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
+  // Ask Mei: a Gemini key from the environment at build time is built into the page (src/ai/askMei/provider.ts
+  // says when that is wise). Without one the page shows Ask Mei's "needs a key" card.
+  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)), __ASK_MEI_KEY__: JSON.stringify(process.env.GEMINI_API_KEY ?? '') },
   build: { outDir: mode === 'artifact' ? 'dist-artifact' : mode === 'standalone' ? 'dist-standalone' : 'dist', chunkSizeWarningLimit: 1200 },
 }));

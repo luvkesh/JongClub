@@ -65,6 +65,8 @@ export async function startServer(opts = {}) {
   const apple = { ...APPLE, jwks: env.APPLE_JWKS_URL || APPLE.jwks, audiences: list(env.APPLE_SERVICES_ID) };
   const origins = list(env.ALLOWED_ORIGINS);
   const emailProvider = env.EMAIL_PROVIDER || '';
+  // Ask Mei: the Gemini key stays here; the game sends Mei's brief and the conversation and gets her reply.
+  const gemini = { key: env.GEMINI_API_KEY || '', models: list(env.GEMINI_MODEL).length ? list(env.GEMINI_MODEL) : ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'] };
 
   // The signing secret: from the environment, else generated once and kept in the store.
   let secret = env.SESSION_SECRET;
@@ -87,6 +89,15 @@ export async function startServer(opts = {}) {
     const t = tries.get(ip);
     if (!t || t.reset < now) return void tries.set(ip, { n: 1, reset: now + 60_000 });
     if (++t.n > 20) fail(429, 'rate_limited', 'Too many attempts. Wait a minute and try again.');
+  };
+
+  const asks = new Map();
+  /** Ask Mei: 30 questions a minute per address (a key's quota is shared by every player). */
+  const askThrottle = (ip) => {
+    const now = Date.now();
+    const t = asks.get(ip);
+    if (!t || t.reset < now) return void asks.set(ip, { n: 1, reset: now + 60_000 });
+    if (++t.n > 30) fail(429, 'rate_limited', 'Mei needs a breather. Ask again in a minute.');
   };
 
   const userOf = (req) => {
@@ -135,7 +146,44 @@ export async function startServer(opts = {}) {
 
   const routes = [
     ['GET', /^\/health$/, () => ({ ok: true, storage: store.kind })],
-    ['GET', /^\/config$/, () => ({ email: true, google: google.audiences.length > 0, apple: apple.audiences.length > 0, emailReminders: !!emailProvider })],
+    ['GET', /^\/config$/, () => ({ email: true, google: google.audiences.length > 0, apple: apple.audiences.length > 0, emailReminders: !!emailProvider, askMei: !!gemini.key })],
+
+    // Ask Mei: Mei's brief (system) and the turns so far, answered by Gemini with the server's key.
+    ['POST', /^\/ask-mei$/, async (req, b) => {
+      if (!gemini.key) fail(501, 'not_configured', 'Ask Mei isn’t set up on this server (GEMINI_API_KEY).');
+      askThrottle(req.socket.remoteAddress);
+      const system = String(b.system ?? '');
+      const turns = Array.isArray(b.turns) ? b.turns : [];
+      if (!system || system.length > 200_000) fail(400, 'invalid', 'Mei’s brief is missing or too long.');
+      if (!turns.length || turns.length > 24 || !turns.every((t) => t && (t.role === 'user' || t.role === 'mei') && typeof t.text === 'string' && t.text.length <= 4000)) fail(400, 'invalid', 'The conversation doesn’t look right.');
+      if (turns[turns.length - 1].role !== 'user') fail(400, 'invalid', 'The last turn must be the player’s question.');
+      const body = JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: turns.map((t) => ({ role: t.role === 'user' ? 'user' : 'model', parts: [{ text: t.text }] })),
+        generationConfig: { temperature: 0.4, topP: 0.9, maxOutputTokens: 900 },
+      });
+      let last = null;
+      for (const model of gemini.models) {
+        let r;
+        try {
+          r = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': gemini.key }, body });
+        } catch (e) {
+          last = fail.bind(null, 502, 'upstream', 'Mei could not reach Gemini.');
+          continue;
+        }
+        const j = await r.json().catch(() => ({}));
+        if (r.status === 429 || r.status === 404 || r.status >= 500) {
+          last = fail.bind(null, r.status === 429 ? 429 : 502, r.status === 429 ? 'rate_limited' : 'upstream', j.error?.message ?? `Gemini answered ${r.status}.`);
+          continue;
+        }
+        if (r.status !== 200) fail(502, 'upstream', j.error?.message ?? `Gemini answered ${r.status}.`);
+        if (j.promptFeedback?.blockReason) fail(422, 'blocked', 'That question was blocked.');
+        const text = (j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('').trim();
+        if (!text) fail(502, 'empty', 'Mei had nothing to say.');
+        return { text, model };
+      }
+      (last ?? fail.bind(null, 502, 'upstream', 'Mei is away from the table for a moment.'))();
+    }],
 
     // Accounts.
     ['POST', /^\/auth\/register$/, async (req, b) => {
