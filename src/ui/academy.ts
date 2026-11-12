@@ -551,8 +551,6 @@ export interface LessonPlayerOptions {
   onOpenLesson?(id: LessonId): void;
   /** Start the first scene straight away (the player chose this lesson). Otherwise a start card waits for a tap. */
   autostart?: boolean;
-  /** The scenes begin (at once, or from the start card). */
-  onStart?(): void;
 }
 
 /** A self-contained story lesson with narration, then a test. */
@@ -730,7 +728,7 @@ export function lessonPlayer(lesson: Lesson, opts: LessonPlayerOptions): HTMLEle
       h('div', { class: 'story-head' }, h('p', { class: 'eyebrow' }, lt(lesson.title)), voiceBtnIntro()),
       h('h3', { lang: lessonsTranslated() ? null : 'en' }, lt(lesson.title)),
       h('div', { class: 'narration' }, h('div', { class: 'narrator', 'aria-hidden': 'true' }, 'M'), h('p', { class: 'lesson-body' }, tr('{n} short scenes with Mei, then a quick test.', { n: lesson.scenes.length })), lessonContents(lesson)),
-      h('div', { class: 'btn-row' }, h('button', { class: 'btn primary lesson-begin', onclick: () => (sound.play('button'), opts.onStart?.(), go(scene)) }, tr('Begin the lesson'))),
+      h('div', { class: 'btn-row' }, h('button', { class: 'btn primary lesson-begin', onclick: () => (sound.play('button'), go(scene)) }, tr('Begin the lesson'))),
     );
   const voiceBtnIntro = () => {
     const b = voiceBtn();
@@ -738,9 +736,7 @@ export function lessonPlayer(lesson: Lesson, opts: LessonPlayerOptions): HTMLEle
     return b;
   };
 
-  if (opts.autostart) {
-    opts.onStart?.();
-    scene();
-  } else intro();
+  if (opts.autostart) scene();
+  else intro();
   return root;
 }
