@@ -289,6 +289,8 @@ export interface MatchSummary {
   opponents?: string[];
   /** Ranked: each opponent's rating and final place, for the rating change. */
   field?: { rating: number; place: number }[];
+  /** Team play: your partner, and the two team totals (placement is the team's place). */
+  team?: { partner: string; mine: number; theirs: number };
 }
 
 export interface Rewards {

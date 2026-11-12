@@ -1291,6 +1291,13 @@ summary:hover { color: #fff3d6; }
 /* Display serifs default to old-style figures (a 0 that reads as "o"); numbers stand at full height everywhere. */
 body { font-variant-numeric: lining-nums; }
 
+/* Table options (src/engine/rules/tableOptions.ts): team pills on the seat plates, co-winner and team rows in the hand summary. */
+.team-pill { font: 600 9px/1 var(--ui); letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 6px; border-radius: 2px; background: #1e3d4f; color: #d9eef7; box-shadow: inset 0 0 0 1px rgba(200, 230, 245, 0.25); }
+.team-pill.team-1 { background: #4a2d1a; color: #f7e3cf; box-shadow: inset 0 0 0 1px rgba(255, 220, 190, 0.25); }
+.hand-result .co-win-head { margin: 18px 0 8px; font: 600 20px/1.2 var(--display-title); letter-spacing: 0; text-transform: none; color: var(--ivory); }
+.hand-result .team-totals .delta-row { grid-template-columns: minmax(0, 1fr) 90px; }
+.hand-result .team-row.mine > span:first-child { color: var(--brass-hi); }
+
 /* Tile legibility floor (user, 2026-10-24: "all tiles should be a minimum size so that they are always legible").
    min-width beats every width rule above and in the screen styles, so no 2D tile face anywhere in the app
    (lessons, tests, Mei, cards, guides, mini-games, results, tooltips, the table HUD) can shrink below it.

@@ -207,6 +207,16 @@ first in turn).
 - **Placement scoring** (`src/club/placement.ts`): uma +15/+5/-5/-15 (or 20/10, 30/10;
   three seats +15/0/-15) plus the score difference per 1,000 (per 100 at small-stake
   tables); ties share. Shown on match results and selectable for club tournaments.
+- **Table options** (`src/engine/rules/tableOptions.ts`, every rule set, House rules
+  panel): *Self-draw only* (no win on a discard, a robbed kong or a set-aside North;
+  bots stop defending), *Multiple winners* (everyone who calls the win on one discard
+  wins and the discarder pays each; off = head bump; Riichi sanchahou still aborts
+  three), *Winner takes all* (a win on a discard is paid by every other player, as the
+  rule set pays a self-draw), *Team play* (four seats: East with West, South with
+  North; partners pool scores, the team total decides the match placement, and bots
+  never defend against a partner) and *Cumulative leaderboard* (`src/club/ladder.ts`:
+  the match's net points, matches and first places add up by name on this device
+  and show under Club › Rankings).
 
 ## Taiwanese, American and Dubai club
 
