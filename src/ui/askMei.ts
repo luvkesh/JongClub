@@ -128,7 +128,7 @@ export function askMeiSection(app: App): HTMLElement {
     const p = resolveProvider();
     if (p) {
       body.append(chips, thread, composer, status, foot);
-      sourceLine.textContent = p.kind === 'proxy' ? tr('Answers through the club server') : p.kind === 'device-key' ? tr('Answers with the key on this device') : tr('Answers with the key built into this build');
+      sourceLine.textContent = p.kind === 'proxy' ? tr('Answers through the club server') : tr('Answers with the key on this device');
       forget.hidden = p.kind !== 'device-key';
       draw();
       return;

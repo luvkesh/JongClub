@@ -1,13 +1,12 @@
-// Where Ask Mei's answers come from. Three ways, first found wins:
+// Where Ask Mei's answers come from. Two ways, first found wins:
 //   1. The JongClub server's /api/ask-mei route (server/app.js), which keeps the
 //      Gemini key on the server: the way to run it once the club is hosted.
 //      Used when the game points at a server (src/net/api.ts) or when
 //      VITE_ASK_MEI_ENDPOINT names the route at build time.
 //   2. A key the player pasted into Ask Mei, kept only on this device.
-//   3. A key built into the page: GEMINI_API_KEY in the environment when the
-//      game is built (vite.config.ts). Note that anyone who can open that build
-//      can read the key from it, so this suits a private preview, not go-live.
-// With none of these, Ask Mei shows its "needs a key" card instead of a chat.
+// A key is never built into the page: the game is published as one HTML file,
+// and anyone who could open it could read the key out of it. With neither of
+// these, Ask Mei shows its "needs a key" card instead of a chat.
 //
 // Only Google's Gemini API is reachable from the cloud the club is built in,
 // so Gemini is the one model provider for now.
@@ -19,7 +18,7 @@ export interface ChatTurn {
   text: string;
 }
 
-export type ProviderKind = 'proxy' | 'device-key' | 'built-in';
+export type ProviderKind = 'proxy' | 'device-key';
 
 export interface AskProvider {
   kind: ProviderKind;
@@ -44,8 +43,6 @@ export const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta';
 
 const DEVICE_KEY = 'jongclub.askmei.key.v1';
 
-declare const __ASK_MEI_KEY__: string | undefined;
-
 const env = ((import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {}) as Record<string, string | undefined>;
 
 const store = {
@@ -65,9 +62,6 @@ const store = {
     }
   },
 };
-
-/** The key built into this page at build time, or ''. */
-export const builtInKey = (): string => (typeof __ASK_MEI_KEY__ === 'string' ? __ASK_MEI_KEY__.trim() : '');
 
 /** A key the player pasted on this device, or null. */
 export const deviceKey = (): string | null => store.get(DEVICE_KEY);
@@ -183,7 +177,5 @@ export function resolveProvider(o: { fetch?: FetchLike } = {}): AskProvider | nu
   if (endpoint) return { kind: 'proxy', ask: (s, t, signal) => proxyGenerate(endpoint, s, t, { fetch: o.fetch, signal }) };
   const mine = deviceKey();
   if (mine) return { kind: 'device-key', ask: (s, t, signal) => geminiGenerate(mine, s, t, { fetch: o.fetch, signal }) };
-  const built = builtInKey();
-  if (built) return { kind: 'built-in', ask: (s, t, signal) => geminiGenerate(built, s, t, { fetch: o.fetch, signal }) };
   return null;
 }
