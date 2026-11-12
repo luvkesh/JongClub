@@ -123,6 +123,18 @@ export function tr(src: string, params?: Record<string, string | number>): strin
 }
 
 /**
+ * The English source of a translated UI string (the string itself in English,
+ * or when no table row translates to it). Mei's recorded clips are keyed by
+ * their English text, so a line built from translated strings finds its clip
+ * through this.
+ */
+export function source(text: string): string {
+  if (current === 'en') return text;
+  for (const [key, cell] of dict) if (cell === text) return key;
+  return text;
+}
+
+/**
  * A count with its noun: trn(3, '{n} game', '{n} games'). The key is the plural
  * (`other`) form; languages with more forms (Arabic) give each in the table.
  */

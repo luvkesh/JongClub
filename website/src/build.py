@@ -228,15 +228,20 @@ tabs = "".join(f'<button type="button" role="tab" aria-controls="car-{k}" aria-s
 carousel = f'<div class="car"><div class="car-tabs" role="tablist" aria-label="The collection">{tabs}</div>' + "".join(panel(k, label, ic, items, n == 0) for n, (k, label, ic, items) in enumerate(cats)) + "</div>"
 groups = [("table", "Table cloths"), ("frame", "Portrait frames"), ("avatar", "Outfits"), ("accessory", "Accessories"), ("winAnimation", "Win animations"), ("tableEffect", "Table effects"), ("sound", "Sounds")]
 extras = []
-for key, label in groups:
+# the seven cards sit where the painting has them: four across, then three centred
+EXTRA_AT = [(95, 318, 385, 207), (505, 318, 385, 207), (915, 318, 385, 207), (1325, 318, 385, 207), (218, 556, 427, 216), (677, 556, 427, 216), (1129, 556, 427, 216)]
+for (key, label), (x, y, w, h) in zip(groups, EXTRA_AT):
     items = [r for r in cat["rest"] if r["cat"] == key and r["id"] not in ("none", "fx-none")]
-    sw = items[min(3, len(items) - 1)]["swatch"]
     names = ", ".join(r["name"] for r in items[:2])
-    medal = os.path.join(SITE, "assets", "details", key + ".webp")
-    art = (f'<img class="medal" src="assets/details/{key}.webp" alt="" width="360" height="360">' if os.path.exists(medal)
-           else f'<span class="swatch" style="background:conic-gradient({sw[0]} 0 45%, {sw[1]} 0 80%, {sw[2]} 0)"></span>')
-    n, word = len(items), label.lower()
-    extras.append(f'<div class="extra">{art}<div><b>{n} {word}</b><span>{html.escape(names)} and more</span></div></div>')
+    cut = os.path.join(SITE, "assets", "cut", f"detail-{key}.webp")
+    from PIL import Image
+    cw, ch = Image.open(cut).size
+    tx = w - 150
+    extras.append(f'<article class="lux" style="--x:{x};--y:{y};--w:{w};--h:{h};--r:16">'
+                  f'<span class="ico pos" style="--x:6;--y:6;--w:196"><img src="assets/cut/detail-{key}.webp" alt="" width="{cw}" height="{ch}" loading="lazy"></span>'
+                  f'<span class="vdiv pos" style="--x:{tx - 18};--y:38;--h:{h - 76}"></span>'
+                  f'<h4 class="pos" style="--x:{tx};--y:40;--w:{w - tx - 14};--fs:29">{len(items)} {label.title()}</h4>'
+                  f'<p class="pos" style="--x:{tx};--y:{h - 92};--w:{w - tx - 14};--fs:15.5">{html.escape(names)} and more</p></article>')
 
 page = open(os.path.join(HERE, "index.template.html")).read()
 page = re.sub(r"\{\{ICON:([a-z0-9-]+)\}\}", lambda m: icon(m.group(1)), page)
@@ -257,7 +262,7 @@ page = re.sub(r'<h2 class="title"([^>]*)>(.*?)</h2>', lambda m: f'<h2 class="tit
 page = page.replace("{{TOUR}}", json.dumps(tour(), ensure_ascii=False)).replace("{{ZEN}}", open(os.path.join(HERE, "zen.js")).read().strip())
 en = strings(page.replace("{{I18N}}", "{}"))
 json.dump(en, open(os.path.join(HERE, "i18n", "en.json"), "w"), ensure_ascii=False, indent=0)
-page = page.replace("{{I18N}}", json.dumps(i18n(), ensure_ascii=False))
+page = page.replace("{{I18N}}", json.dumps({l: {k: v for k, v in d.items() if k in set(en)} for l, d in i18n().items()}, ensure_ascii=False))
 assert "{{" not in page, re.findall(r"\{\{[^}]*\}\}", page)
 open(os.path.join(SITE, "index.html"), "w").write(page)
 print("wrote website/index.html", len(page) // 1024, "KB")
