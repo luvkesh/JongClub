@@ -22,10 +22,14 @@ import { Rng } from '../engine/rng';
 import { KIND_COUNT, WIND_NAMES, rankOf, suitOf, toCounts, type Wind } from '../engine/tiles';
 import { andList, tr } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
+import { passportDiscardDrill, passportDrill } from './passportDrills';
 
-export type DrillType = 'name' | 'wait' | 'discard' | 'safe' | 'value';
+export type DrillType = 'name' | 'wait' | 'discard' | 'safe' | 'value' | 'passport' | 'passportDiscard';
 
+/** The daily mix. */
 export const DRILL_TYPES: DrillType[] = ['name', 'wait', 'discard', 'safe', 'value'];
+/** The passport drills (India Rules, East round), a set of their own from Learn (learn/passportDrills.ts). */
+export const PASSPORT_DRILL_TYPES: DrillType[] = ['passport', 'passportDiscard'];
 
 export const DRILL_LABEL: Record<DrillType, string> = {
   name: tr('Name the tile'),
@@ -33,6 +37,8 @@ export const DRILL_LABEL: Record<DrillType, string> = {
   discard: tr('Best discard'),
   safe: tr('Is this tile safe?'),
   value: tr('Count the hand'),
+  passport: tr('Spot the passport'),
+  passportDiscard: tr('Keep passports open'),
 };
 
 /** Variations whose winning hands the value drill can show. */
@@ -426,6 +432,10 @@ export function makeDrill(type: DrillType, seed: number, variation = 'classic'):
       return safeDrill(seed);
     case 'value':
       return valueDrill(seed, variation);
+    case 'passport':
+      return passportDrill(seed);
+    case 'passportDiscard':
+      return passportDiscardDrill(seed);
   }
 }
 

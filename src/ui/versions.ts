@@ -22,7 +22,7 @@ import { tr, trn } from '../i18n';
 
 const LAST_KEY = 'jongclub.versions.last.v1';
 
-interface Version {
+export interface Version {
   id: string;
   /** Academy lesson id. */
   lesson: string;
@@ -39,7 +39,7 @@ interface Version {
   mei: string;
 }
 
-const VERSIONS: Version[] = [
+export const VERSIONS: Version[] = [
   {
     id: 'classic',
     lesson: 'basics',

@@ -123,16 +123,17 @@ export interface PlannedDrill {
  * ones picked by weakness, never more than three of a kind. `focus` makes a
  * practice set of one kind; `salt` gives a different set on the same day.
  */
-export function planSet(s: DrillState, day: string, opts: { size?: number; focus?: DrillType; salt?: number; variation?: string } = {}): PlannedDrill[] {
+export function planSet(s: DrillState, day: string, opts: { size?: number; focus?: DrillType | DrillType[]; salt?: number; variation?: string } = {}): PlannedDrill[] {
   const size = opts.size ?? SET_SIZE;
   const variation = opts.variation ?? 'classic';
-  const due = dueItems(s, day).filter((x) => !opts.focus || x.type === opts.focus);
+  const focus = opts.focus === undefined ? [] : Array.isArray(opts.focus) ? opts.focus : [opts.focus];
+  const due = dueItems(s, day).filter((x) => !focus.length || focus.includes(x.type));
   const out: PlannedDrill[] = due.slice(0, Math.ceil(size / 2)).map((x) => ({ type: x.type, seed: x.seed, variation: x.variation, review: true }));
   const count = (t: DrillType) => out.filter((x) => x.type === t).length;
   for (let i = 0; out.length < size && i < 200; i++) {
-    const r = seedOf('drills', day, opts.salt ?? 0, opts.focus ?? '', i);
+    const r = seedOf('drills', day, opts.salt ?? 0, focus.join(','), i);
     let type: DrillType;
-    if (opts.focus) type = opts.focus;
+    if (focus.length) type = focus[i % focus.length];
     else {
       const open = DRILL_TYPES.filter((t) => count(t) < 3);
       const ws = open.map((t) => weight(s, t));
@@ -147,7 +148,7 @@ export function planSet(s: DrillState, day: string, opts: { size?: number; focus
       }
     }
     const seed = seedOf('drill', day, opts.salt ?? 0, type, i);
-    out.push({ type, seed, variation: type === 'value' || type === 'discard' ? variation : type === 'safe' ? 'riichi' : 'classic', review: false });
+    out.push({ type, seed, variation: type === 'value' || type === 'discard' ? variation : type === 'safe' ? 'riichi' : type === 'passport' || type === 'passportDiscard' ? 'india' : 'classic', review: false });
   }
   // Mix reviews in among the new ones, but keep the order stable for the day.
   return out

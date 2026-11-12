@@ -152,3 +152,6 @@
   .lx-search { flex: 1 1 0; min-width: 0; }
   .lx-sort-wrap { flex: none; }
 }
+
+/* Seven ways in (the two passport cards included): wide screens show four over three, so each card keeps room for its line. */
+@media (min-width: 1101px) { .lx-choices .lux-row.lx-seven .lux-card { flex: 1 1 200px; } }

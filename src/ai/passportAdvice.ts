@@ -7,6 +7,7 @@ import type { MeldShape } from '../engine/hand';
 import type { ClaimOption } from '../engine/state';
 import { passportPlans, type PassportPlan } from '../engine/rules/indiaPassport';
 import { seatLabel } from './danger';
+import { tr } from '../i18n';
 
 const SUIT_NAMES = ['Characters', 'Dots', 'Bamboos'];
 const suitOf = (k: number) => Math.floor(k / 9);
@@ -135,4 +136,27 @@ export function passportCall(game: MahjongGame, seat: number, o: ClaimOption, di
   else if (after === before) line = `Passport check: this ${verb} doesn't bring a passport closer. You stay ${fromReady(after)}, aiming for ${named(plan.names)}.`;
   else line = `Passport check: this ${verb} blocks your nearest passport. The best left would be ${named(plan.names)}, ${fromReady(after)} instead of ${fromReady(before)}.`;
   return { before, after, names: plan?.names ?? null, inPassport, line };
+}
+
+/** "3 Knits in the same 2 suits twice": a plan's names as one translated phrase. */
+const namesPhrase = (names: string[]) => names.filter((n, i) => names.indexOf(n) === i).map((n) => (names.filter((x) => x === n).length > 1 ? tr('{name} twice', { name: tr(n) }) : tr(n))).join(' + ');
+
+/**
+ * The practice table (hands open): the passport each other player is nearest to, read from their
+ * actual tiles, for the plate under their name. 13 tiles with `missing` to go are missing - 1 from ready.
+ */
+export function aimingReads(game: MahjongGame, seat: number): Map<number, { name: string; line: string; tag: string }> {
+  const out = new Map<number, { name: string; line: string; tag: string }>();
+  for (let o = 0; o < game.profile.players; o++) {
+    if (o === seat) continue;
+    const plan = planPassports(game, o, undefined, 1)[0];
+    if (!plan) continue;
+    const held = game.players[o].hand.length;
+    // 14 tiles (their turn, before the discard) count one tile further than 13.
+    const n = Math.max(0, plan.missing - (held >= 14 ? 2 : 1));
+    const state = n <= 0 ? tr('ready') : n === 1 ? tr('1 from ready') : tr('{n} from ready', { n });
+    const name = namesPhrase(plan.names);
+    out.set(o, { name, tag: tr('Aiming for'), line: tr('{name} is {state}: {passport}', { name: seatLabel(game, o), state, passport: name }) });
+  }
+  return out;
 }

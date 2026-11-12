@@ -11,6 +11,8 @@ import { seasonOnGame } from '../../progression/season';
 import { clear, copyWithNote, fmt, h } from '../dom';
 import { saveReplay, type ReplayRecord } from '../../net/replay';
 import { clubOnFinish } from '../../club/privateClubs';
+import { ladderLine, recordLadder } from '../../club/ladder';
+import { usesLadder, usesTeams, teamTotals } from '../../engine/rules/tableOptions';
 import { keyMomentsSection } from '../keyMoments';
 import { recordGameSkills } from '../../progression/skills';
 import { saveProgressCard } from '../../auth/prompt';
@@ -52,8 +54,22 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
     const line = dailyOnFinish(app.ctx(), tag, summary);
     if (line) extra.push(infoLine('daily', line));
   }
+  if (summary.practice) extra.push(infoLine('academy', tr('Practice table: hands were open, so no Jong Points, Club Level or rating change.')));
   const seasonLine = spectated ? null : seasonOnGame(summary);
   if (seasonLine) extra.push(infoLine('season', seasonLine));
+  // Team play: the two team totals decide the match (the placement already is the team's).
+  if (summary.team) {
+    const t = summary.team;
+    extra.push(infoLine('tourney', t.mine > t.theirs ? tr('Team play: you and {partner} win, {mine} to {theirs}.', { partner: t.partner, mine: fmt(t.mine), theirs: fmt(t.theirs) }) : t.mine < t.theirs ? tr('Team play: you and {partner} lose, {mine} to {theirs}.', { partner: t.partner, mine: fmt(t.mine), theirs: fmt(t.theirs) }) : tr('Team play: you and {partner} tie the other team at {mine}.', { partner: t.partner, mine: fmt(t.mine) })));
+  }
+  // Cumulative leaderboard (table option): the match joins the running table in the Club.
+  if (!spectated && usesLadder(app.lastConfig.houseRules)) {
+    const startingScore = getProfile(app.lastConfig.variation)?.startingScore ?? 0;
+    const seats = replay.names.map((name, seat) => ({ name: seat === me ? app.profile.name : name, score: replay.finalScores[seat] }));
+    const teams = usesTeams(app.lastConfig.houseRules, replay.names.length) ? teamTotals(replay.finalScores) : undefined;
+    const l = recordLadder({ variation: app.lastConfig.variation, seats, startingScore, teams, date: replay.date }, app.profile.name);
+    extra.push(infoLine('rating', ladderLine(l.rank, l.rows.length, l.points, fmt, ordinal)));
+  }
   const guided = tag === 'tutorial';
   // A lesson's practice game leads straight on to the next lesson.
   const afterLesson = tag?.startsWith('lesson:') ? nextAfter(app, tag.slice(7)) : null;

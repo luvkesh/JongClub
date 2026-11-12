@@ -3,7 +3,7 @@
 
 let seq = 0;
 
-export type LuxArtId = 'quick' | 'host' | 'join' | 'learn' | 'mini' | 'daily' | 'casual' | 'ranked' | 'tournament' | 'foundations' | 'mastery' | 'variations' | 'drills' | 'season' | 'clubs';
+export type LuxArtId = 'quick' | 'host' | 'join' | 'learn' | 'mini' | 'daily' | 'casual' | 'ranked' | 'tournament' | 'foundations' | 'mastery' | 'variations' | 'drills' | 'season' | 'clubs' | 'passport' | 'openTable';
 
 /** The shared paints: gold, ivory, jade, lacquer and a soft floor shadow. */
 function defs(p: string) {
@@ -186,6 +186,35 @@ const ART: Record<LuxArtId, (p: string) => string> = {
     <path d="M80 60 L80 36" stroke="#17603f" stroke-width="3" stroke-linecap="round"/><path d="M80 60 L96 68" stroke="#b8402e" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M80 60 L80 28 A32 32 0 0 1 108 44 Z" fill="#2f7a62" fill-opacity=".18"/>
     <circle cx="80" cy="60" r="3.4" fill="url(#${p}g)"/>`,
+
+  // A jade passport booklet with a gold crest and stamp, three tiles fanned before it (Passport drills).
+  passport: (p) =>
+    `<ellipse cx="80" cy="60" rx="62" ry="44" fill="url(#${p}glow)"/>
+    <ellipse cx="80" cy="106" rx="46" ry="6" fill="url(#${p}sh)"/>
+    <g transform="translate(46 18) rotate(-6)">
+      <rect x="3" y="3" width="64" height="80" rx="6" fill="#0b2b22"/>
+      <rect x="0" y="0" width="64" height="80" rx="6" fill="url(#${p}jd)" stroke="url(#${p}g)" stroke-width="2"/>
+      <rect x="6" y="6" width="52" height="68" rx="4" fill="none" stroke="url(#${p}g)" stroke-width=".8" stroke-opacity=".7"/>
+      <circle cx="32" cy="32" r="13" fill="none" stroke="url(#${p}g)" stroke-width="2"/>
+      <circle cx="32" cy="32" r="8" fill="url(#${p}g)"/>
+      <text x="32" y="36" text-anchor="middle" font-family="'Noto Serif SC','Songti SC','SimSun',serif" font-weight="700" font-size="11" fill="#1a5644">東</text>
+      <path d="M14 54 H50 M14 61 H44 M14 68 H38" stroke="url(#${p}g)" stroke-width="1.6" stroke-linecap="round" stroke-opacity=".85"/>
+    </g>
+    <g transform="translate(104 60) rotate(14)"><circle r="11" fill="none" stroke="#b8402e" stroke-width="2.2"/><circle r="7.5" fill="none" stroke="#b8402e" stroke-width="1"/><path d="M-5 0 L-1.5 3.5 L5 -4" fill="none" stroke="#b8402e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+    ${tile(p, 22, 66, 22, 30, -12, ring(22, 30))}${tile(p, 48, 72, 22, 30, 0, bamboo(22, 30))}${tile(p, 74, 70, 22, 30, 10, east(22, 30))}`,
+
+  // Four hands face up around a small table, lamplit: the passport practice table.
+  openTable: (p) =>
+    `<ellipse cx="80" cy="60" rx="62" ry="44" fill="url(#${p}glow)"/>
+    <ellipse cx="80" cy="108" rx="48" ry="6" fill="url(#${p}sh)"/>
+    <rect x="28" y="30" width="104" height="64" rx="10" fill="url(#${p}felt)" stroke="url(#${p}g)" stroke-width="2.5"/>
+    <rect x="36" y="38" width="88" height="48" rx="6" fill="none" stroke="#fff" stroke-opacity=".12"/>
+    ${tile(p, 60, 12, 12, 16, 0, ring(12, 16))}${tile(p, 74, 12, 12, 16, 0, bamboo(12, 16))}${tile(p, 88, 12, 12, 16, 0, east(12, 16))}
+    ${tile(p, 60, 96, 12, 16, 0, east(12, 16))}${tile(p, 74, 96, 12, 16, 0, ring(12, 16))}${tile(p, 88, 96, 12, 16, 0, bamboo(12, 16))}
+    ${tile(p, 14, 42, 12, 16, -90, bamboo(12, 16))}${tile(p, 14, 56, 12, 16, -90, east(12, 16))}${tile(p, 14, 70, 12, 16, -90, ring(12, 16))}
+    ${tile(p, 146, 44, 12, 16, 90, ring(12, 16))}${tile(p, 146, 58, 12, 16, 90, bamboo(12, 16))}${tile(p, 146, 72, 12, 16, 90, east(12, 16))}
+    <circle cx="80" cy="62" r="9" fill="url(#${p}g)"/><circle cx="80" cy="62" r="5.5" fill="url(#${p}iv)"/>
+    <path d="M80 34 L80 26" stroke="url(#${p}g)" stroke-width="2"/><ellipse cx="80" cy="22" rx="14" ry="5" fill="url(#${p}g)"/><ellipse cx="80" cy="21" rx="10" ry="3" fill="#fff3cf" fill-opacity=".6"/>`,
 
   // A red paper lantern on a gold cord, for the Club Season.
   season: (p) =>

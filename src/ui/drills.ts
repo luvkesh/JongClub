@@ -5,7 +5,7 @@
 // Learn screen, and from Profile's "Practise this" for one kind of drill.
 
 import { sound } from '../audio/sound';
-import { DRILL_LABEL, VALUE_VARIATIONS, isRight, makeDrill, type Drill, type DrillType } from '../learn/drillGen';
+import { DRILL_LABEL, PASSPORT_DRILL_TYPES, VALUE_VARIATIONS, isRight, makeDrill, type Drill, type DrillType } from '../learn/drillGen';
 import { accuracy, drillStreak, dueItems, finishSet, loadDrills, planSet, recordAnswer, saveDrills, today, POINTS_FOR_SET, POINTS_PER_RIGHT, SET_SIZE, type PlannedDrill } from '../learn/drillSchedule';
 import type { AppCtx } from './ctx';
 import { clear, fmt, h, tileImg } from './dom';
@@ -61,9 +61,21 @@ export function drillsCard(ctx: AppCtx): HTMLElement {
   return card;
 }
 
+/** Learn's Passport drills card: spot the passport in a hand, or keep two passports open (India Rules, East round). */
+export function passportDrillsCard(ctx: AppCtx): HTMLElement {
+  const s = loadDrills();
+  const acc = PASSPORT_DRILL_TYPES.map((t) => accuracy(s, t)).filter((a): a is number => a !== null);
+  const lately = acc.length ? tr('{n}% lately', { n: Math.round((acc.reduce((a, b) => a + b, 0) / acc.length) * 100) }) : tr('Six quick questions');
+  const line = `${tr('Spot the passport, keep two open')} · ${lately}`;
+  const card: HTMLElement = luxCard({ art: 'passport', title: tr('Passport drills'), line, run: () => openDrills(ctx, { focus: PASSPORT_DRILL_TYPES, size: 6, onClose: () => card.replaceWith(passportDrillsCard(ctx)) }) });
+  return card;
+}
+
 export interface DrillOpts {
-  /** One kind of drill only (Profile's "Practise this"). */
-  focus?: DrillType;
+  /** One kind of drill only (Profile's "Practise this"), or a few kinds (the passport drills). */
+  focus?: DrillType | DrillType[];
+  /** The set's size (five for a focused set). */
+  size?: number;
   onClose?: () => void;
 }
 
@@ -73,9 +85,9 @@ export function openDrills(ctx: AppCtx, opts: DrillOpts = {}) {
   const day = today();
   const practice = !!opts.focus || !!state.days[day]?.sets;
   const plan: PlannedDrill[] = planSet(state, day, {
-    size: opts.focus ? 5 : SET_SIZE,
+    size: opts.size ?? (opts.focus ? 5 : SET_SIZE),
     focus: opts.focus,
-    salt: (state.days[day]?.sets ?? 0) + (state.days[day]?.practice ?? 0) * 7 + (opts.focus ? 1000 : 0),
+    salt: (state.days[day]?.sets ?? 0) + (state.days[day]?.practice ?? 0) * 7 + (opts.focus ? 1000 : 0) + (Array.isArray(opts.focus) ? 500 : 0),
     variation: drillVariation(ctx),
   });
   const results: boolean[] = [];
