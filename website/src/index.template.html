@@ -1358,6 +1358,31 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   #play .notes li > div > b { font-size: clamp(21px, 1.7vw, 25px); }
   #play .notes li > div > span { font-size: clamp(15px, 1.2vw, 17px); }
 }
+/* V65 (2026-11-13): And the Details and Play for It sit in their reference rooms on wide screens; each card lies where the reference has it. */
+@media (min-width: 1280px) {
+  #details, #earn { --W: min(100vw, 2100px); position: relative; width: var(--W); margin-inline: calc(50% - var(--W) / 2); padding: 0; border-radius: 0; background: none; display: block; isolation: isolate; }
+  #details::before, #earn::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url(scenes/details.jpg) center / 100% 100% no-repeat; -webkit-mask-image: linear-gradient(transparent, #000 9%, #000 90%, transparent); mask-image: linear-gradient(transparent, #000 9%, #000 90%, transparent); }
+  #details { --u: calc(var(--W) / 1774); height: calc(887 * var(--u)); }
+  #earn { --u: calc(var(--W) / 1942); height: calc(809 * var(--u)); }
+  #earn::before { background-image: url(scenes/earn.jpg); }
+  #details .subhead, #earn .subhead { position: absolute; left: 0; right: 0; top: calc(54 * var(--u)); gap: calc(8 * var(--u)); }
+  #details .subhead .kicker, #earn .subhead .kicker { font-size: calc(19 * var(--u)); gap: calc(20 * var(--u)); }
+  #details .subhead .kicker .ring, #earn .subhead .kicker .ring { width: calc(58 * var(--u)); height: calc(58 * var(--u)); }
+  #details .subhead h3, #earn .subhead h3 { font-size: calc(70 * var(--u)); line-height: 1.1; }
+  #details .subhead h3::after, #earn .subhead h3::after { width: calc(340 * var(--u)); margin-top: calc(6 * var(--u)); }
+  #details .subhead p { font-size: calc(22 * var(--u)); color: #f1ead8; max-width: none; margin-top: calc(6 * var(--u)); }
+  #details .det7 { display: block; }
+  #details .det7 > .extra { position: absolute; left: calc(var(--x) * var(--u)); top: calc(var(--y) * var(--u)); width: calc(var(--w) * var(--u)); height: calc(var(--h) * var(--u)); }
+  #details .det7 > .extra > img { width: 100%; height: 100%; transform: none; }
+  #earn .subhead { top: calc(48 * var(--u)); }
+  #earn .subhead h3 { font-size: calc(78 * var(--u)); }
+  #earn .earn4 { display: block; }
+  #earn .earn4 > article { position: absolute; left: calc(var(--x) * var(--u)); top: calc(260 * var(--u)); width: calc(372 * var(--u)); height: calc(370 * var(--u)); }
+  #earn .earn4 > article > img { width: 100%; height: 100%; transform: none; }
+  #earn .promise { position: absolute; left: 0; right: 0; top: calc(684 * var(--u)); margin: 0; font-size: calc(18 * var(--u)); letter-spacing: 0.2em; }
+}
+.scene-num { direction: ltr; }
+:lang(hi) .sn span, :lang(ar) .sn span, :lang(hi) .promise, :lang(ar) .promise, :lang(hi) .rt-n, :lang(ar) .rt-n { letter-spacing: 0.04em; margin-inline-end: 0; }
 </style>
 
 <header class="top">
@@ -1736,10 +1761,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <h3>Play for It</h3>
       </div>
       <div class="earn pcards earn4">
-        <article><img src="cards/earn-coins.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></div></article>
-        <article><img src="cards/earn-calendar.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>The Season Track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></div></article>
-        <article><img src="cards/earn-stamp.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>World Tour Stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></div></article>
-        <article><img src="cards/earn-tag.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></div></article>
+        <article style="--x: 204"><img src="cards/earn-coins.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></div></article>
+        <article style="--x: 592"><img src="cards/earn-calendar.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>The Season Track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></div></article>
+        <article style="--x: 980"><img src="cards/earn-stamp.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>World Tour Stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></div></article>
+        <article style="--x: 1369"><img src="cards/earn-tag.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></div></article>
       </div>
       <p class="promise"><span class="icon">{{ICON:shield-check}}</span>Nothing in the Atelier changes gameplay or your rating.</p>
       </div>
