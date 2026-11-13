@@ -443,7 +443,8 @@ export class App {
     clear(this.hud);
     this.shell.hidden = false;
     this.table.idle();
-    this.go(this.screen === 'home' ? 'home' : 'play');
+    // A table opened from Learn (a lesson's practice, a guided game, the passport practice table) leads back to Learn.
+    this.go(this.screen === 'home' || this.screen === 'learn' ? this.screen : 'play');
   }
 
   /** Step through a saved game on the table. */
