@@ -297,7 +297,8 @@ class Sound {
   /** Building and dealing: rows of tiles pushed into line, then picked up in blocks and set down. */
   private build(t: number, blocks: number, gap: number) {
     for (let b = 0; b < blocks; b++) {
-      const s = t + b * gap + rnd(-0.02, 0.03);
+      // Safari throws on a time before zero (Chrome clamps), so the jitter never starts a block before `t`.
+      const s = Math.max(t, t + b * gap + rnd(-0.02, 0.03));
       const pan = rnd(-0.5, 0.5);
       this.rub(s, rnd(0.1, 0.16), rnd(0.05, 0.08), pan);
       // Tiles butting together as the row closes up.

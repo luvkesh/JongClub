@@ -268,7 +268,9 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .hud > .coach .coach-btn { width: 32px; height: 32px; position: relative; }
   .hud > .coach .coach-btn::after { content: ''; position: absolute; inset: -4px; }
   .hud .card-grip { position: relative; }
-  .hud .card-grip::after { content: ''; position: absolute; inset: -5px -9px; }
+  .hud .card-grip::after { content: ''; position: absolute; inset: -8px -10px; }
+  .poss-sheet > .group-btn { min-height: 40px; }
+  .sc-check { min-height: 40px; }
   .hud > .coach:not(.tucked) button.narrator { position: relative; }
   .hud > .coach:not(.tucked) button.narrator::after { content: ''; position: absolute; inset: -7px; }
 }

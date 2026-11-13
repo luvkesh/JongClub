@@ -67,7 +67,7 @@ import { handNowView, lineName, onShowView } from './handScoreView';
 import { fillEtiquetteBar, showSignal } from './etiquette';
 import { TeaService } from './tea';
 import { diceForVariation } from '../render/sideTables';
-import { andList, tr, trn } from '../i18n';
+import { andList, shownName, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { cardGrip, consoleWidth, dockButton, hudMode, moreSheet, restoreCard, type GridItem, type HudMode } from './matchControls';
 import { applyVolumes, setTableMuted, type MusicSettings } from './musicToggle';
@@ -1425,7 +1425,7 @@ export class MatchController {
         h(
           'div',
           { class: 'seat-info' },
-          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, p.name), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
+          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, shownName(p.name)), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
           h('div', { class: 'seat-sub' }, h('span', { class: 'wind', title: { E: tr('East seat'), S: tr('South seat'), W: tr('West seat'), N: tr('North seat') }[wind] }, wind), this.seats[s].kind === 'ai' ? PERSONALITIES[ai.personality].label : s === this.you ? tr('You') : tr('Club member')),
           reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
         ),
@@ -2328,7 +2328,7 @@ export class MatchController {
       this.eastRounds = undefined;
       if (ceremony)
         await runOpening(
-          { root: this.root, table: this.table, names: this.game.players.map((p) => p.name), me: this.you, pace: this.settings.speed === 'cinematic' ? 0.85 : 1,
+          { root: this.root, table: this.table, names: this.game.players.map((p) => shownName(p.name)), me: this.you, pace: this.settings.speed === 'cinematic' ? 0.85 : 1,
             eastRounds,
             onCancel: (stop) => (this.cancelOpening = stop),
             pulseSeat: (seat, n) => {
@@ -3492,7 +3492,7 @@ export class MatchController {
       const note = drawnHandNote(r, (s) => (s === this.me ? tr('you') : g.players[s].name), g.state.log.find((e) => e.type === 'abortive')?.seat);
       if (note) card.append(h('p', { class: 'muted' }, note));
       else if (r.tenpai) {
-        const ready = g.players.filter((_, i) => r.tenpai![i]).map((p, _i) => (p.seat === this.me ? tr('you') : p.name));
+        const ready = g.players.filter((_, i) => r.tenpai![i]).map((p, _i) => (p.seat === this.me ? tr('you') : shownName(p.name)));
         card.append(h('p', { class: 'muted' }, ready.length ? tr('The wall ran out. Ready (tenpai): {names}. Players who weren’t ready pay {n} points in total to those who were.', { names: andList(ready), n: g.profile.players === 3 ? '2,000' : '3,000' }) : tr('The wall ran out and nobody was ready. No points change hands.')));
       } else if (g.profile.drawPot) card.append(h('p', { class: 'muted' }, tr('The live wall ran out before anyone completed a hand. Everyone puts {n} in the bank for the next winner.', { n: fmt(g.profile.drawPot) })));
       else card.append(h('p', { class: 'muted' }, tr('The live wall ran out before anyone completed a hand. No points change hands.')));
@@ -3548,13 +3548,13 @@ export class MatchController {
           : dealerExtra(i)
             ? h('span', { class: 'delta-split' }, tr('hand {a} · as dealer {b}', { a: signed(hd + dealerExtra(i)), b: signed(-dealerExtra(i)) }))
             : '';
-      deltas.append(h('div', { class: 'delta-row' }, h('span', {}, i === this.me ? tr('{name} (you)', { name: p.name }) : p.name, split), h('span', { class: `num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}` }, signed(d)), h('span', { class: 'num muted' }, fmt(p.score))));
+      deltas.append(h('div', { class: 'delta-row' }, h('span', {}, i === this.me ? tr('{name} (you)', { name: p.name }) : shownName(p.name), split), h('span', { class: `num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}` }, signed(d)), h('span', { class: 'num muted' }, fmt(p.score))));
     });
     card.append(deltas);
     if (g.teamOf(0) !== null) {
       // Team play: the two teams' totals, yours first.
       const totals = teamTotals(g.players.map((p) => p.score));
-      const team = (t: number) => andList(g.players.filter((p) => g.teamOf(p.seat) === t).map((p) => (p.seat === this.me ? tr('You') : p.name)));
+      const team = (t: number) => andList(g.players.filter((p) => g.teamOf(p.seat) === t).map((p) => (p.seat === this.me ? tr('You') : shownName(p.name))));
       const mineT = this.spectator ? 0 : g.teamOf(this.me)!;
       const row = (t: number) => h('div', { class: `delta-row team-row ${t === mineT && !this.spectator ? 'mine' : ''}` }, h('span', {}, team(t)), h('span', { class: `num ${totals[t] > totals[1 - t] ? 'up' : totals[t] < totals[1 - t] ? 'down' : ''}` }, fmt(totals[t])));
       card.append(h('h4', { class: 'instant-head' }, tr('Teams')), h('div', { class: 'deltas team-totals' }, row(mineT), row(1 - mineT)));
@@ -3694,7 +3694,7 @@ export class MatchController {
     const g = this.game;
     // Ties never favour you: you are listed after anyone on the same score, and
     // a shared place counts as the lower one (a drawn game is no win).
-    const standings = g.players.map((p) => ({ name: p.name, score: p.score, seat: p.seat })).sort((a, b) => b.score - a.score || (a.seat === this.me ? 1 : b.seat === this.me ? -1 : a.seat - b.seat));
+    const standings = g.players.map((p) => ({ name: shownName(p.name), score: p.score, seat: p.seat })).sort((a, b) => b.score - a.score || (a.seat === this.me ? 1 : b.seat === this.me ? -1 : a.seat - b.seat));
     // Team play: the team with more points takes first place for both partners; a tie is second (no win).
     const teams = !this.spectator && g.teamOf(this.me) !== null ? teamTotals(g.players.map((p) => p.score)) : null;
     const myTeam = teams ? g.teamOf(this.me)! : 0;
