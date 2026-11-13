@@ -830,7 +830,13 @@ export class MahjongGame {
   }
 
   private claimOptionsFor(seat: number, discarder: number, tile: Tile): ClaimOption[] {
-    const out = this.claimOptionsRaw(seat, discarder, tile);
+    // A call is followed by a discard, so it must leave a tile in hand to throw: a card game
+    // (American) or Big Card hand with every other tile exposed may only call the tile for Mahjong.
+    // (A kong that draws a replacement always has that tile.)
+    const held = this.players[seat].hand.length;
+    const p = this.profile;
+    const kongDraws = !p.card && (p.big ? p.big.extras.kong : 1) > 0;
+    const out = this.claimOptionsRaw(seat, discarder, tile).filter((o) => o.type === 'win' || o.type === 'buy' || (o.type === 'kong' ? kongDraws || held > 3 : held > 2));
     return this.discardWins() ? out : out.filter((o) => o.type !== 'win');
   }
 
@@ -1673,7 +1679,8 @@ export class MahjongGame {
     const payer = this.table?.winnerTakesAll ? null : discarder;
     const payFor = (w: number, sc: HandScore) => this.profile.payments(w, payer, sc, this.dealer, this.profile.players, bonus).map((x) => (stakes === 1 ? x : { ...x, amount: x.amount * stakes }));
     const won = [...payFor(winner, score), ...co.flatMap((c) => payFor(c.seat, c.score))];
-    const payments = [...instant, ...won, ...this.handEndPayments(winner, discarder, score)];
+    // The hand-end settlement follows the table option too (India West: no discarder's penalty when everyone pays).
+    const payments = [...instant, ...won, ...this.handEndPayments(winner, payer, score)];
     const deltas = this.applyPayments(payments);
     const pot = this.state.riichiPot;
     if (pot) {
