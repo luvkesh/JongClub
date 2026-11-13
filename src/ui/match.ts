@@ -1314,8 +1314,13 @@ export class MatchController {
   /** Ends a running opening ceremony (set by runOpening while it runs). */
   private cancelOpening: (() => void) | null = null;
 
+  /** A limit hand's signature moment while it plays (winCinematic.ts): leaving the table ends it at once. */
+  private cinematic: { done: Promise<void>; skip(): void } | null = null;
+
   abort() {
     this.aborted = true;
+    this.cinematic?.skip();
+    this.cinematic = null;
     this.cancelOpening?.();
     this.cancelOpening = null;
     this.closeCallWarning(false);
@@ -2608,8 +2613,9 @@ export class MatchController {
           if (st.done) {
             const v = onTimeout();
             this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
+            // "I discarded for you" only when a tile was discarded (not for a draw, a Charleston pass or an exchange).
             if (kind === 'claim') this.speak({ parts: [{ line: LINES.timeClaim }], text: LINES.timeClaim });
-            else this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
+            else if (!timeoutNote) this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
             return done(v);
           }
           if (!fromInterval) this.timerFrame = window.requestAnimationFrame(() => step());
@@ -2648,6 +2654,12 @@ export class MatchController {
     const turn = this.limits.turn;
     const me = this.me;
     return this.game.state.log.some((e) => e.type === 'discard' && e.seat === me) ? turn : firstTurnLimit(turn);
+  }
+
+  /** The limit for a choice before play (a Charleston pass, an exchange): your first decision of the hand gets the same extra time as a first turn. */
+  private get preDealLimit() {
+    const turn = this.limits.turn;
+    return this.handLog.some((a) => a.s === this.me) ? turn : firstTurnLimit(turn);
   }
 
   // ------------------------------------------------------------ drawing your tile
@@ -2948,8 +2960,9 @@ export class MatchController {
         };
       },
       () => advice.tiles,
-      this.limits.turn,
+      this.preDealLimit,
       'turn',
+      tr('JongBot’s choice was made for you'),
     );
     t.onTileClick = undefined;
     t.interactive.clear();
@@ -2989,8 +3002,9 @@ export class MatchController {
             bar.append(group(india ? tr('Tic-Tac-Toe') : tr('Between players'), 'passes'), group(tr('With the wall'), 'wall'), h('button', { class: 'btn primary', onclick: () => done(choice) }, tr('Start the exchanges')));
           },
           () => advice,
-          this.limits.turn,
+          this.preDealLimit,
           'turn',
+          tr('JongBot’s choice was made for you'),
         )) ?? advice;
       clear(this.els.actions);
       this.renderHint(null);
@@ -3045,8 +3059,9 @@ export class MatchController {
             bar.append(...values.map((v, i) => h('button', { class: `btn${v === advice ? ' primary' : ''}`, onclick: () => done(v) }, q[2 + i])));
           },
           () => advice,
-          this.limits.turn,
+          this.preDealLimit,
           'turn',
+          tr('JongBot’s choice was made for you'),
         )) ?? advice;
       clear(this.els.actions);
       this.renderHint(null);
@@ -3149,6 +3164,7 @@ export class MatchController {
           () => advice,
           limit,
           'turn',
+          tr('JongBot’s choice was made for you'),
         )) ?? advice;
       (panel as HTMLElement | null)?.remove();
     } else if (this.seats[seat].kind === 'remote') {
@@ -3203,6 +3219,7 @@ export class MatchController {
         () => advice,
         limit,
         'turn',
+        tr('JongBot’s choice was made for you'),
       );
       (panel as HTMLElement | null)?.remove();
       if (!this.aborted) this.shareEarly(this.handLog.length + this.me, { t: 'sc', s: this.me, c: picks[this.me]! });
@@ -3309,8 +3326,9 @@ export class MatchController {
         };
       },
       () => advice,
-      this.limits.turn,
+      this.preDealLimit,
       'turn',
+      tr('JongBot’s choice was made for you'),
     );
     t.onTileClick = undefined;
     t.interactive.clear();
@@ -3332,9 +3350,10 @@ export class MatchController {
           const bar = clear(this.els.actions);
           bar.append(h('button', { class: 'btn', onclick: () => done(true) }, tr('Pass again')), h('button', { class: 'btn primary', onclick: () => done(false) }, tr('Start play')));
         },
-        () => false,
+        () => this.ais[this.me].charlestonVote(g),
         this.limits.turn,
         'turn',
+        tr('JongBot’s choice was made for you'),
       );
       clear(this.els.actions);
       this.renderHint(null);
@@ -3443,7 +3462,11 @@ export class MatchController {
     }
     const sp = this.settings.speed;
     // A limit hand or yakuman gets its signature moment first (winCinematic.ts); a tap cuts it short.
-    if (winMoment && !this.catchingUp()) await startWinCinematic(t, this.root, winner!, r.score, winner === this.me)?.done;
+    if (winMoment && !this.catchingUp()) {
+      this.cinematic = startWinCinematic(t, this.root, winner!, r.score, winner === this.me);
+      await this.cinematic?.done;
+      this.cinematic = null;
+    }
     if (this.aborted) return;
     // A win is given time to be seen; a drawn hand moves on sooner.
     await this.skippableWait(winMoment ? (sp === 'minimal' ? 1400 : sp === 'cinematic' ? 4200 : 3200) : sp === 'minimal' ? 500 : sp === 'cinematic' ? 2600 : 1700);
@@ -3559,6 +3582,8 @@ export class MatchController {
       const row = (t: number) => h('div', { class: `delta-row team-row ${t === mineT && !this.spectator ? 'mine' : ''}` }, h('span', {}, team(t)), h('span', { class: `num ${totals[t] > totals[1 - t] ? 'up' : totals[t] < totals[1 - t] ? 'down' : ''}` }, fmt(totals[t])));
       card.append(h('h4', { class: 'instant-head' }, tr('Teams')), h('div', { class: 'deltas team-totals' }, row(mineT), row(1 - mineT)));
     }
+    // The summary's H key listener ends with the summary (the overlay element is reused every hand).
+    const summaryKeys = new AbortController();
     await new Promise<void>((resolve) => {
       const cont = h('button', { class: 'btn primary', onclick: () => resolve() }, over ? tr('See results') : tr('Next hand')) as HTMLButtonElement;
       // A win can fold its summary away to look at the hand on the table; the camera frames it.
@@ -3577,7 +3602,7 @@ export class MatchController {
         if (over > 0 && p.bottom > c.top && p.width) topPlate.style.translate = `${-Math.min(over, Math.max(0, p.left - 12))}px 0`;
       };
       const reframeAll = () => (reframe(), clearTopPlate());
-      const hide = summaryToggle(o, cont, { onHide: reframeAll, onShow: reframeAll, strip: card.querySelector('.win-hand')?.cloneNode(true) as HTMLElement | undefined });
+      const hide = summaryToggle(o, cont, { signal: summaryKeys.signal, onHide: reframeAll, onShow: reframeAll, strip: card.querySelector('.win-hand')?.cloneNode(true) as HTMLElement | undefined });
       // View (All hands): fold the summary away and frame that player's whole hand in 3D on the table.
       const viewSeat = (seat: number) => {
         framed = seat;
@@ -3622,6 +3647,7 @@ export class MatchController {
       requestAnimationFrame(clearTopPlate);
       this.resolveHuman = () => resolve();
     });
+    summaryKeys.abort();
     o.hidden = true;
     o.classList.remove('win-sheet', 'peek', 'free-cam');
     this.root.querySelector<HTMLElement>('.seat-2')?.style.removeProperty('translate');

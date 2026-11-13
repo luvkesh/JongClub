@@ -47,7 +47,19 @@ export function musicButton(s: MusicSettings, save: () => void, cls = 'icon-btn 
     b.title = label;
   };
   paint();
-  const onChange = () => (b.isConnected ? paint() : window.removeEventListener(EVENT, onChange));
-  window.addEventListener(EVENT, onChange);
+  painters.set(b, paint);
+  // Copies left behind (an earlier table's menu) are dropped here, so they never pile up between switches.
+  for (const old of painters.keys()) if (old !== b && !old.isConnected) painters.delete(old);
+  if (!listening && typeof window !== 'undefined') {
+    listening = true;
+    window.addEventListener(EVENT, () => {
+      for (const [btn, p] of painters) if (btn.isConnected) p();
+        else painters.delete(btn);
+    });
+  }
   return b;
 }
+
+/** Every music button made, with how to repaint it; one listener serves them all. */
+const painters = new Map<HTMLButtonElement, () => void>();
+let listening = false;
