@@ -3,7 +3,7 @@
 // gameplay or rating; they are acquired with Jong Points only.
 
 import { avatarSvg } from '../cosmetics/avatar';
-import { tileSetPreview } from '../render/tileFaces';
+import { showTileSetArt } from '../render/tileRenders';
 import { environmentPreview } from '../render/backdrop';
 import { rackPreview } from '../render/rackPreview';
 import { tablePreview } from '../render/tablePreview';
@@ -100,7 +100,7 @@ export function preview(ctx: AppCtx, c: Cosmetic): HTMLElement {
   switch (c.category) {
     case 'tileSet':
       // The real set: faces, body layers and back, drawn by the tile renderer.
-      return h('div', { class: 'item-prev tiles-prev real-prev', style: { height: 'auto', aspectRatio: '480 / 264', background: `#0b0f0d url(${tileSetPreview(c.id)}) center / cover no-repeat` } });
+      return showTileSetArt(h('div', { class: 'item-prev tiles-prev real-prev', style: { height: 'auto', aspectRatio: '480 / 264', background: '#0b0f0d center / cover no-repeat' } }), c.id);
     case 'rack': {
       // The real rack, holding a few of your tiles.
       return picture('tiles-prev', () => rackPreview(c.id), `linear-gradient(160deg, ${a}, ${b})`);
