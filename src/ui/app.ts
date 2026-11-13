@@ -104,7 +104,7 @@ export class App {
       h(
         'header',
         { class: 'topbar' },
-        h('button', { class: 'wordmark-sm', onclick: () => this.go('home'), 'aria-label': 'JongClub home' }, h('span', { class: 'brand-mark', 'aria-hidden': 'true', html: brandSvg('mark') }), brandWordmark()),
+        h('button', { class: 'wordmark-sm', onclick: () => this.go('home'), 'aria-label': tr('JongClub home') }, h('span', { class: 'brand-mark', 'aria-hidden': 'true', html: brandSvg('mark') }), brandWordmark()),
         this.navEl,
         h('div', { class: 'topbar-tools' }, pointsPill(() => this.profile, () => this.go('store')), labsButton(() => this.openLabs()), musicButton(this.settings, () => persistSettings(this)), h('button', { class: 'icon-btn', 'aria-label': tr('Settings'), onclick: () => this.openSettings(), html: icon('settings') })),
       ),

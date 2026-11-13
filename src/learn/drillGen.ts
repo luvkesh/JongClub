@@ -20,7 +20,7 @@ import { getProfile } from '../engine/rules';
 import { classicProfile } from '../engine/rules/classic';
 import { Rng } from '../engine/rng';
 import { KIND_COUNT, WIND_NAMES, rankOf, suitOf, toCounts, type Wind } from '../engine/tiles';
-import { andList, tr } from '../i18n';
+import { andList, scoreLine, tr } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { passportDiscardDrill, passportDrill } from './passportDrills';
 
@@ -154,7 +154,7 @@ export function readingWith(counts: number[], kind: number): string {
   if (!d) return '';
   if (d.shape === 'sevenPairs') return tr('the {tile} makes seven pairs', { tile: tileLabel(kind) });
   if (d.shape === 'thirteenOrphans') return tr('the {tile} completes thirteen orphans', { tile: tileLabel(kind) });
-  return tr('the {tile} makes {sets}', { tile: tileLabel(kind), sets: [...d.sets.map(setLabel), setLabel({ type: 'pair', kind: d.pair })].join(', ') });
+  return tr('the {tile} makes {sets}', { tile: tileLabel(kind), sets: andList([...d.sets.map(setLabel), setLabel({ type: 'pair', kind: d.pair })]) });
 }
 
 /** A ready 13-tile concealed hand built from sets, mostly in one suit so the waits are interesting. */
@@ -382,7 +382,7 @@ function valueDrill(seed: number, variation: string): Drill {
     const sc = r.score!;
     if (!sc.items.length) continue;
     // Extras the tiles can't show (ura dora, the last tile, a red five...) are named in the context.
-    const hidden = [...new Set(sc.items.filter((i) => HIDDEN_ITEM.test(i.name)).map((i) => i.name))];
+    const hidden = [...new Set(sc.items.filter((i) => HIDDEN_ITEM.test(i.name)).map((i) => scoreLine(i.name)))];
     const winner = r.winner!;
     const unit = sc.unit;
     const rng = new Rng(s);
@@ -391,7 +391,7 @@ function valueDrill(seed: number, variation: string): Drill {
     const pool = [val - 2, val - 1, val + 1, val + 2, val + 3].filter((x) => x >= least && x !== val);
     const opts = [val, ...shuffle(rng, pool).slice(0, 3)].sort((a, b) => a - b);
     const sum = sc.items.reduce((a, i) => a + i.value, 0);
-    const parts = sc.items.map((i) => `${i.name} ${i.value}`).join(' + ');
+    const parts = sc.items.map((i) => `${scoreLine(i.name)} (${i.value})`).join(' + ');
     const capped = sum !== val ? ` ${tr(sc.limit ? 'That comes to {sum}, and the hand counts {val} at the limit.' : 'That comes to {sum}, and the hand counts {val}.', { sum, val })}` : '';
     const winTile = r.winTile?.kind;
     const hand = (r.revealedHand ?? game.players[winner].hand).map((t) => t.kind).filter((k) => k < KIND_COUNT);
@@ -403,7 +403,7 @@ function valueDrill(seed: number, variation: string): Drill {
       seed,
       variation: v,
       prompt: tr('How many {unit} is this winning hand worth?', { unit: tr(unit) }),
-      context: `${profile.name} · ${r.discarder === null ? tr('won by self-draw') : tr('won on a discard')}${game.players[winner].riichi ? ` ${tr('after declaring riichi')}` : ''}${winner === game.dealer ? ` · ${tr('dealer')}` : ''} · ${tr('seat wind {seat}, round wind {round}', { seat: wind(game.state.seatWinds[winner]), round: wind(game.prevailing) })}${hidden.length ? ` · ${tr('it also counts {items}', { items: hidden.join(', ') })}` : ''}`,
+      context: `${tr(profile.name)} · ${r.discarder === null ? tr('won by self-draw') : tr('won on a discard')}${game.players[winner].riichi ? ` ${tr('after declaring riichi')}` : ''}${winner === game.dealer ? ` · ${tr('dealer')}` : ''} · ${tr('seat wind {seat}, round wind {round}', { seat: wind(game.state.seatWinds[winner]), round: wind(game.prevailing) })}${hidden.length ? ` · ${tr('it also counts {items}', { items: andList(hidden) })}` : ''}`,
       hand: hand.sort((a, b) => a - b),
       melds,
       winTile,

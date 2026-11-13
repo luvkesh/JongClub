@@ -18,7 +18,7 @@ import { luxCard, luxRow } from '../luxCard';
 import type { LuxArtId } from '../luxArt';
 import { promptSignIn } from '../../auth/prompt';
 import { placementLink, placementOffer } from '../placement';
-import { tr } from '../../i18n';
+import { andList, tr } from '../../i18n';
 import type { App } from '../app';
 import { DEFAULT_TABLE, tableFor, type Lesson } from './tables';
 import { canOpen, isFree, lessonPrice } from '../../economy/economy';
@@ -394,7 +394,7 @@ function learningPath(app: App, levels: Level[], current: Lesson, open: (l: Less
     const opened = path.open.has(k) || (!!path.q && kids.length > 0) || kids.some((x) => x.lesson === current);
     const active = l.lesson === current;
     const chev = kids.length
-      ? h('button', { type: 'button', class: 'lx-chev', 'aria-expanded': String(opened), 'aria-label': opened ? tr('Hide {name}', { name: kids.map((x) => x.t).join(', ') }) : tr('Show {name}', { name: kids.map((x) => x.t).join(', ') }), html: icon('chevronDown') })
+      ? h('button', { type: 'button', class: 'lx-chev', 'aria-expanded': String(opened), 'aria-label': opened ? tr('Hide {name}', { name: andList(kids.map((x) => x.t)) }) : tr('Show {name}', { name: andList(kids.map((x) => x.t)) }), html: icon('chevronDown') })
       : h('span', { class: 'lx-chev-gap' });
     const el = h(
       'div',

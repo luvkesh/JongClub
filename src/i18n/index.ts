@@ -147,6 +147,23 @@ export function trn(n: number, one: string, other: string, params: Record<string
   return fill(e[form] ?? e.other ?? other, p);
 }
 
+/** The separator between list items: "、" in Chinese and Japanese, "، " in Arabic, ", " otherwise. */
+export function listSep(): string {
+  return current === 'ar' ? '، ' : current === 'en' || current === 'hi' ? ', ' : '、';
+}
+
+/**
+ * A score line's name as shown: "Passport: …" and a count suffix ("Mixed pung × 3")
+ * translate their parts, anything else through tr().
+ */
+export function scoreLine(name: string): string {
+  const p = /^Passport: (.+)$/.exec(name);
+  if (p) return `${tr('Passport')}: ${tr(p[1])}`;
+  const x = /^(.+) × (\d+)$/.exec(name);
+  if (x && !dict.has(name)) return `${tr(x[1])} × ${x[2]}`;
+  return tr(name);
+}
+
 /** Join a short list the way the language does ("A, B and C"). */
 export function andList(items: string[]): string {
   try {
