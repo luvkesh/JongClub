@@ -6,7 +6,7 @@
 import { avatarSvg } from '../cosmetics/avatar';
 import { byId } from '../cosmetics/catalog';
 import { VARIATIONS } from '../engine/rules';
-import { tileSetPreview } from '../render/tileFaces';
+import { showTileSetArt } from '../render/tileRenders';
 import { claimAll, claimStep, claimable, finalsQualified, FINALS_STEP, rewardTrack, seasonAt, SEASON_STEPS, SEASON_WEEKS, stepOf, xpToReach, type SeasonInfo, type SeasonProgress, type SeasonReward } from '../club/seasons';
 import { loadSeasonLeague } from '../club/seasonLeague';
 import { createTournament, nextRound } from '../club/tournament';
@@ -37,7 +37,7 @@ function rewardArt(ctx: AppCtx, r: SeasonReward, big = false): HTMLElement {
   const c = r.cosmetic;
   if (!c) return h('div', { class: 'sr-art jp', 'aria-hidden': 'true' }, h('span', {}, fmt(r.jongPoints ?? 0)), h('em', {}, tr('JP')));
   if (c.category === 'frame') return h('div', { class: 'sr-art frame', html: avatarSvg({ ...ctx.profile.avatar, frame: c.id }, big ? 96 : 54) });
-  if (c.category === 'tileSet') return h('div', { class: 'sr-art tiles', style: { backgroundImage: `url(${tileSetPreview(c.id, 240, 132)})` } });
+  if (c.category === 'tileSet') return showTileSetArt(h('div', { class: 'sr-art tiles' }), c.id, 240, 132);
   const item = byId('table', c.id);
   return h('div', { class: 'sr-art cloth', style: { background: `radial-gradient(circle at 50% 40%, color-mix(in srgb, ${item?.swatch[0] ?? '#123'} 70%, white 12%), ${item?.swatch[0] ?? '#123'})`, boxShadow: `inset 0 0 0 5px ${item?.swatch[1] ?? '#333'}` } });
 }

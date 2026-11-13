@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import type { TileFinish } from '../cosmetics/catalog';
 import { currentTileSet, drawFaceSurface, tileFinishCanvas } from './tileFaces';
 import { leanGraphics } from './quality';
-import { BEZEL_HH, BEZEL_HW, BEZEL_R, BEZEL_W, BODY_Z0, BODY_Z1 } from './tileShape';
+import { BODY_Z0, BODY_Z1 } from './tileShape';
 
 export interface Finish {
   roughness: number;
@@ -46,14 +46,14 @@ const f4 = (v: number) => v.toFixed(4);
 /**
  * The body slab's shading, worked out per pixel from the slab's own position so every side matches:
  * layered resin is banded through its depth (one colour per layer, the last meeting the face), and the
- * front carries the face's bezel, a polished band of the set's trim metal with a rounded profile round
- * the face plate (sizes in tileShape.ts). No other line is drawn on the body: the sides stay clean.
+ * bezel (Blender's domed band round the face plate, marked by the `metal` attribute) is polished trim
+ * metal. No other line is drawn on the body: the sides stay clean.
  * Geometry built at another size sets `m.userData.slabScale`.
  */
 export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | undefined, trim: string) {
   const contact = !!m.userData.contact;
   const k = (m.userData.slabScale as number | undefined) ?? 1;
-  const key = `body2:${stripes?.join(',') ?? ''}:${trim}:${contact}:${k}`;
+  const key = `body3:${stripes?.join(',') ?? ''}:${trim}:${contact}:${k}`;
   if (m.userData.body === key) return;
   m.userData.body = key;
   const cols = (stripes ?? []).map((c) => new THREE.Color(c));
@@ -65,35 +65,16 @@ export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | und
     if (n) sh.uniforms.uStripes = { value: cols };
     if (contact) groundShade(sh);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vSlabP;\nvarying vec3 vSlabTx;\nvarying vec3 vSlabTy;')
-      .replace(
-        '#include <begin_vertex>',
-        `#include <begin_vertex>
-        vSlabP = position;
-        {
-          vec3 tx = vec3(1.0, 0.0, 0.0), ty = vec3(0.0, 1.0, 0.0);
-          #ifdef USE_INSTANCING
-          tx = mat3(instanceMatrix) * tx; ty = mat3(instanceMatrix) * ty;
-          #endif
-          vSlabTx = normalize(normalMatrix * tx); vSlabTy = normalize(normalMatrix * ty);
-        }`,
-      );
+      .replace('#include <common>', '#include <common>\nattribute float metal;\nvarying vec3 vSlabP;\nvarying float vMetal;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSlabP = position;\nvMetal = metal;');
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', `#include <common>\nvarying vec3 vSlabP;\nvarying vec3 vSlabTx;\nvarying vec3 vSlabTy;\nuniform vec3 uBezel;${n ? `\nuniform vec3 uStripes[${n}];` : ''}`)
+      .replace('#include <common>', `#include <common>\nvarying vec3 vSlabP;\nvarying float vMetal;\nuniform vec3 uBezel;${n ? `\nuniform vec3 uStripes[${n}];` : ''}`)
       .replace(
         '#include <map_fragment>',
         `#include <map_fragment>
         float slabT = ${t};
-        // The bezel: a rounded-rectangle band on the flat front, anti-aliased, with a domed profile.
-        vec2 bzP = vSlabP.xy;
-        vec2 bzQ = abs(bzP) - vec2(${f4((BEZEL_HW - BEZEL_R) * k)}, ${f4((BEZEL_HH - BEZEL_R) * k)});
-        float bzD = length(max(bzQ, 0.0)) + min(max(bzQ.x, bzQ.y), 0.0) - ${f4(BEZEL_R * k)};
-        float bzAA = max(fwidth(bzD), 1e-5);
-        float bezelK = step(${f4((BODY_Z1 - 0.0006) * k)}, vSlabP.z) * (1.0 - smoothstep(-bzAA, bzAA, bzD)) * smoothstep(${f4(-BEZEL_W * k)} - bzAA, ${f4(-BEZEL_W * k)} + bzAA, bzD);
-        vec2 bzG = (bzQ.x > 0.0 && bzQ.y > 0.0) ? normalize(bzQ) : (bzQ.x > bzQ.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
-        bzG *= sign(bzP + 1e-6);
-        float bzT = clamp((bzD + ${f4(BEZEL_W * 0.5 * k)}) / ${f4(BEZEL_W * 0.5 * k)}, -0.97, 0.97);
-        vec3 bzTilt = (vSlabTx * bzG.x + vSlabTy * bzG.y) * (bzT / sqrt(1.0 - bzT * bzT)) * 0.55 * bezelK;
+        // The bezel is real geometry in Blender's model, its vertices marked as metal.
+        float bezelK = step(0.5, vMetal);
         ${
           n
             ? `{
@@ -107,9 +88,7 @@ export function shadeBody(m: THREE.MeshPhysicalMaterial, stripes: string[] | und
         diffuseColor.rgb = mix(diffuseColor.rgb, uBezel, bezelK);`,
       )
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.17, bezelK);')
-      .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 1.0, bezelK);')
-      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = normalize(normal + bzTilt);')
-      .replace('#include <clearcoat_normal_fragment_maps>', '#include <clearcoat_normal_fragment_maps>\n#ifdef USE_CLEARCOAT\nclearcoatNormal = normalize(clearcoatNormal + bzTilt);\n#endif');
+      .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 1.0, bezelK);');
   };
   m.customProgramCacheKey = () => key;
   m.needsUpdate = true;
@@ -242,7 +221,7 @@ export const faceCoatRough = (gf: Finish) => Math.min(0.06, Math.max(0.03, gf.cl
 
 let faceRough = 0.32;
 /** How far the wires and bezel stand proud of the enamel under the room's light (the relief is in tileFaces). */
-export const BUMP = 2.6;
+export const BUMP = 4;
 let surfaceLow = false;
 const surfaceTex = new Map<string, THREE.CanvasTexture>();
 let surfaceSet = '';
