@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as THREE from 'three';
 import { Rng } from '../src/engine/rng';
 import { miniGame } from '../src/minigames/registry';
-import { family, matchGroup } from '../src/minigames/helpers';
+import { matchGroup } from '../src/minigames/helpers';
 import { MINI_DAILY_CAP } from '../src/minigames/progress';
 import { Match3 } from '../src/minigames/games/match3';
 import { Sorter } from '../src/minigames/games/colour';
@@ -104,8 +104,9 @@ class StubBoard {
     this.moveTo(id, p);
   }
   remove(id: number, o: { done?: () => void } = {}) {
-    const t = this.t(id);
-    if (!t.alive) return;
+    // Like TileBoard: a tile that is not there is left alone.
+    const t = this.tiles.get(id);
+    if (!t?.alive) return;
     t.alive = false;
     t.scale = 0.001;
     o.done?.();
@@ -782,5 +783,275 @@ describe('round 2 regressions', () => {
     await wait(r, 1.2);
     expect(r.finishes.length).toBe(1);
     expect(r.finishes[0].won).toBe(false);
+  });
+});
+
+// ------------------------------------------------------------ the rules as the how-to tells them
+
+describe('rules against the how-to text', () => {
+  /** A Match-3 board with no line: four kinds in a pattern, `a` kept for the cells a test sets. */
+  function match3Board(seed: number, set: Record<number, 'a'>) {
+    const r = start('match3', 'easy', seed);
+    const ks = r.p.g.kinds as number[];
+    const [a, ...rest] = ks;
+    const cells = Array.from({ length: 49 }, (_, i) => rest[((i % 7) + 2 * Math.floor(i / 7)) % 4]);
+    for (const c of Object.keys(set)) cells[+c] = a;
+    r.p.g.cells = cells;
+    cells.forEach((k, i) => r.board.setKind(r.p.idAt[i], k));
+    expect((r.p.g as Match3).lines().length).toBe(0);
+    return { r, a };
+  }
+  const cell = (x: number, y: number) => y * 7 + x;
+
+  it('match3: four in a line leaves a Dragon on the moved tile; matching it sweeps its row and column', async () => {
+    // Bottom row A A _ A, with an A above the gap: swapping it down makes four.
+    const { r } = match3Board(3, { [cell(0, 6)]: 'a', [cell(1, 6)]: 'a', [cell(3, 6)]: 'a', [cell(2, 5)]: 'a' });
+    pickTwo(r, r.p.idAt[cell(2, 5)], r.p.idAt[cell(2, 6)]);
+    await wait(r, 4);
+    expect(r.p.moves).toBe(24);
+    expect(r.p.score).toBeGreaterThanOrEqual(30);
+    // The Dragon stays (unless a cascade already set it off).
+    expect(r.p.dragons.has(cell(2, 6)) || r.toasts.includes('Dragon sweep')).toBe(true);
+    expect(r.p.g.lines().length).toBe(0);
+
+    // A Dragon set into a line sweeps 13 cells at least (its row and column).
+    const { r: r2 } = match3Board(4, { [cell(0, 6)]: 'a', [cell(1, 6)]: 'a', [cell(2, 5)]: 'a' });
+    r2.p.dragons.add(cell(1, 6));
+    pickTwo(r2, r2.p.idAt[cell(2, 5)], r2.p.idAt[cell(2, 6)]);
+    await wait(r2, 4);
+    expect(r2.toasts).toContain('Dragon sweep');
+    expect(r2.p.score).toBeGreaterThanOrEqual(13 * 10);
+    expect(r2.p.dragons.has(cell(1, 6))).toBe(false);
+  });
+
+  it('match3: five in a line clears every tile of that kind', async () => {
+    const { r } = match3Board(5, { [cell(0, 6)]: 'a', [cell(1, 6)]: 'a', [cell(3, 6)]: 'a', [cell(4, 6)]: 'a', [cell(2, 5)]: 'a', [cell(6, 0)]: 'a', [cell(5, 2)]: 'a' });
+    pickTwo(r, r.p.idAt[cell(2, 5)], r.p.idAt[cell(2, 6)]);
+    await wait(r, 4);
+    expect(r.toasts).toContain('Five in a line: every tile of that kind clears');
+    expect(r.p.score).toBeGreaterThanOrEqual(7 * 10);
+  });
+
+  it('match3: a swap that makes no line swaps back and costs no move; a tap far away moves the selection', async () => {
+    const { r } = match3Board(6, {});
+    const cells = [...r.p.g.cells];
+    pickTwo(r, r.p.idAt[cell(0, 0)], r.p.idAt[cell(1, 0)]);
+    await wait(r, 1);
+    expect(r.p.g.cells).toEqual(cells);
+    expect(r.p.moves).toBe(25);
+    r.s.onPick(r.p.idAt[cell(0, 0)]);
+    r.s.onPick(r.p.idAt[cell(5, 5)]);
+    expect(r.p.sel).toBe(cell(5, 5));
+    r.s.onPick(r.p.idAt[cell(5, 5)]);
+    expect(r.p.sel).toBe(null);
+  });
+
+  it('match3: with no swap left the tiles are dealt again, and the move counter decides the end', async () => {
+    const r = start('match3', 'medium', 12);
+    // Run out of moves: a loss once the last move lands short of the target.
+    r.p.moves = 1;
+    await match3Rules.move(r, new Rng(1));
+    await wait(r, 3);
+    const { res } = checkReward(r);
+    expect(res.won).toBe(res.score >= 2400);
+    // A board with no swap is dealt again after a move.
+    const r2 = start('match3', 'easy', 13);
+    (r2.p.g as Match3).fill = function (this: Match3) {
+      Match3.prototype.fill.call(this);
+    };
+    const findMove = Match3.prototype.findMove;
+    let once = true;
+    (r2.p.g as Match3).findMove = function (this: Match3) {
+      // The first look after the move finds nothing.
+      if (!r2.p.busy && once && r2.p.moves < 25) return (once = false), null;
+      return findMove.call(this);
+    };
+    const m = findMove.call(r2.p.g)!;
+    pickTwo(r2, r2.p.idAt[m[0]], r2.p.idAt[m[1]]);
+    await wait(r2, 4);
+    expect(r2.toasts).toContain('No more swaps: the tiles are dealt again.');
+    expect(r2.p.dragons.size).toBe(0);
+    match3Rules.inv!(r2);
+  });
+
+  it('survival: an idle player sees a row creep in every few seconds and loses when the ninth would come', async () => {
+    const every: Record<MiniLevel, number> = { easy: 12, medium: 10, hard: 8 };
+    for (const level of LEVELS) {
+      const r = start('survival', level, 41);
+      expect(r.p.g.rows.length).toBe(4);
+      await wait(r, every[level] + 0.6);
+      expect(r.p.g.rows.length).toBe(5);
+      // A pause holds the next row back.
+      pause(r, true);
+      for (let i = 0; i < 100; i++) r.s.tick!(0.1); // even if a stray tick arrives
+      pause(r, false);
+      expect(r.p.g.rows.length).toBe(5);
+      await wait(r, every[level] * 3);
+      expect(r.p.g.rows.length).toBe(8);
+      expect(r.finishes.length).toBe(0);
+      await wait(r, every[level] + 0.6);
+      expect(r.finishes.length).toBe(1);
+      expect(r.finishes[0].won).toBe(false);
+      checkReward(r);
+    }
+  });
+
+  it('chain: a group holding a run scores double; Winds and Dragons are one suit, Flowers and Seasons another', () => {
+    const r = start('chain', 'easy', 2);
+    const w = 8;
+    const g = r.p.g;
+    // Clear the field to a known corner: 1-2-3 Characters in a row, and East + Red Dragon below.
+    g.cells.fill(26); // all 9 Bamboo, one big group
+    g.cells[0] = 0;
+    g.cells[1] = 1;
+    g.cells[2] = 2;
+    g.cells[3] = 9;
+    g.cells[w] = 27;
+    g.cells[w + 1] = 31;
+    g.cells[w + 2] = 9;
+    g.cells.forEach((k: number, i: number) => r.board.setKind(r.p.idAt[i], k));
+    expect(g.group(0).sort()).toEqual([0, 1, 2]);
+    expect(g.hasRun(g.group(0))).toBe(true);
+    expect(g.group(w).sort((a: number, b: number) => a - b)).toEqual([w, w + 1]);
+    const before = r.p.score;
+    r.s.onPick(r.p.idAt[0]);
+    expect(r.p.score - before).toBe(3 * 2 * 5 * 2);
+    chainRules.inv!(r);
+    useUndo(r);
+    expect(r.p.score).toBe(before);
+    chainRules.inv!(r);
+  });
+
+  it('dungeon: monsters cost their number less armour, armour caps at three, flowers heal up to five, the door needs the key', async () => {
+    // A deal with a room (a tile) straight ahead of the start.
+    let r = start('dungeon', 'easy', 1);
+    for (let seed = 2; !r.board.tiles.has(r.p.at - r.p.g.w); seed++) r = start('dungeon', 'easy', seed);
+    const g = r.p.g;
+    const at = r.p.at as number;
+    const up = at - g.w;
+    const room = (t: string, kind?: number) => (kind === undefined ? { t } : { t, kind });
+    const stepTo = async (i: number, rm: any) => {
+      g.rooms[i] = rm;
+      if (!r.board.tiles.has(i)) throw new Error('room has no tile');
+      r.board.revive(i, {});
+      r.s.onPick(i);
+      await wait(r, 0.5);
+    };
+    // Rooms with tiles: use the ones the deal gave (every room but the start has one, or none if empty).
+    const tiled = (i: number) => r.board.tiles.has(i);
+    let back = at;
+    let cur = up;
+    expect(tiled(cur)).toBe(true); // this seed deals a room with a tile above the start
+    await stepTo(cur, room('monster', 3)); // a 4 of Characters (kind 3)
+    expect(r.p.hp).toBe(16 - 4);
+    expect(r.p.at).toBe(cur);
+    // Back and forth over empty rooms costs nothing.
+    r.board.felt = (r.s as any).world(back);
+    r.s.onEmptyTap!(0, 0, new THREE.PerspectiveCamera(), {} as HTMLElement);
+    r.board.felt = null;
+    await wait(r, 0.5);
+    expect(r.p.at).toBe(back);
+    expect(r.p.hp).toBe(12);
+    // Armour: four winds give three armour and ten gold.
+    for (let i = 0; i < 4; i++) {
+      [back, cur] = [cur, back];
+      if (!tiled(cur)) {
+        r.board.felt = (r.s as any).world(cur);
+        r.s.onEmptyTap!(0, 0, new THREE.PerspectiveCamera(), {} as HTMLElement);
+        r.board.felt = null;
+        await wait(r, 0.5);
+        g.rooms[cur] = room('armour', 27);
+        (r.s as any).arrive(cur);
+      } else await stepTo(cur, room('armour', 27));
+    }
+    expect(r.p.armour).toBe(3);
+    expect(r.p.gold).toBe(10);
+    // A 2 does nothing through three armour; a flower heals 5, never past the most.
+    g.rooms[r.p.at] = room('monster', 1);
+    (r.s as any).arrive(r.p.at);
+    expect(r.p.hp).toBe(12);
+    g.rooms[r.p.at] = room('potion', 34);
+    (r.s as any).arrive(r.p.at);
+    expect(r.p.hp).toBe(16);
+    // The door stays shut without the key.
+    const door = g.find('door');
+    r.p.at = door + g.w;
+    r.s.onPick(door);
+    await wait(r, 0.5);
+    expect(r.p.at).toBe(door + g.w);
+    expect(r.toasts).toContain('The door is locked. Find the Green Dragon key first.');
+    r.p.hasKey = true;
+    r.s.onPick(door);
+    await wait(r, 0.5);
+    expect(r.finishes.length).toBe(1);
+    expect(checkReward(r).res.won).toBe(true);
+  });
+});
+
+describe('daily boards: pause suggestions and hints never change what the seed deals', () => {
+  for (const id of ['hex', 'colour', 'treasure', 'chain', 'dungeon'])
+    it(id, async () => {
+      for (let seed = 1; seed <= 4; seed++) {
+        const a = start(id, 'medium', seed, { daily: true });
+        const b = start(id, 'medium', seed, { daily: true });
+        const rng = new Rng(seed);
+        const fp = (r: Run) => JSON.stringify([...r.board.tiles].map(([k, t]) => [k, t.kind, t.alive]));
+        expect(fp(a)).toBe(fp(b));
+        await wait(a, 0.6);
+        await wait(b, 0.6);
+        for (let i = 0; i < 25 && !a.finishes.length; i++) {
+          for (let j = 0; j < 3; j++) a.s.suggest?.();
+          const seedOfMove = rng.int(1e9);
+          await RULES[id].move(a, new Rng(seedOfMove));
+          await RULES[id].move(b, new Rng(seedOfMove));
+          if (i % 7 === 3) (useShuffle(a), useShuffle(b));
+          await wait(a, 0.5);
+          await wait(b, 0.5);
+          expect(fp(a)).toBe(fp(b));
+        }
+      }
+    });
+});
+
+describe('rewards for every level', () => {
+  /** The most hints, undos and shuffles a game can report (Infinity where unlimited). */
+  const CAPS: Record<string, { hints: number; undos: number; shuffles: number }> = {
+    match3: { hints: Infinity, undos: 0, shuffles: 0 },
+    hex: { hints: Infinity, undos: Infinity, shuffles: Infinity },
+    colour: { hints: Infinity, undos: Infinity, shuffles: 0 },
+    survival: { hints: Infinity, undos: 0, shuffles: 3 },
+    treasure: { hints: 5, undos: 0, shuffles: 0 },
+    boss: { hints: Infinity, undos: 0, shuffles: Infinity },
+    chain: { hints: Infinity, undos: Infinity, shuffles: 0 },
+    rush: { hints: 3, undos: 0, shuffles: 0 },
+    dungeon: { hints: Infinity, undos: 0, shuffles: 0 },
+  };
+  it('are whole, never negative, never above the daily cap, for any result a game can report', () => {
+    const rng = new Rng(77);
+    const lim = (v: number) => (Number.isFinite(v) ? v : 2000);
+    for (const id of Object.keys(CAPS)) {
+      const d = miniGame(id)!;
+      const c = CAPS[id];
+      for (const level of LEVELS)
+        for (let i = 0; i < 3000; i++) {
+          const total = 1 + rng.int(200);
+          const r: MiniResult = {
+            won: rng.next() < 0.5,
+            score: rng.next() < 0.1 ? 0 : rng.int(rng.next() < 0.5 ? 1000 : 1e6),
+            seconds: rng.next() * 3600,
+            cleared: rng.int(total + 1),
+            total,
+            hints: rng.int(lim(c.hints) + 1),
+            undos: rng.int(lim(c.undos) + 1),
+            shuffles: rng.int(lim(c.shuffles) + 1),
+          };
+          if (id === 'dungeon') (r.total = 1), (r.cleared = [0, 0.5, 1][rng.int(3)]);
+          const v = d.reward(r, level);
+          expect(Number.isFinite(v), `${id} ${level} ${JSON.stringify(r)}`).toBe(true);
+          expect(Number.isInteger(v)).toBe(true);
+          expect(v, `${id} ${level} ${JSON.stringify(r)}`).toBeGreaterThanOrEqual(0);
+          expect(v).toBeLessThanOrEqual(MINI_DAILY_CAP);
+        }
+    }
   });
 });

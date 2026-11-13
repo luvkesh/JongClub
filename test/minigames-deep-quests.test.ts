@@ -374,7 +374,8 @@ describe('hex: full games', () => {
     expect(n).toBe(2);
     expect(r.s.canUse!('shuffle')).toBe(false);
     n = 0;
-    while (useHint(r)) n++;
+    // One hint at a time: the next can go once the lit pair fades.
+    while (useHint(r)) (n++, vi.advanceTimersByTime(2500));
     expect(n).toBe(3);
     // Undoing shuffles puts the board back exactly.
     const start0 = dealHex(5, new Rng(5)).kinds;
