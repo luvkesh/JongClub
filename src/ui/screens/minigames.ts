@@ -98,7 +98,8 @@ const minutesOf = (def: MiniGameDef) => Number(/\d+/.exec(def.minutes)?.[0] ?? 9
 export function minigamesScreen(app: MiniApp & { go(s: 'minigames'): void }): HTMLElement {
   const store = loadMini();
   const today = isoDay(new Date());
-  const earned = Object.values(store.earned[today] ?? {}).reduce((a, b) => a + b, 0);
+  // Today's game payouts plus the daily puzzle bonus, which is paid once, with the day's first solve.
+  const earned = Object.values(store.earned[today] ?? {}).reduce((a, b) => a + b, 0) + (store.daily[today]?.won ? DAILY_PUZZLE_BONUS : 0);
   const daily = dailyGame();
   const dres = dailyResult();
   const streak = dailyStreak();
@@ -304,7 +305,7 @@ export function openSetup(app: MiniApp, def: MiniGameDef) {
       h('p', { class: 'muted' }, def.blurb),
       h('ol', { class: 'mini-howto' }, ...def.howTo.map((l) => h('li', {}, l))),
       ...fields,
-      best?.plays ? h('p', { class: 'muted small' }, tr('Played {n} · Won {w}', { n: best.plays, w: best.wins }) + (best.seconds ? ` · ${tr('Fastest {time}', { time: fmtClock(best.seconds) })}` : '')) : null,
+      best?.plays ? h('p', { class: 'muted small' }, tr('Played {n} · Won {w}', { n: best.plays, w: best.wins }) + (best.seconds && def.timeRecord !== false ? ` · ${tr('Fastest {time}', { time: fmtClock(best.seconds) })}` : '')) : null,
       h('p', { class: 'muted small' }, tr('{n} of {cap} Jong Points earned from this game today.', { n: fmt(earnedToday(def.id)), cap: fmt(MINI_DAILY_CAP) })),
       h(
         'div',

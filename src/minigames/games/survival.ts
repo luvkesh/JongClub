@@ -344,6 +344,7 @@ class SurvivalSession implements MiniSession {
 
 registerMiniGame({
   id: 'survival',
+  timeRecord: false,
   title: tr('Mahjong Survival'),
   blurb: tr('Rows of tiles creep toward you. Match the free ends fast and hold the line.'),
   minutes: tr('2–3 min'),

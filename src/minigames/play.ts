@@ -87,7 +87,34 @@ export class MiniPlay {
     this.tools.get('shuffle')?.classList.remove('nudge');
   };
   private onResize = () => this.layoutInsets(true);
-  private onVis = () => this.setPaused(document.hidden);
+  // Coming back to the tab resumes only when no sheet is open (a sheet keeps the game paused).
+  private onVis = () => this.setPaused(document.hidden || !this.app.modal.hidden || this.finished);
+  /** Left or replaced: late timers, finishes and sheets of this game do nothing from then on. */
+  private disposed = false;
+  /** The hash of the hub the game was started from; the game adds one history entry on top of it. */
+  private hash = '';
+  /**
+   * The browser's Back mid-game asks before leaving (the board would be lost), and Back on a
+   * finished game goes to the hub. The entry is put back so the game keeps its place in history.
+   */
+  private onPop = () => {
+    if (this.disposed) return;
+    narrator.stop();
+    if (this.finished) {
+      this.app.modal.hidden = true;
+      this.leave(false);
+      return;
+    }
+    this.pushEntry();
+    this.askLeave();
+  };
+  private pushEntry() {
+    try {
+      history.pushState({ mini: this.def.id }, '', this.hash || location.hash);
+    } catch {
+      /* sandboxed */
+    }
+  }
 
   constructor(private app: MiniApp, private def: MiniGameDef, private start: MiniStart) {
     const t = app.table;
@@ -285,6 +312,9 @@ export class MiniPlay {
     this.begin();
     window.addEventListener('resize', this.onResize);
     document.addEventListener('visibilitychange', this.onVis);
+    this.hash = location.hash;
+    this.pushEntry();
+    window.addEventListener('popstate', this.onPop);
     let last = performance.now();
     this.timer = window.setInterval(() => {
       const now = performance.now();
@@ -319,10 +349,10 @@ export class MiniPlay {
         this.stage.wake(1200);
       },
       setStat: (id, text, label) => this.setStat(id, text, label),
-      toast: (text, tone) => host === this.host && this.toast(text, tone),
-      sound: (name) => sound.play(name),
-      finish: (r) => host === this.host && this.finish(r),
-      used: (what) => host === this.host && this.counts[what]++,
+      toast: (text, tone) => host === this.host && !this.disposed && this.toast(text, tone),
+      sound: (name) => !this.disposed && sound.play(name),
+      finish: (r) => host === this.host && !this.disposed && this.finish(r),
+      used: (what) => host === this.host && !this.disposed && this.counts[what]++,
       refreshButtons: () => this.refreshButtons(),
     });
     this.session = this.def.start(this.host);
@@ -394,7 +424,9 @@ export class MiniPlay {
     const obs = new MutationObserver(() => {
       if (o.hidden) {
         obs.disconnect();
-        if (!this.finished) this.setPaused(false);
+        // Mei stops reading when the how-to closes any way (Escape, the backdrop, Back).
+        narrator.stop();
+        if (!this.finished && !this.disposed && !document.hidden) this.setPaused(false);
       }
     });
     obs.observe(o, { attributes: true, attributeFilter: ['hidden'] });
@@ -443,6 +475,7 @@ export class MiniPlay {
 
   /** Same game again: a new deal, or the same deal (`same`, used by the daily puzzle). */
   restart(fresh = true) {
+    if (this.disposed) return;
     this.session?.dispose();
     if (fresh && !this.start.daily) this.seed = randomSeed();
     this.begin();
@@ -451,12 +484,12 @@ export class MiniPlay {
   // ------------------------------------------------------------ finish
 
   private finish(r: Omit<MiniResult, 'hints' | 'undos' | 'shuffles'> & Partial<Pick<MiniResult, 'hints' | 'undos' | 'shuffles'>>) {
-    if (this.finished) return;
+    if (this.finished || this.disposed) return;
     this.finished = true;
     this.refreshButtons();
     const result: MiniResult = { hints: this.counts.hints, undos: this.counts.undos, shuffles: this.counts.shuffles, ...r };
     const variant = this.session.variant?.() ?? '';
-    const rec = recordResult(bestKey(this.def.id, this.start.level, this.start.daily ? 'daily' : variant), result);
+    const rec = recordResult(bestKey(this.def.id, this.start.level, this.start.daily ? 'daily' : variant), result, this.def.timeRecord !== false);
     const pay = payout(this.def, result, this.start.level, !!this.start.daily);
     const p = this.app.profile;
     p.jongPoints += pay.paid;
@@ -468,7 +501,9 @@ export class MiniPlay {
       sound.play('mahjong');
       this.stage.wake(3000);
     } else sound.play('score');
-    window.setTimeout(() => this.showResult(result, rec.newBestScore, rec.newBestTime, pay), result.won ? 1300 : 700);
+    // Not over the hub (or another game) when the player left in the moment before the sheet.
+    const host = this.host;
+    window.setTimeout(() => !this.disposed && host === this.host && this.showResult(result, rec.newBestScore, rec.newBestTime, pay), result.won ? 1300 : 700);
   }
 
   private showResult(r: MiniResult, bestScore: boolean, bestTime: boolean, pay: { paid: number; bonus: number; capped: boolean }) {
@@ -506,12 +541,18 @@ export class MiniPlay {
     return { session: this.session, board: this.board, screenOf: (id: number) => this.board.toScreen(this.board.pose(id)!.pos, t.camera, t.renderer.domElement) };
   }
 
-  leave() {
+  /** Back to the hub; `popEntry` also takes the game's history entry off (false when Back already did). */
+  leave(popEntry = true) {
+    const ours = popEntry && !this.disposed && (history.state as { mini?: string } | null)?.mini === this.def.id;
     this.dispose();
+    if (ours) history.back();
     this.app.backToHub();
   }
 
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    window.removeEventListener('popstate', this.onPop);
     window.clearInterval(this.timer);
     window.removeEventListener('resize', this.onResize);
     document.removeEventListener('visibilitychange', this.onVis);
