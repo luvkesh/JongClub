@@ -221,7 +221,7 @@ export const faceCoatRough = (gf: Finish) => Math.min(0.06, Math.max(0.03, gf.cl
 
 let faceRough = 0.32;
 /** How far the wires and bezel stand proud of the enamel under the room's light (the relief is in tileFaces). */
-export const BUMP = 2.6;
+export const BUMP = 4;
 let surfaceLow = false;
 const surfaceTex = new Map<string, THREE.CanvasTexture>();
 let surfaceSet = '';

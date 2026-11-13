@@ -10,7 +10,7 @@ import { TD, TH } from '../../src/render/tileShape';
 const url = (c: HTMLCanvasElement) => c.toDataURL('image/png');
 
 /** Faces (colour + surface: R relief, G roughness, B metalness), body and back, and the set's style. */
-async function dump(id: string, kinds: number[], scale = 4) {
+async function dump(id: string, kinds: number[], scale = Number(new URLSearchParams(location.search).get("scale") ?? 4)) {
   await loadTileFonts();
   return withTileSet(id, () => {
     const st = currentTileSet();

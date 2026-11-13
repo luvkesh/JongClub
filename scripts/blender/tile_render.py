@@ -62,8 +62,9 @@ def finish_inputs(b, f, ivory_like=False):
         b.inputs['Transmission Weight'].default_value = 1 - f['opacity'] * 0.6
     if ivory_like:
         # Ivory, bone and porcelain let a little light into the surface: the soft glow of the real thing.
-        b.inputs['Subsurface Weight'].default_value = 0.12
-        b.inputs['Subsurface Scale'].default_value = 0.004
+        b.inputs['Subsurface Weight'].default_value = 0.35
+        b.inputs['Subsurface Radius'].default_value = (1.0, 0.82, 0.62)
+        b.inputs['Subsurface Scale'].default_value = 0.006
 
 
 def tex_node(nt, image, uv=True):
@@ -90,7 +91,7 @@ def materials(d, st, fin):
     nt.links.new(sep.outputs['Green'], b.inputs['Roughness'])
     nt.links.new(sep.outputs['Blue'], b.inputs['Metallic'])
     bump = nt.nodes.new('ShaderNodeBump')
-    bump.inputs['Strength'].default_value = 1.0
+    bump.inputs['Strength'].default_value = 0.25
     bump.inputs['Distance'].default_value = 0.0012
     nt.links.new(sep.outputs['Red'], bump.inputs['Height'])
     nt.links.new(bump.outputs['Normal'], b.inputs['Normal'])
@@ -124,6 +125,7 @@ def materials(d, st, fin):
     else:
         t = tex_node(nt, img(f'{d}/body.png'))
         nt.links.new(t.outputs['Color'], b.inputs['Base Color'])
+    micro(bm)
     # back
     km, nt, b = node_mat('back')
     finish_inputs(b, fin['back'], False)
@@ -131,10 +133,27 @@ def materials(d, st, fin):
     nt.links.new(t.outputs['Color'], b.inputs['Base Color'])
     # bezel
     rm, nt, b = node_mat('rim')
-    b.inputs['Base Color'].default_value = hex_rgb(style['trim'])
+    t = hex_rgb(style['trim'])
+    # polished metal reads brighter than its paint swatch: lift the trim toward its own highlight
+    b.inputs['Base Color'].default_value = tuple(min(1.0, c * 1.35 + 0.06) for c in t[:3]) + (1,)
     b.inputs['Metallic'].default_value = 1
-    b.inputs['Roughness'].default_value = 0.16
+    b.inputs['Roughness'].default_value = 0.1
     return {'face': fm, 'body': bm, 'back': km, 'rim': rm}
+
+
+def micro(m, scale=900.0, strength=0.035):
+    """A faint hand-polished ripple in the surface (bump only), so highlights run like on a real piece."""
+    nt = m.node_tree
+    b = nt.nodes['Principled BSDF']
+    n = nt.nodes.new('ShaderNodeTexNoise')
+    n.inputs['Scale'].default_value = scale
+    n.inputs['Detail'].default_value = 4
+    bp = nt.nodes.new('ShaderNodeBump')
+    bp.inputs['Strength'].default_value = strength
+    bp.inputs['Distance'].default_value = 0.0002
+    nt.links.new(n.outputs['Fac'], bp.inputs['Height'])
+    if not b.inputs['Normal'].is_linked:
+        nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
 
 
 def face_material(base, d, kind):
@@ -145,11 +164,73 @@ def face_material(base, d, kind):
     return m
 
 
+CARVE = {'on': True, 'res': (540, 720)}
+
+
+def carved_plate(d, kind, mat):
+    """The face plate as real geometry: a fine grid lifted and sunk by the game's own relief map (R of the
+    surface map: ground 214, enamel 186 sunk into the face, metal wires 255 standing proud), so every stroke
+    is carved with true walls that catch light and throw shadow, and the paint sits down in the grooves."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    rel = Image.open(f'{d}/surface-{kind}.png').split()[0]
+    rel = rel.resize((rel.width * 2, rel.height * 2), Image.BICUBIC).filter(ImageFilter.GaussianBlur(1.2))
+    a = np.asarray(rel, dtype=np.float32) / 255.0
+    nx, ny = CARVE['res']
+    u = np.linspace(0, 1, nx)
+    v = np.linspace(0, 1, ny)
+    U, V = np.meshgrid(u, v)
+    # bilinear sample (image row 0 is the top: v = 1)
+    H, W = a.shape
+    fx = U * (W - 1)
+    fy = (1 - V) * (H - 1)
+    x0 = np.floor(fx).astype(int); y0 = np.floor(fy).astype(int)
+    x1 = np.minimum(x0 + 1, W - 1); y1 = np.minimum(y0 + 1, H - 1)
+    tx = fx - x0; ty = fy - y0
+    h = (a[y0, x0] * (1 - tx) * (1 - ty) + a[y0, x1] * tx * (1 - ty) + a[y1, x0] * (1 - tx) * ty + a[y1, x1] * tx * ty)
+    # the ground's guilloche is a whisper, not a wave: keep a fifth of it
+    g = (h > 205 / 255) & (h < 230 / 255)
+    h = np.where(g, 214 / 255 + (h - 214 / 255) * 0.2, h)
+    depth = 0.017  # metres per unit of relief: ink sinks ~0.0011, wires stand ~0.0017 (a real tile: ~0.4 / 0.6 mm)
+    z = (h - 214 / 255) * depth
+    X = (U - 0.5) * 2 * tm.FACE_HW
+    Y = (V - 0.5) * 2 * tm.FACE_HH
+    # the carved plate stands a touch proud so its deepest strokes stay above the body's front
+    Z = tm.BODY_Z1 + tm.FACE_LIFT + 0.0016 + z
+    co = np.stack([X, Y, Z], -1).reshape(-1, 3)
+    # quads, skipping those outside the plate's rounded corners
+    ix = np.arange(nx * ny).reshape(ny, nx)
+    q = np.stack([ix[:-1, :-1], ix[:-1, 1:], ix[1:, 1:], ix[1:, :-1]], -1).reshape(-1, 4)
+    cx = np.abs(co[q[:, 0], 0] + co[q[:, 2], 0]) / 2
+    cy = np.abs(co[q[:, 0], 1] + co[q[:, 2], 1]) / 2
+    r = tm.FACE_R
+    dx = np.maximum(cx - (tm.FACE_HW - r), 0); dy = np.maximum(cy - (tm.FACE_HH - r), 0)
+    q = q[(dx * dx + dy * dy) <= r * r]
+    me = bpy.data.meshes.new('carved')
+    me.vertices.add(len(co))
+    me.vertices.foreach_set('co', co.ravel())
+    me.loops.add(len(q) * 4)
+    me.loops.foreach_set('vertex_index', q.ravel())
+    me.polygons.add(len(q))
+    me.polygons.foreach_set('loop_start', np.arange(0, len(q) * 4, 4))
+    me.polygons.foreach_set('use_smooth', np.ones(len(q), dtype=bool))
+    me.update(calc_edges=True)
+    uv = me.uv_layers.new(name='UV')
+    uvs = np.stack([U, V], -1).reshape(-1, 2)[q.ravel()]
+    uv.data.foreach_set('uv', uvs.ravel())
+    me.materials.append(mat)
+    ob = bpy.data.objects.new('plate', me)
+    bpy.context.scene.collection.objects.link(ob)
+    return ob
+
+
 def tile(mats, d, kind, loc, rot):
     m = dict(mats)
     if kind is not None:
         m['face'] = face_material(mats['face'], d, kind)
-    r = tm.build_tile(m, 'hi', face=kind is not None)
+    r = tm.build_tile(m, 'hi', face=kind is not None and not CARVE['on'])
+    if kind is not None and CARVE['on']:
+        carved_plate(d, kind, m['face']).parent = r
     col = bpy.data.collections.get('tiles') or bpy.data.collections.new('tiles')
     for o in [r, *r.children]:
         col.objects.link(o)
@@ -231,7 +312,7 @@ def studio(stage):
         return o
     # Studio light: a big soft key from the upper left, a long strip from the right that draws a clean
     # highlight down every edge, a cool rim from behind, and a pool of light on the backdrop.
-    area('key', (-1.7, -1.5, 2.3), (0, 0, 0.15), 1.4, 220, (1, 0.975, 0.95))
+    area('key', (-1.7, -1.5, 2.3), (0, 0, 0.15), 1.4, 220, (1, 0.93, 0.84))
     area('strip', (1.8, -0.7, 1.2), (0, 0, 0.15), 0.25, 70, (1, 1, 1), 'RECTANGLE', 1.6)
     rim = area('rim', (0.5, 1.7, 1.3), (0, 0, 0.2), 0.8, 70, (0.85, 0.9, 1.0))
     # The rim light only touches the tiles (light linking), so it never shows as a bright card in the plinth.
@@ -259,6 +340,48 @@ def studio(stage):
     so.location = (0, 0.2, 2.2)
     so.rotation_euler = (Vector((0, 2.0, 0.9)) - Vector(so.location)).to_track_quat('-Z', 'Y').to_euler()
     sc.collection.objects.link(so)
+
+
+def hero_set(stage):
+    """A club table at night: tiles on deep green felt, warm lamps glowing out of focus behind."""
+    import random
+    rnd = random.Random(7)
+    for o in list(bpy.data.objects):
+        if o.name.startswith('cyc'):
+            bpy.data.objects.remove(o)
+    bpy.ops.mesh.primitive_plane_add(size=20, location=(0, 0, 0))
+    fl = bpy.context.object
+    m, nt, b = node_mat('felt')
+    b.inputs['Base Color'].default_value = hex_rgb('#06261a')
+    b.inputs['Roughness'].default_value = 0.95
+    b.inputs['Sheen Weight'].default_value = 0.3
+    b.inputs['Sheen Tint'].default_value = hex_rgb('#3f7a5f')
+    n = nt.nodes.new('ShaderNodeTexNoise')
+    n.inputs['Scale'].default_value = 2600
+    n.inputs['Detail'].default_value = 6
+    bp = nt.nodes.new('ShaderNodeBump')
+    bp.inputs['Strength'].default_value = 0.35
+    bp.inputs['Distance'].default_value = 0.0006
+    nt.links.new(n.outputs['Fac'], bp.inputs['Height'])
+    nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
+    fl.data.materials.append(m)
+    # lamps and candles far behind: they become soft discs of light through a wide lens
+    for i in range(46):
+        x = rnd.uniform(-5, 5)
+        y = rnd.uniform(3.5, 9)
+        z = rnd.uniform(0.2, 2.6)
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=rnd.uniform(0.03, 0.09), location=(x, y, z), segments=12, ring_count=8)
+        o = bpy.context.object
+        em, ent, eb = node_mat('lamp')
+        warm = rnd.choice([(1, 0.62, 0.3), (1, 0.75, 0.45), (1, 0.55, 0.35), (0.95, 0.8, 0.6)])
+        eb.inputs['Base Color'].default_value = (0, 0, 0, 1)
+        eb.inputs['Emission Color'].default_value = (*warm, 1)
+        eb.inputs['Emission Strength'].default_value = rnd.uniform(3, 9)
+        o.data.materials.append(em)
+        o.visible_shadow = False
+        o.visible_glossy = False
+        o.visible_diffuse = False
+    bpy.context.scene.world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.02, 0.014, 0.01, 1)
 
 
 def camera(loc, look, lens):
@@ -302,6 +425,27 @@ def main():
         tile(mats, d, None, (0.5, -0.16, tm.TD / 2), Euler((math.pi, 0, 0.42)))
         sc.render.resolution_x, sc.render.resolution_y = W, int(W * 528 / 960)
         camera((0.05, -2.45, 0.72), (0.08, 0, 0.16), 46)
+    elif scene == 'hero':
+        hero_set(stage)
+        ks = [27, 31, 13, 8, 33]
+        # a short row standing as on a rack, turned toward the lens, so faces, edges and layers all read
+        for i, k in enumerate(ks):
+            yaw = 0.12
+            tile(mats, d, k, ((i - 2) * 0.315 * math.cos(yaw), (i - 2) * 0.315 * math.sin(yaw), h), STAND(yaw))
+        tile(mats, d, None, (0.95, 0.75, tm.TD / 2), Euler((math.pi, 0, 0.2)))
+        for o in list(bpy.data.objects):
+            if o.name.startswith('top'):
+                bpy.data.objects.remove(o)
+        # a low raking key from the left draws every carved line in light and shadow
+        kl = bpy.data.lights.new('rake', 'AREA'); kl.energy = 90; kl.size = 0.5; kl.color = (1, 0.9, 0.78)
+        ko = bpy.data.objects.new('rake', kl); ko.location = (-2.2, -0.6, 0.55)
+        ko.rotation_euler = (Vector((0, 0, 0.2)) - Vector(ko.location)).to_track_quat('-Z', 'Y').to_euler()
+        sc.collection.objects.link(ko)
+        c = camera((0.95, -1.7, 0.33), (-0.04, 0.02, 0.18), 36)
+        # the set is built ten times life size, so the lens opens ten times wider for a true close-up blur
+        c.data.dof.aperture_fstop = 0.8
+        c.data.dof.focus_distance = (Vector((0.0, 0.0, 0.2)) - Vector((0.95, -1.7, 0.33))).length
+        sc.render.resolution_x, sc.render.resolution_y = W, int(W * 9 / 16)
     elif scene == 'deck':
         # Every tile of the set lying face up, row by row: three suits, honours, flowers and seasons,
         # then the jokers and the animals.

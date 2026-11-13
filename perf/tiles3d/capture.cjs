@@ -8,7 +8,7 @@ const fs = require('fs');
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport: { width: 800, height: 600 } });
   p.on('console', (m) => m.type() === 'error' && console.log('console:', m.text()));
-  await p.goto('http://localhost:5311/perf/tiles3d/', { timeout: 180000 });
+  await p.goto('http://localhost:5311/perf/tiles3d/?scale=' + (process.env.SCALE || 4), { timeout: 180000 });
   await p.waitForFunction('window.ready', null, { timeout: 180000 });
   const save = (f, d) => fs.writeFileSync(f, Buffer.from(d.split(',')[1], 'base64'));
   for (const id of sets) {

@@ -18,8 +18,8 @@ FACE_HW, FACE_HH, FACE_R, FACE_LIFT = 0.116, 0.161, 0.016, 0.0012
 # The bezel: a domed band whose inner foot tucks just under the face plate's edge.
 RIM_CX, RIM_CY = 0.1185, 0.1635   # half sizes of the band's centre line
 RIM_CR = 0.0195                   # corner radius of the centre line
-RIM_HW = 0.0034                   # half width of the band
-RIM_H = 0.0028                   # height of the dome above the front
+RIM_HW = 0.0045                  # half width of the band
+RIM_H = 0.0042                  # height of the dome above the front
 RIM_SINK = 0.0004                 # the band's feet sit this far into the front, so no gap shows
 
 LODS = {'lo': dict(bevel=3, corner=5, profile=5), 'hi': dict(bevel=8, corner=12, profile=12)}
