@@ -57,6 +57,8 @@ export interface ScoringContext {
   card?: number;
   /** Won on the dealer's first discard, before any call. */
   earthly?: boolean;
+  /** A non-dealer self-drew on their first draw of the hand, before any call (Riichi chiihou). */
+  firstDraw?: boolean;
   /** This hand's three dice. */
   dice?: number[];
 }

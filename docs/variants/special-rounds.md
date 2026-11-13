@@ -42,13 +42,13 @@ On by default now (144 tiles). Your own flower and your own season are 1 faan ea
 - This is separate from the Goulash *mode* (a goulash after a wall game), which stays as it was.
 
 ### The cards (South and North)
-Every card hand is concealed: no calls except the tile that wins. Value = the card hand + self-drawn + flowers.
+The cards are the club's own deck from the Mahjong Calling rulebook: the 55 Small Cards (`indiaCards.ts`) and the 29 Big Cards (`indiaBig.ts`), the same cards India Rules plays. Each card keeps its own calling rules and jokers (some take no discard at all, not even to win).
 
-Small Card, 3 faan each: Passport Hand (one passport), Knitting, Seven Pairs, Two Dragons (two dragon pungs + two sets + pair), Three Families (the same run in all three suits + set + pair), Half Flush.
+- South: each player is dealt three Small Cards in secret, keeps one, and wins only with the hand it names.
+- North: before the deal East picks one Big Card, and everyone plays to it.
+- The table keeps its own faan scoring (`CARD_FAAN` in `windRounds.ts`): a half-limit card is 3 faan, a limit card 4, a double-limit card 5. A Big Card is 4 faan, or 5 when concealed (nothing claimed; the last tile may be a discard). Then self-drawn +1 and flowers as usual.
 
-Big Card: Crochet 6, Double Passport (9 + 5 or 6 + 6) 6, Full Flush 6, Small Three Dragons 5, Small Four Winds 6, Heads and Tails (terminal and honour pungs) 7, Four Concealed Pungs 8, Thirteen Orphans 8.
-
-The user described "small and big cards" without listing the hands; the Mumbai sources say each club keeps its own deck. These two cards are JongClub's own selection, to be replaced by a club's real card when one is supplied.
+(An earlier version used two short JongClub cards, `SMALL_CARD` and `BIG_CARD` in `special.ts`; they now only supply guide pictures.)
 
 ## Sources
 WebFetch was blocked; read through search extracts only.
