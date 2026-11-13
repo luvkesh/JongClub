@@ -6,7 +6,7 @@ import type { DiscardSetting } from '../render/discardMarks';
 import { labsButton } from '../dev/panel';
 import { icon } from './icons';
 import { dev } from '../dev/devMode';
-import { cardUses, currentShanten, evaluateDiscards, exchangePick, unseenCounts } from '../ai/evaluate';
+import { cardUses, currentShanten, currentWaits, evaluateDiscards, exchangePick, unseenCounts, waitingView } from '../ai/evaluate';
 import { SMALL_CARDS, cardSets, type SmallCard } from '../engine/rules/indiaCards';
 import { NORTH, NUMBER_NAMES, northBig, northGoulash } from '../engine/rules/india';
 import { BIG_CARDS, type BigCard, type BigGroup } from '../engine/rules/indiaBig';
@@ -1482,15 +1482,29 @@ export class MatchController {
     this.table.matchKind = kind;
   }
 
+  private waitsKey = '';
+  private waitsList: number[] = [];
+  /** Your winning tiles now, worked out again only when your hand, sets or flowers change. */
+  private waitsNow(): number[] {
+    const g = this.game;
+    const pl = g.players[this.me];
+    const key = [pl.hand.map((t) => t.kind).join(','), pl.melds.map((m) => m.tiles.map((t) => t.kind).join('.')).join('/'), pl.flowers.length, pl.riichi, g.state.wildKinds?.join('.'), g.state.handSeed, g.state.seatWinds[this.me]].join('|');
+    if (key !== this.waitsKey) {
+      this.waitsKey = key;
+      this.waitsList = this.asSeen(() => currentWaits(g, this.me));
+    }
+    return this.waitsList;
+  }
+
   /** One tile from winning: the tiles that complete your hand, each with how many you have not seen. */
   private renderWaits() {
     const el = this.els.waits;
     const g = this.game;
     const ph = g.state.phase;
-    const pl = g.players[this.me];
     const on = this.settings.showWaits !== false && this.config.hints && !this.spectator && !g.profile.card && ph.kind !== 'handOver' && ph.kind !== 'charleston' && ph.kind !== 'charlestonVote';
     // Only between your own discards (13 tiles in hand, less any sets), when the answer is stable.
-    const waiting = on && pl.hand.length % 3 === 1 ? g.waitsOf(this.me).filter((k) => k < KIND_COUNT) : [];
+    // The tiles the rules would really pay out on (a minimum, a yaku, a passport...), as JongBot reads them.
+    const waiting = on && waitingView(g, this.me) ? this.waitsNow().filter((k) => k < KIND_COUNT) : [];
     const key = waiting.join(',') + '|' + (waiting.length ? unseenCounts(g, this.me).join(',') : '');
     if (el.dataset.key === key) return;
     el.dataset.key = key;

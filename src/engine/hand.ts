@@ -269,8 +269,11 @@ export function setsShanten(counts: number[], meldCount: number, need: number, p
   let best = 2 * need + 1;
   const combine = (g: number, sets: number, partials: number, pr: number) => {
     if (g === 4) {
-      const usable = Math.min(partials, need - sets);
-      const s = 2 * need - 2 * sets - Math.max(0, usable) - (pair ? pr : 1);
+      // Sets beyond `need` are spare tiles, not progress (a hand that already set some tiles aside
+      // for other components can hold more sets than it still needs).
+      const sc = Math.min(sets, need);
+      const usable = Math.min(partials, need - sc);
+      const s = 2 * need - 2 * sc - Math.max(0, usable) - (pair ? pr : 1);
       if (s < best) best = s;
       return;
     }
