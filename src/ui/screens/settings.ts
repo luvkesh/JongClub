@@ -31,9 +31,19 @@ export function loadSettings(): StoredSettings {
   const d: StoredSettings = { speed: 'classic', hintDepth: 'beginner', labels: true, sort: 'suit', groupSets: false, volumes: { effects: 0.8, music: 0.25, ambient: 0.35, voices: 1 } };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      return { ...d, ...saved, volumes: { ...d.volumes, ...saved.volumes } };
+    const saved: unknown = raw ? JSON.parse(raw) : null;
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      const s = saved as Record<string, unknown>;
+      // A damaged save must not break the app: a setting keeps its default's type, and a
+      // volume must be a number from 0 to 1 (the audio graph throws on anything else).
+      for (const k of Object.keys(d) as (keyof StoredSettings)[]) if (k in s && typeof s[k] !== typeof d[k]) delete s[k];
+      const vol = s.volumes && typeof s.volumes === 'object' ? (s.volumes as Record<string, unknown>) : {};
+      const volumes = { ...d.volumes };
+      for (const k of Object.keys(volumes) as (keyof StoredSettings['volumes'])[]) {
+        const v = vol[k];
+        if (typeof v === 'number' && Number.isFinite(v)) volumes[k] = Math.min(1, Math.max(0, v));
+      }
+      return { ...d, ...(s as Partial<StoredSettings>), volumes };
     }
   } catch {
     /* defaults */
