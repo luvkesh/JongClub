@@ -585,8 +585,7 @@ function exact(card: BigCard, comps: BComp[], counts: number[], melds: MInfo[], 
       const r = take(c, opt, p + 1, cont);
       H[k]++;
       if (r) return true;
-      // A natural of a joker kind may still be wanted as a joker elsewhere; other naturals are spent first.
-      if (!capRem.has(k)) return false;
+      // The natural may be wanted elsewhere (a clean pair of it): a joker may take its place here.
     }
     if (!c.jok || c.nat?.includes(k)) return false;
     for (const [j, left] of capRem) {
@@ -793,6 +792,8 @@ export function bigGroups(card: BigCard, hand: { id: number; kind: number }[], m
     const caps = capsOf(card.jokers(e));
     const capRem = new Map(caps);
     for (const m of melds) for (const j of m.jokers) capRem.set(j.kind, (capRem.get(j.kind) ?? 0) - 1);
+    // Jokers already laid down fix the reading (the secret number): skip readings they don't fit.
+    if ([...capRem.values()].some((v) => v < 0)) continue;
     for (const comps of card.alts(e))
       for (const c of comps) {
         if (c.type !== 'kong' && c.type !== 'qwong' && c.type !== 'run') continue;
