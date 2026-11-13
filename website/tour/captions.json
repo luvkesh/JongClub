@@ -71,6 +71,24 @@
       "text": "And after every game, I'll show you what you did right, and what to do better."
     }
   ],
+  "askmei": [
+    {
+      "t": 0.12,
+      "text": "Got a question?"
+    },
+    {
+      "t": 1.87,
+      "text": "Ask me."
+    },
+    {
+      "t": 3.35,
+      "text": "In the Academy you can ask me anything about Mahjong, from a single rule to the whole of India Rules."
+    },
+    {
+      "t": 9.96,
+      "text": "I answer from the club's own rule sheets and lessons, and I'll point you to the lesson that explains it."
+    }
+  ],
   "play": [
     {
       "t": 0.12,
