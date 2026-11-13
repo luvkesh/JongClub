@@ -100,3 +100,16 @@
 .wh-piece .wh-rev { color: var(--brass-hi); opacity: 0.85; }
 .wh-last { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .wh-last .wh-how { font: 500 12px var(--ui); letter-spacing: 0.06em; color: var(--brass-hi); }
+
+/* Landscape phones: the hand and the two buttons share one low bar, so most of the table stays free to look around. */
+@media (max-height: 500px) {
+  .overlay.peek .peek-bar { width: min(calc(100vw - 2 * var(--gutter)), 820px); flex-direction: row; align-items: center; gap: 10px; padding: 6px 10px; }
+  .overlay.peek .peek-strip { flex: 1 1 auto; min-width: 0; }
+  .peek-strip .win-hand { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+  .peek-strip .wh-row { display: flex; }
+  .peek-strip .wh-label { display: none; }
+  .peek-strip .tile2d { width: clamp(16px, calc((min(100vw, 820px) - 260px) / 15), 24px); }
+  .overlay.peek .peek-btns { flex: none; grid-template-columns: 1fr; gap: 6px; }
+}
+/* While you look around after a hand, Mei's caption steps aside too. */
+body:has(.overlay.peek:not([hidden])) .hud > .coach { visibility: hidden; }

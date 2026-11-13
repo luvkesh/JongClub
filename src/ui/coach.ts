@@ -597,8 +597,8 @@ export class TutorialCoach {
     readonly theme?: string,
   ) {
     this.script = themedScript(variation, theme);
-    this.text = h('p', { class: 'coach-text' });
-    this.extra = h('p', { class: 'coach-extra' });
+    this.text = h('p', { class: 'coach-text', dir: 'auto' });
+    this.extra = h('p', { class: 'coach-extra', dir: 'auto' });
     const replay = h('button', { class: 'coach-btn', title: tr('Hear that again'), 'aria-label': tr('Hear that again'), onclick: () => this.current && narrator.say(this.current), html: icon('replay') });
     const mute = h('button', { class: 'coach-btn', title: tr('Turn Mei’s voice on or off for this game'), 'aria-label': tr('Mei’s voice'), 'aria-pressed': 'true', html: icon('speaker') });
     mute.onclick = () => {

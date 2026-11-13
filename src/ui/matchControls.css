@@ -158,6 +158,9 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .hud.mode-phone .round-text { min-width: 0; flex: 1 1 auto; }
   .hud.mode-phone .round-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hud.mode-phone .round-extra { flex-wrap: nowrap; min-width: 0; }
+  /* Riichi's sticks and dora read in full: the chips wrap to a second line rather than end in "…". */
+  .hud.mode-phone .round-extra:has(> .sticks) { flex-wrap: wrap; row-gap: 3px; }
+  .hud.mode-phone .round-extra > .sticks { white-space: normal; text-overflow: clip; }
   .hud.mode-phone .round-extra > * { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9.5px; letter-spacing: 0.06em; padding-inline: 6px; }
   .hud.mode-phone .round-meta { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
   @media (max-width: 380px) { .hud.mode-phone .round-badge .round-emblem { display: none; } }
@@ -242,4 +245,14 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .hud.mode-phone > .coach.floating:not(.tucked) { width: min(420px, calc(100vw - 2 * var(--gutter))); max-height: 50vh; }
   /* Tucked away, Mei waits behind the Tutor button rather than on the table. */
   .hud.mode-phone > .coach.tucked { display: none !important; }
+}
+
+/* Side console: Mei's caption has the column's height to itself, so it is never cut short. */
+#hud.mode-console > .coach .coach-text { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }
+
+/* Landscape phones: the Possibilities sheet keeps its title, list and Back button inside the screen. */
+@media (max-height: 500px) {
+  .poss-sheet { max-height: calc(100dvh - 28px); gap: 6px; padding: 12px 16px; }
+  .poss-sheet h2 { font-size: 17px; padding-bottom: 4px; }
+  .poss-list { min-height: 0; }
 }

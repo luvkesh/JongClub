@@ -30,7 +30,7 @@ export function scoreRow(v: WinValue, label?: string): HTMLElement {
 /** The score lines, as the hand result lists them. */
 export function scoreLines(s: HandScore, max = 99): HTMLElement {
   const items = s.items.slice(0, max);
-  const ul = h('ul', { class: 'hs-lines' }, ...items.map((it) => h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : ''))));
+  const ul = h('ul', { class: 'hs-lines' }, ...items.map((it) => h('li', {}, h('span', {}, tr(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : ''))));
   if (s.items.length > max) ul.append(h('li', { class: 'hs-more' }, tr('+{n} more lines', { n: s.items.length - max })));
   return ul;
 }

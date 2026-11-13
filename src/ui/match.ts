@@ -465,8 +465,8 @@ export class MatchController {
     const views = viewControls(this.table);
     views.classList.add('hud-views');
     // The rule book and the calculator share the middle of the table: one at a time.
-    this.guide.onOpen = () => this.calc.toggle(false);
-    this.calc.onOpen = () => this.guide.toggle(false);
+    this.guide.onOpen = () => (this.calc.toggle(false), requestAnimationFrame(() => this.fitPanels()));
+    this.calc.onOpen = () => (this.guide.toggle(false), requestAnimationFrame(() => this.fitPanels()));
     // Escape closes the card and the leave question (never a hand result, which moves the game on).
     els.sheet.addEventListener('keydown', (e) => e.key === 'Escape' && (els.sheet.hidden = true));
     const reactBar = h('div', { class: 'reactions', hidden: true });
@@ -612,6 +612,25 @@ export class MatchController {
       this.table.resize();
     }
     this.refreshDock();
+  }
+
+  /**
+   * The rule book and the calculator end above your hand, the action row, the dock and Mei's caption
+   * (on phones and upright tablets they would otherwise run under them); their bodies scroll.
+   */
+  private fitPanels() {
+    for (const p of [this.guide.panel, this.calc.panel]) {
+      if (p.hidden) continue;
+      p.style.removeProperty('max-height');
+      const pr = p.getBoundingClientRect();
+      const top = pr.top;
+      const below = [...this.root.querySelectorAll<HTMLElement>('.bottom > *, .dock-bar, .hud > .coach:not(.tucked):not([hidden])')]
+        .filter((e) => e.offsetParent !== null || getComputedStyle(e).position === 'fixed')
+        .map((e) => e.getBoundingClientRect())
+        .filter((r) => r.height > 0 && r.width > 0 && r.top > top + 120 && r.left < pr.right && r.right > pr.left);
+      const floor = Math.min(window.innerHeight, ...below.map((r) => r.top));
+      p.style.maxHeight = `${Math.max(160, Math.floor(floor - top - 8))}px`;
+    }
   }
 
   /** Observers on the HUD root, which every match reuses: disconnected when this match ends, or old matches keep reacting. */
@@ -1150,7 +1169,8 @@ export class MatchController {
       const plate = [...this.root.querySelectorAll<HTMLElement>('.seat:not([hidden])')].map((x) => x.getBoundingClientRect()).filter((r) => r.left < 120 && r.top > end).sort((a, b) => a.top - b.top)[0];
       this.root.classList.toggle('views-tucked', !!views && !!plate && end + views.offsetHeight + 8 > plate.top);
     };
-    if (!coach || coach.hidden || !coach.isConnected || coach.getBoundingClientRect().top > window.innerHeight / 2) {
+    const cr = coach?.getBoundingClientRect();
+    if (!coach || !cr || coach.hidden || !coach.isConnected || coach.classList.contains('tucked') || cr.height < 8 || cr.top > window.innerHeight / 2) {
       if (wide) corner();
       else el.style.top = '';
       return;
@@ -1165,7 +1185,18 @@ export class MatchController {
       el.style.left = `${Math.round(c.right + 12)}px`;
       el.style.right = 'auto';
       el.style.transform = 'none';
-    } else el.style.top = `${Math.round(c.bottom + 8)}px`;
+    } else {
+      // Just below Mei, unless that would put it on your hand (the action row, tray or rack labels): then its usual place.
+      const top = Math.round(c.bottom + 8);
+      const floor = Math.min(
+        ...['.action-row', '.tray', '.bottom']
+          .map((s) => this.root.querySelector<HTMLElement>(s)?.getBoundingClientRect())
+          .filter((r): r is DOMRect => !!r && r.height > 0)
+          .map((r) => r.top),
+        window.innerHeight,
+      );
+      el.style.top = top + (el.offsetHeight || 72) + 6 <= floor ? `${top}px` : '';
+    }
   }
 
   /** The JongClub card of American hands, with your closest hands marked. */
@@ -1514,6 +1545,7 @@ export class MatchController {
     this.placeDock();
     this.guide.place();
     this.calc.place();
+    this.fitPanels();
   };
 
   /**
@@ -3437,7 +3469,7 @@ export class MatchController {
       const wm = r.revealedMelds ?? [];
       card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm), winFrom: this.winFrom(r) }));
       const items = h('ul', { class: 'score-items' });
-      for (const it of s.items) items.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
+      for (const it of s.items) items.append(h('li', {}, h('span', {}, tr(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
       const summary = `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;
       card.append(items, h('div', { class: 'score-total' }, h('span', {}, summary), h('strong', {}, tr('{n} pts', { n: fmt(s.points) }))));
       // Multiple winners: each other winner's hand and score, under the first.
@@ -3446,7 +3478,7 @@ export class MatchController {
         card.append(h('h3', { class: 'co-win-head' }, c.seat === this.me ? tr('You win the hand too') : tr('{name} wins the hand too', { name: g.players[c.seat].name })));
         card.append(winHandSection({ hand: c.revealedHand, melds: c.revealedMelds, flowers: g.players[c.seat].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(c.revealedHand, c.revealedMelds), winFrom: this.winFrom(r) }));
         const citems = h('ul', { class: 'score-items' });
-        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
+        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, tr(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
         const csum = `${fmt(cs.value)} ${tr(cs.unit)}${cs.fu ? ` ${cs.fu} ${tr('fu')}` : ''}${cs.tier ? ` · ${cs.tier}` : cs.limit ? ` · ${tr('Limit')}` : ''}`;
         card.append(citems, h('div', { class: 'score-total' }, h('span', {}, csum), h('strong', {}, tr('{n} pts', { n: fmt(cs.points) }))));
       }
