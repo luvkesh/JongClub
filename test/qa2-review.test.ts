@@ -31,3 +31,23 @@ describe('weekly "Daily Hand on 3 days" counter', () => {
     expect(dailyHandsInWeek(p, '2026-11-16')).toBe(3);
   });
 });
+
+describe('Club Regular on the profile (30 days in a row)', () => {
+  it('does not count a day twice when the clocks go forward', async () => {
+    const { applyMatch } = await import('../src/progression/profile');
+    vi.stubEnv('TZ', 'Europe/London');
+    // 00:30 on Monday 30 March 2026 in London (summer time began on Sunday): still Sunday 29th in UTC.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-03-29T23:30:00Z'));
+    try {
+      const p = loadProfile();
+      // 29 days in a row, 1 to 29 March: one short of Club Regular.
+      p.daysPlayed = Array.from({ length: 29 }, (_, i) => `2026-03-${String(i + 1).padStart(2, '0')}`);
+      const r = applyMatch(p, { placement: 4, finalScore: 0, handsWon: 0, handsPlayed: 1, selfDraws: 0, bestHand: null, limitHand: false, fullNews: false, variation: 'classic', lengthLabel: 'Single hand', ranked: false });
+      expect(r.unlocked).not.toContain('club-regular');
+      expect(p.achievements['club-regular']).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
