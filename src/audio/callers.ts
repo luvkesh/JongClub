@@ -20,6 +20,8 @@ export function callerPhrases(): string[] {
 
 class Callers {
   enabled = true;
+  /** The table's Mute (match.ts): silent for this match only, without touching the saved setting. */
+  muted = false;
   /** Voice per seat for the current match. */
   private seats: (CallerMeta | null)[] = [];
   private playing: PlayingClip[] = [];
@@ -37,6 +39,11 @@ class Callers {
 
   get library() {
     return CALLERS;
+  }
+
+  setMuted(on: boolean) {
+    this.muted = on;
+    if (on) this.stop();
   }
 
   setEnabled(on: boolean) {
@@ -82,7 +89,7 @@ class Callers {
 
   /** Say a phrase (a tile name or call word) in this seat's voice. */
   say(seat: number, phrase: string) {
-    if (!this.enabled) return;
+    if (!this.enabled || this.muted) return;
     // Outside a match (the settings preview) nobody is seated yet: use the first recorded voice.
     const voice = this.seats.length ? this.seats[seat] : CALLERS[seat % CALLERS.length];
     const clip = voice ? callerClip(voice.id, phrase) : undefined;

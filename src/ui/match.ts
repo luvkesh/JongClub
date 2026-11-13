@@ -705,6 +705,8 @@ export class MatchController {
   private muted = false;
   private setMuted(on: boolean) {
     this.muted = on;
+    // Player calls play outside the effects bus, so they need their own switch.
+    callers.setMuted(on);
     if (on) sound.setVolumes({ effects: 0, music: 0, ambient: 0 });
     else {
       const s = this.settings as Settings & Partial<MusicSettings>;

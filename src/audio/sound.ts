@@ -43,6 +43,8 @@ export interface Volumes {
   effects: number;
   music: number;
   ambient: number;
+  /** Recorded voices: Mei and the players' tile calls (clipPlayer.ts). */
+  voices: number;
 }
 
 interface HitOpts {
@@ -65,7 +67,7 @@ class Sound {
   private musicIn?: GainNode;
   private samples: Partial<Record<Pool, AudioBuffer[]>> = {};
   private last: Partial<Record<Pool, number>> = {};
-  volumes: Volumes = { effects: 0.8, music: 0.25, ambient: 0.35 };
+  volumes: Volumes = { effects: 0.8, music: 0.25, ambient: 0.35, voices: 1 };
   private voice: Voice = VOICES.ivory;
   material: TileMaterial = 'ivory';
 
@@ -94,9 +96,10 @@ class Sound {
     const c = this.ctx;
     const master = c.createGain();
     master.connect(c.destination);
-    this.buses = { effects: c.createGain(), music: c.createGain(), ambient: c.createGain() };
+    this.buses = { effects: c.createGain(), music: c.createGain(), ambient: c.createGain(), voices: c.createGain() };
     for (const b of Object.values(this.buses)) b.connect(master);
-    this.noise = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    // Four seconds of noise: the room tone loops it, and a one-second loop was heard as a slow, regular pulse.
+    this.noise = c.createBuffer(1, c.sampleRate * 4, c.sampleRate);
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.musicIn = c.createGain();
@@ -381,6 +384,11 @@ class Sound {
     src.connect(lp).connect(g).connect(this.buses!.ambient);
     src.start();
     lfo.start();
+  }
+
+  /** Where recorded voices play (Mei, the callers): the Voices bus, or the speakers before unlock(). */
+  voiceOut(): AudioNode | undefined {
+    return this.buses?.voices;
   }
 
   /** The Ambient bus, for venue soundscapes (ambience.ts); null until unlock(). */

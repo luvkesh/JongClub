@@ -185,6 +185,7 @@ export const TIPS: Row[] = [
     'संगीत और कमरे की परिवेश ध्वनि को एक साथ चालू या बंद करता है। टाइलों की आवाज़, खिलाड़ियों की पुकार और Mei पर असर नहीं।',
   ],
   ['The background music.', '背景音乐。', '背景音樂。', 'BGM の音量。', 'الموسيقى الخلفية.', 'पृष्ठभूमि संगीत।'],
+  ['Mei’s voice and the players’ tile calls.', 'Mei 的语音和玩家的叫牌声。', 'Mei 的語音和玩家的叫牌聲。', 'Meiの声とプレイヤーの発声。', 'صوت Mei ونداءات اللاعبين على البلاطات.', 'Mei की आवाज़ और खिलाड़ियों की टाइल पुकार।'],
   [
     'Tile clacks, dice and the other table and button sounds. Player calls and Mei are not on this slider.',
     '牌的碰撞声、骰子以及其他牌桌和按钮音效。玩家叫牌和 Mei 不受此滑块控制。',
