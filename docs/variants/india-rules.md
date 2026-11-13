@@ -9,6 +9,11 @@ player choose any one of the four rounds or all four.
 Readings marked **[reading]** are JongClub's where the book is silent or unclear; questions sent to the user
 are marked **[asked]**.
 
+**Confirmed 2026-11-13:** the club owner answered "do what's recommended" to every open reading, so each
+**[reading]** and **[asked]** item below stands as JongClub plays it (Big Cards, the North round choice and jokers,
+the Small Cards joker in a called set, the dirty hand with three flower doubles, the flower wall set aside by the
+player whose wall was broken). No further confirmation is needed; a later correction from the owner would supersede it.
+
 ## Equipment and terms (pp. contents, 1-4)
 - 144 tiles: three suits 1-9 (Cracks = characters, Bamboos, Rings = dots), winds E S W N, dragons
   Red, Green, White, four flowers and four seasons numbered 1-4.
@@ -79,8 +84,9 @@ are marked **[asked]**.
   Mahjong (buying still allowed).
 - Payment per the card; East pays and receives double: Half limit 500/1000, Limit 1000/2000,
   Double limit 2000/4000, Super limit 4000/8000, Top limit 10000/20000. Flowers paid as in the East round.
-- Draw: East keeps the deal, the buy money waits for the next winner, and an extra game is played in the
-  round (another Small Card game or a Goulash game).
+- Draw: the buy money waits for the next winner. The book has East keep the deal for an extra game; the user
+  ruled 2026-10-25 that East never keeps the deal, win or draw, in every round (the game follows the user).
+  (Book: another Small Card game or a Goulash game.)
 - The 55 Small Cards (value, then the hand):
   1 Lily of the Valley, double: pungs of Green and White dragons, 2 pungs of green bamboos, pair of green bamboos.
   2 Red Lily, double: pungs of Red and White dragons, 2 pungs of red bamboos, pair of red bamboos.
