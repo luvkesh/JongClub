@@ -821,6 +821,17 @@ export class MatchController {
     if (!p.discards.length) box.append(h('div', { class: 'sr-empty' }, tr('Nothing discarded yet')));
     else box.append(h('div', { class: 'sr-tiles' }, ...p.discards.map((t) => tileImg(t.kind, 'mini', this.settings.labels, isRed(this.game.state, t.id)))));
     el.append(box);
+    // Upright screens put the side plates just above your hand: a card that would run down over your
+    // tiles, the hand tools or the dock opens above the plate instead (where there is more room).
+    const b = box.getBoundingClientRect();
+    const tops = [...this.root.querySelectorAll<HTMLElement>('.bottom > *, .dock-bar')]
+      .filter((e) => e.offsetParent !== null)
+      .map((e) => e.getBoundingClientRect())
+      .filter((r) => r.height > 0 && r.width > 0 && r.left < b.right && r.right > b.left && r.bottom > b.top)
+      .map((r) => r.top);
+    const floor = Math.min(window.innerHeight - 8, ...tops);
+    const plate = el.getBoundingClientRect();
+    if (b.bottom > floor && plate.top - b.height - 8 > (this.root.querySelector('.hud-top')?.getBoundingClientRect().bottom ?? 0)) box.classList.add('up');
   }
 
   /** What a seat's hand is worth now: your own in full, another player's only as far as it is on show. */
