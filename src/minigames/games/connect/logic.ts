@@ -1,8 +1,8 @@
 // Mahjong Connect rules: a flat grid of tiles; two matching tiles go when a
 // path of at most three straight lines (two turns) joins them through empty
-// cells, and the path may run round the outside of the board. Deals are built
-// backwards, pair by pair, so the board can always be cleared. With gravity
-// (Mahjong Cascade), tiles drop to fill the gaps a pair leaves.
+// cells, and the path may run round the outside of the board. Deals follow a
+// removal order played out on blank tiles, so the board can always be cleared.
+// With gravity (Mahjong Cascade), tiles drop to fill the gaps a pair leaves.
 
 import type { Rng } from '../../../engine/rng';
 import { matchGroup, pairsFromSet } from '../../helpers';
@@ -227,40 +227,51 @@ export function findPath(w: number, h: number, empty: (x: number, y: number) => 
   return out;
 }
 
-/** A board that can be cleared: pairs placed backwards, each joinable when it lands. */
+/**
+ * A board that can be cleared. Paths depend only on where tiles lie, not on
+ * their faces, so a removal order is played out first on a board of blank
+ * tiles (with the same gravity), each step taking two tiles a path can join.
+ * The pairs are then dealt along that order. On a full board two tiles that
+ * both see the same side of the outer ring always join, so this never sticks.
+ */
 export function dealConnect(w: number, h: number, rng: Rng, gravity: Gravity = 'none'): number[] {
   const n = w * h;
   const pairs = pairsFromSet(n / 2, rng);
-  if (gravity === 'none') {
-    for (let attempt = 0; attempt < 40; attempt++) {
-      const cells = Array(n).fill(-1);
-      let ok = true;
-      for (const [ka, kb] of pairs) {
-        const empty = cells.map((k, i) => (k < 0 ? i : -1)).filter((i) => i >= 0);
-        rng.shuffle(empty);
-        let placed = false;
-        for (const a of empty.slice(0, 12)) {
-          const bs = rng.shuffle(empty.filter((b) => b !== a));
-          for (const b of bs) {
-            // Removing this pair later happens with the tiles placed so far still there.
-            if (findPath(w, h, (x, y) => cells[y * w + x] < 0, a, b)) {
-              cells[a] = ka;
-              cells[b] = kb;
-              placed = true;
-              break;
-            }
-          }
-          if (placed) break;
-        }
-        if (!placed) {
-          ok = false;
+  // Each cell holds the id of the tile dealt there (its starting cell); gravity carries ids along.
+  const sim = new Connect(w, h, Array.from({ length: n }, (_, i) => i), gravity);
+  const order: [number, number][] = [];
+  // A tile with no open side can only join a neighbour: skip the searches that cannot succeed.
+  const open = (i: number) => {
+    const x = i % w,
+      y = Math.floor(i / w);
+    return sim.at(x - 1, y) < 0 || sim.at(x + 1, y) < 0 || sim.at(x, y - 1) < 0 || sim.at(x, y + 1) < 0;
+  };
+  const touch = (a: number, b: number) => Math.abs((a % w) - (b % w)) + Math.abs(Math.floor(a / w) - Math.floor(b / w)) === 1;
+  while (sim.left >= 2) {
+    const filled = rng.shuffle(sim.cells.map((k, i) => (k >= 0 ? i : -1)).filter((i) => i >= 0));
+    let found: [number, number] | null = null;
+    for (const a of filled) {
+      if (!open(a)) continue;
+      for (const b of rng.shuffle(filled.filter((x) => x !== a)))
+        if ((open(b) || touch(a, b)) && sim.path(a, b)) {
+          found = [a, b];
           break;
         }
-      }
-      if (ok) return cells;
+      if (found) break;
     }
+    if (!found) break;
+    order.push([sim.cells[found[0]], sim.cells[found[1]]]);
+    sim.remove(found[0], found[1]);
   }
-  // Gravity boards (or a rare failure): a random deal; the game shuffles when stuck.
+  const cells: number[] = Array(n).fill(-1);
+  if (order.length * 2 === n) {
+    order.forEach(([a, b], i) => {
+      cells[a] = pairs[i][0];
+      cells[b] = pairs[i][1];
+    });
+    return cells;
+  }
+  // Not expected: a random deal; the game shuffles when stuck.
   const flat: number[] = [];
   for (const [a, b] of pairs) flat.push(a, b);
   return rng.shuffle(flat);

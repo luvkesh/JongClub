@@ -163,6 +163,8 @@ class Match3Session implements MiniSession {
     const x = cell % SIZE,
       y = Math.floor(cell / SIZE);
     const [nx, ny] = Math.abs(dx) >= Math.abs(dz) ? [x + Math.sign(dx), y] : [x, y + Math.sign(dz)];
+    // A drag with no direction would swap the tile with itself.
+    if (nx === x && ny === y) return;
     if (nx < 0 || ny < 0 || nx >= SIZE || ny >= SIZE) return;
     this.sel = null;
     this.hintPair = null;
@@ -186,9 +188,11 @@ class Match3Session implements MiniSession {
     if (!trial.lines().length) {
       // No line: they swap back.
       await this.wait(230);
+      if (this.disposed) return;
       bd.moveTo(ia, { pos: this.world(a) }, { dur: 0.2 });
       bd.moveTo(ib, { pos: this.world(b) }, { dur: 0.2 });
       await this.wait(220);
+      if (this.disposed) return;
       this.busy = false;
       this.refresh();
       return;
@@ -205,7 +209,10 @@ class Match3Session implements MiniSession {
       }
     this.moves--;
     await this.wait(220);
+    if (this.disposed) return;
     await this.resolve(b);
+    // The board is shared: after a restart it holds the next game's tiles, so a game left mid-cascade stops here.
+    if (this.disposed) return;
     this.busy = false;
     if (this.score >= this.setup.target) return this.end(true);
     if (this.moves <= 0) return this.end(false);
@@ -267,6 +274,7 @@ class Match3Session implements MiniSession {
       this.host.burst(mid, clear.size > 5);
       this.refresh();
       await this.wait(420);
+      if (this.disposed) return;
       // Gravity and refill, column by column.
       for (let x = 0; x < SIZE; x++) {
         let dst = SIZE - 1;
@@ -297,6 +305,7 @@ class Match3Session implements MiniSession {
         }
       }
       await this.wait(380);
+      if (this.disposed) return;
     }
   }
 
@@ -350,8 +359,9 @@ class Match3Session implements MiniSession {
       notes: [won ? tr('Target {n} reached', { n: this.setup.target }) : tr('Target {n} not reached', { n: this.setup.target }), ...(bonus ? [tr('{n} moves to spare: +{b}', { n: this.moves, b: bonus })] : []), ...(this.chainBest > 1 ? [tr('Longest chain ×{n}', { n: this.chainBest })] : [])],
     });
   }
+  private disposed = false;
   dispose() {
-    this.ended = true;
+    this.ended = this.disposed = true;
   }
 }
 
