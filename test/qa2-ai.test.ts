@@ -10,6 +10,7 @@ import { buildProfile } from '../src/club/sim';
 import type { ClaimOption } from '../src/engine/state';
 import { parseKinds, type Tile } from '../src/engine/tiles';
 import { setsShanten } from '../src/engine/hand';
+import { passportMissing, passportNamedMissing } from '../src/engine/rules/indiaPassport';
 import type { Meld } from '../src/engine/state';
 import { currentShanten, currentWaits, winningWaits } from '../src/ai/evaluate';
 import { claimHint, handStatus, turnHint } from '../src/ai/jongbot';
@@ -186,6 +187,13 @@ describe('Small Card speed: A Joker Hand', () => {
     // 6-7-8 Dots left over once four sets are set aside: still a pair short.
     expect(setsShanten(counts('6p 7p 8p'), 4, 4)).toBe(0);
     expect(cardShanten(card, counts('1m 3m 4m 7m 2p 2p 6p 6p 7p 8p 1s 3s 5s 5s'), [], 27, 28)).toBe(0);
+  });
+
+  it('India East passport meter: a spare pung does not stand in for a missing tile', () => {
+    // 3 Mixed Chows short the 9 Bamboo, beside two honour pungs: one tile missing, not complete.
+    const c = counts('1m 2p 3s 4m 5p 6s 7m 8p E E E S S S');
+    expect(passportNamedMissing('3 Mixed Chows', c, [])).toBe(1);
+    expect(passportMissing(c, [])).toBe(1);
   });
 
   it('Buried Treasure (all hidden) reads four pungs and a pair quickly, as the full search does', () => {

@@ -7,7 +7,7 @@ describe('India Rules East round: the after-hand passport review', () => {
   it('names the passport you came closest to and only points at real discards', () => {
     let reviewed = 0;
     let slips = 0;
-    for (const seed of [3, 7, 11, 19]) {
+    for (const seed of [3, 6, 7, 11]) {
       const rec = recordMatch('india', seed, 'oneHand', 'beginner', { indiaRounds: 'E' });
       const t0 = performance.now();
       const r = runAll(passportReviewScan(rec, 0));
