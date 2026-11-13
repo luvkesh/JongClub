@@ -184,7 +184,9 @@ export const SMALL_CARDS: SmallCard[] = [
     picture: '123456789s RdRdRd EE',
     value: 'limit',
     suits: 1,
-    claim: (type, kind) => !((type === 'pung' || type === 'kong' || type === 'win') && kind >= 27),
+    // The honour pung never comes from a discard; a discard may still finish the honour pair to Mahjong
+    // (southScore turns away a win whose discard completes the pung).
+    claim: (type, kind) => !((type === 'pung' || type === 'kong') && kind >= 27),
     alts: (e) => [[Ch([e.A], [1]), Ch([e.A], [4]), Ch([e.A], [7]), P(HONOURS), Pr(HONOURS)]],
   },
   { n: 25, name: 'Buried Treasure', how: 'Chows and pungs all in one suit with winds and dragons, no kongs. All from the wall', picture: '123p 555p 789p EEE RdRd', value: 'limit', wall: true, noKong: true, suits: 1, alts: (e) => [[...rep(4, PC([...suitTiles(e.A), ...HONOURS], [e.A], 'TA')), Pr([...suitTiles(e.A), ...HONOURS])]] },
@@ -343,10 +345,23 @@ export function missing(comps: Comp[], counts: number[], melds: MeldShape[], car
   // With no beam (exact search), a lower bound prunes: each remaining component's cheapest
   // option on the tiles left (sharing tiles can only cost more; a declared meld may cost 0).
   const exact = !Number.isFinite(beam);
+  // Distinct pairs only (All Pair Hand, Dirty Pairs): the best fill is the kinds held most, two at most each.
+  const pairOnly = !rest && card.distinct && comps.length > 0 && comps.every((x) => x.id === comps[0].id) && comps[0].opts.every((o) => !o.meld && o.tiles.length === 2 && o.tiles[0] === o.tiles[1]);
+  if (pairOnly) {
+    const kinds = [...new Set(comps[0].opts.map((o) => o.tiles[0]))];
+    if (melds.length || kinds.length < comps.length) return budget;
+    const have = kinds.map((k) => Math.min(2, counts[k])).sort((a, b) => b - a);
+    let m = 0;
+    for (let i = 0; i < comps.length; i++) m += 2 - have[i];
+    return Math.min(budget, m);
+  }
+  // Can an unused declared meld stand for this option?
+  const meldFor = (want: { type: 'pung' | 'chow'; kind: number }) =>
+    melds.some((x, j) => !used[j] && x.kind === want.kind && (want.type === 'chow' ? x.type === 'chow' : x.type === 'pung' || (x.type === 'kong' && !card.noKong)));
+  // A component's cheapest option on the tiles left, counting concealed tiles only.
   const cheapest = (comp: Comp) => {
     let lo = 99;
     for (const opt of comp.opts) {
-      if (opt.meld && melds.length) return 0;
       let m = 0;
       const ts = opt.tiles;
       for (let j = 0; j < ts.length && m < lo; j++) {
@@ -362,9 +377,28 @@ export function missing(comps: Comp[], counts: number[], melds: MeldShape[], car
   const go = (i: number, minOpt: number, miss: number) => {
     if (miss >= best) return;
     if (exact && i < comps.length) {
+      // Each unused declared meld fills at most one component for free: take back the dearest few.
+      const free = melds.length ? used.reduce((a, u) => a + (u ? 0 : 1), 0) : 0;
       let lb = miss;
-      for (let j = i; j < comps.length && lb < best; j++) lb += cheapest(comps[j]);
+      const saves: number[] = [];
+      for (let j = i; j < comps.length; j++) {
+        const cost = cheapest(comps[j]);
+        lb += cost;
+        if (free && cost && comps[j].opts.some((o) => o.meld && meldFor(o.meld))) saves.push(cost);
+      }
+      saves.sort((a, b) => b - a);
+      for (let s = 0; s < Math.min(free, saves.length); s++) lb -= saves[s];
       if (lb >= best) return;
+      // Without a price for leftovers, every declared meld must still find a component.
+      if (!rest && free)
+        for (let m = 0; m < melds.length; m++) {
+          if (used[m]) continue;
+          const x = melds[m];
+          let home = false;
+          for (let j = i; j < comps.length && !home; j++)
+            home = comps[j].opts.some((o) => !!o.meld && o.meld.kind === x.kind && (o.meld.type === 'chow' ? x.type === 'chow' : x.type === 'pung' || (x.type === 'kong' && !card.noKong)));
+          if (!home) return;
+        }
     }
     if (i === comps.length) {
       if (rest) best = Math.min(best, miss + rest(c, used.filter((u) => !u).length));
