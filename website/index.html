@@ -1383,6 +1383,38 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 }
 .scene-num { direction: ltr; }
 :lang(hi) .sn span, :lang(ar) .sn span, :lang(hi) .promise, :lang(ar) .promise, :lang(hi) .rt-n, :lang(ar) .rt-n { letter-spacing: 0.04em; margin-inline-end: 0; }
+/* Second pass against the references: heading scale in The Regulars and Rounds, larger rows in Variations, larger World Tour stamps. */
+@media (min-width: 1000px) { .scene-reg .title { font-size: min(3.7vw, 78px); } }
+.scene-rounds .sub { max-width: none; }
+@media (min-width: 1280px) { .scene-rounds .title { font-size: calc(78 * var(--u)); } .scene-rounds .story p { font-size: max(13px, calc(17.5 * var(--u))); } }
+@media (min-width: 1000px) {
+  .vsplit .families b { font-size: clamp(54px, 4.6vw, 72px); width: 86px; }
+  .vsplit .families h4 { font-size: clamp(27px, 2.3vw, 34px); }
+  .vsplit .families p { font-size: clamp(15px, 1.15vw, 17px); }
+  .vsplit .vk-head span { font-size: clamp(24px, 2.2vw, 32px); }
+  .vsplit .vkit li { font-size: clamp(20px, 1.75vw, 26px); }
+  #variations .vhead p { font-size: clamp(26px, 2.7vw, 40px); }
+  #variations .story p { font-size: clamp(16px, 1.3vw, 19px); }
+}
+@media (min-width: 1280px) {
+  .vt-stamps { max-width: none; flex-wrap: nowrap; gap: 16px; }
+  .pstamp { width: 112px; height: 112px; gap: 6px; }
+  .pstamp i { font-size: 32px; }
+  .pstamp b { font-size: 10.5px; max-width: 84px; }
+  .pstamp:nth-child(n + 6) { display: none; }
+  .vtour h3 { font-size: clamp(40px, 3.8vw, 58px); }
+  .vtour .vt-text > p:last-child { font-size: 18px; color: #e3dccb; }
+}
+@media (min-width: 1100px) {
+  .scene-final { --u: calc(100vw / 1973); height: calc(797 * var(--u)); }
+  .scene-final > .wrap { padding-block: calc(58 * var(--u)) 0; gap: calc(13 * var(--u)); }
+  .scene-final .crest-md { width: calc(286 * var(--u)); height: calc(286 * var(--u)); }
+  .scene-final h2 { font-size: calc(98 * var(--u)); line-height: 1.05; margin-top: calc(-8 * var(--u)); }
+  .scene-final h2::after { margin-top: calc(8 * var(--u)); width: calc(330 * var(--u)); }
+  .scene-final h2 + p { font-size: max(15px, calc(26 * var(--u))); margin: 0; }
+  .scene-final .motto { font-size: max(12px, calc(20 * var(--u))); margin: 0; }
+  .scene-final .btn { margin-top: calc(6 * var(--u)); min-height: max(50px, calc(72 * var(--u))); min-width: calc(400 * var(--u)); font-size: max(13px, calc(19 * var(--u))); }
+}
 </style>
 
 <header class="top">
