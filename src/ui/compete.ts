@@ -30,6 +30,7 @@ import { GAME_LENGTHS } from '../engine/rounds';
 import { VARIATIONS, seatsOf } from '../engine/rules';
 import type { HandResult } from '../engine/state';
 import { leagueOf, saveProfile, unlock, type MatchSummary } from '../progression/profile';
+import { accountKey } from '../progression/accountKey';
 import type { AppCtx } from './ctx';
 import { clear, fmt, h, tileImg } from './dom';
 import { icon } from './icons';
@@ -369,11 +370,12 @@ export const rankedFieldFromTag = (tag: string | undefined) => (tag?.startsWith(
 
 // ================================================================ tournaments
 
-const T_KEY = 'jongclub.tournament.v1';
+// Per account, like the profile: an entry paid by one account must not be played (and paid out) by another.
+const T_KEY = () => accountKey('jongclub.tournament.v1');
 
 export function loadTournament(): TournamentState | null {
   try {
-    const raw = localStorage.getItem(T_KEY);
+    const raw = localStorage.getItem(T_KEY());
     return raw ? (JSON.parse(raw) as TournamentState) : null;
   } catch {
     return null;
@@ -382,8 +384,8 @@ export function loadTournament(): TournamentState | null {
 
 export function saveTournament(s: TournamentState | null) {
   try {
-    if (s) localStorage.setItem(T_KEY, JSON.stringify(s));
-    else localStorage.removeItem(T_KEY);
+    if (s) localStorage.setItem(T_KEY(), JSON.stringify(s));
+    else localStorage.removeItem(T_KEY());
   } catch {
     /* ignore */
   }
@@ -403,7 +405,7 @@ function playMyTable(ctx: AppCtx, s: TournamentState) {
 }
 
 /** The app calls this when your tournament table finishes. Simulates the rest of the round in small steps. */
-const PENDING_KEY = 'jongclub.tournament.pending.v1';
+const PENDING_KEY = () => accountKey('jongclub.tournament.pending.v1');
 let resolving = false;
 
 /** True while the other tables of a round are still being played out. */
@@ -414,7 +416,7 @@ export function tournamentOnFinish(ctx: AppCtx, standingsAtTable: { seat: number
   if (!s || resolving) return;
   // Keep your result first, so a reload or a quick click elsewhere cannot lose or replay it.
   try {
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ id: s.id, round: s.roundsPlayed, result: standingsAtTable }));
+    localStorage.setItem(PENDING_KEY(), JSON.stringify({ id: s.id, round: s.roundsPlayed, result: standingsAtTable }));
   } catch {
     /* ignore */
   }
@@ -422,7 +424,7 @@ export function tournamentOnFinish(ctx: AppCtx, standingsAtTable: { seat: number
   const finish = (line: string) => {
     resolving = false;
     try {
-      localStorage.removeItem(PENDING_KEY);
+      localStorage.removeItem(PENDING_KEY());
     } catch {
       /* ignore */
     }
@@ -470,11 +472,11 @@ export function tournamentOnFinish(ctx: AppCtx, standingsAtTable: { seat: number
 function resumePending(ctx: AppCtx) {
   if (resolving) return;
   try {
-    const raw = localStorage.getItem(PENDING_KEY);
+    const raw = localStorage.getItem(PENDING_KEY());
     const pend = raw ? JSON.parse(raw) : null;
     const s = loadTournament();
     if (!pend || !s || pend.id !== s.id || pend.round !== s.roundsPlayed) {
-      if (raw) localStorage.removeItem(PENDING_KEY);
+      if (raw) localStorage.removeItem(PENDING_KEY());
       return;
     }
     tournamentOnFinish(ctx, pend.result, () => ctx.go('tournaments'));
