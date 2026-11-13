@@ -14,7 +14,7 @@
 // flowers and points. When a hand ends, the winner's score is the result.
 
 import type { MahjongGame } from '../engine/game';
-import type { HandScore } from '../engine/rules/types';
+import type { HandScore, Payment } from '../engine/rules/types';
 import { KIND_COUNT, isFlower, type Tile } from '../engine/tiles';
 import { currentShanten, unseenCounts } from './evaluate';
 
@@ -74,28 +74,51 @@ export function withHand<T>(game: MahjongGame, seat: number, hand: Tile[], fn: (
   }
 }
 
-/** What a win with this score pays the winner: the profile's payment rule, a non-dealer discarder for a discard win. */
+/** What a win with this score pays the winner: the profile's payment rule, a non-dealer discarder for a discard win
+ *  (at a winner-takes-all table every other player pays a discard win, as settlement does). */
 export function collectFor(game: MahjongGame, seat: number, score: HandScore, selfDrawn: boolean): number {
   const n = game.profile.players;
   let from: number | null = null;
-  if (!selfDrawn) {
+  if (!selfDrawn && !game.table?.winnerTakesAll) {
     for (let i = 1; i < n && from === null; i++) if ((seat + i) % n !== game.dealer) from = (seat + i) % n;
     if (from === null) from = (seat + 1) % n;
   }
   const stakes = game.state.goulash ? (game.profile.goulashStakes ?? 1) : 1;
-  return game.profile
-    .payments(seat, from, score, game.dealer, n, game.state.round.repeat)
-    .reduce((a, p) => a + (p.to === seat ? p.amount : 0) - (p.from === seat ? p.amount : 0), 0) * stakes;
+  const net = (ps: Payment[]) => ps.reduce((a, p) => a + (p.to === seat ? p.amount : 0) - (p.from === seat ? p.amount : 0), 0);
+  // Rules that pay the win at the hand's end (India Rules West: the winner's points come from everyone there).
+  // Flowers stay aside, and so do the other hands, which are hidden: only the winner's own hand is read.
+  const pl = game.players[seat];
+  const end = game.profile.handPayments?.({
+    winner: seat,
+    discarder: selfDrawn ? null : from,
+    dealer: game.dealer,
+    players: n,
+    flowers: game.players.map(() => []),
+    seatWinds: game.state.seatWinds,
+    prevailing: game.prevailing,
+    score,
+    hands: game.players.map((_, s) => (s === seat ? { concealed: pl.hand.map((t) => t.kind), melds: game.scoringMelds(s) } : { concealed: [], melds: [] })),
+    calling: () => true,
+  });
+  return net(game.profile.payments(seat, from, score, game.dealer, n, game.state.round.repeat)) * stakes + net(end ?? []);
 }
 
 const value = (game: MahjongGame, seat: number, score: HandScore | undefined | null, selfDrawn: boolean): WinValue | null =>
   score ? { score, collect: collectFor(game, seat, score, selfDrawn) } : null;
 
+/** Could `seat` win on a discarded `kind` at all? Not at a self-draw-only table, nor where the seat's rules
+ *  take no discard to win (an India Rules Small Card all from the wall, say). */
+function discardWinAllowed(game: MahjongGame, seat: number, kind: number): boolean {
+  if (!game.discardWins()) return false;
+  const allowed = game.profile.claimAllowed;
+  return !allowed || allowed(seat, 'win', kind, game.seatInfo(seat));
+}
+
 /** Scores of each tile a 13-tile hand waits on (the seat's hand as it is now). */
 export function waitScores(game: MahjongGame, seat: number, unseen = unseenCounts(game, seat)): WaitScore[] {
   const out: WaitScore[] = [];
   for (const k of game.waitsOf(seat)) {
-    const ron = value(game, seat, game.evaluateWin(seat, k, false, true)?.score, false);
+    const ron = discardWinAllowed(game, seat, k) ? value(game, seat, game.evaluateWin(seat, k, false, true)?.score, false) : null;
     const tsumo = value(game, seat, game.evaluateWin(seat, k, true, true)?.score, true);
     if (ron || tsumo) out.push({ kind: k, ron, tsumo, left: k < KIND_COUNT ? (unseen[k] ?? 0) : 0 });
   }
@@ -120,7 +143,8 @@ export function handNow(game: MahjongGame, seat: number, deep = true): HandNow {
   if (!pl) return { state: 'none' };
   if (ph.kind === 'handOver') {
     const r = ph.result;
-    return r.type === 'win' && r.winner === seat && r.score ? { state: 'won', win: { score: r.score, collect: r.deltas[seat] ?? 0 } } : { state: 'none' };
+    const sc = r.type === 'win' ? (r.winner === seat ? r.score : r.coWinners?.find((c) => c.seat === seat)?.score) : undefined;
+    return sc ? { state: 'won', win: { score: sc, collect: r.deltas[seat] ?? 0 } } : { state: 'none' };
   }
   // The deal and the passing phases have no hand to score yet.
   if (ph.kind !== 'turn' && ph.kind !== 'claims') return { state: 'none' };
@@ -169,7 +193,7 @@ function reachOneSwap(game: MahjongGame, seat: number): { discard: number; draw:
       withHand(game, seat, hand, () => {
         if (!game.isTenpai(seat)) return;
         for (const w of game.waitsOf(seat)) {
-          const v = value(game, seat, game.evaluateWin(seat, w, false, true)?.score, false) ?? value(game, seat, game.evaluateWin(seat, w, true, true)?.score, true);
+          const v = (discardWinAllowed(game, seat, w) ? value(game, seat, game.evaluateWin(seat, w, false, true)?.score, false) : null) ?? value(game, seat, game.evaluateWin(seat, w, true, true)?.score, true);
           if (v && (!best || v.score.points > best.value.score.points)) best = { discard: t.kind, draw: k, wait: w, value: v };
         }
       });

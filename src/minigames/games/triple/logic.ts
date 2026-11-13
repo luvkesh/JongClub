@@ -100,13 +100,30 @@ export class Triple {
     return m.id;
   }
 
-  /** A tile worth taking: one that completes or builds on a kind in the tray, else any free tile. */
+  /**
+   * A tile worth taking: first a kind whose set can be finished from the tray and
+   * the free tiles, then one that builds on a kind in the tray, then the one that
+   * frees the most tiles under it. (Looking only at the tray led greedy play into
+   * a full tray on nearly every deal.)
+   */
   hint(): number | null {
     const free = this.free();
     if (!free.length) return null;
-    const count = (k: number) => this.tray.filter((t) => this.kinds[t] === k).length;
-    free.sort((a, b) => count(this.kinds[b]) - count(this.kinds[a]));
-    return free[0];
+    const inTray = (k: number) => this.tray.filter((t) => this.kinds[t] === k).length;
+    const inFree = (k: number) => free.filter((t) => this.kinds[t] === k).length;
+    const frees = (i: number) => this.cover.filter((c, j) => this.onBoard[j] && c.includes(i) && c.every((x) => x === i || !this.onBoard[x])).length;
+    const worth = (i: number) => {
+      const k = this.kinds[i],
+        t = inTray(k);
+      return (t + inFree(k) >= 3 ? 100 : 0) + t * 10 + frees(i);
+    };
+    let best = free[0],
+      bestW = -1;
+    for (const i of free) {
+      const w = worth(i);
+      if (w > bestW) (best = i), (bestW = w);
+    }
+    return best;
   }
 
   /** Mix the kinds of the tiles still on the board. */

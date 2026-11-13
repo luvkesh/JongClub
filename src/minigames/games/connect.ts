@@ -29,12 +29,17 @@ class ConnectSession implements MiniSession {
   private hints: number;
   private shuffles: number;
   private ended = false;
+  /** Set by dispose (a restart or leaving): late timers must not touch the next game. */
+  private disposed = false;
+  private hintTok = 0;
   private hintPair: [number, number] | null = null;
   private lines: THREE.Group;
   private lineMat = new THREE.MeshStandardMaterial({ color: '#f3d48a', emissive: '#c79a3c', emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.3, transparent: true });
   private fade = 0;
   private total: number;
   private stuck = false;
+  /** Portrait phones turn the board a quarter (columns become rows) so its tiles can be larger; the rules don't change. */
+  private turned = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
 
   constructor(
     private host: MiniHost,
@@ -59,6 +64,8 @@ class ConnectSession implements MiniSession {
 
   private world(x: number, y: number, lift = 0) {
     const b = this.host.board;
+    // Cascade keeps its board as dealt, so its tiles still fall the way the option says.
+    if (this.turned && this.g.gravity === 'none') return new THREE.Vector3((y - (this.g.h - 1) / 2) * (b.w + 0.02), b.d / 2 + lift, (x - (this.g.w - 1) / 2) * (b.h + 0.02));
     return new THREE.Vector3((x - (this.g.w - 1) / 2) * (b.w + 0.02), b.d / 2 + lift, (y - (this.g.h - 1) / 2) * (b.h + 0.02));
   }
 
@@ -118,7 +125,7 @@ class ConnectSession implements MiniSession {
       });
     }
     const mid = this.world((a % this.g.w + (b % this.g.w)) / 2, (Math.floor(a / this.g.w) + Math.floor(b / this.g.w)) / 2, 0.2);
-    window.setTimeout(() => this.host.burst(mid), 350);
+    this.later(() => this.host.burst(mid), 350);
     this.sel = null;
     this.hintPair = null;
     const t = this.clock.elapsed;
@@ -129,8 +136,8 @@ class ConnectSession implements MiniSession {
     this.host.sound(this.combo > 2 ? 'kong' : 'pung');
     if (this.combo > 2) this.host.toast(tr('Combo ×{n}', { n: this.combo }), 'good');
     if (this.g.left === 0) {
-      this.refresh();
-      window.setTimeout(() => this.win(), 600);
+      // Over at once (no undo or time-out in the gap); the result shows once the last pair has flown.
+      this.win(600);
       return;
     }
     this.ensureMoves();
@@ -142,7 +149,8 @@ class ConnectSession implements MiniSession {
     this.stuck = this.g.pairs(1).length === 0;
     if (!this.stuck) return;
     if (this.shuffles > 0) this.host.toast(tr('No more moves. Shuffle the tiles to carry on.'), 'bad');
-    else window.setTimeout(() => this.lose(tr('No more moves')), 900);
+    // Still stuck when the loss lands: an undo in the meantime gets the player out.
+    else this.later(() => !this.ended && !this.g.pairs(1).length && this.lose(tr('No more moves')), 900);
   }
 
   private drawPath(path: Cell[]) {
@@ -188,7 +196,9 @@ class ConnectSession implements MiniSession {
     this.hints--;
     this.score = Math.max(0, this.score - 5);
     this.refresh();
-    window.setTimeout(() => {
+    const tok = ++this.hintTok;
+    this.later(() => {
+      if (tok !== this.hintTok) return;
       this.hintPair = null;
       if (!this.ended) this.refresh();
     }, 2600);
@@ -213,6 +223,8 @@ class ConnectSession implements MiniSession {
     // Tiles keep their ids; the shuffle hands kinds round, so rebuild the board in place with a toss.
     if (!this.g.shuffle(this.host.rng)) return false;
     this.shuffles--;
+    this.hintPair = null;
+    this.sel = null;
     this.rebuild(true);
     this.host.sound('shuffle');
     this.stuck = false;
@@ -230,7 +242,9 @@ class ConnectSession implements MiniSession {
     this.score = Math.max(0, this.score - 10);
     this.combo = 0;
     this.sel = null;
-    this.stuck = this.g.pairs(1).length === 0;
+    this.hintPair = null;
+    // Undoing a shuffle can step back into a dead end: offer a shuffle or end as after a move.
+    this.ensureMoves();
     this.host.sound('slide');
     this.refresh();
     return true;
@@ -265,12 +279,20 @@ class ConnectSession implements MiniSession {
     this.clock.paused = p;
   }
 
-  private win() {
+  /** A timer that does nothing once the session is disposed. */
+  private later(fn: () => void, ms: number) {
+    window.setTimeout(() => !this.disposed && fn(), ms);
+  }
+
+  private win(delay = 0) {
     if (this.ended) return;
     this.ended = true;
+    this.sel = null;
+    this.refresh();
     const bonus = this.clock.limit ? Math.round(this.clock.left) : Math.max(0, Math.round(this.total * 2.5 - this.clock.elapsed));
     this.score += bonus;
-    this.host.finish({ won: true, score: this.score, seconds: this.clock.elapsed, cleared: this.total, total: this.total, notes: [...(bonus ? [tr('Time bonus +{n}', { n: bonus })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])] });
+    const result = { won: true, score: this.score, seconds: this.clock.elapsed, cleared: this.total, total: this.total, notes: [...(bonus ? [tr('Time bonus +{n}', { n: bonus })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])] };
+    this.later(() => this.host.finish(result), delay);
   }
   private lose(why: string) {
     if (this.ended) return;
@@ -279,6 +301,7 @@ class ConnectSession implements MiniSession {
   }
   dispose() {
     this.ended = true;
+    this.disposed = true;
     this.clearPath();
     this.lines.removeFromParent();
     this.lineMat.dispose();
@@ -287,7 +310,8 @@ class ConnectSession implements MiniSession {
 
 function reward(r: MiniResult, level: MiniLevel) {
   if (!r.won) return Math.round((r.cleared / Math.max(1, r.total)) * 25 * LEVEL_PAY[level]);
-  return Math.max(20, Math.round((40 + r.total * 0.9) * LEVEL_PAY[level] - r.hints * 4 - r.shuffles * 8 - r.undos));
+  // A win never pays less than the best a loss could (every tile cleared but the last pair).
+  return Math.max(Math.round(25 * LEVEL_PAY[level]), Math.round((40 + r.total * 0.9) * LEVEL_PAY[level] - r.hints * 4 - r.shuffles * 8 - r.undos));
 }
 
 registerMiniGame({

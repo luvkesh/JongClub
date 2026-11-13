@@ -343,6 +343,7 @@ function mixedCandidates(c: number[]): number[][] {
 export const MIXED_SETS: SpecialShape = {
   name: 'Mixed sets',
   ai: true,
+  approx: true,
   complete(counts, meldCount) {
     const need = 4 - meldCount;
     if (need < 0 || sum(counts) !== need * 3 + 2) return false;

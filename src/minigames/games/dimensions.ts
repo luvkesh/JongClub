@@ -28,6 +28,9 @@ class DimensionsSession implements MiniSession {
   private lastPair = -99;
   private hints: number;
   private ended = false;
+  /** Set by dispose (a restart or leaving): late timers must not touch the next game. */
+  private disposed = false;
+  private hintTok = 0;
   private hintPair: [number, number] | null = null;
   private center: THREE.Vector3;
 
@@ -84,7 +87,7 @@ class DimensionsSession implements MiniSession {
       const mid = b.pose(a)!.pos.add(b.pose(id)!.pos).multiplyScalar(0.5);
       b.remove(a, { to: mid });
       b.remove(id, { to: mid });
-      window.setTimeout(() => this.host.burst(mid.clone().setY(mid.y + 0.3)), 380);
+      this.later(() => this.host.burst(mid.clone().setY(mid.y + 0.3)), 380);
       const t = this.clock.elapsed;
       this.combo = t - this.lastPair <= 4 ? this.combo + 1 : 1;
       this.bestCombo = Math.max(this.bestCombo, this.combo);
@@ -93,13 +96,14 @@ class DimensionsSession implements MiniSession {
       if (this.clock.limit) this.clock.add(2);
       this.host.sound(this.combo > 2 ? 'kong' : 'pung');
       if (this.g.left === 0) {
-        this.refresh();
-        window.setTimeout(() => this.win(), 600);
+        // Over at once (no undo or time-out in the gap); the result shows once the last pair has gone.
+        this.win(600);
         return;
       }
       // Frame what is left as the block shrinks.
-      window.setTimeout(() => !this.ended && this.host.fit(), 500);
-      if (!this.g.pairs().length) window.setTimeout(() => this.lose(tr('No more moves')), 900);
+      this.later(() => !this.ended && this.host.fit(), 500);
+      // Still stuck when the loss lands: an undo in the meantime gets the player out.
+      if (!this.g.pairs().length) this.later(() => !this.g.pairs().length && this.lose(tr('No more moves')), 900);
       return this.refresh();
     }
     this.sel = id;
@@ -121,7 +125,9 @@ class DimensionsSession implements MiniSession {
     this.hints--;
     this.score = Math.max(0, this.score - 5);
     this.refresh();
-    window.setTimeout(() => {
+    const tok = ++this.hintTok;
+    this.later(() => {
+      if (tok !== this.hintTok) return;
       this.hintPair = null;
       if (!this.ended) this.refresh();
     }, 2800);
@@ -137,8 +143,12 @@ class DimensionsSession implements MiniSession {
     return !this.ended && this.g.history.length > 0;
   }
   undo() {
+    if (!this.canUndo()) return false;
     const m = this.g.undo();
     if (!m) return false;
+    // The pair's two bonus seconds go back too, so undo and redo cannot farm time.
+    if (this.clock.limit) this.clock.add(-2);
+    this.hintPair = null;
     for (const id of m) this.host.board.restore(id, { pos: this.world(this.g.blocks[id]), quat: new THREE.Quaternion(), scale: 1 });
     this.score = Math.max(0, this.score - 10);
     this.combo = 0;
@@ -163,12 +173,20 @@ class DimensionsSession implements MiniSession {
   variant() {
     return this.host.options.shape ?? 'cube';
   }
-  private win() {
+  /** A timer that does nothing once the session is disposed. */
+  private later(fn: () => void, ms: number) {
+    window.setTimeout(() => !this.disposed && fn(), ms);
+  }
+
+  private win(delay = 0) {
     if (this.ended) return;
     this.ended = true;
+    this.sel = null;
+    this.refresh();
     const bonus = this.clock.limit ? Math.round(this.clock.left * 2) : Math.max(0, Math.round(this.g.n * 3 - this.clock.elapsed));
     this.score += bonus;
-    this.host.finish({ won: true, score: this.score, seconds: this.clock.elapsed, cleared: this.g.n, total: this.g.n, notes: [...(bonus ? [tr('Time bonus +{n}', { n: bonus })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])] });
+    const result = { won: true, score: this.score, seconds: this.clock.elapsed, cleared: this.g.n, total: this.g.n, notes: [...(bonus ? [tr('Time bonus +{n}', { n: bonus })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])] };
+    this.later(() => this.host.finish(result), delay);
   }
   private lose(why: string) {
     if (this.ended) return;
@@ -177,6 +195,7 @@ class DimensionsSession implements MiniSession {
   }
   dispose() {
     this.ended = true;
+    this.disposed = true;
   }
 }
 
@@ -198,6 +217,7 @@ registerMiniGame({
   ],
   tools: { hint: true, undo: true },
   daily: true,
-  reward: (r, level) => (r.won ? Math.round((40 + r.total) * PAY[level] - r.hints * 4 - r.undos) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
+  // A win never pays less than the best a loss could (25 × level).
+  reward: (r, level) => (r.won ? Math.max(Math.round(25 * PAY[level]), Math.round((40 + r.total) * PAY[level] - r.hints * 4 - r.undos)) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
   start: (host) => new DimensionsSession(host),
 });

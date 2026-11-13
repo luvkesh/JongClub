@@ -256,7 +256,11 @@ export class MiniPlay {
     const H = window.innerHeight;
     const tb = top?.getBoundingClientRect();
     const bb = bar?.getBoundingClientRect();
-    this.cam.insets = { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: bb ? Math.max(40, H - bb.top + 6) : 86, left: 10, right: 10 };
+    // Short landscape screens stand the tool bar up along the right edge (CSS), so the board gets the height.
+    const side = !!bb && bb.height > bb.width;
+    this.cam.insets = side
+      ? { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: 12, left: 10, right: Math.max(10, window.innerWidth - bb!.left + 6) }
+      : { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: bb ? Math.max(40, H - bb.top + 6) : 86, left: 10, right: 10 };
     if (refit) this.fit();
   }
 
@@ -300,7 +304,8 @@ export class MiniPlay {
     this.counts = { hints: 0, undos: 0, shuffles: 0 };
     for (const k of [...this.stats.keys()]) this.setStat(k, null);
     const rng = new Rng(this.seed);
-    this.host = {
+    // A late timer from a game already left must not reach the next board.
+    const host: MiniHost = (this.host = {
       board: this.board,
       camera: this.cam,
       rng,
@@ -314,12 +319,12 @@ export class MiniPlay {
         this.stage.wake(1200);
       },
       setStat: (id, text, label) => this.setStat(id, text, label),
-      toast: (text, tone) => this.toast(text, tone),
+      toast: (text, tone) => host === this.host && this.toast(text, tone),
       sound: (name) => sound.play(name),
-      finish: (r) => this.finish(r),
-      used: (what) => this.counts[what]++,
+      finish: (r) => host === this.host && this.finish(r),
+      used: (what) => host === this.host && this.counts[what]++,
       refreshButtons: () => this.refreshButtons(),
-    };
+    });
     this.session = this.def.start(this.host);
     // Portrait phones: look down on flat boards from higher up, so their width fills the screen.
     if (this.def.shape !== 'cube' && !this.def.ownPortraitCamera && window.innerWidth / window.innerHeight < 0.85 && this.cam.home.pitch < 76) {
@@ -362,7 +367,7 @@ export class MiniPlay {
   private useHint() {
     if (this.finished || !this.session.hint) return;
     if (this.session.hint()) this.counts.hints++;
-    else this.toast(tr('No pair to show. Try a shuffle.'), 'bad');
+    else if (this.tools.has('shuffle') && (this.session.canUse?.('shuffle') ?? true)) this.toast(tr('No pair to show. Try a shuffle.'), 'bad');
     this.refreshButtons();
   }
   private useUndo() {
@@ -397,14 +402,26 @@ export class MiniPlay {
 
   showHelp() {
     const lines = this.def.howTo;
+    // Mei reads the sheet on request (and by herself when "Speak all content" is on).
+    let reading = 0;
+    let on = false;
+    const listen = h('button', { type: 'button', class: 'btn ghost mini-listen', disabled: !narrator.enabled }) as HTMLButtonElement;
+    const paint = (v: boolean) => ((on = v), (listen.innerHTML = `${icon(v ? 'speakerOff' : 'speaker')}<span>${v ? tr('Pause') : tr('Listen to Mei')}</span>`));
+    const read = () => {
+      const mine = ++reading;
+      paint(true);
+      void narrator.say(narrator.recorded ? howToLine(this.def) : lines.join(' ')).then(() => mine === reading && paint(false));
+    };
+    listen.onclick = () => (on ? (reading++, narrator.stop(), paint(false)) : read());
+    paint(false);
     this.sheet(
       h('p', { class: 'eyebrow' }, tr('How to play')),
       h('h3', {}, this.def.title),
       h('ol', { class: 'mini-howto' }, ...lines.map((l) => h('li', {}, l))),
-      h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => ((this.app.modal.hidden = true), narrator.stop()) }, tr('Play'))),
+      h('div', { class: 'btn-row' }, listen, h('button', { class: 'btn primary', onclick: () => ((this.app.modal.hidden = true), narrator.stop()) }, tr('Play'))),
     );
     // Mei's clip is keyed by the English text; a device voice reads the sheet as shown.
-    narrator.auto(narrator.recorded ? howToLine(this.def) : lines.join(' '));
+    if (narrator.speakAll) read();
   }
 
   private askLeave() {

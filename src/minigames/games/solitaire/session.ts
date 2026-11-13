@@ -46,12 +46,17 @@ export class SolitaireSession implements MiniSession {
   private clearedTotal = 0;
   private stuck = false;
   private pairsDone = 0;
+  /** The board is cleared and the win is on its way: the clock stops and nothing more can be done. */
+  private clearing = false;
   private rng: Rng;
+  /** Hints and pause suggestions draw from their own stream, so pausing never changes later deals or shuffles. */
+  private hintRng: Rng;
 
   constructor(private host: MiniHost, private mode: SolitaireMode, layoutIds: string[]) {
     const pick = host.options.layout && host.options.layout !== 'random' ? host.options.layout : layoutIds[host.rng.int(layoutIds.length)];
     this.layout = layoutById(pick);
     this.rng = host.rng;
+    this.hintRng = new Rng((host.seed ^ 0x5bd1e995) >>> 0);
     this.hintsLeft = HINTS[host.level];
     this.shufflesLeft = SHUFFLES[host.level];
     this.clock = new GameClock(mode.clock === 'classic' ? 0 : mode.seconds ?? 300);
@@ -92,6 +97,7 @@ export class SolitaireSession implements MiniSession {
       this.host.sound('shuffle');
     }
     this.sel = null;
+    this.hintPair = null;
     this.stuck = false;
     this.host.fit(first);
     this.refresh();
@@ -175,6 +181,7 @@ export class SolitaireSession implements MiniSession {
         this.refresh();
         return;
       }
+      this.clearing = true;
       this.refresh();
       window.setTimeout(() => this.win(), 650);
       return;
@@ -189,15 +196,29 @@ export class SolitaireSession implements MiniSession {
     this.stuck = moves === 0;
     if (this.stuck) {
       if (this.shufflesLeft > 0) this.host.toast(tr('No more moves. Shuffle the tiles to carry on.'), 'bad');
-      else window.setTimeout(() => this.lose(tr('No more moves')), 900);
+      else this.loseIfStuck(900);
     }
     this.refresh();
   }
 
   suggest(): number[] | null {
-    if (this.ended) return [];
+    // Nothing to show while a cleared board waits for the win or the next Blitz board.
+    if (this.ended || this.clearing || !this.g.left) return [];
     const p = this.g.pairs();
-    return p.length ? [...p[this.rng.int(p.length)]] : null;
+    return p.length ? [...p[this.hintRng.int(p.length)]] : null;
+  }
+
+  /** A dead end with no shuffle to get out of it: the game ends, unless the player has undone a move meanwhile. */
+  private loseIfStuck(ms: number) {
+    window.setTimeout(() => {
+      if (!this.ended && this.g.left && !this.g.pairs().length) this.deadEnd(tr('No more moves'));
+    }, ms);
+  }
+
+  /** No way on: a Blitz run ends with every board it cleared counted; other games are lost. */
+  private deadEnd(why: string) {
+    if (this.mode.clock === 'blitz') this.endBlitz(why);
+    else this.lose(why);
   }
 
   hint(): boolean {
@@ -205,18 +226,18 @@ export class SolitaireSession implements MiniSession {
     const pairs = this.g.pairs();
     if (!pairs.length) return false;
     // The pair that frees the most next: prefer tiles with others on their sides or below.
-    this.hintPair = pairs[this.rng.int(pairs.length)];
+    this.hintPair = pairs[this.hintRng.int(pairs.length)];
     this.hintUntil = performance.now() / 1000 + 2.6;
     this.hintsLeft--;
     this.score = Math.max(0, this.score - 5);
     this.host.sound('click');
     this.refresh();
-    window.setTimeout(() => this.refresh(), 2700);
+    window.setTimeout(() => !this.ended && this.refresh(), 2700);
     return true;
   }
 
   canUndo() {
-    return !this.ended && this.g.history.length > 0;
+    return !this.ended && !this.clearing && this.g.history.length > 0;
   }
 
   undo(): boolean {
@@ -231,6 +252,7 @@ export class SolitaireSession implements MiniSession {
       this.pairsDone = Math.max(0, this.pairsDone - 1);
     } else this.moveAll();
     this.sel = null;
+    this.hintPair = null;
     this.stuck = this.g.pairs().length === 0;
     this.host.sound('slide');
     this.refresh();
@@ -238,19 +260,21 @@ export class SolitaireSession implements MiniSession {
   }
 
   canUse(tool: 'hint' | 'shuffle') {
-    if (this.ended) return false;
-    return tool === 'hint' ? this.hintsLeft > 0 && this.g.pairs().length > 0 : this.shufflesLeft > 0;
+    if (this.ended || this.clearing) return false;
+    return tool === 'hint' ? this.hintsLeft > 0 && this.g.pairs().length > 0 : this.shufflesLeft > 0 && this.g.left >= 2;
   }
 
   shuffle(): boolean {
-    if (this.ended || this.shufflesLeft <= 0) return false;
+    // Nothing to shuffle on a cleared board (between Blitz boards).
+    if (this.ended || this.clearing || this.shufflesLeft <= 0 || this.g.left < 2) return false;
     if (!this.g.shuffle(this.rng)) {
       this.host.toast(tr('These tiles cannot be cleared, whatever the order.'), 'bad');
-      window.setTimeout(() => this.lose(tr('No more moves')), 1200);
+      this.loseIfStuck(1200);
       return false;
     }
     this.shufflesLeft--;
     this.sel = null;
+    this.hintPair = null;
     this.moveAll();
     this.host.sound('shuffle');
     this.stuck = false;
@@ -261,7 +285,7 @@ export class SolitaireSession implements MiniSession {
   /** Mahjong Shuffle: the board mixes itself, free of charge. */
   private autoShuffle() {
     if (this.ended || !this.g.left) return;
-    if (!this.g.shuffle(this.rng)) return this.lose(tr('No more moves'));
+    if (!this.g.shuffle(this.rng)) return this.deadEnd(tr('No more moves'));
     this.sel = null;
     this.hintPair = null;
     this.g.history = [];
@@ -290,7 +314,7 @@ export class SolitaireSession implements MiniSession {
   }
 
   tick(dt: number) {
-    if (this.ended) return;
+    if (this.ended || this.clearing) return;
     this.clock.tick(dt);
     if (this.combo && this.clock.elapsed - this.lastPair > COMBO_GAP) {
       this.combo = 0;
@@ -324,17 +348,18 @@ export class SolitaireSession implements MiniSession {
     });
   }
 
-  private endBlitz() {
+  private endBlitz(why?: string) {
     if (this.ended) return;
     this.ended = true;
-    const cleared = this.clearedTotal + (this.g.total - this.g.left);
+    // A board cleared just before the bell is already in clearedTotal.
+    const cleared = this.clearedTotal + (this.g.left ? this.g.total - this.g.left : 0);
     this.host.finish({
       won: this.pairsDone > 0,
       score: this.score,
       seconds: this.clock.elapsed,
       cleared,
       total: cleared,
-      notes: [tr('{n} pairs cleared', { n: this.pairsDone }), ...(this.boards ? [tr('{n} boards cleared', { n: this.boards })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])],
+      notes: [...(why ? [why] : []), tr('{n} pairs cleared', { n: this.pairsDone }), ...(this.boards ? [tr('{n} boards cleared', { n: this.boards })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])],
     });
   }
 

@@ -106,6 +106,7 @@ export function evaluateDiscards(game: MahjongGame, seat: number): DiscardEval[]
   const chows = rules.chows !== false;
   const orphans = !open && rules.thirteenOrphans;
   const voidKind = voidSuit(game, seat);
+  const inexact = approxShapes(rules);
   for (let k = 0; k < KIND_COUNT; k++) {
     if (!counts[k]) continue;
     counts[k]--;
@@ -125,13 +126,15 @@ export function evaluateDiscards(game: MahjongGame, seat: number): DiscardEval[]
     counts[k]++;
     // Ready in shape only: keep the waits the rules would really pay out on (a minimum value,
     // a 2-5-8 pair, a compulsory passport, a clean hand...). None at all is as good as a tile short.
+    // Where the quick shanten only estimates a shape (mixed sets, passports), a hand it reads as
+    // further away may already be ready: the win test settles it.
     let ready = s;
     let readyUke = uke;
     let readyImp = improvers;
-    if (s === 0) {
+    if (s === 0 || (s > 0 && s < 99 && inexact)) {
       const ws = winningWaits(game, seat, k);
-      if (!ws.length) (ready = 1), (readyUke = 0), (readyImp = []);
-      else (readyImp = ws.filter((w) => unseen[w] > 0)), (readyUke = readyImp.reduce((a, w) => a + unseen[w], 0));
+      if (ws.length) (ready = 0), (readyImp = ws.filter((w) => unseen[w] > 0)), (readyUke = readyImp.reduce((a, w) => a + unseen[w], 0));
+      else if (s === 0) (ready = 1), (readyUke = 0), (readyImp = []);
     }
     let shapeBonus = 0;
     const near = (d: number) => {
@@ -194,12 +197,20 @@ export function dominantSuit(game: MahjongGame, seat: number) {
   return Object.entries(tally).sort((a, b) => b[1] - a[1])[0][0];
 }
 
+/** Does the quick shanten only estimate one of these shapes (see SpecialShape.approx)? */
+export const approxShapes = (rules: ShapeRules) => !!rules.special?.some((sp) => sp.approx);
+
 /** Shanten of the hand now (13-tile view: without the drawn tile if 14). */
 export function currentShanten(game: MahjongGame, seat: number) {
   const pl = game.players[seat];
-  const s = shantenWith(game.naturalCounts(pl.hand), pl.melds.length, game.shapesFor(seat), handWilds(game, seat));
-  // Ready in shape with no wait the rules accept is a tile short (13-tile view only).
-  if (s === 0 && pl.hand.length % 3 === 1 && !game.profile.card && !winningWaits(game, seat).length) return 1;
+  const rules = game.shapesFor(seat);
+  const s = shantenWith(game.naturalCounts(pl.hand), pl.melds.length, rules, handWilds(game, seat));
+  if (pl.hand.length % 3 === 1 && !game.profile.card) {
+    // Ready in shape with no wait the rules accept is a tile short (13-tile view only).
+    if (s === 0 && !winningWaits(game, seat).length) return 1;
+    // An estimated shape may be ready already (mixed sets, passports).
+    if (s > 0 && s < 99 && approxShapes(rules) && winningWaits(game, seat).length) return 0;
+  }
   return s;
 }
 
