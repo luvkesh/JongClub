@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT } from '../board';
-import { GameClock, freeLook, goldMaterial, pairsFromSet, tilesMatch } from '../helpers';
+import { GameClock, freeLook, goldMaterial, matchGroup, pairsFromSet, tilesMatch } from '../helpers';
 import type { Rng } from '../../engine/rng';
 import type { MiniHost, MiniLevel, MiniSession } from '../types';
 
@@ -67,6 +67,17 @@ export class Rows {
   }
   get count() {
     return this.rows.reduce((n, r) => n + this.live(r).length, 0);
+  }
+  /** Whether any two tiles on the board match at all (else no shuffle can make a pair: wait for the next row). */
+  canPair() {
+    const seen = new Set<number>();
+    for (const r of this.rows)
+      for (const id of this.live(r)) {
+        const g = matchGroup(this.kinds[id]);
+        if (seen.has(g)) return true;
+        seen.add(g);
+      }
+    return false;
   }
   /** Deal the live tiles' kinds round again so that at least one pair is free. */
   shuffle(rng: Rng): boolean {
@@ -237,16 +248,18 @@ class SurvivalSession implements MiniSession {
   suggest(): number[] | null {
     if (this.ended) return [];
     const p = this.g.pairs();
-    if (!p.length) return this.g.count ? null : [];
+    // No pair and none a shuffle could make: the next row brings partners, so there is nothing to nudge.
+    if (!p.length) return this.g.canPair() ? null : [];
     return p[this.host.rng.int(p.length)];
   }
   hint() {
-    if (this.ended) return false;
+    if (this.ended || this.hintPair.length) return false;
     const p = this.g.pairs();
     if (!p.length) return false;
-    this.hintPair = p[0];
+    const pair = (this.hintPair = p[0]);
     this.refresh();
     window.setTimeout(() => {
+      if (this.hintPair !== pair) return;
       this.hintPair = [];
       if (!this.ended) this.refresh();
     }, 2200);
@@ -265,19 +278,20 @@ class SurvivalSession implements MiniSession {
       }),
     );
     this.sel = null;
+    this.hintPair = [];
     this.host.sound('shuffle');
     this.refresh();
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
     if (this.ended) return false;
-    return tool === 'hint' ? this.g.pairs().length > 0 : this.shuffles > 0 && this.g.count > 1;
+    return tool === 'hint' ? !this.hintPair.length && this.g.pairs().length > 0 : this.shuffles > 0 && this.g.canPair();
   }
   badges() {
     return { shuffle: String(this.shuffles) };
   }
   attention() {
-    return !this.ended && this.g.count > 1 && !this.g.pairs().length && this.shuffles > 0 ? ('shuffle' as const) : null;
+    return !this.ended && this.g.canPair() && !this.g.pairs().length && this.shuffles > 0 ? ('shuffle' as const) : null;
   }
 
   tick(dt: number) {

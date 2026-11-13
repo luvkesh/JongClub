@@ -180,7 +180,8 @@ class BossSession implements MiniSession {
       this.walls++;
       this.host.toast(tr('A new wall rises!'), 'info');
       this.later(() => !this.ended && (this.deal(), this.host.fit()), 650);
-    } else if (!this.open(1).length && !this.locked.size && !this.shuffles) {
+    } else if (!this.g.pairs(1).length && !this.shuffles) {
+      // A dead end with no shuffle left (locks do not matter: they hold no pair) ends the fight.
       this.later(() => !this.g.pairs(1).length && this.end(false, tr('No more moves')), 900);
     } else if (!this.g.pairs(1).length) this.host.toast(tr('No more moves. Shuffle the tiles to carry on.'), 'bad');
     this.refresh();
@@ -218,9 +219,10 @@ class BossSession implements MiniSession {
     b.moveTo(BOSS_ID, { pos: p }, { dur: 0.25 });
     this.host.sound('kong');
     if (kind === 'heal') {
-      const gain = Math.round(this.boss.hp * 0.08);
-      this.hp = Math.min(this.boss.hp, this.hp + gain);
-      this.host.toast(tr('{boss} heals {n}', { boss: this.boss.name, n: gain }), 'bad');
+      // What it really heals: a boss at full health gains nothing (and says nothing).
+      const gain = Math.max(0, Math.min(Math.round(this.boss.hp * 0.08), this.boss.hp - this.hp));
+      this.hp += gain;
+      if (gain) this.host.toast(tr('{boss} heals {n}', { boss: this.boss.name, n: gain }), 'bad');
     } else if (kind === 'scramble' && this.g.left > 2) {
       this.g.shuffle(this.host.rng);
       this.g.cells.forEach((k, i) => {
@@ -238,19 +240,20 @@ class BossSession implements MiniSession {
       for (const c of pick) this.locked.set(c, this.clock.elapsed + LOCK_SECS);
       if (this.sel !== null && this.locked.has(this.sel)) this.sel = null;
       if (this.hintPair.some((c) => this.locked.has(c))) this.hintPair = [];
-      this.host.toast(tr('{boss} locks {n} tiles!', { boss: this.boss.name, n: pick.length }), 'bad');
+      if (pick.length) this.host.toast(tr('{boss} locks {n} tiles!', { boss: this.boss.name, n: pick.length }), 'bad');
     }
     this.refresh();
   }
 
   suggest(): number[] | null {
-    if (this.ended) return [];
+    // A cleared wall is about to be dealt again: no "no more moves" meanwhile.
+    if (this.ended || !this.g.left) return [];
     const p = this.open();
     if (p.length) return p[this.host.rng.int(p.length)];
     return this.locked.size ? [] : null;
   }
   hint() {
-    if (this.ended || this.hints <= 0) return false;
+    if (this.ended || this.hints <= 0 || this.hintPair.length) return false;
     const p = this.open();
     if (!p.length) return false;
     this.hints--;
@@ -276,15 +279,15 @@ class BossSession implements MiniSession {
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    if (this.ended) return false;
-    return tool === 'hint' ? this.hints > 0 : this.shuffles > 0;
+    if (this.ended || !this.g.left) return false;
+    return tool === 'hint' ? this.hints > 0 && !this.hintPair.length : this.shuffles > 0;
   }
   badges() {
     const n = (v: number) => (Number.isFinite(v) ? String(v) : undefined);
     return { hint: n(this.hints), shuffle: n(this.shuffles) };
   }
   attention() {
-    return !this.ended && !this.g.pairs(1).length && this.shuffles > 0 ? ('shuffle' as const) : null;
+    return !this.ended && this.g.left > 0 && !this.g.pairs(1).length && this.shuffles > 0 ? ('shuffle' as const) : null;
   }
 
   tick(dt: number) {
@@ -303,7 +306,8 @@ class BossSession implements MiniSession {
       this.combo = 0;
       this.host.setStat('combo', null);
     }
-    this.nextAttack -= dt;
+    // The boss waits while a cleared wall is dealt again (nothing to lock or scramble).
+    if (this.g.left) this.nextAttack -= dt;
     if (this.nextAttack <= 0) {
       this.nextAttack = this.boss.every;
       this.attack();

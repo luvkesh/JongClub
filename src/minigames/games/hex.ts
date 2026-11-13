@@ -153,7 +153,7 @@ class HexSession implements MiniSession {
   private g: HexBoard;
   private sel: number | null = null;
   private clock = new GameClock();
-  private undos = new UndoStack<{ a: number; b: number; ka: number; kb: number } | { shuffle: number[] }>();
+  private undos = new UndoStack<{ a: number; b: number; ka: number; kb: number; pts: number } | { shuffle: number[] }>();
   private score = 0;
   private combo = 0;
   private lastPair = -99;
@@ -212,7 +212,8 @@ class HexSession implements MiniSession {
       this.host.sound('click');
       return this.refresh();
     }
-    this.undos.push({ a, b: id, ka: this.g.kinds[a], kb: this.g.kinds[id] });
+    const move = { a, b: id, ka: this.g.kinds[a], kb: this.g.kinds[id], pts: 0 };
+    this.undos.push(move);
     this.g.kinds[a] = this.g.kinds[id] = -1;
     const b = this.host.board;
     const mid = this.world(a).add(this.world(id)).multiplyScalar(0.5);
@@ -225,7 +226,9 @@ class HexSession implements MiniSession {
     this.combo = t - this.lastPair <= 3.5 ? this.combo + 1 : 1;
     this.bestCombo = Math.max(this.bestCombo, this.combo);
     this.lastPair = t;
-    this.score += 10 + 5 * (this.combo - 1);
+    // An undo takes back exactly what the pair scored (combo included), so take-undo-take cannot farm points.
+    move.pts = 10 + 5 * (this.combo - 1);
+    this.score += move.pts;
     this.host.sound(this.combo > 2 ? 'kong' : 'pung');
     if (this.combo > 2) this.host.toast(tr('Combo ×{n}', { n: this.combo }), 'good');
     this.refresh();
@@ -259,9 +262,10 @@ class HexSession implements MiniSession {
       this.g.kinds[m.a] = m.ka;
       this.g.kinds[m.b] = m.kb;
       for (const c of [m.a, m.b]) b.restore(c, { pos: this.world(c), quat: FLAT, scale: 1 });
-      this.score = Math.max(0, this.score - 10);
+      this.score = Math.max(0, this.score - m.pts);
     }
     this.sel = null;
+    this.hintPair = [];
     this.combo = 0;
     this.host.sound('slide');
     this.refresh();
@@ -274,14 +278,16 @@ class HexSession implements MiniSession {
     return p.length ? p[this.hintRng.int(p.length)] : null;
   }
   hint() {
-    if (this.ended || this.hints <= 0) return false;
+    // A second press while a hint shows would spend another (and 5 points) on the same pair.
+    if (this.ended || this.hints <= 0 || this.hintPair.length) return false;
     const p = this.g.pairs(1);
     if (!p.length) return false;
     this.hints--;
-    this.hintPair = p[0];
+    const pair = (this.hintPair = p[0]);
     this.score = Math.max(0, this.score - 5);
     this.refresh();
     window.setTimeout(() => {
+      if (this.hintPair !== pair) return;
       this.hintPair = [];
       if (!this.ended) this.refresh();
     }, 2400);
@@ -301,13 +307,15 @@ class HexSession implements MiniSession {
       b.moveTo(i, { pos: this.world(i) }, { dur: 0.24 });
     });
     this.sel = null;
+    // The lit pair has new faces now.
+    this.hintPair = [];
     this.host.sound('shuffle');
     this.refresh();
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
     if (this.ended) return false;
-    return tool === 'hint' ? this.hints > 0 : this.shuffles > 0;
+    return tool === 'hint' ? this.hints > 0 && !this.hintPair.length : this.shuffles > 0;
   }
   badges() {
     const n = (v: number) => (Number.isFinite(v) ? String(v) : undefined);

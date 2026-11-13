@@ -157,7 +157,7 @@ class Match3Session implements MiniSession {
 
   /** Slide a tile toward a neighbour to swap them. */
   onSwipe(id: number, dx: number, dz: number) {
-    if (this.ended || this.busy) return;
+    if (this.ended || this.busy || !Number.isFinite(dx) || !Number.isFinite(dz)) return;
     const cell = this.idAt.indexOf(id);
     if (cell < 0) return;
     const x = cell % SIZE,
@@ -327,20 +327,22 @@ class Match3Session implements MiniSession {
   }
 
   hint() {
-    if (this.ended || this.busy || this.hints <= 0) return false;
+    // A second press while a hint shows would spend another for the same swap.
+    if (this.ended || this.busy || this.hints <= 0 || this.hintPair) return false;
     const m = this.g.findMove();
     if (!m) return false;
     this.hintPair = m;
     this.hints--;
     this.refresh();
     window.setTimeout(() => {
+      if (this.hintPair !== m) return;
       this.hintPair = null;
       if (!this.ended) this.refresh();
     }, 2400);
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && !this.busy && tool === 'hint' && this.hints > 0;
+    return !this.ended && !this.busy && tool === 'hint' && this.hints > 0 && !this.hintPair;
   }
   badges() {
     return { hint: Number.isFinite(this.hints) ? String(this.hints) : undefined };

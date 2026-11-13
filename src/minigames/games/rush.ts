@@ -184,14 +184,15 @@ class RushSession implements MiniSession {
     return [];
   }
   hint() {
-    if (this.ended || this.busy || this.hints <= 0) return false;
+    // A second press would light the same tile again for another hint.
+    if (this.ended || this.busy || this.hints <= 0 || this.hintId >= 0) return false;
     this.hints--;
     this.hintId = 10 + this.p.choices.indexOf(this.p.answer);
     this.refresh();
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && tool === 'hint' && this.hints > 0;
+    return !this.ended && !this.busy && tool === 'hint' && this.hints > 0 && this.hintId < 0;
   }
   badges() {
     return { hint: String(this.hints) };
