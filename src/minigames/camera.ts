@@ -37,7 +37,7 @@ export class BoardCamera {
   private yaw = 0;
   private pitch = 64;
   private zoom = 1;
-  private cur = { yaw: 0, pitch: 64, zoom: 1, tx: 0, ty: 0, tz: 0, dist: 10 };
+  private cur = { yaw: 0, pitch: 64, zoom: 1, tx: 0, ty: 0, tz: 0, dist: 10, mx: 0, my: 0 };
   private dist = 10;
   private box = new THREE.Box3(new THREE.Vector3(-2, 0, -2), new THREE.Vector3(2, 0.4, 2));
   insets: Insets = { top: 70, bottom: 86, left: 12, right: 12 };
@@ -202,17 +202,22 @@ export class BoardCamera {
     return Math.abs(this.yaw - this.home.yaw) > 1 || Math.abs(this.pitch - this.home.pitch) > 1 || Math.abs(this.zoom - 1) > 0.02;
   }
 
-  /** Frame these bounds (world space). `snap` jumps there instead of easing. */
-  frame(box: THREE.Box3, snap = false) {
+  /**
+   * Frame these bounds (world space). `snap` jumps there instead of easing. `points` (optional) hold
+   * the board more tightly than the box's corners (a stacked board), and are what is fitted to the screen.
+   */
+  frame(box: THREE.Box3, snap = false, points?: THREE.Vector3[]) {
     this.box.copy(box);
+    this.points = points?.length ? points.map((p) => p.clone()) : null;
     box.getCenter(this.target);
     this.settling = true;
     if (snap) {
-      this.cur = { yaw: this.yaw, pitch: this.pitch, zoom: this.zoom, tx: this.target.x, ty: this.target.y, tz: this.target.z, dist: this.cur.dist };
+      this.cur = { yaw: this.yaw, pitch: this.pitch, zoom: this.zoom, tx: this.target.x, ty: this.target.y, tz: this.target.z, dist: this.cur.dist, mx: this.cur.mx, my: this.cur.my };
       this.snapDist = true;
     }
   }
   private snapDist = true;
+  private points: THREE.Vector3[] | null = null;
 
   /** Place the camera for this frame. Returns true while easing. */
   apply(cam: THREE.PerspectiveCamera, dt: number, viewW: number, viewH: number): boolean {
@@ -234,17 +239,25 @@ export class BoardCamera {
     const look = new THREE.Vector3(c.tx, c.ty, c.tz);
     const dir = this.dirFor(c.yaw, c.pitch);
     // The distance that fits the board in the free area, at this angle (zoom 1).
-    this.dist = this.fitDistance(cam, this.target, dir, viewW, viewH);
+    this.fitMid.set(0, 0);
+    this.dist = this.fitDistance(cam, this.target, dir, viewW, viewH, this.points ?? this.boxCorners(this.box), this.insets);
+    // Slide the picture so the board's middle (not the look point) sits in the middle of the free area.
+    const mx = THREE.MathUtils.clamp(this.fitMid.x, -0.5, 0.5),
+      my = THREE.MathUtils.clamp(this.fitMid.y, -0.5, 0.5);
     if (this.snapDist) {
+      c.mx = mx;
+      c.my = my;
       c.dist = this.dist;
       this.snapDist = false;
     }
     c.dist += (this.dist - c.dist) * k;
+    c.mx += (mx - c.mx) * k;
+    c.my += (my - c.my) * k;
     const d = c.dist / c.zoom;
     cam.position.copy(look).addScaledVector(dir, d);
     // Shift the picture so the board sits in the middle of the free area, not the whole screen.
-    const ox = (this.insets.left - this.insets.right) / 2,
-      oy = (this.insets.top - this.insets.bottom) / 2;
+    const ox = (this.insets.left - this.insets.right) / 2 - (c.mx * c.zoom * viewW) / 2,
+      oy = (this.insets.top - this.insets.bottom) / 2 + (c.my * c.zoom * viewH) / 2;
     if (Math.abs(ox) > 0.5 || Math.abs(oy) > 0.5) cam.setViewOffset(viewW, viewH, -ox, -oy, viewW, viewH);
     else cam.clearViewOffset();
     cam.up.set(0, 1, 0);
@@ -252,7 +265,7 @@ export class BoardCamera {
     cam.updateProjectionMatrix();
     cam.updateMatrixWorld();
     const still =
-      Math.abs(this.yaw - c.yaw) < 0.05 && Math.abs(this.pitch - c.pitch) < 0.05 && Math.abs(this.zoom - c.zoom) < 1e-3 && Math.abs(this.dist - c.dist) < 1e-3 && Math.abs(look.x - tx) + Math.abs(look.y - this.target.y) + Math.abs(look.z - tz) < 1e-3;
+      Math.abs(this.yaw - c.yaw) < 0.05 && Math.abs(this.pitch - c.pitch) < 0.05 && Math.abs(this.zoom - c.zoom) < 1e-3 && Math.abs(this.dist - c.dist) < 1e-3 && Math.abs(mx - c.mx) + Math.abs(my - c.my) < 1e-4 && Math.abs(look.x - tx) + Math.abs(look.y - this.target.y) + Math.abs(look.z - tz) < 1e-3;
     this.settling = !still || !!this.spin;
     return this.settling;
   }
@@ -265,23 +278,38 @@ export class BoardCamera {
 
   private fitCam = new THREE.PerspectiveCamera();
   private corners = Array.from({ length: 8 }, () => new THREE.Vector3());
+  private pv = new THREE.Vector3();
+
+  /**
+   * The distance at which `box` would fit the free area `insets` leaves at the home angle: a smaller
+   * distance means bigger tiles (the play shell compares HUD layouts with it).
+   */
+  distanceFor(cam: THREE.PerspectiveCamera, box: THREE.Box3, insets: Insets, w: number, h: number, points?: THREE.Vector3[]) {
+    return this.fitDistance(cam, box.getCenter(new THREE.Vector3()), this.dirFor(this.home.yaw, this.home.pitch), w, h, points?.length ? points : this.boxCorners(box), insets);
+  }
+
+  private boxCorners(b: THREE.Box3) {
+    let i = 0;
+    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) this.corners[i++].set(x, y, z);
+    return this.corners;
+  }
 
   /** Smallest distance at which every corner of the board falls inside the free area. */
-  private fitDistance(cam: THREE.PerspectiveCamera, look: THREE.Vector3, dir: THREE.Vector3, w: number, h: number) {
+  private fitDistance(cam: THREE.PerspectiveCamera, look: THREE.Vector3, dir: THREE.Vector3, w: number, h: number, pts: THREE.Vector3[], insets: Insets) {
     const f = this.fitCam;
     f.fov = cam.fov;
     f.aspect = w / Math.max(1, h);
     f.near = 0.1;
     f.far = 200;
     f.updateProjectionMatrix();
-    const b = this.box;
-    let i = 0;
-    for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) this.corners[i++].set(x, y, z);
     // Free area in normalised device units (the view offset recentres it).
-    const fw = Math.max(80, w - this.insets.left - this.insets.right) / w;
-    const fh = Math.max(80, h - this.insets.top - this.insets.bottom) / h;
-    // Portrait screens are width-bound: let the board run nearly edge to edge.
-    const lim = { x: fw * (w < h ? 0.98 : 0.9), y: fh * 0.9 };
+    const fw = Math.max(80, w - insets.left - insets.right) / w;
+    const fh = Math.max(80, h - insets.top - insets.bottom) / h;
+    // Phones and small tablets need every pixel: portrait screens are width-bound and short landscape
+    // ones height-bound, so there the board runs nearly to the edges of the free area (the insets
+    // already keep it clear of the HUD); big screens keep a calmer margin.
+    const short = Math.min(w, h) <= 500;
+    const lim = { x: fw * (w < h ? 0.99 : short ? 0.97 : 0.9), y: fh * (short ? 0.98 : 0.9) };
     let lo = 0.5,
       hi = 120;
     for (let it = 0; it < 22; it++) {
@@ -290,17 +318,31 @@ export class BoardCamera {
       f.up.set(0, 1, 0);
       f.lookAt(look);
       f.updateMatrixWorld();
-      let ok = true;
-      for (const c of this.corners) {
-        const v = c.clone().project(f);
-        if (v.z > 1 || Math.abs(v.x) > lim.x || Math.abs(v.y) > lim.y) {
+      // The board's picture need not be centred on the look point (a stack's near side looms larger):
+      // what must fit is its span, and the picture is then slid to the middle of the free area.
+      let ok = true,
+        x0 = Infinity,
+        x1 = -Infinity,
+        y0 = Infinity,
+        y1 = -Infinity;
+      for (const c of pts) {
+        const v = this.pv.copy(c).project(f);
+        if (v.z > 1) {
           ok = false;
           break;
         }
+        x0 = Math.min(x0, v.x);
+        x1 = Math.max(x1, v.x);
+        y0 = Math.min(y0, v.y);
+        y1 = Math.max(y1, v.y);
       }
-      if (ok) hi = mid;
-      else lo = mid;
+      if (ok && (x1 - x0) / 2 <= lim.x && (y1 - y0) / 2 <= lim.y) {
+        hi = mid;
+        this.fitMid.set((x0 + x1) / 2, (y0 + y1) / 2);
+      } else lo = mid;
     }
     return hi;
   }
+  /** Where the middle of the board's picture falls (device units) at the last fitted distance. */
+  private fitMid = new THREE.Vector2();
 }

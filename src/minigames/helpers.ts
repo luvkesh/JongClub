@@ -143,3 +143,14 @@ export function woodMaterial(color = '#5b321b') {
 export function goldMaterial(opacity = 1) {
   return new THREE.MeshStandardMaterial({ color: '#f3d48a', emissive: '#c79a3c', emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.3, transparent: opacity < 1, opacity });
 }
+
+/**
+ * A phone held sideways (short and wide): boards that would be tall there lay out wider instead, so
+ * their tiles can be larger. False outside the browser (tests).
+ */
+export function sidewaysPhone(): boolean {
+  if (typeof window === 'undefined') return false;
+  const w = window.innerWidth,
+    h = window.innerHeight;
+  return h <= 500 && w / Math.max(1, h) > 1.3;
+}

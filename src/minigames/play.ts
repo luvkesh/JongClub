@@ -267,25 +267,60 @@ export class MiniPlay {
     }
   }
 
-  /** The board fits between the top bar and the tool bar. */
+  /**
+   * The board fits between the top bar and the tool bar. On short landscape screens (phones held
+   * sideways) the top bar can instead stand as a column down the left edge, giving the board the
+   * screen's full height: both layouts are measured and the one that shows this board's tiles
+   * larger is kept (wide, shallow boards keep the bar along the top).
+   */
   private layoutInsets(refit = false) {
-    const top = this.root.querySelector<HTMLElement>('.mini-top');
-    const bar = this.root.querySelector<HTMLElement>('.mini-tools');
-    const H = window.innerHeight;
-    const tb = top?.getBoundingClientRect();
-    const bb = bar?.getBoundingClientRect();
-    // Short landscape screens stand the tool bar up along the right edge (CSS), so the board gets the height.
-    const side = !!bb && bb.height > bb.width;
-    this.cam.insets = side
-      ? { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: 12, left: 10, right: Math.max(10, window.innerWidth - bb!.left + 6) }
-      : { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: bb ? Math.max(40, H - bb.top + 6) : 86, left: 10, right: 10 };
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    const hud = this.root;
+    if (H <= 500 && W > H) {
+      hud.classList.remove('hud-side');
+      const along = this.measureInsets();
+      hud.classList.add('hud-side');
+      const side = this.measureInsets();
+      const box = this.board.bounds(true),
+        pts = this.board.fitPoints(true);
+      const cam = this.app.table.camera;
+      const useSide = this.cam.distanceFor(cam, box, side, W, H, pts) < this.cam.distanceFor(cam, box, along, W, H, pts) * 0.99;
+      hud.classList.toggle('hud-side', useSide);
+      this.cam.insets = useSide ? side : along;
+    } else {
+      hud.classList.remove('hud-side');
+      this.cam.insets = this.measureInsets();
+    }
     // Toasts sit just under the top bar (whose stats can wrap to two rows on phones), never over it.
     this.toastEl.style.top = `${Math.max(this.cam.insets.top + 4, H * 0.22)}px`;
     if (refit) this.fit();
   }
 
+  /** The space the HUD covers as it stands now. */
+  private measureInsets() {
+    const top = this.root.querySelector<HTMLElement>('.mini-top');
+    const bar = this.root.querySelector<HTMLElement>('.mini-tools');
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    const tb = top?.getBoundingClientRect();
+    const bb = bar?.getBoundingClientRect();
+    // Portrait phones are width-bound: a slim margin at the sides.
+    const edge = W < H ? 6 : 10;
+    // Short landscape screens stand the tool bar up along the right edge (CSS), so the board gets the height;
+    // the top bar may stand down the left edge as well (hud-side).
+    const toolsSide = !!bb && bb.height > bb.width;
+    const topSide = !!tb && this.root.classList.contains('hud-side');
+    return {
+      top: topSide ? 8 : tb ? Math.max(40, tb.bottom + 6) : 70,
+      bottom: toolsSide ? 8 : bb ? Math.max(40, H - bb.top + 6) : 86,
+      left: topSide ? tb!.right + 6 : edge,
+      right: toolsSide ? Math.max(10, W - bb!.left + 6) : edge,
+    };
+  }
+
   private fit(snap = false) {
-    this.cam.frame(this.board.bounds(true), snap);
+    this.cam.frame(this.board.bounds(true), snap, this.board.fitPoints(true));
     this.stage.wake(800);
   }
 
@@ -351,9 +386,12 @@ export class MiniPlay {
       refreshButtons: () => this.refreshButtons(),
     });
     this.session = this.def.start(this.host);
-    // Portrait phones: look down on flat boards from higher up, so their width fills the screen.
-    if (this.def.shape !== 'cube' && !this.def.ownPortraitCamera && window.innerWidth / window.innerHeight < 0.85 && this.cam.home.pitch < 76) {
-      this.cam.home = { ...this.cam.home, pitch: 78 };
+    // Portrait phones and phones held sideways: look down on flat boards from higher up, so the board
+    // fills the screen (a slanted view wastes height and shrinks the far rows).
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    if (this.def.shape !== 'cube' && !this.def.ownPortraitCamera && (W / H < 0.85 || (H <= 500 && W > H)) && this.cam.home.pitch < 76) {
+      this.cam.home = { ...this.cam.home, pitch: W > H ? 84 : 78 };
       this.cam.reset();
     }
     this.layoutInsets();

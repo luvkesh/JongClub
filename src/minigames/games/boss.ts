@@ -9,7 +9,7 @@ import { Rng } from '../../engine/rng';
 import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT, UPRIGHT } from '../board';
-import { GameClock, goldMaterial, matchGroup } from '../helpers';
+import { GameClock, goldMaterial, matchGroup, sidewaysPhone } from '../helpers';
 import type { MiniHost, MiniLevel, MiniSession } from '../types';
 import { Connect, dealConnect, type Cell } from './connect/logic';
 
@@ -34,6 +34,9 @@ const SHUFFLES: Record<MiniLevel, number> = { easy: Infinity, medium: 3, hard: 2
 const HINTS: Record<MiniLevel, number> = { easy: Infinity, medium: 4, hard: 2 };
 const PAY: Record<MiniLevel, number> = { easy: 1, medium: 1.5, hard: 2.2 };
 const BOSS_ID = 100000;
+/** How far the boss leans back when it stands beside the wall (sideways phones), to face the camera above. */
+const LEAN_ANGLE = (52 * Math.PI) / 180;
+const LEAN = new THREE.Quaternion().setFromEuler(new THREE.Euler(-LEAN_ANGLE, 0, 0));
 const LOCK_SECS = 8;
 
 /** Damage for a pair in a combo of `combo` quick pairs. */
@@ -68,6 +71,11 @@ class BossSession implements MiniSession {
   /** Pause suggestions draw from their own stream, so idle time never changes later walls, attacks or shuffles. */
   private hintRng: Rng;
   private fade = 0;
+  /**
+   * Phones held sideways: the boss stands beside the wall, leaning back to face you, instead of
+   * beyond it, so the wall gets the screen's short height and its tiles are larger.
+   */
+  private beside = sidewaysPhone();
 
   constructor(private host: MiniHost) {
     [this.w, this.h] = SIZES[host.level];
@@ -94,11 +102,12 @@ class BossSession implements MiniSession {
     const b = this.host.board;
     const specs = this.g.cells.map((kind, i) => ({ id: i, kind, pos: this.world(i % this.w, Math.floor(i / this.w)), quat: FLAT }));
     // The boss: a great tile standing beyond the wall, facing you.
-    specs.push({ id: BOSS_ID, kind: this.boss.kind, pos: this.bossPos(), quat: UPRIGHT });
+    specs.push({ id: BOSS_ID, kind: this.boss.kind, pos: this.bossPos(), quat: this.beside ? LEAN : UPRIGHT });
     b.build(specs);
     b.place(BOSS_ID, { scale: 2.6 });
     const bp = this.bossPos();
-    b.fitExtra = new THREE.Box3(bp.clone().add(new THREE.Vector3(-b.w * 1.5, -bp.y, -0.1)), bp.clone().add(new THREE.Vector3(b.w * 1.5, bp.y, 0.1)));
+    // Room for the boss as it jumps when struck (beside the wall the frame holds its leaning tile as it is).
+    b.fitExtra = this.beside ? null : new THREE.Box3(bp.clone().add(new THREE.Vector3(-b.w * 1.5, -bp.y, -0.1)), bp.clone().add(new THREE.Vector3(b.w * 1.5, bp.y, 0.1)));
     this.refresh();
   }
 
@@ -108,6 +117,11 @@ class BossSession implements MiniSession {
   }
   private bossPos() {
     const b = this.host.board;
+    if (this.beside) {
+      // To the right of the wall, level with its middle row, its foot on the felt.
+      const x = ((this.w - 1) / 2) * (b.w + 0.02) + b.w / 2 + 0.3 + (b.w * 2.6) / 2;
+      return new THREE.Vector3(x, ((b.h * 2.6) / 2) * Math.cos(LEAN_ANGLE) + 0.02, this.world(0, (this.h - 1) / 2).z);
+    }
     return new THREE.Vector3(0, (b.h * 2.6) / 2, this.world(0, 0).z - b.h * 1.9);
   }
 

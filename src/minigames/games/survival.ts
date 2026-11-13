@@ -149,9 +149,10 @@ class SurvivalSession implements MiniSession {
     b.root.add(this.line);
     host.camera.home = { yaw: 0, pitch: 66 };
     host.camera.reset();
-    b.build(kinds.map((kind, id) => ({ id, kind, pos: this.pos(id, -2), quat: FLAT })));
+    // Tiles still to come wait hidden on the first row, inside the frame (the camera frames every tile, hidden or not).
+    b.build(kinds.map((kind, id) => ({ id, kind, pos: this.pos(id, 0), quat: FLAT })));
     for (let id = 0; id < kinds.length; id++) b.hide(id);
-    b.fitExtra = new THREE.Box3(new THREE.Vector3(-(st.w / 2) * b.w - 0.1, 0, this.rowZ(0) - b.h * 0.6), new THREE.Vector3((st.w / 2) * b.w + 0.1, 0.2, this.rowZ(st.max - 1) + b.h * 0.8));
+    b.fitExtra = new THREE.Box3(new THREE.Vector3(-(st.w / 2) * b.w - 0.1, 0, this.rowZ(0) - b.h * 0.5 - 0.04), new THREE.Vector3((st.w / 2) * b.w + 0.1, 0.2, this.rowZ(st.max - 1) + b.h / 2 + 0.2));
     for (let i = 0; i < st.start; i++) this.pushRow(true);
     host.fit(true);
     this.refresh();

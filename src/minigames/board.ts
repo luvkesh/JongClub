@@ -762,15 +762,72 @@ export class TileBoard {
   bounds(all = false): THREE.Box3 {
     const b = new THREE.Box3();
     if (this.fitExtra) b.union(this.fitExtra);
-    const half = new THREE.Vector3(Math.max(this.w, this.h) / 2, this.d, Math.max(this.w, this.h) / 2);
+    // Each tile's own footprint as it lies (a flat tile is narrower across than deep), so the frame
+    // hugs the board instead of treating every tile as a square of its long side.
+    const half = new THREE.Vector3();
+    const e = m4.elements;
+    const hw = this.w / 2 + 0.01,
+      hh = this.h / 2 + 0.01,
+      hd = this.d / 2 + 0.01;
     for (const t of this.tiles.values()) {
       if (!all && !t.alive) continue;
-      const p = (t.tween?.to ?? t.pose).pos;
-      b.expandByPoint(v3.copy(p).sub(half));
-      b.expandByPoint(v3.copy(p).add(half));
+      const pose = t.tween?.to ?? t.pose;
+      // Scaled-up tiles (Boss Challenge's giant) count at their size; leaving tiles at their full size.
+      m4.makeRotationFromQuaternion(pose.quat).scale(s3.setScalar(Math.max(1, pose.scale)));
+      half.set(
+        Math.abs(e[0]) * hw + Math.abs(e[4]) * hh + Math.abs(e[8]) * hd,
+        Math.max(this.d, Math.abs(e[1]) * hw + Math.abs(e[5]) * hh + Math.abs(e[9]) * hd),
+        Math.abs(e[2]) * hw + Math.abs(e[6]) * hh + Math.abs(e[10]) * hd,
+      );
+      b.expandByPoint(v3.copy(pose.pos).sub(half));
+      b.expandByPoint(v3.copy(pose.pos).add(half));
     }
     if (b.isEmpty()) b.set(new THREE.Vector3(-1, 0, -1), new THREE.Vector3(1, 0.3, 1));
     return b.applyMatrix4(this.root.matrixWorld);
+  }
+
+  /**
+   * Points (world space) whose hull holds every tile, for framing: a stacked board's bounding box
+   * has the top layer's height over its whole footprint, which seen from above frames the board
+   * well short of the screen. The tile corners are thinned to the outermost ones in many directions.
+   */
+  fitPoints(all = false): THREE.Vector3[] {
+    const pts: THREE.Vector3[] = [];
+    const hw = this.w / 2,
+      hh = this.h / 2,
+      hd = this.d / 2;
+    for (const t of this.tiles.values()) {
+      if (!all && !t.alive) continue;
+      const pose = t.tween?.to ?? t.pose;
+      const k = Math.max(1, pose.scale);
+      for (const x of [-hw, hw]) for (const y of [-hh, hh]) for (const z of [-hd, hd]) pts.push(new THREE.Vector3(x * k, y * k, z * k).applyQuaternion(pose.quat).add(pose.pos));
+    }
+    if (this.fitExtra) {
+      const e = this.fitExtra;
+      for (const x of [e.min.x, e.max.x]) for (const y of [e.min.y, e.max.y]) for (const z of [e.min.z, e.max.z]) pts.push(new THREE.Vector3(x, y, z));
+    }
+    if (!pts.length) return [];
+    let out = pts;
+    if (pts.length > 96) {
+      // The outermost point in each of many directions (round the board, level, and tilted up and down).
+      const keep = new Set<THREE.Vector3>();
+      const dir = new THREE.Vector3();
+      for (const e of [-0.6, -0.2, 0.2, 0.6, 1.2])
+        for (let k = 0; k < 48; k++) {
+          const a = (k / 48) * Math.PI * 2;
+          dir.set(Math.cos(a), e, Math.sin(a));
+          let best = pts[0],
+            bd = -Infinity;
+          for (const p of pts) {
+            const d = p.dot(dir);
+            if (d > bd) (bd = d), (best = p);
+          }
+          keep.add(best);
+        }
+      out = [...keep];
+    }
+    for (const p of out) p.applyMatrix4(this.root.matrixWorld);
+    return out;
   }
 
   /** Screen position (client px) of a board point. */

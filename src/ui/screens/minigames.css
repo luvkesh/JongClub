@@ -245,3 +245,29 @@
   .mini-sheet .mini-pay-n { font-size: 28px; }
   .mini-sheet .btn-row { margin-top: 0; }
 }
+
+/* Short landscape screens: a slimmer top bar (touch targets keep their size). */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* The stats stay beside the title on narrow ones too (wrapping among themselves), not on a second row. */
+  .mini-top { flex-wrap: nowrap; align-items: flex-start; }
+  .mini-stats { order: 0; flex: 1 1 0; min-width: 0; justify-content: center; }
+  .mini-title { padding: 3px; padding-inline-end: 12px; }
+  .mini-stat { padding: 4px 10px; }
+  .mini-stat .v { font-size: 16px; }
+}
+/* Short landscape screens, when it shows the board larger (play.ts measures both ways): the top bar
+   stands as a column down the left edge (title, stats, then help and restart), so the board gets the
+   screen's full height. */
+.mini-hud.hud-side .mini-top {
+  top: calc(env(safe-area-inset-top, 0px) + 6px); bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); right: auto; width: 150px;
+  flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; gap: 6px;
+}
+.mini-hud.hud-side .mini-title { gap: 8px; padding: 3px; padding-inline-end: 10px; border-radius: 24px; }
+.mini-hud.hud-side .mini-title > div { min-width: 0; }
+.mini-hud.hud-side .mini-title .icon-btn { flex: none; }
+.mini-hud.hud-side .mini-name { white-space: normal; font-size: 15px; line-height: 1.1; }
+.mini-hud.hud-side .mini-stats { order: 0; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 4px; justify-content: flex-start; }
+.mini-hud.hud-side .mini-stat { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; padding: 4px 10px; }
+.mini-hud.hud-side .mini-stat .v { font-size: 15px; }
+.mini-hud.hud-side .mini-actions { margin-top: auto; }
+.mini-hud.hud-side .mini-tools { top: 50%; }
