@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" href="{{FAVICON}}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..700&family=Playfair+Display:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&family=Pinyon+Script&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&text=%E6%9D%B1%E5%8D%97%E8%A5%BF%E5%8C%97&display=swap">
 <style>
 /* The site reads as one evening at the club: arrive, learn, play, collect,
@@ -1433,6 +1433,9 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   .scene-about div.house-tile::before { content: none; }
   .scene-about div.house-tile img { display: block; width: 100%; height: auto; margin: 0; filter: none; border-radius: 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 34%, #000 86%, transparent), linear-gradient(transparent, #000 22%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 34%, #000 86%, transparent), linear-gradient(transparent, #000 22%, #000 86%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; }
 }
+/* Big numerals (user 2026-11-13: "use a different font for the numbers"): the reference's high-contrast serif. */
+.sn b, .vhead .big, .families b { font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif; font-weight: 600; font-variant-numeric: lining-nums; letter-spacing: 0; }
+.sn b { font-size: 11.6cqw; }
 </style>
 
 <header class="top">
