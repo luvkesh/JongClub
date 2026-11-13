@@ -194,7 +194,7 @@ class ColourSession implements MiniSession {
       if (g.length === CAP && g.every((k) => family(k) === family(g[0]))) return 'free';
       return 'normal';
     });
-    this.host.setStat('left', `${sorted} / ${this.g.lanes.filter((l) => l.length).length}`, tr('Rows sorted'));
+    this.host.setStat('left', `${sorted} / ${new Set(this.g.lanes.flat().map(family)).size}`, tr('Rows sorted'));
     this.host.setStat('moves', String(this.moves), tr('Moves'));
     this.host.refreshButtons();
   }
