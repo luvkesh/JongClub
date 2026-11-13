@@ -1,5 +1,12 @@
 // Second deep retest (menus, Learn, account and economy): one test per fix.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const store = new Map<string, string>();
+(globalThis as { localStorage?: unknown }).localStorage = {
+  getItem: (k: string) => store.get(k) ?? null,
+  setItem: (k: string, v: string) => void store.set(k, v),
+  removeItem: (k: string) => void store.delete(k),
+};
 import { loadProfile } from '../src/progression/profile';
 import { dailyHandsInWeek, weekOf } from '../src/economy/economy';
 import { dailyFieldDone, dailyKey, dailySweepDone } from '../src/club/daily';
@@ -61,5 +68,43 @@ describe('daily challenges: the all-five sweep bonus', () => {
     expect(dailySweepDone({ ...rec, speed: 640 })).toBe(true);
     expect(dailySweepDone({ ...rec, winds: false })).toBe(false);
     expect(dailyFieldDone({ discard: 0 }, 'discard')).toBe(true);
+  });
+});
+
+describe('guest progress moves to the first new account', () => {
+  beforeEach(() => store.clear());
+
+  it('season XP, skills, drills, shield, clubs and placement move with the profile', async () => {
+    const { activate, guestAccount, signOut } = await import('../src/auth/account');
+    const { seasonProgress, addSeasonXp } = await import('../src/progression/season');
+    activate(guestAccount());
+    const p = loadProfile();
+    p.jongPoints = 500;
+    const { saveProfile } = await import('../src/progression/profile');
+    saveProfile(p);
+    addSeasonXp('lesson', 80);
+    const guestXp = seasonProgress().xp;
+    expect(guestXp).toBeGreaterThan(0);
+    for (const k of ['jongclub.skills.v1', 'jongclub.drills.v1', 'jongclub.streak-shield.v1', 'jongclub.clubs.v1', 'jongclub.placement.v1']) store.set(k, `{"from":"${k}"}`);
+
+    activate({ id: 'email-q', provider: 'email', name: 'Quinn', email: 'q@x.co', since: '' });
+    expect(loadProfile().jongPoints).toBe(500);
+    expect(seasonProgress().xp).toBe(guestXp);
+    for (const k of ['jongclub.skills.v1', 'jongclub.drills.v1', 'jongclub.streak-shield.v1', 'jongclub.clubs.v1', 'jongclub.placement.v1']) {
+      expect(store.get(`${k}:email-q`), k).toBe(`{"from":"${k}"}`);
+      expect(store.has(k), k).toBe(false);
+    }
+
+    // Signing out leaves a fresh guest, season XP included.
+    signOut();
+    activate(guestAccount());
+    expect(seasonProgress().xp).toBe(0);
+    // Signing back in to an account that has its own slot moves nothing.
+    addSeasonXp('lesson', 80);
+    saveProfile(loadProfile());
+    activate({ id: 'email-q', provider: 'email', name: 'Quinn', email: 'q@x.co', since: '' });
+    expect(seasonProgress().xp).toBe(guestXp);
+    expect(store.has('jongclub.season.v1')).toBe(true);
+    signOut();
   });
 });

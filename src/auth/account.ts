@@ -31,6 +31,13 @@ interface EmailRecord {
 const SESSION_KEY = 'jongclub.auth.session.v1';
 const ACCOUNTS_KEY = 'jongclub.auth.accounts.v1';
 const GUEST_PROFILE_KEY = 'jongclub.profile.v1';
+/**
+ * The guest's other progress, kept per account next to the profile (season XP,
+ * skills, drills, streak shield, private clubs, placement): it moves with the
+ * profile, or a new account would start them from nothing while the emptied
+ * guest slot kept them.
+ */
+const GUEST_PROGRESS_KEYS = ['jongclub.season.v1', 'jongclub.skills.v1', 'jongclub.drills.v1', 'jongclub.streak-shield.v1', 'jongclub.clubs.v1', 'jongclub.placement.v1'];
 
 export const PROVIDER_LABEL: Record<Provider, string> = { guest: 'Guest', email: 'Email', google: 'Google', apple: 'Apple' };
 
@@ -82,7 +89,15 @@ export function activate(a: Account) {
     if (!own || !p.name || p.name === 'Guest') {
       if (!p.name || p.name === 'Guest') p.name = a.name;
       localStorage.setItem(slot, JSON.stringify(p));
-      if (guest) localStorage.removeItem(GUEST_PROFILE_KEY);
+      if (guest) {
+        localStorage.removeItem(GUEST_PROFILE_KEY);
+        for (const k of GUEST_PROGRESS_KEYS) {
+          const v = localStorage.getItem(k);
+          if (v === null || localStorage.getItem(`${k}:${a.id}`) !== null) continue;
+          localStorage.setItem(`${k}:${a.id}`, v);
+          localStorage.removeItem(k);
+        }
+      }
     }
   } catch {
     /* ignore */
