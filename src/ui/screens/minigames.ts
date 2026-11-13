@@ -119,7 +119,7 @@ export function minigamesScreen(app: MiniApp & { go(s: 'minigames'): void }): HT
       h('span', { class: 'mini-medal mini-daily-medal' }, dIcon),
       h('div', { class: 'mini-daily-text' }, h('h3', {}, tr('Daily puzzle')), h('p', {}, line), streak ? h('p', { class: 'muted small' }, tr('Daily streak: {n}', { n: streak })) : null),
       h('span', { class: 'mini-daily-bonus' }, dres?.won ? tr('Solved') : tr('+{n} JP bonus', { n: DAILY_PUZZLE_BONUS })),
-      h('button', { class: 'btn primary mini-daily-go', onclick: () => play(app, daily, dailyStart(daily)), html: `<span>${dres ? tr('Play again') : tr('Play today’s puzzle')}</span>${glyph('next')}` }),
+      h('button', { class: 'btn primary mini-daily-go', onclick: () => play(app, daily, dailyStart(daily)), html: `<span>${dres ? tr('Play again') : tr('Play today’s puzzle')}</span>${glyph('next', 'ico-fwd')}` }),
     );
   }
 
