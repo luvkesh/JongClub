@@ -46,7 +46,11 @@ export function zungJungScore(ctx: ScoringContext): HandScore {
   const noTerminals = f.kinds.every((k) => !isHonor(k) && !isTerminal(k));
 
   if (d.shape === 'thirteenOrphans') add('Thirteen Terminals', 160);
-  else if (d.shape === 'sevenPairs') add('Seven Pairs', 30);
+  else if (d.shape === 'sevenPairs') {
+    add('Seven Pairs', 30);
+    // Seven Pairs combines with the whole-hand patterns that need no sets, the greater terminals among them.
+    if (!allHonours && f.kinds.every((k) => isTerminal(k) || isHonor(k))) add(f.kinds.every(isTerminal) ? 'Pure Greater Terminals' : 'Mixed Greater Terminals', f.kinds.every(isTerminal) ? 400 : 100);
+  }
   else {
     // 1. Trivial
     if (f.chows.length === 4) add('All Sequences', 5);

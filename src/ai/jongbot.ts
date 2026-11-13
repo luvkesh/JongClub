@@ -13,7 +13,7 @@ import { charlestonDirName, CHARLESTON } from '../engine/game';
 import { distance as cardDistance, progress } from '../engine/rules/american';
 import { bestSwap, charlestonPick, describeTarget, exposureDanger, kindLabel, missingAfterCall, rankDiscards } from './american';
 import { safetySentence, threatSentence, riskLabelFor } from './danger';
-import { cardUses, currentShanten, currentWaits, exchangePick, handWilds, shantenWith, openHandHasYakuPath, unseenCounts } from './evaluate';
+import { cardUses, currentShanten, currentWaits, exchangePick, handWilds, shantenWith, openHandHasYakuPath, unseenCounts, waitingView, winningWaits } from './evaluate';
 import { shantenAfterKong } from './players';
 import { ADVISOR, ADVISOR_CLAIMS, planClaim, planDiscard, riichiAdvice } from './strategy';
 import { isPassportRound, passportThreats, threatsOn } from './passportAdvice';
@@ -141,7 +141,8 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
   if (me.riichi) {
     return {
       headline: `You're in ${names.riichi ?? 'riichi'}. Your drawn tile goes back out automatically.`,
-      why: `Waiting on ${game.waitsOf(seat).map(tileName).join(', ')}. You can still win on any of them.`,
+      // The drawn tile goes back out: the waits are those of the hand without it.
+      why: `Waiting on ${winningWaits(game, seat, opts.discards[0]?.kind ?? -1).map(tileName).join(', ')}. You can still win on any of them.`,
     };
   }
   const plan = planDiscard(game, seat, ADVISOR);
@@ -305,8 +306,10 @@ function baseClaimHint(game: MahjongGame, seat: number, options: ClaimOption[], 
     const verb = called.type === 'chow' ? names.chow : called.type === 'kong' ? names.kong : names.pung;
     const moves = plan.after < plan.before ? `It moves you from ${away(plan.before)} to ${away(plan.after)}` : `It keeps you ${away(plan.after)}`;
     const joker = called.using?.some((k) => game.isWild(k)) ? ' It uses up one of your jokers.' : '';
+    // More than one chow on offer: say which (the others may fit no winning hand at all).
+    const which = called.type === 'chow' && options.filter((o) => o.type === 'chow').length > 1 ? ` with the ${called.using!.map(tileName).join(' and ')}` : '';
     return {
-      headline: `${verb} the ${name}.`,
+      headline: `${verb} the ${name}${which}.`,
       why: why(`${moves}. Calling shows your set to the table, so your hand is no longer concealed.${joker}`),
       action: called.type,
       focusKind: discardKind,
@@ -409,7 +412,7 @@ export function handStatus(game: MahjongGame, seat: number): string {
     return pl.hand.length + pl.melds.reduce((a, m) => a + m.tiles.length, 0) > 13 ? '' : cardAway(cardDistance(pl.hand, pl.melds));
   }
   const s = currentShanten(game, seat);
-  if (s === 0 && game.players[seat].hand.length % 3 === 1) {
+  if (s === 0 && waitingView(game, seat)) {
     const w = currentWaits(game, seat);
     return w.length ? tr('Ready · waiting on {tiles}', { tiles: andList(w.map((k) => tileLabel(k))) }) : tr('Ready');
   }

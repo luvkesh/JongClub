@@ -57,6 +57,8 @@ export interface ScoringContext {
   card?: number;
   /** Won on the dealer's first discard, before any call. */
   earthly?: boolean;
+  /** A non-dealer self-drew on their first draw of the hand, before any call (Riichi chiihou). */
+  firstDraw?: boolean;
   /** This hand's three dice. */
   dice?: number[];
 }
@@ -159,7 +161,7 @@ export interface SettleInfo {
   /** The winner's score (null on a draw). */
   score?: HandScore | null;
   /** Each seat's concealed tile kinds and declared melds at the end of the hand. */
-  hands?: { concealed: number[]; melds: Meld[] }[];
+  hands?: { concealed: number[]; melds: Meld[]; /** Kinds of the concealed tiles that are jokers (North Goulash). */ jokers?: number[] }[];
   /** Is this seat one tile from Mahjong (calling)? */
   calling?(seat: number): boolean;
 }

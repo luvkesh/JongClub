@@ -269,6 +269,8 @@ function riichiGuide(p: RuleProfile, unit: string): Guide {
           L('Ryuuiisou', tr('Yakuman'), tr('Only green tiles: 2, 3, 4, 6, 8 Bamboo and the green dragon')),
           L('Chuuren Poutou', tr('Yakuman'), tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, concealed, plus any tile of that suit')),
           L('Suukantsu', tr('Yakuman'), tr('Four kongs')),
+          L('Tenhou', tr('Yakuman'), tr('The dealer wins on the deal')),
+          L('Chiihou', tr('Yakuman'), tr('Self-drawn on your first draw, before anyone calls')),
         ],
       },
     ],
@@ -446,15 +448,17 @@ function mcrGuide(p: RuleProfile, unit: string): Guide {
 
 function sichuanGuide(p: RuleProfile, unit: string): Guide {
   const cap = Number(choice(p, 'cap') ?? 4);
+  // The default table adds one base for a self-draw (jia di); the house rule makes it a fan instead.
+  const selfFan = choice(p, 'selfDraw') === 'fan';
   return {
     unit,
     win: winLines(p, unit),
-    pay: tr('Each fan doubles the payment, up to the cap of {cap} fan. Kongs pay on the spot.', { cap }),
+    pay: selfFan ? tr('Each fan doubles the payment, up to the cap of {cap} fan. Kongs pay on the spot.', { cap }) : tr('Each fan doubles the payment, up to the cap of {cap} fan. A self-draw adds one base on top. Kongs pay on the spot.', { cap }),
     sections: [
       {
         title: tr('Hand patterns'),
         lines: [
-          L('Self-drawn', 1, tr('You drew the winning tile yourself')),
+          ...(selfFan ? [L('Self-drawn', 1, tr('You drew the winning tile yourself'))] : []),
           L('All Pungs', 1, tr('Every set is a pung or kong')),
           L('All Simples', 1, tr('No ones or nines')),
           L('Root (four of a kind)', 1, tr('All four of one tile in your hand, each time')),
@@ -495,12 +499,24 @@ function koreanGuide(p: RuleProfile, unit: string): Guide {
           L('Terminals and Honours', 2, tr('Only ones, nines and honours')),
           L('Mixed One Suit', 2, tr('One suit plus honours')),
           L('Pure One Suit', 5, tr('One suit only, no honours')),
+          L('Win after Kong', 1, tr('Won on the replacement tile after a kong')),
+          L('Robbing the Kong', 1, tr('Won on a tile another player added to a pung')),
+          L('Last tile', 1, tr('Won on the very last tile')),
         ],
       },
       {
         title: tr('Limit hands'),
         closed: true,
-        lines: [L('Thirteen Orphans', 10, tr('One of each one, nine, wind and dragon, plus any one of them again')), L('All Honours', 10, tr('Only winds and dragons')), L('Big Three Dragons', 10, tr('Pungs of all three dragons')), L('Big Four Winds', 10, tr('Pungs of all four winds')), L('Four Concealed Pungs', 10, tr('Four pungs, none of them claimed'))],
+        lines: [
+          L('Thirteen Orphans', 10, tr('One of each one, nine, wind and dragon, plus any one of them again')),
+          L('All Honours', 10, tr('Only winds and dragons')),
+          L('All Terminals', 10, tr('Only ones and nines')),
+          L('Big Three Dragons', 10, tr('Pungs of all three dragons')),
+          L('Small Four Winds', 10, tr('Three wind pungs and a pair of the fourth wind')),
+          L('Big Four Winds', 10, tr('Pungs of all four winds')),
+          L('Four Concealed Pungs', 10, tr('Four pungs, none of them claimed')),
+          L('Four Kongs', 10, tr('Four kongs')),
+        ],
       },
     ],
   };

@@ -299,7 +299,7 @@ function beginLive(host: LiveHost, s: TableSession) {
     // Spectators: watch from the host's seat, joining at the current hand.
     const snap = s.hostSnapshot();
     opts.viewSeat = 0;
-    if (snap && snap.h > 0) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot };
+    if (snap && snap.h > 0) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot, goulash: !!snap.goulash };
   }
   host.liveStarted(s);
   host.startMatch(t.cfg, opts);
