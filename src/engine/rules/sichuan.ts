@@ -97,7 +97,8 @@ export const sichuanProfile: RuleProfile = {
   summary: '108 tiles, three suits only, no chow calls (runs built in your own hand still count). Your winning hand must be missing a whole suit. Kongs pay on the spot. Simplified: the hand ends at the first win, where real Blood Battle plays on.',
   tileKinds: Array.from({ length: 27 }, (_, k) => k),
   calls: { ...classicProfile.calls, chow: false },
-  shapes: { sevenPairs: true, thirteenOrphans: false },
+  // Seven pairs may hold four of a kind as two pairs (dragon seven pairs: Seven Pairs plus a Root).
+  shapes: { sevenPairs: true, sevenPairsQuads: true, thirteenOrphans: false },
   minValue: 0,
   rounds: { ...classicProfile.rounds },
   score: sichuanScore,

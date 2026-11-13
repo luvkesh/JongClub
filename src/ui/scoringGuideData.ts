@@ -446,15 +446,17 @@ function mcrGuide(p: RuleProfile, unit: string): Guide {
 
 function sichuanGuide(p: RuleProfile, unit: string): Guide {
   const cap = Number(choice(p, 'cap') ?? 4);
+  // The default table adds one base for a self-draw (jia di); the house rule makes it a fan instead.
+  const selfFan = choice(p, 'selfDraw') === 'fan';
   return {
     unit,
     win: winLines(p, unit),
-    pay: tr('Each fan doubles the payment, up to the cap of {cap} fan. Kongs pay on the spot.', { cap }),
+    pay: selfFan ? tr('Each fan doubles the payment, up to the cap of {cap} fan. Kongs pay on the spot.', { cap }) : tr('Each fan doubles the payment, up to the cap of {cap} fan. A self-draw adds one base on top. Kongs pay on the spot.', { cap }),
     sections: [
       {
         title: tr('Hand patterns'),
         lines: [
-          L('Self-drawn', 1, tr('You drew the winning tile yourself')),
+          ...(selfFan ? [L('Self-drawn', 1, tr('You drew the winning tile yourself'))] : []),
           L('All Pungs', 1, tr('Every set is a pung or kong')),
           L('All Simples', 1, tr('No ones or nines')),
           L('Root (four of a kind)', 1, tr('All four of one tile in your hand, each time')),

@@ -104,7 +104,8 @@ const knittedStraight: SpecialShape = {
   },
 };
 
-const SHAPES: ShapeRules = { sevenPairs: true, thirteenOrphans: true, special: [honoursKnitted, knittedStraight] };
+// Seven Pairs may hold four of a kind as two pairs (scored with Tile Hog).
+const SHAPES: ShapeRules = { sevenPairs: true, sevenPairsQuads: true, thirteenOrphans: true, special: [honoursKnitted, knittedStraight] };
 
 /** Fans that a higher fan already includes (MCR's non-repeat principle). */
 const EXCLUDES: Record<string, string[]> = {
@@ -132,9 +133,11 @@ const EXCLUDES: Record<string, string[]> = {
   'All Even Pungs': ['All Pungs', 'All Simples', 'No Honours'],
   'Full Flush': ['No Honours', 'One Voided Suit'],
   'Pure Triple Chow': ['Pure Double Chow'],
-  'Upper Tiles': ['No Honours'],
+  'Upper Tiles': ['Upper Four', 'No Honours'],
   'Middle Tiles': ['No Honours', 'All Simples'],
-  'Lower Tiles': ['No Honours'],
+  'Lower Tiles': ['Lower Four', 'No Honours'],
+  'Upper Four': ['No Honours'],
+  'Lower Four': ['No Honours'],
   'Three-Suited Terminal Chows': ['All Chows', 'Two Terminal Chows', 'Mixed Double Chow', 'No Honours'],
   'All Fives': ['All Simples'],
   'Reversible Tiles': ['One Voided Suit'],
@@ -295,6 +298,9 @@ export function mcrScore(ctx: ScoringContext): HandScore {
     if (r.every((x) => x >= 6)) add('Upper Tiles', 24);
     else if (r.every((x) => x >= 3 && x <= 5)) add('Middle Tiles', 24);
     else if (r.every((x) => x <= 2)) add('Lower Tiles', 24);
+    // Upper Four / Lower Four: only 6-9 / only 1-4.
+    if (r.every((x) => x >= 5)) add('Upper Four', 12);
+    else if (r.every((x) => x <= 3)) add('Lower Four', 12);
   }
   if (allKinds.every((k) => REVERSIBLE.has(k))) add('Reversible Tiles', 8);
   if (suitsUsed.size === 3 && allKinds.some(isWind) && allKinds.some(isDragon)) add('All Types', 6);
@@ -322,7 +328,8 @@ export function mcrScore(ctx: ScoringContext): HandScore {
     const sets: Set[] = ctx.melds.map((m) => ({ type: m.type, kind: Math.min(...m.tiles.map((t) => t.kind)), concealed: m.concealed, exposed: !m.concealed }));
     for (const s of std.sets) {
       if (s.type === 'pair') continue;
-      const byDiscard = !ctx.selfDrawn && s.type === 'pung' && s.kind === ctx.winKind;
+      // A pung finished on a discard is melded, unless the winning tile could have finished a chow instead.
+      const byDiscard = !ctx.selfDrawn && s.type === 'pung' && s.kind === ctx.winKind && !std.sets.some((x) => x.type === 'chow' && ctx.winKind >= x.kind && ctx.winKind <= x.kind + 2);
       sets.push({ type: s.type, kind: s.kind, concealed: !byDiscard, exposed: false });
     }
     const pair = std.pair;
@@ -351,11 +358,12 @@ export function mcrScore(ctx: ScoringContext): HandScore {
     }
 
     // Shapes
+    // Nine Gates: the hand before the winning tile is exactly 1112345678999 of one suit.
     if (ctx.melds.length === 0 && suitsUsed.size === 1 && !hasHonor) {
       const base = [...suitsUsed][0] * 9;
       const c = ctx.concealedCounts.slice(base, base + 9);
-      const need = [3, 1, 1, 1, 1, 1, 1, 1, 3];
-      if (c.every((n, i) => n >= need[i])) add('Nine Gates', 88);
+      if (ctx.winKind >= base && ctx.winKind < base + 9) c[ctx.winKind - base]--;
+      if ([3, 1, 1, 1, 1, 1, 1, 1, 3].every((n, i) => c[i] === n)) add('Nine Gates', 88);
     }
     if (kongs.length === 4) add('Four Kongs', 88);
     else if (kongs.length === 3) add('Three Kongs', 32);
@@ -407,8 +415,11 @@ export function mcrScore(ctx: ScoringContext): HandScore {
   }
 
   // How the hand was won
-  if (!exposed && ctx.selfDrawn) add('Fully Concealed Hand', 4);
-  else if (!exposed) add('Concealed Hand', 2);
+  // Seven Pairs, Thirteen Orphans and Honours and Knitted Tiles already include the concealed hand
+  // (they score neither Concealed Hand nor Fully Concealed Hand; a self-draw is still Self-Drawn).
+  const irregular = d.shape === 'sevenPairs' || d.shape === 'thirteenOrphans' || (d.shape === 'special' && d.special === HONOURS_KNITTED);
+  if (!irregular && !exposed && ctx.selfDrawn) add('Fully Concealed Hand', 4);
+  else if (!irregular && !exposed) add('Concealed Hand', 2);
   if (ctx.lastTileOfWall) add(ctx.selfDrawn ? 'Last Tile Draw' : 'Last Tile Claim', 8);
   if (ctx.afterKong && ctx.selfDrawn) add('Out with Replacement Tile', 8);
   if (ctx.robbedKong) add('Robbing the Kong', 8);

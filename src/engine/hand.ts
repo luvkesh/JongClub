@@ -58,10 +58,12 @@ export function standardDecompositions(counts: number[], need: number, chows = t
   return out;
 }
 
-export function isSevenPairs(counts: number[]): boolean {
+/** Seven pairs. With `quads`, four of a kind counts as two pairs (MCR, Sichuan "dragon seven pairs"). */
+export function isSevenPairs(counts: number[], quads = false): boolean {
   let pairs = 0;
   for (const n of counts) {
     if (n === 2) pairs++;
+    else if (quads && n === 4) pairs += 2;
     else if (n !== 0) return false;
   }
   return pairs === 7;
@@ -84,6 +86,8 @@ export function isThirteenOrphans(counts: number[]): boolean {
 
 export interface ShapeRules {
   sevenPairs: boolean;
+  /** Seven pairs may hold four of a kind as two of its pairs (MCR, Sichuan). Default false: seven different pairs. */
+  sevenPairsQuads?: boolean;
   thirteenOrphans: boolean;
   /** Sets needed besides the pair: 4 for 13-tile games, 5 for 16-tile Taiwanese. Default 4. */
   sets?: number;
@@ -130,7 +134,7 @@ export interface SpecialShape {
 export function winningDecompositions(counts: number[], meldCount: number, rules: ShapeRules, melds?: MeldShape[]): Decomposition[] {
   const out = rules.standard === false ? [] : standardDecompositions(counts, (rules.sets ?? 4) - meldCount, rules.chows !== false);
   if (meldCount === 0) {
-    if (rules.sevenPairs && isSevenPairs(counts)) out.push({ shape: 'sevenPairs', sets: [], pair: -1 });
+    if (rules.sevenPairs && isSevenPairs(counts, rules.sevenPairsQuads)) out.push({ shape: 'sevenPairs', sets: [], pair: -1 });
     if (rules.thirteenOrphans && isThirteenOrphans(counts)) out.push({ shape: 'thirteenOrphans', sets: [], pair: -1 });
   }
   for (const sp of rules.special ?? []) if (sp.complete(counts, meldCount, melds)) out.push({ shape: 'special', special: sp.name, sets: [], pair: -1 });
@@ -234,14 +238,15 @@ export function standardShanten(counts: number[], meldCount: number, need = 4, c
   return best;
 }
 
-export function sevenPairsShanten(counts: number[]): number {
+export function sevenPairsShanten(counts: number[], quads = false): number {
   let pairs = 0;
   let kinds = 0;
   for (const n of counts) {
-    if (n >= 2) pairs++;
+    if (n >= 2) pairs += quads && n >= 4 ? 2 : 1;
     if (n >= 1) kinds++;
   }
-  return 6 - pairs + Math.max(0, 7 - kinds);
+  // With quads allowed, a four of a kind is two pairs, so fewer different kinds are needed.
+  return quads ? 6 - Math.min(7, pairs) : 6 - pairs + Math.max(0, 7 - kinds);
 }
 
 export function thirteenOrphansShanten(counts: number[]): number {
@@ -288,7 +293,7 @@ export function setsShanten(counts: number[], meldCount: number, need: number, p
 export function shanten(counts: number[], meldCount: number, rules: ShapeRules): number {
   let s = rules.standard === false ? 99 : standardShanten(counts, meldCount, rules.sets ?? 4, rules.chows !== false);
   if (meldCount === 0) {
-    if (rules.sevenPairs) s = Math.min(s, sevenPairsShanten(counts));
+    if (rules.sevenPairs) s = Math.min(s, sevenPairsShanten(counts, rules.sevenPairsQuads));
     if (rules.thirteenOrphans) s = Math.min(s, thirteenOrphansShanten(counts));
   }
   for (const sp of rules.special ?? []) if (!sp.bound || sp.bound(counts, meldCount) < s) s = Math.min(s, sp.shanten(counts, meldCount));
