@@ -127,7 +127,7 @@ function destination(ctx: AppCtx, id: string) {
         { class: 'btn-row' },
         h('button', { class: 'btn ghost', onclick: () => (o.hidden = true) }, tr('Close')),
         h('button', { class: 'btn', onclick: () => ((o.hidden = true), ctx.openLesson(lessonOf(id))) }, tr('Lesson')),
-        h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), ctx.startMatch(ctx.tableFor(id))) }, tr('Play {name}', { name: v.short })),
+        h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), ctx.startMatch(ctx.tableFor(id))) }, tr('Play {name}', { name: tr(v.short) })),
       ),
     ),
   );

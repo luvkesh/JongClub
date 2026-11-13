@@ -25,7 +25,8 @@
     border-top: 1px solid var(--line); pointer-events: none;
   }
   .tab {
-    position: relative; flex: 1 1 0; min-width: 0; min-height: 58px; padding: 10px 2px 6px;
+    /* auto basis: a longer label ("Mini-games", Arabic "الألعاب المصغّرة") takes the room it needs instead of being cut to "Mini-ga…". */
+    position: relative; flex: 1 1 auto; min-width: 0; min-height: 58px; padding: 10px 2px 6px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     background: none; border: 0; cursor: pointer; color: var(--muted);
     font: 500 11px/1 var(--ui); letter-spacing: 0.03em;
@@ -35,6 +36,7 @@
   .tab-icon { display: block; width: 22px; height: 22px; }
   .tab-icon svg { display: block; width: 100%; height: 100%; }
   .tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 420px) { .tab { letter-spacing: 0; padding-left: 1px; padding-right: 1px; } }
   .tab.on { color: var(--brass-hi); }
   .tab::after {
     /* the active mark: the brass lozenge of the top nav */

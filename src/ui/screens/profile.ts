@@ -183,7 +183,7 @@ export function profileScreen(ctx: AppCtx) {
               ...played.map((v) => {
                 const r = p.ratings[v.id];
                 const n = p.variationGames[v.id] ?? p.varStats[v.id]?.games ?? 0;
-                return h('div', { class: `pf-var ${r ? '' : 'unrated'}` }, h('span', { class: 'pf-var-flag' }, v.flag), h('span', { class: 'pf-var-name' }, v.short), r ? h('span', { class: 'pf-var-emb', html: leagueEmblem(tierOf(r), 20) }) : null, h('b', {}, r ? fmt(r) : tr('Unrated')), n ? h('small', {}, trn(n, '{n} game', '{n} games')) : null);
+                return h('div', { class: `pf-var ${r ? '' : 'unrated'}` }, h('span', { class: 'pf-var-flag' }, v.flag), h('span', { class: 'pf-var-name' }, tr(v.short)), r ? h('span', { class: 'pf-var-emb', html: leagueEmblem(tierOf(r), 20) }) : null, h('b', {}, r ? fmt(r) : tr('Unrated')), n ? h('small', {}, trn(n, '{n} game', '{n} games')) : null);
               }),
             ),
             hist.length > 1 ? h('div', { class: 'pf-spark' }, h('span', { class: 'pf-sub' }, tr('Rating over your ranked games')), sparkline(hist.map((x) => x.rating))) : null,
@@ -303,7 +303,7 @@ export function profileScreen(ctx: AppCtx) {
                     'table',
                     { class: 'history' },
                     h('thead', {}, h('tr', {}, h('th', {}, tr('Date')), h('th', {}, tr('Game')), h('th', {}, tr('Place')), h('th', { class: 'num' }, tr('Score')), h('th', { class: 'num' }, tr('Jong Points')))),
-                    h('tbody', {}, ...p.history.map((g) => h('tr', {}, h('td', {}, new Date(g.date).toLocaleDateString(lang())), h('td', {}, `${vinfo(g.variation).short} · ${tr(g.length)}`), h('td', {}, ordinal(g.placement)), h('td', { class: 'num' }, fmt(g.score)), h('td', { class: 'num' }, `+${fmt(g.points)}`)))),
+                    h('tbody', {}, ...p.history.map((g) => h('tr', {}, h('td', {}, new Date(g.date).toLocaleDateString(lang())), h('td', {}, `${tr(vinfo(g.variation).short)} · ${tr(g.length)}`), h('td', {}, ordinal(g.placement)), h('td', { class: 'num' }, fmt(g.score)), h('td', { class: 'num' }, `+${fmt(g.points)}`)))),
                   ),
                 )
               : null,
