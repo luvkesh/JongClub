@@ -1098,6 +1098,87 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .hero .wrap { padding-block: 44px 56px; }
 @media (max-width: 760px) { div.house-tile { display: grid; position: relative; right: auto; bottom: auto; order: 3; margin: 30px auto 6px; width: 210px; } }
 .side-h.crowned > span:first-child { white-space: nowrap; }
+
+/* V57 (2026-11-13): the opening scene, The Regulars and Rounds sit on the user's reference paintings
+   as whole scenes (never cut-outs); words stay HTML. --u is one reference pixel. */
+.scene-hero { --sh: min(50.18vw, 1054px); --u: calc(var(--sh) / 856); min-height: var(--sh); background: #070d0a; }
+.scene-hero::before { content: none; }
+.sh-art { position: absolute; top: 0; left: 0; right: 0; height: var(--sh); overflow: hidden; }
+.sh-art img { position: absolute; top: 0; left: 50%; height: 100%; width: auto; max-width: none; transform: translateX(-50%); }
+.scene-hero .wrap { max-width: none; min-height: var(--sh); padding: calc(350 * var(--u)) 16px calc(26 * var(--u)); gap: 0; }
+.scene-hero h1 img { width: min(calc(652 * var(--u)), 90vw); display: block; }
+.scene-hero .rule.knot, .js .scene-hero .rule.knot { width: calc(250 * var(--u)); margin: calc(2 * var(--u)) 0 0; transform: none; }
+.scene-hero .tagline { margin-top: calc(6 * var(--u)); font-size: calc(47 * var(--u)); line-height: 1.12; }
+.scene-hero .lead { margin-top: calc(22 * var(--u)); max-width: calc(570 * var(--u)); font: 400 calc(22 * var(--u))/1.4 var(--ui); }
+.scene-hero .motto { margin-top: calc(34 * var(--u)); font-size: calc(17 * var(--u)); letter-spacing: 0.36em; }
+.hero.scene-hero .motto::before, .hero.scene-hero .motto::after { width: calc(96 * var(--u)); margin: 0 calc(22 * var(--u)); }
+.scene-hero .hero-cta { margin-top: calc(40 * var(--u)); gap: calc(26 * var(--u)); flex-wrap: nowrap; }
+.scene-hero .hero-cta .btn { min-height: calc(58 * var(--u)); min-width: calc(286 * var(--u)); padding: 0 calc(26 * var(--u)); border-radius: 999px; font-size: calc(17 * var(--u)); letter-spacing: 0.12em; white-space: nowrap; }
+.scene-hero .hero-cta .btn.ghost { border: 1px solid rgba(227, 194, 124, 0.85); background: linear-gradient(180deg, #123a2c, #0a241b); color: var(--gold-hi); box-shadow: inset 0 0 0 3px rgba(6, 22, 17, 0.9), inset 0 0 0 4px rgba(227, 194, 124, 0.25), 0 10px 26px rgba(0, 0, 0, 0.45); }
+.scene-hero .hero-cta .btn .icon { width: calc(20 * var(--u)); height: calc(20 * var(--u)); min-width: 14px; min-height: 14px; }
+.scene-hero .mei-invite { margin-top: calc(16 * var(--u)); }
+@media (max-width: 999px) {
+  .scene-hero { --sh: max(50.2vw, min(128vw, 92svh)); }
+  .sh-art { -webkit-mask-image: linear-gradient(#000 88%, transparent); mask-image: linear-gradient(#000 88%, transparent); }
+  .scene-hero .lead { font-size: max(14.5px, calc(22 * var(--u))); max-width: min(92vw, max(300px, calc(540 * var(--u)))); margin-top: calc(16 * var(--u)); }
+  .scene-hero .motto { font-size: max(11px, calc(17 * var(--u))); margin-top: calc(24 * var(--u)); letter-spacing: 0.28em; }
+  .scene-hero .hero-cta { margin-top: calc(28 * var(--u)); gap: max(10px, calc(26 * var(--u))); }
+  .scene-hero .hero-cta .btn { min-height: max(44px, calc(58 * var(--u))); min-width: 0; padding: 0 max(14px, calc(26 * var(--u))); font-size: max(11px, calc(17 * var(--u))); letter-spacing: 0.08em; gap: 7px; }
+  .scene-hero .mei-invite { margin-top: 14px; }
+}
+
+.scene-bg { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: left bottom; pointer-events: none; }
+.scene-reg::before { content: none; }
+.scene-reg .side-h { font: 600 14px/1 var(--display); letter-spacing: 0.34em; }
+.cast2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(10px, 1.1vw, 18px); }
+.cast2 article { position: relative; container-type: inline-size; aspect-ratio: 278 / 370; border-radius: 2.6cqw; overflow: hidden; box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45); background: #0c2a20; }
+.cast2 article > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cast2 .plate { position: absolute; left: 7%; right: 7%; top: 62.6%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.cast2 h4 { font: 500 11.4cqw/1 var(--serif); color: #fbf6e8; letter-spacing: 0.01em; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
+.cast2 em { margin-top: 3.1cqw; font: 600 max(8px, 4.3cqw)/1 var(--ui); font-style: normal; letter-spacing: 0.24em; text-transform: uppercase; color: #e6bd62; white-space: nowrap; }
+.cast2 p { margin-top: 3.6cqw; font: 400 max(10px, 5.5cqw)/1.28 var(--ui); color: #f1ecdd; text-wrap: balance; }
+@media (min-width: 1000px) {
+  .scene-reg { min-height: min(56.28vw, 1182px); }
+  .scene-reg > .wrap { max-width: 2100px; padding: 4.4vw 5.6vw 4.6vw 8.6vw; }
+  .scene-reg .split.company { grid-template-columns: 31fr 51fr; gap: 4.2vw; align-items: start; }
+  .scene-reg .head { margin-top: 3.4vw; }
+  .scene-reg .sub { font-size: clamp(24px, 2.5vw, 44px); }
+  .scene-reg .story p { font-size: clamp(14px, 1.22vw, 20px); line-height: 1.5; }
+  .scene-reg .story { max-width: 30vw; }
+}
+@media (max-width: 999px) {
+  .scene-bg { inset: 0 auto auto 0; width: 1100px; max-width: none; height: auto; -webkit-mask-image: linear-gradient(#000 60px, transparent 250px); mask-image: linear-gradient(#000 60px, transparent 250px); }
+  .scene-reg > .wrap { padding-top: 104px; }
+}
+@media (max-width: 639px) {
+  .cast2 { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -16px; padding: 4px 16px 22px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .cast2::-webkit-scrollbar { display: none; }
+  .cast2 article { flex: 0 0 66vw; scroll-snap-align: center; }
+}
+
+.scene-rounds { --sh: min(30.7vw, 645px); --u: calc(var(--sh) / 482); background: #06110d; }
+.scene-rounds::before { content: none; }
+.sr-art { position: relative; height: var(--sh); overflow: hidden; }
+.sr-in { position: absolute; top: 0; right: 0; height: 100%; aspect-ratio: 1570 / 482; }
+.sr-art { max-width: 2100px; margin: 0 auto; }
+.sr-in img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sr-in b { position: absolute; left: calc(var(--x) / 1570 * 100%); top: 79.1%; transform: translate(-50%, -50%); font: 600 max(9px, calc(15 * var(--u)))/1 var(--display); letter-spacing: 0.22em; padding-left: 0.22em; text-transform: uppercase; color: #f0d48a; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+@media (min-width: 1280px) {
+  .scene-rounds { height: var(--sh); }
+  .scene-rounds .sr-art { position: absolute; inset: 0; z-index: 0; }
+  .scene-rounds > .wrap { position: absolute; inset: 0; max-width: 2100px; margin: 0 auto; padding: 0 0 0 8vw; justify-content: center; pointer-events: none; }
+  .scene-rounds .head { max-width: 31vw; pointer-events: auto; gap: calc(15 * var(--u)); }
+  .scene-rounds .title { font-size: calc(62 * var(--u)); }
+  .scene-rounds .sub { font-size: calc(28 * var(--u)); }
+  .scene-rounds .story p { font-size: max(13px, calc(16.5 * var(--u))); line-height: 1.5; }
+}
+@media (max-width: 1279px) {
+  .scene-rounds { --sh: min(60.25vw, 460px); }
+  .scene-rounds > .wrap { padding-bottom: 8px; }
+  .sr-in { right: calc(-80 * var(--u)); }
+  .sr-art { -webkit-mask-image: linear-gradient(transparent, #000 22%); mask-image: linear-gradient(transparent, #000 22%); }
+  .sr-in b { letter-spacing: 0.14em; padding-left: 0.14em; }
+}
 </style>
 
 <header class="top">
@@ -1132,11 +1213,9 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 </header>
 
 <main id="top">
-  <section class="hero" id="welcome">
-    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420">
-    <div class="hero-media" aria-hidden="true"><video id="hero-video" muted loop playsinline preload="auto" poster="video/hero-poster.jpg"><source src="video/hero.mp4" type="video/mp4"></video></div>
+  <section class="hero scene-hero" id="welcome">
+    <div class="sh-art" aria-hidden="true"><img src="scenes/hero.jpg" srcset="scenes/hero-1200.jpg 1200w, scenes/hero.jpg 1706w" sizes="(max-width: 999px) 255vw, 100vw" alt="" width="1706" height="856" fetchpriority="high"></div>
     <div class="wrap">
-      <img class="crest-lg" src="{{CREST_LG}}" alt="The JongClub crest: an ivory East wind tile inside a gold fret-work medallion">
       <h1 style="--wm: url({{WORDMARK}})"><img src="{{WORDMARK}}" alt="JongClub"></h1>
       <div class="rule knot" aria-hidden="true"></div>
       <p class="tagline">The Table Awaits.</p>
@@ -1166,8 +1245,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   </section>
 
   <!-- I. The Regulars: AI players -->
-  <section class="chapter" id="arrive">
-    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
+  <section class="chapter scene-reg" id="arrive">
+    <img class="scene-bg" src="scenes/regulars.jpg" srcset="scenes/regulars-1200.jpg 1200w, scenes/regulars.jpg 1672w" sizes="(max-width: 999px) 1100px, 100vw" alt="" aria-hidden="true" width="1672" height="941" loading="lazy">
     <div class="wrap">
       <div class="split company">
         <div class="head">
@@ -1181,14 +1260,14 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
           </div>
         </div>
         <div class="company-side">
-          <h3 class="side-h crowned"><span>At the table</span><span class="crown">{{ICON:crown}}</span></h3>
-          <div class="cast">
-            <article><span class="portrait"><img src="assets/companions/mei.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Mei</h4><em>The Teacher</em><div class="trait"><span class="ticon">{{ICON:cast-book}}</span><p>Explains every move as she plays.</p></div></article>
-            <article><span class="portrait"><img src="assets/companions/rex.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Rex</h4><em>The Shark</em><div class="trait"><span class="ticon">{{ICON:cast-fin}}</span><p>Quick and aggressive. Leave a gap, he takes it.</p></div></article>
-            <article><span class="portrait"><img src="assets/companions/hiro.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Hiro</h4><em>The Wall</em><div class="trait"><span class="ticon">{{ICON:cast-rook}}</span><p>Patient. Gives nothing away.</p></div></article>
-            <article><span class="portrait"><img src="assets/companions/lucky.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Lucky</h4><em>The Gambler</em><div class="trait"><span class="ticon">{{ICON:cast-dice}}</span><p>Chases big hands, and sometimes lands them.</p></div></article>
-            <article><span class="portrait"><img src="assets/companions/amara.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Amara</h4><em>The Zen Player</em><div class="trait"><span class="ticon">{{ICON:cast-lotus}}</span><p>Calm and conservative. Rarely rattled.</p></div></article>
-            <article class="friends"><span class="portrait"><img src="assets/companions/friends.webp" alt="" width="640" height="640" loading="lazy"></span><h4>Your Friends</h4><em>Always welcome</em><div class="trait"><span class="ticon">{{ICON:cast-friends}}</span><p>Start a table, share the link, and play together in seconds.</p></div></article>
+          <h3 class="side-h"><span>At the table</span></h3>
+          <div class="cast2">
+            <article><img src="cast/mei.webp" alt="" width="556" height="740" loading="lazy"><div class="plate"><h4>Mei</h4><em>The Teacher</em><p>Explains every move as she plays.</p></div></article>
+            <article><img src="cast/rex.webp" alt="" width="556" height="740" loading="lazy"><div class="plate"><h4>Rex</h4><em>The Shark</em><p>Quick and aggressive. Leave a gap, he takes it.</p></div></article>
+            <article><img src="cast/hiro.webp" alt="" width="556" height="740" loading="lazy"><div class="plate"><h4>Hiro</h4><em>The Wall</em><p>Patient. Gives nothing away.</p></div></article>
+            <article><img src="cast/lucky.webp" alt="" width="556" height="740" loading="lazy"><div class="plate"><h4>Lucky</h4><em>The Gambler</em><p>Chases big hands, and sometimes lands them.</p></div></article>
+            <article><img src="cast/amara.webp" alt="" width="556" height="740" loading="lazy"><div class="plate"><h4>Amara</h4><em>The Zen Player</em><p>Calm and conservative. Rarely rattled.</p></div></article>
+            <article><img src="cast/friends.webp" alt="" width="556" height="740" loading="lazy"><div class="plate"><h4>Your Friends</h4><em>Always welcome</em><p>Start a table, share the link, and play together in seconds.</p></div></article>
           </div>
         </div>
       </div>
@@ -1247,25 +1326,21 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="chapter alt" id="rounds">
-    <img class="deco blossom flip" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
+  <section class="chapter alt scene-rounds" id="rounds">
     <div class="wrap">
-      <div class="split">
-        <div class="head">
-          <p class="kicker"><span class="ring"><span class="icon">{{ICON:clock-3}}</span></span>The four winds</p>
-          <h2 class="title">Rounds</h2>
-          <div class="rule"></div>
-          <p class="sub">One evening, all the way round the table.</p>
-          <div class="story">
-            <p>Four rounds, East to North. The deal passes on, and the prevailing wind changes what scores. Play one round over coffee, or all four.</p>
-          </div>
-        </div>
-        <div class="wind-row plinth" role="list">
-          <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-east.webp" alt="" width="560" height="358" loading="lazy"><b>East</b></div>
-          <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-south.webp" alt="" width="560" height="358" loading="lazy"><b>South</b></div>
-          <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-west.webp" alt="" width="560" height="358" loading="lazy"><b>West</b></div>
-          <div class="wind" role="listitem"><img class="tile3d" src="winds/wind-north.webp" alt="" width="560" height="358" loading="lazy"><b>North</b></div>
-        </div>
+    <div class="head">
+      <p class="kicker"><span class="ring"><span class="icon">{{ICON:clock-3}}</span></span>The four winds</p>
+      <h2 class="title">Rounds</h2>
+      <div class="rule"></div>
+      <p class="sub">One evening, all the way round the table.</p>
+      <div class="story">
+        <p>Four rounds, East to North. The deal passes on, and the prevailing wind changes what scores. Play one round over coffee, or all four.</p>
+      </div>
+    </div>
+    </div>
+    <div class="sr-art" role="list">
+      <div class="sr-in"><img src="scenes/rounds.jpg" srcset="scenes/rounds-1200.jpg 1200w, scenes/rounds.jpg 1570w" sizes="(max-width: 1279px) 200vw, 100vw" alt="Four ivory wind tiles with painted scenes standing on a lacquer stand" width="1570" height="482" loading="lazy">
+        <b role="listitem" style="--x: 803">East</b><b role="listitem" style="--x: 989">South</b><b role="listitem" style="--x: 1174">West</b><b role="listitem" style="--x: 1360">North</b>
       </div>
     </div>
   </section>
