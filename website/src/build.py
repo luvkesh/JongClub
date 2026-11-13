@@ -232,11 +232,11 @@ for key, label in groups:
     items = [r for r in cat["rest"] if r["cat"] == key and r["id"] not in ("none", "fx-none")]
     sw = items[min(3, len(items) - 1)]["swatch"]
     names = ", ".join(r["name"] for r in items[:2])
-    medal = os.path.join(SITE, "assets", "details", key + ".webp")
-    art = (f'<img class="medal" src="assets/details/{key}.webp" alt="" width="360" height="360">' if os.path.exists(medal)
+    card = os.path.join(SITE, "cards", "detail-" + key + ".webp")
+    art = (f'<img src="cards/detail-{key}.webp" alt="" width="840" height="440" loading="lazy" aria-hidden="true">' if os.path.exists(card)
            else f'<span class="swatch" style="background:conic-gradient({sw[0]} 0 45%, {sw[1]} 0 80%, {sw[2]} 0)"></span>')
     n, word = len(items), label
-    extras.append(f'<div class="extra">{art}<div><b>{n} {word}</b><span>{html.escape(names)} and more</span></div></div>')
+    extras.append(f'<div class="extra">{art}<div class="pc-text"><b>{n} {word}</b><span>{html.escape(names)} and more</span></div></div>')
 
 page = open(os.path.join(HERE, "index.template.html")).read()
 page = re.sub(r"\{\{ICON:([a-z0-9-]+)\}\}", lambda m: icon(m.group(1)), page)

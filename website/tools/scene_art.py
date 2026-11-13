@@ -16,9 +16,9 @@ import numpy as np
 import cv2
 from PIL import Image, ImageFilter
 
-HERE = "/tmp/claude-0/-home-user/3c149e02-453f-5db3-9c67-e9087aa306bb/scratchpad/art/tools"
+HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(HERE, ".."))
-REFS = "/mnt/project-files/jongclub/website/refs"
+REFS = os.path.join(SITE, "refs")
 OUT = os.path.join(SITE, "scenes")
 CUT = os.path.join(SITE, "assets", "cut")
 os.makedirs(OUT, exist_ok=True)
@@ -318,3 +318,24 @@ def feature_cards():
 
 
 feature_cards()
+
+
+def detail_cards():
+    """And the Details (details.png): seven reference cards, words erased, divider moved to one place."""
+    from PIL import ImageFilter
+    im = load("details")
+    boxes = dict(table=(95, 319, 481, 528), frame=(507, 319, 876, 528), avatar=(902, 319, 1269, 528), accessory=(1295, 319, 1679, 528),
+                 winAnimation=(214, 558, 645, 774), tableEffect=(677, 558, 1096, 774), sound=(1125, 558, 1559, 774))
+    for n, (x0, y0, x1, y1) in boxes.items():
+        c = im[y0 - 5:y1 + 6, x0 - 5:x1 + 6].copy(); h, w = c.shape[:2]
+        band = c[int(h * .3):int(h * .7), int(w * .45):int(w * .68)].astype(int)
+        warm = (band[..., 2] - band[..., 0]).mean(axis=0); div = int(w * .45) + int(np.argmax(warm - cv2.blur(warm.reshape(1, -1).astype(np.float32), (15, 1)).ravel()))
+        c = erase_glyphs(c, (div + 10, 22, w - 16, h - 22), v=100, grow=3, radius=4, blur=1.5)
+        left = np.concatenate([c[:, :12], cv2.resize(c[:, 12:26], (14 + 250 - (div + 12), h)), c[:, 26:div + 12]], axis=1)
+        mid = cv2.resize(c[:, div + 12:w - 20], (420 - 250 - 20, h), interpolation=cv2.INTER_LINEAR)
+        c = np.concatenate([left, mid, c[:, w - 20:]], axis=1)
+        Image.fromarray(cv2.cvtColor(c, cv2.COLOR_BGR2RGB)).resize((840, 440), Image.LANCZOS).filter(ImageFilter.UnsharpMask(1.2, 60, 2)).save(os.path.join(SITE, "cards", "detail-" + n + ".webp"), quality=90, method=6)
+        print(n, w, h, div)
+
+
+detail_cards()
