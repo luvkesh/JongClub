@@ -18,7 +18,7 @@ import { luxCard } from './luxCard';
 /** The variation your value and discard drills use: the one you play most that they cover. */
 function drillVariation(ctx: AppCtx): string {
   const played = Object.entries(ctx.profile.variationGames).sort((a, b) => b[1] - a[1]);
-  return played.find(([v]) => VALUE_VARIATIONS.includes(v))?.[0] ?? 'classic';
+  return played.find(([v]) => VALUE_VARIATIONS.includes(v))?.[0] ?? 'india';
 }
 
 /** The Daily drills card on the Learn screen. */
@@ -40,7 +40,7 @@ export function drillsEntry(ctx: AppCtx): HTMLElement {
       h(
         'p',
         { class: 'de-stats' },
-        h('span', {}, streak ? tr('{n}-day streak', { n: streak }) : tr('Start a streak today')),
+        h('span', {}, streak ? trn(streak, '{n}-day streak', '{n}-day streak') : tr('Start a streak today')),
         due ? h('span', {}, tr('{n} to review', { n: due })) : null,
         done ? h('span', { class: 'de-tick' }, tr('Done today ✓')) : h('span', {}, tr('Up to {n} Jong Points', { n: fmt(SET_SIZE * POINTS_PER_RIGHT + POINTS_FOR_SET) })),
       ),
@@ -56,7 +56,7 @@ export function drillsCard(ctx: AppCtx): HTMLElement {
   const day = today();
   const done = !!s.days[day]?.sets;
   const streak = drillStreak(s, day);
-  const line = `${streak ? tr('{n}-day streak', { n: streak }) : tr('Start a streak today')} · ${done ? tr('Done today ✓') : tr('Up to {n} Jong Points', { n: fmt(SET_SIZE * POINTS_PER_RIGHT + POINTS_FOR_SET) })}`;
+  const line = `${streak ? trn(streak, '{n}-day streak', '{n}-day streak') : tr('Start a streak today')} · ${done ? tr('Done today ✓') : tr('Up to {n} Jong Points', { n: fmt(SET_SIZE * POINTS_PER_RIGHT + POINTS_FOR_SET) })}`;
   const card: HTMLElement = luxCard({ art: 'drills', title: tr('Daily drills'), line, run: () => openDrills(ctx, { onClose: () => card.replaceWith(drillsCard(ctx)) }) });
   return card;
 }
@@ -101,6 +101,13 @@ export function openDrills(ctx: AppCtx, opts: DrillOpts = {}) {
     clear(o);
     opts.onClose?.();
   };
+  // Escape or a tap on the backdrop hides the dialog without close(): the Learn card still refreshes (streak, done today).
+  const dismissed = new MutationObserver(() => {
+    if (!o.hidden && card.isConnected) return;
+    dismissed.disconnect();
+    if (o.hidden && card.isConnected) opts.onClose?.();
+  });
+  dismissed.observe(o, { attributes: true, attributeFilter: ['hidden'], childList: true });
 
   /** Build drill i (a fallback tile-name drill if the engine can't make it). */
   const build = (i: number): Drill => {

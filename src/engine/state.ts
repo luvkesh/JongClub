@@ -174,6 +174,7 @@ export type GameEvent =
   /** `seat` robbed the kong `from` was adding `tile` to. Followed by 'win'. */
   | { type: 'robKong'; seat: number; from: number; tile: Tile }
   | { type: 'exhausted' }
+  | { type: 'potToLeader'; seat: number; amount: number }
   /** The hand was abandoned (Riichi abortive draw). */
   | { type: 'abortive'; reason: AbortiveKind; seat?: number };
 
@@ -218,6 +219,8 @@ export interface GameState {
   wildIndicator?: Tile;
   /** American goulash: this hand follows a wall game (jokers may be passed). */
   goulash?: boolean;
+  /** India Rules: the match's one extra game after a drawn last game with buy money in the bank is under way. */
+  extraGame?: boolean;
   /** The last draw replaced a flower (a "flower wall" draw). */
   afterFlower?: boolean;
   /** Three dice for this hand, from their own stream of the hand seed (the shuffle is unchanged). */

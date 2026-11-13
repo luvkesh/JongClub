@@ -190,6 +190,22 @@ def thumb(src):
     return out
 
 
+def mid(src):
+    """A 1280px copy of a big tile-set picture, so phones don't fetch the full 1920px one."""
+    from PIL import Image
+    full_src = os.path.join(SITE, src)
+    if not src.startswith("collection/tiles-") or Image.open(full_src).size[0] <= 1400:
+        return ""
+    out = src.replace(".jpg", "-1280.jpg")
+    full = os.path.join(SITE, out)
+    if not os.path.exists(full) or os.path.getmtime(full) < os.path.getmtime(full_src):
+        im = Image.open(full_src).convert("RGB")
+        im.thumbnail((1280, 1280))
+        im.save(full, quality=84, optimize=True, progressive=True)
+    w = Image.open(full_src).size[0]
+    return f' srcset="{out} 1280w, {src} {w}w" sizes="(max-width: 960px) 100vw, 62vw"'
+
+
 def orbit(kind, cid):
     """A room's slow 3D orbit, played over its still while that room is on show."""
     if kind != "rooms" or not os.path.exists(os.path.join(SITE, "video", f"orbit-{cid}.mp4")):
@@ -198,7 +214,7 @@ def orbit(kind, cid):
 def slide(c, img, alt, eyebrow, i, kind):
     blurb = html.escape(c["blurb"].split(" Or open it free")[0])
     on = " on" if i == 0 else ""
-    return (f'<div class="slide{on}" data-i="{i}" data-voice="item-{kind}-{c['id']}"><div class="car-view"><div class="case"><img src="{img}" alt="{html.escape(alt)}"{"" if i == 0 else " loading=\"lazy\""}>{orbit(kind, c['id'])}</div></div>'
+    return (f'<div class="slide{on}" data-i="{i}" data-voice="item-{kind}-{c['id']}"><div class="car-view"><div class="case"><img src="{img}"{mid(img)} alt="{html.escape(alt)}"{"" if i == 0 else " loading=\"lazy\""}>{orbit(kind, c['id'])}</div></div>'
             f'<div class="car-info"><span class="eyebrow">{eyebrow}</span><h3>{html.escape(c["name"])}</h3><p>{blurb}</p>{price(c)}</div></div>')
 
 
@@ -254,7 +270,7 @@ page = (page
         .replace("{{GAME}}", GAME)
         .replace("{{CAROUSEL}}", carousel)
         .replace("{{BAND_OPENING}}", band("opening", "room-taipei", "The match opening in the Taipei Night Market room: the automatic table shuffles and builds the walls."))
-        .replace("{{BAND_ROOMS}}", rooms_tour("A slow walk through the club's rooms, from the Dubai Majlis to Tokyo and Hong Kong."))
+        .replace("{{BAND_ROOMS}}", rooms_tour("A slow walk through the club's rooms, from the Forbidden City to Dubai, Tokyo and Hong Kong."))
         .replace("{{EXTRAS}}", "\n".join(extras))
         .replace("{{N_TILESETS}}", str(len(cat["tiles"]))).replace("{{N_ROOMS}}", str(len(cat["envs"]))))
 # one-line chapter titles: the CSS sizes each by its character count

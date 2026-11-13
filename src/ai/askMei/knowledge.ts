@@ -179,7 +179,7 @@ export function knowledgePacks(): Pack[] {
         'JongClub is a premium online Mahjong club: a 3D table, 31 variations, the Mahjong Academy with Mei, mini-games, a Club with ratings and seasons, and a Collection of tile sets, racks and rooms. It is a club, never a casino.',
         'Menu: Home, Play (Quick Start, Host a New Game, Join a Friend with a table code, Variations, Daily hand), Mini-games (20 solo games that pay Jong Points), Learn (the Academy: lessons with Mei, daily drills, a placement test), Club (seasons, leagues, tournaments, private clubs, World Tour) and Profile (Collection, Jong Points, Settings). JongBot is the in-game helper at the table: tap it for what to discard and why.',
         'India Rules is the club’s main game and the default table. Chinese Classical comes second. Lessons are taught in English in Mei’s recorded voice; the rest of the app is in six languages.',
-        'Jong Points are earned by playing, lessons and mini-games (never bought with rating). Levels 1 to 5 and every India Rules lesson are free; later lessons open with Jong Points.',
+        'Jong Points are earned by playing, lessons and mini-games (never bought with rating). Levels 1 to 5, every India Rules lesson and the Kolkata Joker Club are free; later lessons open with Jong Points.',
         'The Mahjong family at the club:',
         family,
         learnPathText(),

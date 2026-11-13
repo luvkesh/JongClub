@@ -108,8 +108,8 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
       'div',
       { class: 'rewards' },
       h('div', { class: 'reward big' }, h('span', { class: 'k' }, ric('points'), tr('Jong Points')), h('span', { class: 'v' }, `+${fmt(rewards.jongPoints)}`)),
-      h('div', { class: 'reward' }, h('span', { class: 'k' }, ric('rating'), tr('Rating')), h('span', { class: 'v sm' }, `${fmt(rewards.ratingBefore)} → ${fmt(rewards.ratingAfter)}`), h('span', { class: 'note' }, ratingNote)),
-      h('div', { class: 'reward' }, h('span', { class: 'k' }, ric('level'), tr('Club Level')), h('span', { class: 'v sm' }, rewards.levelAfter > rewards.levelBefore ? `${rewards.levelBefore} → ${rewards.levelAfter}` : String(lv.level)), h('div', { class: 'xpbar' }, h('i', { style: { width: `${(lv.into / lv.need) * 100}%` } }))),
+      h('div', { class: 'reward' }, h('span', { class: 'k' }, ric('rating'), tr('Rating')), h('span', { class: 'v sm' }, fmt(rewards.ratingBefore), ' ', h('span', { class: 'ico-fwd' }, '→'), ' ', fmt(rewards.ratingAfter)), h('span', { class: 'note' }, ratingNote)),
+      h('div', { class: 'reward' }, h('span', { class: 'k' }, ric('level'), tr('Club Level')), h('span', { class: 'v sm' }, ...(rewards.levelAfter > rewards.levelBefore ? [String(rewards.levelBefore), ' ', h('span', { class: 'ico-fwd' }, '→'), ' ', String(rewards.levelAfter)] : [String(lv.level)])), h('div', { class: 'xpbar' }, h('i', { style: { width: `${(lv.into / lv.need) * 100}%` } }))),
       h('div', { class: 'reward' }, h('span', { class: 'k' }, ric('best'), tr('Best hand')), h('span', { class: 'v sm' }, summary.bestHand ? tr('{n} pts', { n: fmt(summary.bestHand.points) }) : '—')),
     ),
     h(

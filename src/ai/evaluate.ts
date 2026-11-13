@@ -107,6 +107,7 @@ export function evaluateDiscards(game: MahjongGame, seat: number): DiscardEval[]
   const orphans = !open && rules.thirteenOrphans;
   const voidKind = voidSuit(game, seat);
   const inexact = approxShapes(rules);
+  const big = !!game.profile.big;
   for (let k = 0; k < KIND_COUNT; k++) {
     if (!counts[k]) continue;
     counts[k]--;
@@ -131,7 +132,8 @@ export function evaluateDiscards(game: MahjongGame, seat: number): DiscardEval[]
     let ready = s;
     let readyUke = uke;
     let readyImp = improvers;
-    if (s === 0 || (s > 0 && s < 99 && inexact)) {
+    // A Big Card's distance is a quick search too: one tile off may already be ready.
+    if (s === 0 || (s > 0 && s < 99 && inexact) || (s === 1 && big)) {
       const ws = winningWaits(game, seat, k);
       if (ws.length) (ready = 0), (readyImp = ws.filter((w) => unseen[w] > 0)), (readyUke = readyImp.reduce((a, w) => a + unseen[w], 0));
       else if (s === 0) (ready = 1), (readyUke = 0), (readyImp = []);
@@ -181,12 +183,27 @@ export function winningWaits(game: MahjongGame, seat: number, discardKind = -1):
   if (discardKind >= 0 && i < 0) return [];
   const [gone] = i >= 0 ? pl.hand.splice(i, 1) : [];
   try {
-    const counts = game.naturalCounts(pl.hand);
-    const shapes = wildWaits(counts, handWilds(game, seat), pl.melds.length, game.shapesFor(seat), game.profile.wilds ?? { inPair: false, inChow: false });
-    return shapes.filter((w) => game.evaluateWin(seat, w, false, true) || game.evaluateWin(seat, w, true, true));
+    return shapeWaits(game, seat).filter((w) => game.evaluateWin(seat, w, false, true) || game.evaluateWin(seat, w, true, true));
   } finally {
     if (gone) pl.hand.splice(i, 0, gone);
   }
+}
+
+/**
+ * Kinds that could finish the seat's hand as it is (13-tile view), before the win test: the shape
+ * waits, a Big Card's own search (its shapes are only a distance), and the table's wild kinds,
+ * which finish any ready hand when drawn although no shape lists them.
+ */
+export function shapeWaits(game: MahjongGame, seat: number): number[] {
+  if (game.profile.big || game.profile.card) return game.waitsOf(seat);
+  const pl = game.players[seat];
+  const counts = game.naturalCounts(pl.hand);
+  const out = wildWaits(counts, handWilds(game, seat), pl.melds.length, game.shapesFor(seat), game.profile.wilds ?? { inPair: false, inChow: false });
+  for (const w of game.state.wildKinds ?? []) if (w < KIND_COUNT && !out.includes(w)) out.push(w);
+  // A tile you hold every copy of (sets included) can never come: it is no wait.
+  const held = new Array(KIND_COUNT).fill(0);
+  for (const t of [...pl.hand, ...pl.melds.flatMap((m) => m.tiles)]) if (t.kind < KIND_COUNT) held[t.kind]++;
+  return out.filter((w) => held[w] < game.profile.copiesPerKind).sort((a, b) => a - b);
 }
 
 /** Suit with the most tiles; used for flush-chasing personalities. */
@@ -200,16 +217,29 @@ export function dominantSuit(game: MahjongGame, seat: number) {
 /** Does the quick shanten only estimate one of these shapes (see SpecialShape.approx)? */
 export const approxShapes = (rules: ShapeRules) => !!rules.special?.some((sp) => sp.approx);
 
+/**
+ * Is the seat's hand the 13-tile view (waiting for a tile) rather than 14 (about to discard)? Told by
+ * the tile count, except at a Big Card table, whose kongs, qwongs and runs hold four or more tiles
+ * and earn extra ones: there only the seat on turn holds a full hand.
+ */
+export function waitingView(game: MahjongGame, seat: number): boolean {
+  if (game.profile.big) {
+    const ph = game.state.phase;
+    return !(ph.kind === 'turn' && ph.seat === seat);
+  }
+  return game.players[seat].hand.length % 3 === 1;
+}
+
 /** Shanten of the hand now (13-tile view: without the drawn tile if 14). */
 export function currentShanten(game: MahjongGame, seat: number) {
   const pl = game.players[seat];
   const rules = game.shapesFor(seat);
   const s = shantenWith(game.naturalCounts(pl.hand), pl.melds.length, rules, handWilds(game, seat));
-  if (pl.hand.length % 3 === 1 && !game.profile.card) {
+  if (waitingView(game, seat) && !game.profile.card) {
     // Ready in shape with no wait the rules accept is a tile short (13-tile view only).
     if (s === 0 && !winningWaits(game, seat).length) return 1;
     // An estimated shape may be ready already (mixed sets, passports).
-    if (s > 0 && s < 99 && approxShapes(rules) && winningWaits(game, seat).length) return 0;
+    if (s > 0 && s < 99 && (approxShapes(rules) || (s === 1 && game.profile.big)) && winningWaits(game, seat).length) return 0;
   }
   return s;
 }

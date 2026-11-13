@@ -10,10 +10,11 @@
 // rules) appear in the caption only.
 
 import { narrator } from '../audio/voice';
-import { FLOWER_JOKER, isAnimal, tileName } from '../engine/tiles';
+import { FLOWER_JOKER, isAnimal } from '../engine/tiles';
 import { h } from './dom';
 import './coach.css';
 import { tr } from '../i18n';
+import { tileLabel } from '../i18n/tiles';
 import { icon } from './icons';
 
 export type ClaimKind = 'pung' | 'chow' | 'kong' | 'win';
@@ -702,7 +703,7 @@ export class TutorialCoach {
   myTurn(info: TurnInfo) {
     this.turns++;
     const m = this.script.moments ?? {};
-    const extra = info.hint ? `JongBot: ${info.hint}` : '';
+    const extra = info.hint ? tr('JongBot: {hint}', { hint: info.hint }) : '';
     if (info.canWin && this.say(this.script.selfWin, extra, true, true)) return;
     if (info.canRiichi && this.say(m.riichi, extra, true, true)) return;
     if (info.canSwap && this.say(m.swap, extra, true, true)) return;
@@ -737,7 +738,7 @@ export class TutorialCoach {
   bonusTile(kind: number) {
     const m = this.script.moments ?? {};
     const line = isAnimal(kind) ? (m.animal ?? m.bonus) : kind === FLOWER_JOKER ? (m.flowerJoker ?? m.bonus) : m.bonus;
-    this.later(line, `Set aside: ${tileName(kind)}`);
+    this.later(line, tr('Set aside: {tile}', { tile: tileLabel(kind) }));
   }
 
   /** The Charleston: your turn to choose three tiles for pass `stage` (0 to 5). */

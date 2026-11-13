@@ -56,7 +56,7 @@ function card(m: KeyMoment, labels: boolean, onReplay: (hand: number, step: numb
       'div',
       { class: 'km-body' },
       m.tile !== undefined ? tileImg(m.tile, 'mini', labels) : null,
-      m.better !== undefined && m.better !== m.tile ? h('span', { class: 'km-better' }, '→', tileImg(m.better, 'mini', labels)) : null,
+      m.better !== undefined && m.better !== m.tile ? h('span', { class: 'km-better' }, h('span', { class: 'ico-fwd' }, '→'), tileImg(m.better, 'mini', labels)) : null,
       h('p', {}, m.line),
     ),
     h('button', { class: 'btn sm ghost km-go', onclick: () => onReplay(m.hand, m.step) }, tr('Replay this moment')),
