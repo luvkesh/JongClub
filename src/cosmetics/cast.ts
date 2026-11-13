@@ -32,3 +32,10 @@ export function castLook(name: string): AvatarSpec | null {
   const c = CAST[name];
   return c ? { ...c } : null;
 }
+
+/** Which regular a look belongs to, when it is exactly their own cast look; else null. */
+export function castNameFor(spec: AvatarSpec): string | null {
+  const key = JSON.stringify(spec);
+  for (const [name, look] of Object.entries(CAST)) if (JSON.stringify(look) === key) return name;
+  return null;
+}
