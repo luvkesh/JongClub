@@ -5,7 +5,8 @@ import { icon } from './icons';
 
 /** The settings the music switch reads and writes (StoredSettings in screens/settings.ts). */
 export interface MusicSettings {
-  volumes: { effects: number; music: number; ambient: number };
+  /** `voices` is missing from settings saved before the Voices slider existed: full volume. */
+  volumes: { effects: number; music: number; ambient: number; voices?: number };
   /** Background music and the room's ambient sound switched off with the music button; the sliders keep their levels for when they come back. */
   musicOff?: boolean;
 }
@@ -14,7 +15,7 @@ const EVENT = 'jongclub:music';
 
 /** Send the volumes to the mixer, with the music and the room's ambient sound silenced while they are switched off. */
 export function applyVolumes(s: MusicSettings) {
-  sound.setVolumes({ ...s.volumes, music: s.musicOff ? 0 : s.volumes.music, ambient: s.musicOff ? 0 : s.volumes.ambient });
+  sound.setVolumes({ ...s.volumes, voices: s.volumes.voices ?? 1, music: s.musicOff ? 0 : s.volumes.music, ambient: s.musicOff ? 0 : s.volumes.ambient });
 }
 
 /** Switch the background music and the room's ambient sound on or off (tile sounds, callers and Mei stay as set), remembered across visits. */

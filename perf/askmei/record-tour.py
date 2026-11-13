@@ -43,7 +43,7 @@ for sent in sentences(text):
     cues.append({'t': round(t, 2), 'text': sent}); t += len(audio) / sr + pause_after(sent)
     parts += [audio, np.zeros(int(sr * pause_after(sent)), dtype=np.float32)]
 wav = f'{work}/{key}.wav'; sf.write(wav, np.concatenate(parts), sr)
-subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav, '-af', 'loudnorm=I=-18', '-ac', '1', '-ar', '24000', '-b:a', '48k', f'website/tour/mei-{key}.mp3'], check=True)
+subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav, '-af', 'loudnorm=I=-18', '-ac', '1', '-ar', '24000', '-b:a', '64k', f'website/tour/mei-{key}.mp3'], check=True)
 cp = 'website/tour/captions.json'; caps = json.load(open(cp)); caps[key] = cues
 json.dump(caps, open(cp, 'w'), ensure_ascii=False, indent=2); open(cp, 'a').write('\n')
 print(key, round(t, 1), 's', cues)

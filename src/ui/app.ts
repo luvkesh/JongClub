@@ -5,6 +5,7 @@ import { lastTable, rememberTable } from './lastTable';
 import { refreshLocation } from '../club/location';
 import { sound } from '../audio/sound';
 import { narrator } from '../audio/voice';
+import { callers } from '../audio/callers';
 import { getProfile } from '../engine/rules';
 import { classicProfile } from '../engine/rules/classic';
 import { forfeitRanked, loadProfile, saveProfile, type Profile } from '../progression/profile';
@@ -419,6 +420,9 @@ export class App {
       void this.live.leave();
       this.live = null;
     }
+    // A table left while muted gives the club its sound back.
+    callers.setMuted(false);
+    applyVolumes(this.settings);
     this.match = null;
     this.hud.hidden = true;
     clear(this.hud);
@@ -448,6 +452,8 @@ export class App {
 
   closeMatchUi() {
     if (this.match?.opts.coach instanceof CoachMode) this.match.opts.coach.stop();
+    callers.setMuted(false);
+    applyVolumes(this.settings);
     this.match = null;
     this.hud.hidden = true;
     clear(this.hud);
