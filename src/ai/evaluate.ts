@@ -50,7 +50,8 @@ export function isValueHonor(game: MahjongGame, seat: number, kind: number) {
 export function threatLevels(game: MahjongGame, seat: number): number[] {
   const late = game.liveRemaining < 30;
   return game.players.map((p, s) => {
-    if (s === seat) return 0;
+    // Nobody can feed a win at a self-draw-only table, and a partner's win is your own.
+    if (s === seat || !game.dealInRisk(seat, s)) return 0;
     if (p.riichi) return 1;
     const m = p.melds.filter((x) => !x.concealed).length;
     if (m >= 3) return 1;

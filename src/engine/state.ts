@@ -103,9 +103,21 @@ export type Phase =
   /** India Rules North round: before the deal, East chooses the game (a code from profile.roundChoices). */
   | { kind: 'roundChoice'; seat: number };
 
+/** A second (or third) winner on the same discard, at a table with multiple winners on. */
+export interface CoWinner {
+  seat: number;
+  score: HandScore;
+  revealedHand: Tile[];
+  revealedMelds: Meld[];
+}
+
 export interface HandResult {
   type: 'win' | 'draw';
   winner?: number;
+  /** Every winner in turn order when more than one won on the discard (`winner` is the first). */
+  winners?: number[];
+  /** The other winners' hands and scores (multiple winners). */
+  coWinners?: CoWinner[];
   discarder?: number | null;
   winTile?: Tile;
   score?: HandScore;

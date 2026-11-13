@@ -9,6 +9,7 @@ import type { Meld } from '../state';
 import type { Tile } from '../tiles';
 import type { PassportLayout } from './indiaLayout';
 import type { BigCard, MInfo } from './indiaBig';
+import type { TableOptions } from './tableOptions';
 
 export interface ScoringContext {
   decomposition: Decomposition;
@@ -366,6 +367,10 @@ export interface RuleProfile {
   configure?(choices: Record<string, string>): Partial<RuleProfile>;
   /** Choices applied by withHouseRules. */
   houseChoices?: Record<string, string>;
+  /** The table options (self-draw only, multiple winners, winner takes all, teams, the cumulative
+   *  leaderboard), set by withHouseRules from the host's choices. The game reads them from its
+   *  base profile, so a special round's overlay keeps them. */
+  table?: TableOptions;
   /** House rules a table host may toggle; surfaced generically in the lobby. */
   houseRules: { id: string; label: string; options: { value: string; label: string }[]; default: string }[];
 }
