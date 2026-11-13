@@ -20,7 +20,7 @@ import { getProfile } from '../engine/rules';
 import { classicProfile } from '../engine/rules/classic';
 import { Rng } from '../engine/rng';
 import { KIND_COUNT, WIND_NAMES, rankOf, suitOf, toCounts, type Wind } from '../engine/tiles';
-import { andList, tr } from '../i18n';
+import { andList, scoreLine, tr } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { passportDiscardDrill, passportDrill } from './passportDrills';
 
@@ -382,7 +382,7 @@ function valueDrill(seed: number, variation: string): Drill {
     const sc = r.score!;
     if (!sc.items.length) continue;
     // Extras the tiles can't show (ura dora, the last tile, a red five...) are named in the context.
-    const hidden = [...new Set(sc.items.filter((i) => HIDDEN_ITEM.test(i.name)).map((i) => i.name))];
+    const hidden = [...new Set(sc.items.filter((i) => HIDDEN_ITEM.test(i.name)).map((i) => scoreLine(i.name)))];
     const winner = r.winner!;
     const unit = sc.unit;
     const rng = new Rng(s);
@@ -391,7 +391,7 @@ function valueDrill(seed: number, variation: string): Drill {
     const pool = [val - 2, val - 1, val + 1, val + 2, val + 3].filter((x) => x >= least && x !== val);
     const opts = [val, ...shuffle(rng, pool).slice(0, 3)].sort((a, b) => a - b);
     const sum = sc.items.reduce((a, i) => a + i.value, 0);
-    const parts = sc.items.map((i) => `${i.name} ${i.value}`).join(' + ');
+    const parts = sc.items.map((i) => `${scoreLine(i.name)} (${i.value})`).join(' + ');
     const capped = sum !== val ? ` ${tr(sc.limit ? 'That comes to {sum}, and the hand counts {val} at the limit.' : 'That comes to {sum}, and the hand counts {val}.', { sum, val })}` : '';
     const winTile = r.winTile?.kind;
     const hand = (r.revealedHand ?? game.players[winner].hand).map((t) => t.kind).filter((k) => k < KIND_COUNT);
