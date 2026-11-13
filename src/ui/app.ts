@@ -26,7 +26,7 @@ import { castLook } from '../cosmetics/cast';
 import { clear, h } from './dom';
 import { MatchController, type MatchOptions, type TableConfig } from './match';
 import { renameMe, type ReplayRecord } from '../net/replay';
-import { Club, type TableSession, type Who } from '../net/session';
+import { Club, tableBeforeReload, type TableSession, type Who } from '../net/session';
 import { joinTable, tableFromLink, type LiveHost } from './live';
 import { takeClubInvite } from '../club/privateClubs';
 import { ReplayViewer } from './replay';
@@ -137,8 +137,11 @@ export class App {
     window.addEventListener('pointerdown', unlock);
 
     const hash = location.hash.slice(1) as Screen;
-    // A table from an invite link (?table=CODE) or the older #join=CODE.
-    const joinCode = /^join=([a-z2-9]{5})$/i.exec(location.hash.slice(1))?.[1]?.toLowerCase() ?? tableFromLink();
+    // A table from an invite link (?table=CODE) or the older #join=CODE; else the table this tab sat at before a reload.
+    const linkCode = /^join=([a-z2-9]{5})$/i.exec(location.hash.slice(1))?.[1]?.toLowerCase() ?? tableFromLink();
+    const before = tableBeforeReload();
+    const joinCode = linkCode ?? before?.code ?? null;
+    const joinWatch = !linkCode && !!before?.spectate;
     const SCREENS: Screen[] = ['home', 'play', 'versions', 'learn', 'passport', 'club', 'collection', 'profile', 'daily', 'tournaments', 'atelier', 'minigames', 'seasons', 'store'];
     // A club invite link (?club=CODE) opens the Club screen, which opens the clubs page.
     this.go(joinCode ? 'play' : takeClubInvite() ? 'club' : SCREENS.includes(hash) ? hash : 'home');
@@ -182,7 +185,7 @@ export class App {
       // Home, Play and Club enable their Host / Join controls once the club answers.
       if (c && !this.match && (this.screen === 'home' || this.screen === 'play' || this.screen === 'club')) this.go(this.screen);
       // An invite link opens its table straight away.
-      if (c && joinCode && !this.match) void joinTable(this.liveHost(), joinCode, false);
+      if (c && joinCode && !this.match) void joinTable(this.liveHost(), joinCode, joinWatch);
     });
   }
 
@@ -238,6 +241,13 @@ export class App {
         } else if (this.screen === 'play') this.go('play');
       },
       liveStarted: (s) => (this.live = s),
+      suspendMatch: () => {
+        // Close the game without leaving the table (endMatch leaves this.live when set).
+        const live = this.live;
+        this.live = null;
+        this.match?.abort();
+        this.live = live;
+      },
     };
   }
 

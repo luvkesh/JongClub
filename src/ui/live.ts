@@ -25,6 +25,8 @@ export interface LiveHost {
   onSessionEnd(): void;
   /** A live game is starting at this table (leave it when the game ends). */
   liveStarted(s: TableSession): void;
+  /** Close the running live game but stay at the table (to sit down again at the next hand). */
+  suspendMatch(): void;
 }
 
 const varName = (id: string) => VARIATIONS.find((v) => v.id === id) ?? VARIATIONS[0];
@@ -175,6 +177,8 @@ export function waitingRoom(host: LiveHost, s: TableSession) {
   let closed = false;
   let since = Date.now();
   let starting = false;
+  /** This tab saw the table before its game began (else it arrived at a game under way). */
+  let sawOpen = false;
 
   const close = async () => {
     if (closed) return;
@@ -195,9 +199,10 @@ export function waitingRoom(host: LiveHost, s: TableSession) {
       off();
       window.clearInterval(tick);
       o.hidden = true;
-      beginLive(host, s);
+      beginLive(host, s, undefined, !sawOpen);
       return;
     }
+    if (t) sawOpen = true;
     // Redrawn every couple of seconds: keep the sheet's scroll and a start already pressed.
     const keep = o.scrollTop;
     clear(card);
@@ -280,30 +285,110 @@ export function waitingRoom(host: LiveHost, s: TableSession) {
 }
 
 /** Start the match for everyone at the table: your seat is local, other people are remote. */
-function beginLive(host: LiveHost, s: TableSession) {
+function beginLive(host: LiveHost, s: TableSession, back?: { seat: number; hand: number }, late = false) {
+  // Arriving at a game under way: back at your own seat after a reload, or watching.
+  if (!back && late) {
+    const seat = s.returnSeat();
+    if (seat >= 0) return rejoinSeat(host, s, seat);
+  }
   const t = s.table()!;
   const start = t.start!;
   const me = s.myPeer;
-  const seats: SeatSpec[] = start.seats.map((x) =>
-    x.kind === 'ai' ? { kind: 'ai', name: x.name, personality: (x.personality as Personality) ?? 'zen' } : { kind: x.peer === me ? 'local' : 'remote', name: x.name, avatar: x.avatar },
-  );
   const link = s.link();
   if (!link) return host.onSessionEnd();
+  const seats: SeatSpec[] = start.seats.map((x, i) =>
+    x.kind === 'ai'
+      ? { kind: 'ai', name: x.name, personality: (x.personality as Personality) ?? 'zen' }
+      : back
+        ? // Back in your own seat: the others as they sit at that hand (a player who left plays as an AI).
+          { kind: i === back.seat ? 'local' : link.aiAt(i, back.hand, 0) ? 'ai' : 'remote', name: x.name, avatar: x.avatar }
+        : { kind: x.peer === me ? 'local' : 'remote', name: x.name, avatar: x.avatar },
+  );
   link.onHostLost = () => {
     host.onSessionEnd();
     hostLeftNotice(host);
   };
-  const seated = seats.some((x) => x.kind === 'local');
+  const mine = seats.findIndex((x) => x.kind === 'local');
+  // Cut off long enough that the host gave your seat to an AI: your table has gone its own way,
+  // so step out and take the seat again at the next hand, in step with everyone.
+  if (back) link.seatSince = back.hand;
+  if (mine >= 0)
+    link.onSeatLost = () => {
+      host.suspendMatch();
+      rejoinSeat(host, s, mine);
+    };
+  const seated = mine >= 0;
   const opts: MatchOptions = { seed: start.seed, seats, link, mode: t.ranked ? 'ranked' : 'multiplayer', ranked: t.ranked && seated };
-  if (!seated) {
+  const snap = s.hostSnapshot();
+  if (back && snap) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot, goulash: !!snap.goulash };
+  else if (!seated) {
     // Spectators: watch from the host's seat, joining at the current hand.
-    const snap = s.hostSnapshot();
     opts.viewSeat = 0;
-    if (snap && snap.h > 0) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot };
+    if (snap && snap.h > 0) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot, goulash: !!snap.goulash };
   }
   host.liveStarted(s);
   host.startMatch(t.cfg, opts);
   watcherBadge(s);
+}
+
+/**
+ * Back at a table whose game went on without you (the page reloaded, or the invite was opened
+ * again in the same tab): an AI kept your seat warm, and the host gives it back at the next hand.
+ */
+function rejoinSeat(host: LiveHost, s: TableSession, seat: number) {
+  const o = host.modal;
+  clear(o).hidden = false;
+  let done = false;
+  let hostGoneSince = 0;
+  const stop = () => {
+    done = true;
+    off();
+    window.clearInterval(tick);
+  };
+  const leave = () => {
+    if (done) return;
+    stop();
+    o.hidden = true;
+    void s.leave();
+    host.onSessionEnd();
+  };
+  o.append(
+    h(
+      'div',
+      { class: 'card waiting-room', role: 'dialog', 'aria-labelledby': 'rejoin-title' },
+      h('p', { class: 'eyebrow' }, tr('Table {code}', { code: s.code.toUpperCase() })),
+      h('h3', { id: 'rejoin-title' }, tr('Welcome back')),
+      h('p', { class: 'muted' }, tr('An AI player kept your seat while you were away. You take it again when the next hand starts.')),
+      h('div', { class: 'btn-row' }, h('button', { class: 'btn ghost', onclick: leave }, tr('Leave'))),
+    ),
+  );
+  s.markRejoining();
+  const check = () => {
+    if (done) return;
+    const snap = s.hostSnapshot();
+    if (!s.hostPresent() || s.hostOver()) {
+      hostGoneSince ||= Date.now();
+      if (Date.now() - hostGoneSince > 10000) {
+        // A host still at the table whose game is over finished it; one who is gone left it.
+        const finished = s.hostPresent();
+        stop();
+        void s.leave();
+        host.onSessionEnd();
+        hostLeftNotice(host, finished);
+      }
+      return;
+    }
+    hostGoneSince = 0;
+    const hand = s.rejoinHand(seat);
+    if (hand === null || !snap || snap.h < hand) return;
+    stop();
+    o.hidden = true;
+    // The host moved past that hand without you (you dropped again): watch instead.
+    beginLive(host, s, snap.h === hand ? { seat, hand } : { seat: -1, hand: snap.h });
+  };
+  const off = s.onChange(check);
+  const tick = window.setInterval(check, 1000);
+  check();
 }
 
 /** How many people are watching, shown on the table while a live game runs. */
@@ -373,7 +458,7 @@ async function inviteFriend(btn: HTMLButtonElement, code: string, title: string)
 }
 
 /** Tell guests why their game stopped. */
-function hostLeftNotice(host: LiveHost) {
+function hostLeftNotice(host: LiveHost, finished = false) {
   const o = host.modal;
   clear(o).hidden = false;
   const ok = h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Back to the lobby'));
@@ -382,7 +467,7 @@ function hostLeftNotice(host: LiveHost) {
       'div',
       { class: 'card waiting-room', role: 'alertdialog', 'aria-labelledby': 'host-left-title' },
       h('h3', { id: 'host-left-title' }, tr('The game has ended')),
-      h('p', { class: 'muted' }, tr('The host left the table, so this game can’t continue. Nothing was recorded for this game.')),
+      h('p', { class: 'muted' }, finished ? tr('The game finished while you were away.') : tr('The host left the table, so this game can’t continue. Nothing was recorded for this game.')),
       h('div', { class: 'btn-row' }, ok),
     ),
   );

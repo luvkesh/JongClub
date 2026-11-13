@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { Action } from '../src/net/actions';
-import { RoomLink, decodeAction, encodeAction } from '../src/net/lockstep';
+import { RoomLink, decodeAction, encodeAction, isAiAt } from '../src/net/lockstep';
 import type { NamedRoom, PeersChange, RoomPeer } from '../src/net/room';
 
 beforeAll(() => {
@@ -152,6 +152,139 @@ describe('RoomLink lockstep', () => {
     void g1.next(0, 0, 3);
     await vi.advanceTimersByTimeAsync(9500);
     expect(lost).toBe(1);
+  });
+
+  it('gives a returning player their seat back from the next hand, on every client', async () => {
+    vi.useFakeTimers();
+    const hub = new FakeHub();
+    const seats = ['h', 'g1', 'g2', null];
+    const pids = [null, 'pidg1', 'pidg2', null];
+    const host = new RoomLink(hub.join('h'), seats, 'h', true, pids);
+    const g2 = new RoomLink(hub.join('g2'), seats, 'h', false, pids);
+    links.push(host, g2);
+    for (const l of [host, g2]) l.handStarted(0, fakeGame);
+    // g1 never shows up (their page reloaded): the host hands the seat to an AI.
+    const onHost = host.next(1, 0, 3);
+    const onG2 = g2.next(1, 0, 3);
+    await vi.advanceTimersByTimeAsync(7500);
+    expect(await onHost).toBe('ai');
+    expect(await onG2).toBe('ai');
+    expect(host.aiAt(1, 0, 5)).toBe(true);
+    // They come back under a new label with the same rejoin key.
+    const back = hub.join('g1b');
+    await back.presence({ role: 'player', pid: 'pidg1' });
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(host.returning(1)).toEqual([1]);
+    expect(g2.returning(1)).toEqual([1]);
+    expect(host.returning(0)).toEqual([]);
+    // Still the AI for the rest of this hand, the player again from the next.
+    expect(g2.aiAt(1, 0, 9)).toBe(true);
+    expect(isAiAt([{ s: 1, h: 0, i: 3 }], [{ s: 1, h: 1 }], 1, 0, 9)).toBe(true);
+    expect(g2.aiAt(1, 1, 0)).toBe(false);
+    // From hand 1 the host reads the new label's decisions, and guests take them from the host.
+    const g1b = new RoomLink(back, seats, 'h', false, pids);
+    links.push(g1b);
+    for (const l of [host, g2, g1b]) l.handStarted(1, fakeGame);
+    g1b.publish(1, 2, { t: 'd', s: 1, id: 42 });
+    expect(await host.next(1, 1, 2)).toEqual({ t: 'd', s: 1, id: 42 });
+    expect(await g2.next(1, 1, 2)).toEqual({ t: 'd', s: 1, id: 42 });
+  });
+
+  it('a guest cut off long enough to lose the seat hears so, and gets it back at the next hand', async () => {
+    vi.useFakeTimers();
+    const hub = new FakeHub();
+    const seats = ['h', 'g1', null, null];
+    const pids = [null, 'pidg1', null, null];
+    const host = new RoomLink(hub.join('h'), seats, 'h', true, pids);
+    links.push(host);
+    host.handStarted(0, fakeGame);
+    // g1 is cut off: absent from the room while the host waits on them.
+    const onHost = host.next(1, 0, 2);
+    await vi.advanceTimersByTimeAsync(7500);
+    expect(await onHost).toBe('ai');
+    // The same tab comes back (same label), still thinking it holds the seat.
+    const r = hub.join('g1');
+    await r.presence({ role: 'player', pid: 'pidg1' });
+    const g1 = new RoomLink(r, seats, 'h', false, pids);
+    links.push(g1);
+    let lost = 0;
+    g1.onSeatLost = () => lost++;
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(lost).toBe(1);
+    expect(host.returning(1)).toEqual([1]);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(lost).toBe(1);
+  });
+
+  it('hands a seat whose player is present but stalled to an AI after stallMs', async () => {
+    vi.useFakeTimers();
+    const { host, g2 } = table();
+    host.stallMs = 60_000;
+    const onHost = host.next(1, 0, 4);
+    const onG2 = g2.next(1, 0, 4);
+    let got: unknown = null;
+    void onHost.then((a) => (got = a));
+    await vi.advanceTimersByTimeAsync(50_000);
+    expect(got).toBeNull(); // g1 is still in the room: no takeover yet
+    await vi.advanceTimersByTimeAsync(12_000);
+    expect(await onHost).toBe('ai');
+    expect(await onG2).toBe('ai');
+  });
+
+  it('a player back under the same label (the link kept it) gets the seat at once to an AI, then back next hand', async () => {
+    vi.useFakeTimers();
+    const hub = new FakeHub();
+    const seats = ['h', 'g1', null, null];
+    const pids = [null, 'pidg1', null, null];
+    const host = new RoomLink(hub.join('h'), seats, 'h', true, pids);
+    links.push(host);
+    host.handStarted(0, fakeGame);
+    const g1room = hub.join('g1');
+    await g1room.presence({ role: 'player', pid: 'pidg1', play: { rejoin: 1 } });
+    const onHost = host.next(1, 0, 2);
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(await onHost).toBe('ai');
+    expect(host.returning(1)).toEqual([1]);
+    // The flag left on while the returning tab starts its game no longer takes the seat away.
+    host.handStarted(1, fakeGame);
+    let got: unknown = null;
+    void host.next(1, 1, 0).then((a) => (got = a));
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(got).toBeNull();
+    const g1 = new RoomLink(g1room, seats, 'h', false, pids);
+    links.push(g1);
+    g1.handStarted(1, fakeGame);
+    g1.publish(1, 0, { t: 'd', s: 1, id: 7 });
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(got).toEqual({ t: 'd', s: 1, id: 7 });
+  });
+
+  it('a seat taken over again after a return stays with the AI', () => {
+    const to = [
+      { s: 1, h: 0, i: 3 },
+      { s: 1, h: 2, i: 7 },
+    ];
+    const back = [{ s: 1, h: 1 }];
+    expect(isAiAt(to, back, 1, 0, 2)).toBe(false);
+    expect(isAiAt(to, back, 1, 0, 3)).toBe(true);
+    expect(isAiAt(to, back, 1, 1, 0)).toBe(false);
+    expect(isAiAt(to, back, 1, 2, 6)).toBe(false);
+    expect(isAiAt(to, back, 1, 2, 7)).toBe(true);
+    expect(isAiAt(to, back, 1, 5, 0)).toBe(true);
+    expect(isAiAt(to, back, 2, 5, 0)).toBe(false);
+  });
+
+  it('guests start a hand only once the host has', async () => {
+    const { host, g1 } = table();
+    let ready = false;
+    void g1.handReady(1).then(() => (ready = true));
+    await flush();
+    expect(ready).toBe(false);
+    host.handStarted(1, fakeGame);
+    await flush();
+    await flush();
+    expect(ready).toBe(true);
+    await expect(host.handReady(5)).resolves.toBeUndefined();
   });
 
   it('keeps presence under 4 KiB for a long hand', async () => {

@@ -137,6 +137,8 @@ const DIFFICULTY_PAUSE: Record<Difficulty, number> = { beginner: 150, casual: 50
 /** An AI turn takes about a second at the default speed (aiPause). */
 const AI_PAUSE_MIN = 800;
 const AI_PAUSE_MAX = 1250;
+/** Live tables: seconds the hand summary waits before moving on by itself. */
+const LIVE_SUMMARY_S = 25;
 
 export type SeatKind = 'local' | 'ai' | 'remote';
 
@@ -165,7 +167,7 @@ export interface MatchOptions {
   /** Stop after this many hands (daily challenges). */
   maxHands?: number;
   /** Join a running match at the start of hand `hand` (late spectators). */
-  resume?: { hand: number; round: RoundState; scores: number[]; pot: number };
+  resume?: { hand: number; round: RoundState; scores: number[]; pot: number; /** The hand follows a wall game (American goulash). */ goulash?: boolean };
   /** Guided game: Mei talks the player through the hand. */
   coach?: TutorialCoach;
   /** Practice table: every opponent plays face up, so you can watch their hands come together. No points, no rating. */
@@ -1300,6 +1302,8 @@ export class MatchController {
         { class: 'card confirm' },
         h('h3', {}, tr('Leave the table?')),
         h('p', {}, this.opts.ranked ? tr('Leaving a ranked game counts as finishing 4th.') : this.opts.tag === 'tournament' ? tr('Leaving counts as finishing last at this table.') : tr('This game will not be saved to your profile.')),
+        // Live tables: say what leaving does to everyone else.
+        this.opts.link && !this.spectator ? h('p', { class: 'muted' }, this.opts.link.isHost ? tr('You are the host: leaving ends this game for everyone at the table.') : tr('An AI player takes over your seat and the others play on.')) : null,
         h(
           'div',
           { class: 'btn-row' },
@@ -2295,8 +2299,29 @@ export class MatchController {
       this.game.state.round = resume.round;
       this.game.players.forEach((p, i) => (p.score = resume.scores[i] ?? p.score));
       this.game.state.riichiPot = resume.pot;
+      if (resume.goulash) this.game.state.goulash = true;
     }
+    // A live player whose tab froze never runs out their own clock: past twice the turn time (and a margin
+    // for a slow device), the host hands the seat to an AI. Untimed tables wait as long as it takes.
+    if (this.opts.link && this.limits.turn > 0) this.opts.link.stallMs = Math.max(60, firstTurnLimit(this.limits.turn) + 30) * 1000;
     while (!this.aborted) {
+      const link = this.opts.link;
+      if (link) {
+        // Start each hand together with the host, so a seat given back to a returning player
+        // (and any other change of who sits where) applies on every client from the same hand.
+        if (!link.isHost) {
+          const slow = window.setTimeout(() => this.markWaiting(0), 1500);
+          await link.handReady(this.handNo);
+          window.clearTimeout(slow);
+          this.markWaiting(-1);
+          if (this.aborted) return;
+        }
+        for (const s of link.returning(this.handNo)) {
+          if (this.seats[s].kind !== 'ai') continue;
+          this.seats[s].kind = 'remote';
+          this.toast(tr('WELCOME BACK'), tr('{name} is back and takes their seat again', { name: this.game.players[s].name }));
+        }
+      }
       this.handLog = [];
       if (this.opts.link) {
         // Live tables reseed every AI per hand, so a spectator who joins at hand n
@@ -3559,8 +3584,22 @@ export class MatchController {
       const row = (t: number) => h('div', { class: `delta-row team-row ${t === mineT && !this.spectator ? 'mine' : ''}` }, h('span', {}, team(t)), h('span', { class: `num ${totals[t] > totals[1 - t] ? 'up' : totals[t] < totals[1 - t] ? 'down' : ''}` }, fmt(totals[t])));
       card.append(h('h4', { class: 'instant-head' }, tr('Teams')), h('div', { class: 'deltas team-totals' }, row(mineT), row(1 - mineT)));
     }
+    let autoNext = 0;
     await new Promise<void>((resolve) => {
       const cont = h('button', { class: 'btn primary', onclick: () => resolve() }, over ? tr('See results') : tr('Next hand')) as HTMLButtonElement;
+      // Live tables: everyone else waits while you read, so the summary moves on by itself
+      // (a player who walked away would otherwise hold the whole table at the summary).
+      if (this.opts.link && !over) {
+        // Counted on the wall clock: a busy or backgrounded page runs its timers late.
+        const end = Date.now() + LIVE_SUMMARY_S * 1000;
+        const note = h('p', { class: 'muted small live-next', 'aria-live': 'off' }, tr('Next hand in {n}s', { n: LIVE_SUMMARY_S }));
+        card.append(note);
+        autoNext = window.setInterval(() => {
+          const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+          note.textContent = tr('Next hand in {n}s', { n: left });
+          if (left <= 0) resolve();
+        }, 500);
+      }
       // A win can fold its summary away to look at the hand on the table; the camera frames it.
       // The hand the table frames when the summary folds away: the winner's, or the one picked with View in All hands.
       let framed = winner ?? (this.spectator ? 0 : this.me);
@@ -3622,6 +3661,7 @@ export class MatchController {
       requestAnimationFrame(clearTopPlate);
       this.resolveHuman = () => resolve();
     });
+    window.clearInterval(autoNext);
     o.hidden = true;
     o.classList.remove('win-sheet', 'peek', 'free-cam');
     this.root.querySelector<HTMLElement>('.seat-2')?.style.removeProperty('translate');
