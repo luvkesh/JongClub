@@ -41,7 +41,8 @@ export function passportThreats(game: MahjongGame, seat: number): PassportThreat
   const n = game.profile.players;
   const right = (seat + 1) % n;
   for (let o = 0; o < n; o++) {
-    if (o === seat) continue;
+    // A partner (team play) is never a risk: their passport is your own win.
+    if (o === seat || game.sameTeam(seat, o)) continue;
     const ms = game
       .scoringMelds(o)
       .filter((m) => !m.concealed)

@@ -598,8 +598,12 @@ export class MahjongGame {
       const score = own ? own({ concealed, selfDrawn, seatWind: this.state.seatWinds[seat], flowers: pl.flowers.map((t) => t.kind), house: this.profile.houseChoices }) : bigScore(this.profile.big, concealed);
       return { score, decomposition: { shape: 'special', special: this.profile.big.name, sets: [], pair: -1 } };
     }
-    const counts = this.concealedCounts(seat, extraInHand && winKind < KIND_COUNT ? winKind : undefined);
-    const all = extraInHand ? [...pl.hand, { id: -1, kind: winKind }] : pl.hand;
+    // A capped wild (North Goulash's number) thrown by another player is a natural tile: it never
+    // becomes this hand's joker, even when the hand holds no copy of it.
+    const naturalExtra = extraInHand && !selfDrawn && this.profile.wildCap !== undefined && winKind < KIND_COUNT && this.isWild(winKind);
+    const counts = naturalExtra ? this.concealedCounts(seat) : this.concealedCounts(seat, extraInHand && winKind < KIND_COUNT ? winKind : undefined);
+    if (naturalExtra) counts[winKind]++;
+    const all = extraInHand && !naturalExtra ? [...pl.hand, { id: -1, kind: winKind }] : pl.hand;
     const wilds = this.wildsIn(all);
     const readings = this.winReadings(seat, counts, wilds);
     // A natural wild (laizi, baida, gold) may also stand as itself: those readings use no wild.
@@ -629,7 +633,7 @@ export class MahjongGame {
         melds,
         concealedCounts: r.counts,
         // A joker drawn to win counts as the tile it stands for.
-        winKind: this.isWild(winKind) ? (r.assigned.find((a) => a[0] === this.wildAs(winKind))?.[1] ?? winKind) : winKind,
+        winKind: this.isWild(winKind) && !naturalExtra ? (r.assigned.find((a) => a[0] === this.wildAs(winKind))?.[1] ?? winKind) : winKind,
         selfDrawn,
         seatWind: this.state.seatWinds[seat],
         prevailingWind: this.prevailing,
@@ -997,9 +1001,10 @@ export class MahjongGame {
     const order = Array.from({ length: n - 1 }, (_, i) => (ph.discarder + 1 + i) % n);
     const pick = (types: string[]) => order.find((s) => types.includes(ph.responses[s]?.type ?? 'pass'));
 
-    // Anyone who passed on a win is furiten until their next discard (or for good after riichi).
+    // Anyone who let a win go (passed, or answered with a call instead) is furiten until their next
+    // discard (or for good after riichi). A call that goes through is followed by their own discard.
     for (const s of order) {
-      if (ph.options[s]?.some((o) => o.type === 'win') && ph.responses[s]?.type === 'pass') {
+      if (ph.options[s]?.some((o) => o.type === 'win') && ph.responses[s]?.type !== 'win') {
         const pl = this.players[s];
         if (pl.riichi) pl.furitenLocked = true;
         else pl.furitenTemp = true;
@@ -1281,8 +1286,10 @@ export class MahjongGame {
       const out = p.hand.filter((t) => ph.picks[s].includes(t.id));
       p.hand = p.hand.filter((t) => !ph.picks[s].includes(t.id));
       if (india) {
+        // A player never takes back a tile they put down in this exchange.
+        const placed = new Set<number>();
         for (const put of out) {
-          const t = this.swapFromWall(s, put, rng);
+          const t = this.swapFromWall(s, put, rng, placed);
           if (t) p.hand.push(t);
         }
         continue;
@@ -1301,17 +1308,35 @@ export class MahjongGame {
 
   /** Take a tile from anywhere in the live wall and put `put` in its place. A flower taken is
    *  set aside and replaced from the back, as any drawn flower. */
-  private swapFromWall(seat: number, put: Tile, rng: Rng): Tile | null {
+  private swapFromWall(seat: number, put: Tile, rng: Rng, placed = new Set<number>()): Tile | null {
     const s = this.state;
-    const lo = s.drawnFromFront;
-    const hi = s.wall.length - this.profile.deadWall - s.drawnFromBack;
-    if (hi <= lo) return put;
-    const i = lo + rng.int(hi - lo);
-    const t = s.wall[i];
+    // A random live wall position, never one holding a tile this player just put down.
+    const pick = () => {
+      const lo = s.drawnFromFront;
+      const hi = s.wall.length - this.profile.deadWall - s.drawnFromBack;
+      const free: number[] = [];
+      for (let i = lo; i < hi; i++) if (!placed.has(s.wall[i].id)) free.push(i);
+      return free.length ? free[rng.int(free.length)] : -1;
+    };
+    const i = pick();
+    if (i < 0) return put;
+    let t: Tile | null = s.wall[i];
     s.wall[i] = put;
-    if (!this.isBonus(t.kind)) return t;
-    this.setAside(seat, t);
-    return this.drawFor(seat, true);
+    placed.add(put.id);
+    while (t && (this.isBonus(t.kind) || placed.has(t.id))) {
+      if (this.isBonus(t.kind)) {
+        this.setAside(seat, t);
+        t = this.drawFor(seat, true);
+        continue;
+      }
+      // The flower's replacement from the back was a tile this player put down: trade it back in.
+      const j = pick();
+      if (j < 0) break;
+      const u: Tile = s.wall[j];
+      s.wall[j] = t;
+      t = u;
+    }
+    return t;
   }
 
   private beginPlay() {

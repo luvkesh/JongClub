@@ -211,13 +211,14 @@ export interface IndiaReading {
 /** The pair (or knit) closing a hand: a knit only when the hand holds a crochet. */
 const twoOk = (p: Piece, all: Piece[]) => p.t === 'pair' || (p.t === 'knit' && all.some((x) => x.t === 'crochet'));
 
-/** A complete East-round hand from these pieces: plain sets, or a passport combination. */
-export function readHand(pieces: Piece[], passportOnly: boolean): IndiaReading | null {
+/** A complete East-round hand from these pieces: plain sets, or a passport combination.
+ *  `passports` false (Classic): plain sets only, no passport combination. */
+export function readHand(pieces: Piece[], passportOnly: boolean, passports = true): IndiaReading | null {
   const threes = pieces.filter(isThree);
   const twos = pieces.filter((p) => p.t === 'pair' || p.t === 'knit');
   const odd = pieces.some((p) => p.t === 'news5' || p.t === 'grw');
   const ids = pieces.map((_, i) => i);
-  for (const combo of PASSPORT_COMBOS) {
+  for (const combo of passports ? PASSPORT_COMBOS : []) {
     const found = fit(pieces, ids, combo.pp, [], [], combo);
     if (found) return { pieces, ...found };
   }
@@ -255,11 +256,11 @@ function fit(pieces: Piece[], free: number[], todo: PassportSize[], names: strin
 }
 
 /** The best reading of a complete hand (concealed counts + declared melds), or null. */
-export function eastReading(counts: number[], melds: MeldShape[], passportOnly: boolean): IndiaReading | null {
+export function eastReading(counts: number[], melds: MeldShape[], passportOnly: boolean, passports = true): IndiaReading | null {
   const fixed = melds.map(meldPiece);
   let best: IndiaReading | null = null;
-  for (const r of pieceReadings(counts, { chows: true, mixed: true, passports: true })) {
-    const got = readHand([...fixed, ...r], passportOnly);
+  for (const r of pieceReadings(counts, { chows: true, mixed: true, passports })) {
+    const got = readHand([...fixed, ...r], passportOnly, passports);
     if (got && (!best || got.passports.length > best.passports.length)) best = got;
   }
   return best;
@@ -268,25 +269,26 @@ export function eastReading(counts: number[], melds: MeldShape[], passportOnly: 
 /** The East-round hand as one shape: 3+3+3+3+2 with mixed pieces, or passports. `meldsOf` gives
  *  the seat's declared melds (a call the AI is weighing included), so the distance to a passport can
  *  count them; without it only plain sets are measured. */
-export function eastShape(passportOnly: boolean, meldsOf?: () => MeldShape[]): SpecialShape {
+export function eastShape(passportOnly: boolean, meldsOf?: () => MeldShape[], passports = true): SpecialShape {
   const memo = new Map<string, number>();
   const meter = new PassportMeter();
   return {
     name: passportOnly ? 'Passport' : 'India hand',
     ai: true,
+    approx: true,
     complete(counts, meldCount, melds) {
       const total = counts.reduce((a, b) => a + b, 0);
       if (total + 3 * meldCount !== 14) return false;
       // Without the melds' kinds, declared melds read as pungs of nothing in particular.
       const known = melds ?? meldsOf?.();
       const ms: MeldShape[] = known && known.length === meldCount ? known : Array.from({ length: meldCount }, () => ({ type: 'pung', kind: -1 }));
-      return eastReading(counts, ms, passportOnly) !== null;
+      return eastReading(counts, ms, passportOnly, passports) !== null;
     },
     shanten(counts, meldCount) {
       // Plain sets and a pair, plain or mixed (when no passport is needed), or the nearest passport hand.
       const plain = passportOnly ? 99 : Math.min(standardShanten(counts, meldCount), MIXED_SETS.shanten(counts, meldCount), setsShanten(counts, meldCount, 4, true));
       const ms = meldsOf?.();
-      if (!ms || ms.length !== meldCount) return plain;
+      if (!passports || !ms || ms.length !== meldCount) return plain;
       const key = counts.slice(0, 34).join('') + '|' + ms.map((m) => m.type[0] + m.kind).join(',');
       let v = memo.get(key);
       if (v === undefined) {
@@ -789,8 +791,9 @@ export const indiaProfile: RuleProfile = {
       return {
         rounds: { ...indiaProfile.rounds, prevailingWinds: pick.winds },
         windRounds: undefined,
-        shapes: { sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(false)] },
-        seatShapes: (_seat, info) => ({ sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(false, info.melds)] }),
+        // No passports in Classic: four sets and a pair only.
+        shapes: { sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(false, undefined, false)] },
+        seatShapes: (_seat, info) => ({ sevenPairs: false, thirteenOrphans: false, standard: false, special: [eastShape(false, info.melds, false)] }),
         score: eastScore(false, false),
         mixedSets: true,
         tableName: 'Bombay Gymkhana',

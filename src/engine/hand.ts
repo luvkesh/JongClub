@@ -110,6 +110,9 @@ export interface SpecialShape {
   shanten(counts: number[], meldCount: number): number;
   /** The AI's fast shanten tracks this shape too (cheap shapes only). */
   ai?: boolean;
+  /** shanten() is a quick estimate that may read a ready hand as further away (it tries only some
+   *  readings): the AI checks readiness exactly with the win test. */
+  approx?: boolean;
   /** An all-pairs shape: while short of kinds, any new tile can help it (the AI widens its search). */
   pairs?: boolean;
   /** A cheap lower bound on shanten(): the shape is skipped when it can't beat the best so far. */

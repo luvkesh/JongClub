@@ -240,7 +240,7 @@ const cardKit: TargetKit = {
 function cardReads(game: MahjongGame, seat: number): TargetRead[] {
   const out: TargetRead[] = [];
   game.players.forEach((p, o) => {
-    if (o === seat || !p.melds.length) return;
+    if (o === seat || game.sameTeam(seat, o) || !p.melds.length) return;
     const fits = progress([], p.melds, 400).map((x) => x.instance);
     if (!fits.length) return;
     const sections = [...new Set(fits.map((f) => f.hand.section))];
@@ -356,7 +356,7 @@ const smallCardKit: TargetKit = {
 function smallCardReads(game: MahjongGame, seat: number): TargetRead[] {
   const out: TargetRead[] = [];
   game.players.forEach((p, o) => {
-    if (o === seat) return;
+    if (o === seat || game.sameTeam(seat, o)) return;
     const melds = game.meldShapes(o).filter((_, i) => !p.melds[i]?.concealed);
     if (melds.length < 2) return;
     const sk = kindOfWind(game.state.seatWinds[o]);
