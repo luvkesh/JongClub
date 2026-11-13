@@ -1618,7 +1618,7 @@ export class MahjongGame {
       seatWinds: this.state.seatWinds,
       prevailing: this.prevailing,
       score,
-      hands: this.players.map((p, s) => ({ concealed: p.hand.map((t) => t.kind), melds: this.scoringMelds(s) })),
+      hands: this.players.map((p, s) => ({ concealed: p.hand.map((t) => t.kind), melds: this.scoringMelds(s), jokers: this.profile.wilds ? this.splitWilds(p.hand).wilds.map((t) => t.kind) : undefined })),
       calling: (s) => this.isTenpai(s),
     });
   }
