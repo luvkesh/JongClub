@@ -265,6 +265,14 @@ export function dressFace(m: THREE.MeshStandardMaterial, kind: number, labels: b
   if (had !== !!tex) m.needsUpdate = true;
 }
 
+/** Forget one face's surface map at `scale` (a hand-detail face scaled back); materials still showing it free it on their next dress. */
+export function dropFaceSurface(kind: number, labels: boolean, red: boolean, scale: number) {
+  const key = `${kind}:${labels}:${red}:${scale}`;
+  const tex = surfaceTex.get(key);
+  surfaceTex.delete(key);
+  return tex ?? null;
+}
+
 /** Drop every face surface map (the labels option or the face detail changed). */
 export function clearFaceSurfaces() {
   for (const t of surfaceTex.values()) t.dispose();

@@ -35,7 +35,7 @@
 /* Wide screens: the summary docks at the right and the table frames the hand beside it. */
 @media (min-width: 900px) and (min-height: 501px) {
   .overlay.win-sheet {
-    place-items: center end; place-items: safe center end;
+    place-items: center right; place-items: safe center right; /* physical right, also in Arabic: the table layout stays physical */
     background: linear-gradient(90deg, transparent 0%, transparent 45%, rgba(5, 8, 6, 0.5) 72%, rgba(5, 8, 6, 0.72));
   }
   .overlay.win-sheet .hand-result { width: min(470px, 40vw); padding: 26px 24px; }

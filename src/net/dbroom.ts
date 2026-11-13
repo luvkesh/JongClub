@@ -117,8 +117,17 @@ export class DbNamedRoom implements NamedRoom {
         void this.db.doc(`rooms/${this.name}/peers/${d.id}`).delete().catch(() => {});
         continue;
       }
-      ids.add(d.id);
       const json = JSON.stringify(body);
+      // A tab that went quiet and was pruned stays gone until its document changes again (a closed tab whose
+      // goodbye never landed would otherwise come back with every snapshot until it is hours old).
+      if (this.gone.has(d.id)) {
+        if (this.gone.get(d.id) === json) {
+          ids.add(`gone:${d.id}`);
+          continue;
+        }
+        this.gone.delete(d.id);
+      }
+      ids.add(d.id);
       const prev = this.others.get(d.id);
       if (prev?.body === json) continue;
       const p = body.p;
@@ -130,6 +139,7 @@ export class DbNamedRoom implements NamedRoom {
       });
       changed = true;
     }
+    for (const id of [...this.gone.keys()]) if (!ids.has(`gone:${id}`)) this.gone.delete(id);
     for (const id of [...this.others.keys()]) {
       if (!ids.has(id)) {
         this.others.delete(id);
@@ -139,12 +149,16 @@ export class DbNamedRoom implements NamedRoom {
     if (changed) this.emit();
   }
 
+  /** Pruned tabs and the document they last showed. */
+  private gone = new Map<string, string>();
+
   private prune() {
     const now = Date.now();
     let changed = false;
     for (const [id, o] of this.others) {
       if (now - o.seen > STALE) {
         this.others.delete(id);
+        this.gone.set(id, o.body);
         changed = true;
       }
     }

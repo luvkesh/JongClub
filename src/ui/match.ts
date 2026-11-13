@@ -551,12 +551,12 @@ export class MatchController {
     });
     // Hovering a tile on the table names it; add how many are still unseen and whose discard it is.
     this.table.tipNote = (id, kind) => this.tileNote(id, kind);
-    if (this.opts.coach && typeof ResizeObserver !== 'undefined') new ResizeObserver(() => !this.els.last.hidden && this.placeLastDiscard()).observe(this.opts.coach.el);
+    if (this.opts.coach && typeof ResizeObserver !== 'undefined') this.watch(new ResizeObserver(() => !this.els.last.hidden && this.placeLastDiscard())).observe(this.opts.coach.el);
     // Mei's caption and JongBot share one dock at the bottom right, clear of the table; it follows the hand and the plates.
     if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(() => this.placeDock());
+      const ro = this.watch(new ResizeObserver(() => this.placeDock()));
       for (const el of [r, this.els.bot, this.opts.coach?.el, r.querySelector('.bottom'), r.querySelector('.status-row'), r.querySelector('.action-row'), r.querySelector('.seat-1'), r.querySelector('.seat-3'), this.els.last]) if (el) ro.observe(el);
-      new MutationObserver(() => this.placeDock()).observe(r, { attributes: true, attributeFilter: ['style', 'data-hand-clear'] });
+      this.watch(new MutationObserver(() => this.placeDock())).observe(r, { attributes: true, attributeFilter: ['style', 'data-hand-clear'] });
     }
     requestAnimationFrame(() => this.placeDock());
     this.gatherTalk(r);
@@ -614,8 +614,16 @@ export class MatchController {
     this.refreshDock();
   }
 
+  /** Observers on the HUD root, which every match reuses: disconnected when this match ends, or old matches keep reacting. */
+  private observers: { disconnect(): void }[] = [];
+  private watch<T extends { disconnect(): void }>(o: T): T {
+    this.observers.push(o);
+    return o;
+  }
+
   /** Give the whole screen back to the table (the match is over or left). */
   private releaseStage() {
+    for (const o of this.observers.splice(0)) o.disconnect();
     const body = document.body;
     if (!body.classList.contains('with-console')) return;
     body.classList.remove('with-console');
@@ -1269,8 +1277,13 @@ export class MatchController {
     o.querySelector<HTMLElement>('.btn.ghost')?.focus({ preventScroll: true });
   }
 
+  /** Ends a running opening ceremony (set by runOpening while it runs). */
+  private cancelOpening: (() => void) | null = null;
+
   abort() {
     this.aborted = true;
+    this.cancelOpening?.();
+    this.cancelOpening = null;
     this.closeCallWarning(false);
     window.removeEventListener('resize', this.onResize);
     this.releaseStage();
@@ -1624,7 +1637,7 @@ export class MatchController {
   private gatherTalk(r: HTMLElement) {
     const talk = h('div', { class: 'table-talk' });
     r.append(talk);
-    new MutationObserver((muts) => {
+    this.watch(new MutationObserver((muts) => {
       if (window.innerWidth / window.innerHeight >= 0.85) return;
       for (const m of muts)
         for (const n of m.addedNodes) {
@@ -1636,7 +1649,7 @@ export class MatchController {
           talk.append(b);
           while (talk.children.length > 2) talk.firstElementChild!.remove();
         }
-    }).observe(r, { childList: true, subtree: true });
+    })).observe(r, { childList: true, subtree: true });
   }
 
   private dockKey = '';
@@ -2273,6 +2286,7 @@ export class MatchController {
         this.trayHold = Infinity;
         this.refreshHud();
         await sleep(ms);
+        if (this.aborted) return;
       }
       // The opening (src/ui/opening.ts): the throw for East at the first hand, then East's throw breaks the wall.
       const eastRounds = this.handNo === 0 ? this.eastRounds : undefined;
@@ -2281,6 +2295,7 @@ export class MatchController {
         await runOpening(
           { root: this.root, table: this.table, names: this.game.players.map((p) => p.name), me: this.you, pace: this.settings.speed === 'cinematic' ? 0.85 : 1,
             eastRounds,
+            onCancel: (stop) => (this.cancelOpening = stop),
             pulseSeat: (seat, n) => {
               const plate = this.els.seats[this.rel(seat)];
               if (!plate) return;
@@ -2292,6 +2307,8 @@ export class MatchController {
           this.game.state,
         );
       else this.table.breakWall();
+      this.cancelOpening = null;
+      if (this.aborted) return;
       // Dealt flowers reach the tray's "Set aside" once the deal is done, as they leave the rack on the table.
       this.holdTrayBonus(this.settings.speed === 'minimal' ? 0 : 2900);
       if (this.aborted) return;
@@ -3564,6 +3581,8 @@ export class MatchController {
     this.root.querySelector<HTMLElement>('.seat-2')?.style.removeProperty('translate');
     endFreeCam();
     t.splitPaused = false;
+    // Left from the summary: the table already went back to the club view.
+    if (this.aborted) return;
     if (!over) t.setView('seat', 0.8);
   }
 
