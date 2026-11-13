@@ -13,7 +13,7 @@ import { charlestonDirName, CHARLESTON } from '../engine/game';
 import { distance as cardDistance, progress } from '../engine/rules/american';
 import { bestSwap, charlestonPick, describeTarget, exposureDanger, kindLabel, missingAfterCall, rankDiscards } from './american';
 import { safetySentence, threatSentence, riskLabelFor } from './danger';
-import { cardUses, currentShanten, currentWaits, exchangePick, handWilds, shantenWith, openHandHasYakuPath, unseenCounts, waitingView } from './evaluate';
+import { cardUses, currentShanten, currentWaits, exchangePick, handWilds, shantenWith, openHandHasYakuPath, unseenCounts, waitingView, winningWaits } from './evaluate';
 import { shantenAfterKong } from './players';
 import { ADVISOR, ADVISOR_CLAIMS, planClaim, planDiscard, riichiAdvice } from './strategy';
 import { isPassportRound, passportThreats, threatsOn } from './passportAdvice';
@@ -141,7 +141,8 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
   if (me.riichi) {
     return {
       headline: `You're in ${names.riichi ?? 'riichi'}. Your drawn tile goes back out automatically.`,
-      why: `Waiting on ${game.waitsOf(seat).map(tileName).join(', ')}. You can still win on any of them.`,
+      // The drawn tile goes back out: the waits are those of the hand without it.
+      why: `Waiting on ${winningWaits(game, seat, opts.discards[0]?.kind ?? -1).map(tileName).join(', ')}. You can still win on any of them.`,
     };
   }
   const plan = planDiscard(game, seat, ADVISOR);

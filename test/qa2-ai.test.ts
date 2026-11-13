@@ -147,6 +147,15 @@ describe('claim advice names the chow when there is more than one', () => {
   });
 });
 
+describe('JongBot in riichi', () => {
+  it('names the waits of the hand without the drawn tile (it read the 14 tiles and listed none)', () => {
+    const g = onTurn({ variation: 'riichi', hand: '123m 456m 789p 11s 23s N' });
+    g.players[0].riichi = true;
+    const hint = turnHint(g, 0, 'learning');
+    expect(hint.why).toBe('Waiting on 1 Bamboo, 4 Bamboo. You can still win on any of them.');
+  });
+});
+
 describe('a wait on a tile you hold every copy of is no wait', () => {
   it('Classic: a single wait on the 2 Character beside an exposed pung of it', () => {
     const g = onTurn({ variation: 'classic', hand: '2m 345p 678s 999s N', melds: [{ type: 'pung', kinds: '2m 2m 2m' }] });
