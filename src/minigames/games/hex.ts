@@ -38,6 +38,29 @@ export function hexCells(R: number): HexCell[] {
   return out;
 }
 
+/**
+ * Upright phones: a taller honeycomb with fewer tiles across, so each tile is larger
+ * (the round one is 11 tiles wide on Hard). Same tile count per level; row lengths
+ * alternate by one so every row still sits half a tile off its neighbours.
+ */
+export const TALL_ROWS: Record<MiniLevel, number[]> = {
+  easy: [5, 6, 5, 4, 5, 6, 5],
+  medium: [6, 7, 6, 7, 8, 7, 6, 7, 6],
+  hard: [7, 8, 9, 8, 9, 8, 9, 8, 9, 8, 7],
+};
+
+/** A honeycomb from row lengths, each row centred under the one above. */
+export function rowCells(rows: number[]): HexCell[] {
+  const out: HexCell[] = [];
+  // Axial r must have the parity that makes every centred row land on whole q.
+  const r0 = (rows[0] - 1) % 2;
+  rows.forEach((L, k) => {
+    const r = r0 + k;
+    for (let i = 0; i < L; i++) out.push({ q: i - (L - 1) / 2 - r / 2, r });
+  });
+  return out;
+}
+
 /** Pure rules (tests use this). */
 export class HexBoard {
   /** Neighbour cell index in each direction, -1 off the board. */
@@ -111,9 +134,9 @@ export class HexBoard {
   }
 }
 
-/** A solvable honeycomb of radius R. */
-export function dealHex(R: number, rng: Rng): HexBoard {
-  const cells = hexCells(R);
+/** A solvable honeycomb of radius R (or of the given cells). */
+export function dealHex(R: number | HexCell[], rng: Rng): HexBoard {
+  const cells = typeof R === 'number' ? hexCells(R) : R;
   const g = new HexBoard(cells, Array(cells.length).fill(-1));
   let ord: [number, number][] | null = null;
   for (let t = 0; t < 400 && !ord; t++) ord = g.order(Array(cells.length).fill(true), rng);
@@ -144,7 +167,8 @@ class HexSession implements MiniSession {
   private hintRng: Rng;
 
   constructor(private host: MiniHost) {
-    this.g = dealHex(RADIUS[host.level], host.rng);
+    const tall = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
+    this.g = dealHex(tall ? rowCells(TALL_ROWS[host.level]) : RADIUS[host.level], host.rng);
     this.total = this.g.cells.length;
     this.hintRng = new Rng((host.seed ^ 0x2c1b3c6d) >>> 0);
     this.hints = HINTS[host.level];
