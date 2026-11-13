@@ -1569,15 +1569,19 @@ export class MatchController {
       if (hud.style.getPropertyValue('--badge-end') !== end) hud.style.setProperty('--badge-end', end);
     }
     if (across && badge) {
-      across.style.top = across.style.left = across.style.transform = '';
+      across.style.top = across.style.left = across.style.transform = across.style.maxWidth = '';
       const t = across.getBoundingClientRect();
       const r = badge.getBoundingClientRect();
       if (across.offsetParent && t.left < r.right && r.left < t.right && t.top < r.bottom && r.top < t.bottom) {
         // Short screens: step right of the title, staying on the top edge, rather than down over the discards.
         const toolsLeft = hud.querySelector<HTMLElement>('.hud-tools')?.getBoundingClientRect().left ?? window.innerWidth;
-        if (window.innerHeight <= 500 && r.right + 8 + t.width <= toolsLeft - 8) {
+        // A plate a little too wide for that gap (a long "Likely" read) narrows into it, its read trimmed, rather than
+        // dropping below the title onto the left player's plate (667 x 375).
+        const room = toolsLeft - 8 - (r.right + 8);
+        if (window.innerHeight <= 500 && (t.width <= room || room >= 200)) {
           across.style.left = `${Math.round(r.right + 8 - hud.getBoundingClientRect().left)}px`;
           across.style.transform = 'none';
+          if (t.width > room) across.style.maxWidth = `${Math.floor(room)}px`;
         } else across.style.top = `${Math.round(r.bottom + 6 - hud.getBoundingClientRect().top)}px`;
       }
       // ...and below the menu buttons on the right where the screen is too narrow for both in one row.

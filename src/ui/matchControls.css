@@ -163,7 +163,14 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .hud.mode-phone .round-extra > .sticks { white-space: normal; text-overflow: clip; }
   .hud.mode-phone .round-extra > * { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9.5px; letter-spacing: 0.06em; padding-inline: 6px; }
   .hud.mode-phone .round-meta { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
-  @media (max-width: 380px) { .hud.mode-phone .round-badge .round-emblem { display: none; } }
+  /* Under 430 px the emblem gives its 40 px to the round's name, so "East Round" and the wall count read in full
+     beside the four round buttons. */
+  @media (max-width: 430px) { .hud.mode-phone .round-badge .round-emblem { display: none; } }
+  /* At 360 px that is still short ("85 tiles lef"): the music button leaves the header (Music stays in More). */
+  @media (max-width: 380px) { .hud.mode-phone .hud-tools > .music-btn { display: none !important; } }
+  /* The round pill ("East round: Passport") wraps rather than ending in "…"; it must not clip either, or its
+     touch ring (::after, below) is cut back to the 18 px pill. */
+  .hud.mode-phone .round-extra > .round-pill { white-space: normal; text-overflow: clip; overflow: visible; overflow-wrap: anywhere; line-height: 1.25; }
   .hud.mode-phone .hud-tools { flex: none; gap: 5px; }
   .hud.mode-phone .hud-tools > :not(.guide-btn):not(.music-btn):not(.more-btn):not(:last-child) { display: none !important; }
   .hud.mode-phone .hud-tools .icon-btn { width: 34px; height: 34px; border-color: var(--line-strong); }
@@ -219,13 +226,20 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .db-more { flex-direction: column; justify-content: center; gap: 2px; padding: 4px 4px; min-width: 46px; }
   .db-more .db-ico { width: 30px; height: 26px; border: 0; background: none; box-shadow: none; }
   .db-more .db-sub { display: none; }
-  /* Narrow phones: icon over the words, so each button keeps its full title and a one-line state. */
+  /* Narrow phones: a small icon beside the title and the state on two lines under both, so JongBot's advice
+     ("Pung the North Wind.") and "How to win and score" read to their end instead of stopping at "…". */
   @media (max-width: 419px) {
-    .dock-btn:not(.db-more) { flex-direction: column; justify-content: center; gap: 3px; padding: 5px 4px; text-align: center; }
-    .dock-btn:not(.db-more) .db-ico { width: 28px; height: 28px; }
-    .dock-btn:not(.db-more) .db-text { align-items: center; max-width: 100%; }
+    .hud.mode-phone .dock-bar { grid-template-columns: 1.1fr 1.15fr 1fr auto; }
+    .dock-btn:not(.db-more) {
+      display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'i t' 's s'; align-items: center; align-content: center;
+      column-gap: 4px; row-gap: 2px; padding: 5px 6px;
+    }
+    .dock-btn:not(.db-more) .db-ico { grid-area: i; width: 22px; height: 22px; }
+    .dock-btn:not(.db-more) .db-ico svg { width: 14px; height: 14px; }
+    .dock-btn:not(.db-more) .db-text { display: contents; }
+    .dock-btn:not(.db-more) .db-title { grid-area: t; white-space: normal; overflow-wrap: anywhere; line-height: 1.1; }
     .dock-btn .db-title { font-size: 11.5px; }
-    .dock-btn .db-sub { -webkit-line-clamp: 1; line-clamp: 1; font-size: 10px; }
+    .dock-btn .db-sub { grid-area: s; font-size: 10px; }
   }
   @media (min-width: 420px) {
     .hud.mode-phone .dock-bar { gap: 6px; }
@@ -273,4 +287,14 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .sc-check { min-height: 40px; }
   .hud > .coach:not(.tucked) button.narrator { position: relative; }
   .hud > .coach:not(.tucked) button.narrator::after { content: ''; position: absolute; inset: -7px; }
+  /* JongBot's card: the round buttons grow to 36 px with a ring, the tabs and steppers to 40 px tall. */
+  .jongbot .bot-close, .jongbot .bot-less { width: 36px; height: 36px; position: relative; }
+  .jongbot .bot-close::after, .jongbot .bot-less::after { content: ''; position: absolute; inset: -3px; }
+  .hud .bot-tabs button { min-height: 40px; }
+  .hud .bot-step { width: 40px; }
+  /* Landscape phones: the hand's status line (tap for the score calculator) is 24 px; a ring makes it 40. */
+  .hud .bottom > .status-row .hand-status { position: relative; }
+  .hud .bottom > .status-row .hand-status::after { content: ''; position: absolute; inset: -8px -2px; }
+  /* The score calculator's Use my hand and Clear. */
+  .sc-tools .btn { min-height: 40px; }
 }
