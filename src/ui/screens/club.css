@@ -193,3 +193,17 @@
   .cl-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-self: stretch; }
   .cl-filters button { justify-content: center; min-width: 0; overflow: hidden; }
 }
+
+/* cumulative leaderboard (table option): below the rankings, same board, numeric columns */
+.cl-ladder { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.cl-ladder-head { margin: 0; }
+.cl-ladder-board .cl-row { grid-template-columns: 44px minmax(0, 1.8fr) minmax(0, 0.8fr) minmax(0, 0.8fr) 84px; }
+.cl-ladder-board .cl-row .num { text-align: right; font-variant-numeric: tabular-nums; }
+.cl-ladder-board .cl-pts.up { color: #9fd8a8; }
+.cl-ladder-board .cl-pts.down { color: #e2a08f; }
+@media (max-width: 640px) {
+  .cl-ladder-board .cl-row { grid-template-columns: 34px minmax(0, 1fr) 56px 72px; }
+}
+@media (max-width: 380px) {
+  .cl-ladder-board .cl-row { grid-template-columns: 30px minmax(0, 1fr) 64px; }
+}

@@ -16,6 +16,7 @@ import { CATALOGUE, STANDARDISATION, UAE_PROFILE, entryFor, houseRuleGroup, HOUS
 import { AI_ONLY_LENGTHS, GAME_LENGTHS, type GameLength } from '../engine/rounds';
 import { getProfile, VARIATIONS } from '../engine/rules';
 import { GOULASH_SWITCH, supportsGoulash } from '../engine/rules/goulash';
+import { allHouseRules } from '../engine/rules/tableOptions';
 import type { RuleProfile } from '../engine/rules/types';
 import { clear, h } from './dom';
 import { icon } from './icons';
@@ -296,7 +297,8 @@ let houseOpen = false;
 
 /** The collapsed House rules panel: the rule set's own options, grouped by what they change. */
 function houseRules(profile: RuleProfile, cfg: TableConfig, goulashOn: boolean): HTMLElement {
-  const rules = profile.houseRules.filter((r) => r.id !== GOULASH_SWITCH.id && (goulashOn || !r.id.startsWith('goulash')));
+  // The rule set's own options, then the table options every rule set offers (tableOptions.ts).
+  const rules = allHouseRules(profile).filter((r) => r.id !== GOULASH_SWITCH.id && (goulashOn || !r.id.startsWith('goulash')));
   const changed = rules.filter((r) => cfg.houseRules[r.id] !== undefined && cfg.houseRules[r.id] !== r.default).length;
   const panel = h('details', { class: 'ts-house ts-fold', open: houseOpen }) as HTMLDetailsElement;
   panel.ontoggle = () => (houseOpen = panel.open);

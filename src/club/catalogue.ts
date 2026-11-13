@@ -194,8 +194,8 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
       { name: tr('Discard wins'), status: 'playable' },
       { name: tr('Last tile'), status: 'playable' },
       { name: tr('Abortive draws'), status: 'playable', where: tr('Riichi, Sanma') },
-      { name: tr('Self-draw only'), status: 'coming' },
-      { name: tr('Multiple winners'), status: 'coming' },
+      { name: tr('Self-draw only'), status: 'playable', where: tr('Table option, every rule set') },
+      { name: tr('Multiple winners'), status: 'playable', where: tr('Table option, every rule set') },
     ],
   },
   {
@@ -208,7 +208,7 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
       { name: tr('Who pays on a discard'), status: 'playable' },
       { name: tr('Nagashi mangan'), status: 'playable', where: tr('Riichi, Sanma') },
       { name: tr('Placement points (uma)'), status: 'playable', where: tr('Table option, tournaments') },
-      { name: tr('Winner takes all'), status: 'coming' },
+      { name: tr('Winner takes all'), status: 'playable', where: tr('Table option, every rule set') },
     ],
   },
   { id: 'dealer', name: tr('Dealer'), items: [{ name: tr('Dealer keeps the deal'), status: 'playable' }, { name: tr('Dealer streak bonus'), status: 'playable', where: tr('Riichi, Taiwanese') }] },
@@ -242,8 +242,8 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
       { name: tr('Ranked'), status: 'playable' },
       { name: tr('Tournaments'), status: 'playable' },
       { name: tr('Private tables'), status: 'playable', where: tr('Live on claude.ai') },
-      { name: tr('Cumulative leaderboard'), status: 'coming' },
-      { name: tr('Team play'), status: 'coming' },
+      { name: tr('Cumulative leaderboard'), status: 'playable', where: tr('Table option, every rule set') },
+      { name: tr('Team play'), status: 'playable', where: tr('Table option, every rule set') },
     ],
   },
 ];
@@ -251,11 +251,12 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
 /** Which group a profile's house rule belongs to, for the lobby's House rules panel. */
 export function houseRuleGroup(id: string): HouseRuleGroup {
   if (id.startsWith('goulash')) return 'goulash';
-  if (id === 'minValue' || id === 'minFan' || id === 'abortive' || id === 'tripleRon') return 'winning';
+  if (id === 'minValue' || id === 'minFan' || id === 'abortive' || id === 'tripleRon' || id === 'selfDrawOnly' || id === 'multipleWinners') return 'winning';
+  if (id === 'cumulativeLeaderboard' || id === 'teamPlay') return 'competitive';
   if (id === 'dealerRetention') return 'dealer';
   if (['flowers', 'jokers', 'jokerPair', 'jokerCalls', 'bites', 'redFives', 'animals', 'characters'].includes(id)) return 'tiles';
   if (['sevenPairs', 'chow', 'openTanyao', 'mixedSets', 'mixedHands'].includes(id)) return 'hands';
-  if (id === 'specialRounds' || id === 'passportNine') return 'match';
+  if (id === 'specialRounds' || id === 'passportNine' || id === 'indiaRounds' || id === 'passport' || id === 'northCards') return 'match';
   return 'scoring';
 }
 

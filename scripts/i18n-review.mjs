@@ -36,8 +36,8 @@ const NATIVE = {
 const GLOSSARY = `Mahjong context. JongClub is a premium online mahjong club and game, made for India first.
 Terms (keep consistent): tile, wall, discard, draw, hand, set/meld, pung (three of a kind), kong (four), chow (run of three),
 pair, eye, concealed/exposed, self-drawn win, East/South/West/North wind and seat, round, dealer, flowers, seasons, jokers,
-dragons (Red, Green, White), bonus tiles, Small Card / Big Card (club house-rule cards), Jong Points (in-game currency, a brand
-name), Mei (the teacher character, a name), JongBot (the AI helper, a name), India Rules, Riichi, faan/fan, yaku, crochet, knit.
+dragons (Red, Green, White), bonus tiles, Small Card / Big Card (club house-rule cards), Jong Points (in-game currency; keep however each
+language already writes it, e.g. Jong ポイント, Jong 积分), Mei (the teacher character, a name), JongBot (the AI helper, a name), India Rules, Riichi, faan/fan, yaku, crochet, knit.
 Placeholders like {n}, {name}, {total}, {lesson} must be kept exactly. Brand names stay in Latin script: JongClub, Mei, JongBot.
 Strings are short UI labels, buttons, tooltips and messages: keep them concise and natural for an app.`;
 
@@ -85,15 +85,16 @@ Rows (id, English, current ${lang}):
 ${batch.map((r) => JSON.stringify([r.id, r.en, r.cell])).join('\n')}`;
   for (let attempt = 0; attempt < 60; attempt++) {
     const model = models[mi % models.length];
-    const r = await fetch(`${API}/models/${model}:generateContent?key=${KEY}`, {
+    let r;
+    try { r = await fetch(`${API}/models/${model}:generateContent?key=${KEY}`, {
       method: 'POST',
-      signal: AbortSignal.timeout(240000),
+      signal: AbortSignal.timeout(400000),
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: SCHEMA },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 32768, responseMimeType: 'application/json', responseSchema: SCHEMA },
       }),
-    });
+    }); } catch (e) { console.warn(`  ${e.name} on ${model}, trying the next model`); mi++; continue; }
     if (r.status === 429 || r.status >= 500) {
       // A busy model (503) hands over to the next one in GEMINI_MODEL; a rate limit (429) waits.
       // Each model has its own quota, so both a busy model (503) and a rate limit (429) hand over to the
@@ -117,7 +118,8 @@ ${batch.map((r) => JSON.stringify([r.id, r.en, r.cell])).join('\n')}`;
     if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
     const j = await r.json();
     const text = j.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '[]';
-    return { model, res: JSON.parse(text) };
+    try { return { model, res: JSON.parse(text) }; }
+    catch { console.warn(`  cut-off answer from ${model}, asking again`); mi++; continue; }
   }
   throw new Error('gave up after repeated rate limits');
 }
