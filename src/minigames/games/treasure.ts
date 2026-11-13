@@ -122,8 +122,13 @@ class TreasureSession implements MiniSession {
     host.camera.reset();
     host.board.build(this.kinds.map((kind, i) => ({ id: i, kind, pos: this.world(i), quat: FLAT_DOWN })));
     host.fit(true);
-    // The first clear patch is turned over for you.
-    window.setTimeout(() => !this.ended && this.turn(this.g.dig(start)), 450);
+    // The first clear patch is turned over for you; a tap before it lands must not spend a dig.
+    this.busy = true;
+    window.setTimeout(() => {
+      if (this.ended) return;
+      this.busy = false;
+      this.turn(this.g.dig(start));
+    }, 450);
     this.refresh();
   }
 
@@ -179,8 +184,12 @@ class TreasureSession implements MiniSession {
     const p = this.g.proven();
     return p >= 0 ? [p] : [];
   }
+  /** Whether a hinted tile is still lit and face down (a second hint would only light it again). */
+  private lit() {
+    return this.hintCell >= 0 && !this.g.open.has(this.hintCell);
+  }
   hint() {
-    if (this.ended || this.hints <= 0) return false;
+    if (this.ended || this.busy || this.hints <= 0 || this.lit()) return false;
     const p = this.g.proven();
     if (p < 0) {
       this.host.toast(tr('The clues do not prove a treasure yet. Dig near the higher numbers.'), 'info');
@@ -192,7 +201,7 @@ class TreasureSession implements MiniSession {
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && tool === 'hint' && this.hints > 0;
+    return !this.ended && !this.busy && tool === 'hint' && this.hints > 0 && !this.lit();
   }
   badges() {
     return { hint: String(this.hints) };

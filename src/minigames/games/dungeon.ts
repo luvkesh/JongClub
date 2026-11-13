@@ -342,23 +342,25 @@ class DungeonSession implements MiniSession {
     return next !== undefined && this.g.rooms[next].t !== 'empty' ? [next] : [];
   }
   hint() {
-    if (this.ended || this.hints <= 0) return false;
+    // A second press while the route shows would spend another hint on the same route.
+    if (this.ended || this.hints <= 0 || this.hintPath.length) return false;
     const p = this.plan();
     if (!p) {
       this.host.toast(tr('Explore further: the goal is still in the dark.'), 'info');
       return false;
     }
     this.hints--;
-    this.hintPath = p.filter((c) => this.g.rooms[c].t !== 'empty');
+    const path = (this.hintPath = p.filter((c) => this.g.rooms[c].t !== 'empty'));
     this.refresh();
     window.setTimeout(() => {
+      if (this.hintPath !== path) return;
       this.hintPath = [];
       if (!this.ended) this.refresh();
     }, 2800);
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && tool === 'hint' && this.hints > 0;
+    return !this.ended && tool === 'hint' && this.hints > 0 && !this.hintPath.length;
   }
   badges() {
     return { hint: Number.isFinite(this.hints) ? String(this.hints) : undefined };

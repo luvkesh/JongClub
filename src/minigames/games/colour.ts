@@ -293,12 +293,14 @@ class ColourSession implements MiniSession {
     return this.ids[b].length ? [top(a), top(b)] : [top(a)];
   }
   suggest(): number[] | null {
-    if (this.ended || this.sel !== null) return [];
+    // Sorted, with the win on its way: nothing to suggest.
+    if (this.ended || this.sel !== null || this.g.solved()) return [];
     // Sorting has no shuffle: when no solution is found, say nothing rather than nudge one.
     return this.nextMove() ?? [];
   }
   hint() {
-    if (this.ended) return false;
+    // In the moment before the win shows the rows are sorted: no "no way to sort" then.
+    if (this.ended || this.g.solved()) return false;
     const m = this.nextMove();
     if (!m) {
       this.host.toast(tr('No way to sort from here. Undo a few moves.'), 'bad');
@@ -313,7 +315,7 @@ class ColourSession implements MiniSession {
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && tool === 'hint';
+    return !this.ended && tool === 'hint' && !this.g.solved();
   }
 
   tick(dt: number) {
@@ -356,6 +358,7 @@ registerMiniGame({
   ],
   tools: { hint: true, undo: true },
   daily: true,
-  reward: (r, level) => (r.won ? Math.round(Math.min(200, 50 + r.total * 3 + r.score * 0.05) * PAY[level] - r.hints * 5) : 0),
+  // Hints are unlimited: a win still pays something (never below zero), however many it took.
+  reward: (r, level) => (r.won ? Math.max(Math.round(10 * PAY[level]), Math.round(Math.min(200, 50 + r.total * 3 + r.score * 0.05) * PAY[level] - r.hints * 5)) : 0),
   start: (host) => new ColourSession(host),
 });
