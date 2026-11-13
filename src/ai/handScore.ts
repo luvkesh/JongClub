@@ -16,7 +16,7 @@
 import type { MahjongGame } from '../engine/game';
 import type { HandScore, Payment } from '../engine/rules/types';
 import { KIND_COUNT, isFlower, type Tile } from '../engine/tiles';
-import { currentShanten, unseenCounts } from './evaluate';
+import { currentShanten, shapeWaits, unseenCounts, waitingView } from './evaluate';
 
 export interface WinValue {
   score: HandScore;
@@ -110,6 +110,9 @@ const value = (game: MahjongGame, seat: number, score: HandScore | undefined | n
  *  take no discard to win (an India Rules Small Card all from the wall, say). */
 function discardWinAllowed(game: MahjongGame, seat: number, kind: number): boolean {
   if (!game.discardWins()) return false;
+  // A discarded joker is dead: nobody may claim it, not even to win (a capped wild, North Goulash's
+  // number, is a natural tile once thrown).
+  if (game.isWild(kind) && (game.profile.wildCap === undefined || kind >= KIND_COUNT)) return false;
   const allowed = game.profile.claimAllowed;
   return !allowed || allowed(seat, 'win', kind, game.seatInfo(seat));
 }
@@ -117,7 +120,7 @@ function discardWinAllowed(game: MahjongGame, seat: number, kind: number): boole
 /** Scores of each tile a 13-tile hand waits on (the seat's hand as it is now). */
 export function waitScores(game: MahjongGame, seat: number, unseen = unseenCounts(game, seat)): WaitScore[] {
   const out: WaitScore[] = [];
-  for (const k of game.waitsOf(seat)) {
+  for (const k of shapeWaits(game, seat)) {
     const ron = discardWinAllowed(game, seat, k) ? value(game, seat, game.evaluateWin(seat, k, false, true)?.score, false) : null;
     const tsumo = value(game, seat, game.evaluateWin(seat, k, true, true)?.score, true);
     if (ron || tsumo) out.push({ kind: k, ron, tsumo, left: k < KIND_COUNT ? (unseen[k] ?? 0) : 0 });
@@ -150,7 +153,8 @@ export function handNow(game: MahjongGame, seat: number, deep = true): HandNow {
   if (ph.kind !== 'turn' && ph.kind !== 'claims') return { state: 'none' };
   // A kong counts as a set of three; a card hand's exposures count tile by tile.
   const held = pl.hand.length + pl.melds.reduce((a, m) => a + (game.profile.card ? m.tiles.length : 3), 0);
-  const full = held % 3 === 2;
+  // Big Cards: groups of four and more tiles, so only the seat on turn holds a full hand.
+  const full = game.profile.big ? !waitingView(game, seat) : held % 3 === 2;
   const unseen = unseenCounts(game, seat);
   if (full) {
     const last = ph.kind === 'turn' && ph.seat === seat && ph.drawn ? ph.drawn : pl.hand[pl.hand.length - 1];
@@ -192,7 +196,7 @@ function reachOneSwap(game: MahjongGame, seat: number): { discard: number; draw:
       hand[i] = { id: -100 - k, kind: k };
       withHand(game, seat, hand, () => {
         if (!game.isTenpai(seat)) return;
-        for (const w of game.waitsOf(seat)) {
+        for (const w of shapeWaits(game, seat)) {
           const v = (discardWinAllowed(game, seat, w) ? value(game, seat, game.evaluateWin(seat, w, false, true)?.score, false) : null) ?? value(game, seat, game.evaluateWin(seat, w, true, true)?.score, true);
           if (v && (!best || v.score.points > best.value.score.points)) best = { discard: t.kind, draw: k, wait: w, value: v };
         }

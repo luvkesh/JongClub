@@ -9,7 +9,7 @@
 //
 // Readings where the book is silent are marked [reading] and listed in the spec.
 
-import type { MeldShape, SpecialShape } from '../hand';
+import { setsShanten, type MeldShape, type SpecialShape } from '../hand';
 import type { Wind } from '../tiles';
 import { WINDS } from '../tiles';
 
@@ -272,6 +272,18 @@ export const SMALL_CARDS: SmallCard[] = [
 
 // ------------------------------------------------------------ matching
 
+/** A card's alternatives for one way of giving suits, built once (the matchers only read them; building
+ *  them on every check was most of the time a Joker Hand took, trying all 55 cards per tile). */
+const ALTS = new Map<SmallCard, Map<string, Comp[][]>>();
+function altsOf(card: SmallCard, e: Env): Comp[][] {
+  let m = ALTS.get(card);
+  if (!m) ALTS.set(card, (m = new Map()));
+  const key = `${e.A}${e.B}${e.C}|${e.seat}|${e.round}`;
+  let a = m.get(key);
+  if (!a) m.set(key, (a = card.alts(e)));
+  return a;
+}
+
 function envs(card: SmallCard, seat: number, round: number): Env[] {
   const out: Env[] = [];
   const seen = new Set<string>();
@@ -381,8 +393,10 @@ export function missing(comps: Comp[], counts: number[], melds: MeldShape[], car
       const free = melds.length ? used.reduce((a, u) => a + (u ? 0 : 1), 0) : 0;
       let lb = miss;
       const saves: number[] = [];
+      let cost = 0;
       for (let j = i; j < comps.length; j++) {
-        const cost = cheapest(comps[j]);
+        // A run of the same component (four sets of anything) costs the same each time.
+        if (j === i || comps[j] !== comps[j - 1]) cost = cheapest(comps[j]);
         lb += cost;
         if (free && cost && comps[j].opts.some((o) => o.meld && meldFor(o.meld))) saves.push(cost);
       }
@@ -482,16 +496,78 @@ export function cardComplete(card: SmallCard, counts: number[], melds: MeldShape
   // Jokers may be the tile a check asks for (an honour), so a hand with jokers passes it.
   if (card.check && !jokers && !card.check(allTiles(counts, melds), seat)) return false;
   const c = counts.slice(0, 34);
-  if (jokers) return envs(card, seat, round).some((e) => card.alts(e).some((comps) => missing(comps, c, melds, card, jokers + 1, undefined, Infinity) <= jokers));
-  return envs(card, seat, round).some((e) => card.alts(e).some((comps) => fits(comps, c, melds, card)));
+  if (jokers) return envs(card, seat, round).some((e) => altsOf(card, e).some((comps) => missing(comps, c, melds, card, jokers + 1, undefined, Infinity) <= jokers));
+  return envs(card, seat, round).some((e) => altsOf(card, e).some((comps) => fits(comps, c, melds, card)));
+}
+
+/** The sets across the three suits (mixed chows and crochets), as tile lists. */
+const CROSS_SETS = [...Mx().opts, ...Cr().opts].map((o) => o.tiles);
+
+/**
+ * A Joker Hand's shanten without the full search, which takes seconds on a scattered hand (four
+ * components of a hundred options each): plain sets and a pair (the usual shanten), after taking
+ * out any mixed chows and crochets the hand already holds two tiles of. A ready or complete hand
+ * holds at least two tiles of each such set, so ready is always read exactly; further away it
+ * may read a tile too far.
+ */
+function jokerShanten(counts: number[], meldCount: number): number {
+  const c = counts.slice(0, 34);
+  let best = setsShanten(c, meldCount, 4);
+  const go = (from: number, taken: number, miss: number) => {
+    if (meldCount + taken >= 4) return;
+    for (let i = from; i < CROSS_SETS.length; i++) {
+      const ts = CROSS_SETS[i];
+      let held = 0;
+      for (const k of ts) if (c[k] > 0) held++;
+      if (held < 2) continue;
+      const m = miss + 3 - held;
+      if (m - 1 >= best) continue;
+      const took: number[] = [];
+      for (const k of ts)
+        if (c[k] > 0) {
+          c[k]--;
+          took.push(k);
+        }
+      best = Math.min(best, m + setsShanten(c, meldCount + taken + 1, 4));
+      go(i, taken + 1, m);
+      for (const k of took) c[k]++;
+    }
+  };
+  go(0, 0, 0);
+  return best;
+}
+
+/**
+ * Four pungs and a pair from one set of kinds (Buried Treasure (all hidden), All Winds and Dragons,
+ * Purity Hand...): the usual pungs-and-a-pair count on the kinds the card allows, which the full
+ * search takes up to a second to match. Null when the alternative is not of that form or a meld
+ * doesn't fit it (the full search decides).
+ */
+function pungsAndPair(comps: Comp[], counts: number[], melds: MeldShape[], card: SmallCard): number | null {
+  if (comps.length !== 5) return null;
+  const run = comps[0];
+  if (comps.slice(1, 4).some((x) => x !== run) || !run.opts.every((o) => o.tiles.length === 3 && o.tiles[0] === o.tiles[1] && o.tiles[1] === o.tiles[2])) return null;
+  const pair = comps[4].opts;
+  if (!pair.every((o) => o.tiles.length === 2 && o.tiles[0] === o.tiles[1])) return null;
+  const kinds = new Set(run.opts.map((o) => o.tiles[0]));
+  if (pair.length !== kinds.size || pair.some((o) => !kinds.has(o.tiles[0]))) return null;
+  if (melds.some((m) => m.type === 'chow' || !kinds.has(m.kind) || (m.type === 'kong' && card.noKong))) return null;
+  const c = counts.map((n, k) => (kinds.has(k) ? n : 0));
+  return setsShanten(c, melds.length, 4, true, false) + 1;
 }
 
 /** Tiles away from ready, as shanten counts it (-1 complete). */
 export function cardShanten(card: SmallCard, counts: number[], melds: MeldShape[], seat: number, round: number): number {
+  // A Joker Hand takes no melds (all from the wall), save kongs declared from the hand.
+  if (card.n === 45 && melds.every((m) => m.type !== 'chow')) return jokerShanten(counts, melds.length);
   const c = counts.slice(0, 34);
   const held = c.reduce((a, b) => a + b, 0) + melds.length * 3;
   let best = 99;
-  for (const e of envs(card, seat, round)) for (const comps of card.alts(e)) best = Math.min(best, missing(comps, c, melds, card, best, undefined, Infinity));
+  for (const e of envs(card, seat, round))
+    for (const comps of altsOf(card, e)) {
+      const quick = card.distinct ? null : pungsAndPair(comps, c, melds, card);
+      best = Math.min(best, quick ?? missing(comps, c, melds, card, best, undefined, Infinity));
+    }
   if (best >= 99) return 99;
   // With 14 tiles held, 0 missing is a win; with 13, 1 missing is ready.
   void held;
@@ -505,21 +581,26 @@ export function cardShape(card: SmallCard, seat: Wind, round: Wind, meldsOf: () 
   const rk = 27 + WINDS.indexOf(round);
   const memo = new Map<string, number>();
   let used: boolean[] | undefined;
+  const usedKinds = () => {
+    if (!used) {
+      used = new Array(34).fill(false);
+      for (const e of envs(card, sk, rk)) for (const comps of card.alts(e)) for (const c of comps) for (const o of c.opts) for (const k of o.tiles) used[k] = true;
+    }
+    return used;
+  };
   return {
     name: card.name,
     how: card.how,
     ai: true,
     wilds,
-    uses: (kind) => {
-      if (!used) {
-        used = new Array(34).fill(false);
-        for (const e of envs(card, sk, rk)) for (const comps of card.alts(e)) for (const c of comps) for (const o of c.opts) for (const k of o.tiles) used[k] = true;
-      }
-      return !!used[kind];
-    },
+    uses: (kind) => usedKinds()[kind],
     complete: (counts, meldCount, melds, jokers = 0) => {
       const ms = melds ?? meldsOf();
       if (ms.length !== meldCount) return false;
+      // Every tile must sit in the card: a tile it never uses rules it out at once (a Joker Hand
+      // tries all 55 cards for each tile it could win on).
+      const u = usedKinds();
+      for (let k = 0; k < 34; k++) if (counts[k] > 0 && !u[k]) return false;
       return cardComplete(card, counts, ms, sk, rk, wilds ? jokers : 0);
     },
     shanten: (counts, meldCount) => {
