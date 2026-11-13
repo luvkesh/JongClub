@@ -823,6 +823,17 @@ export class MatchController {
     if (!p.discards.length) box.append(h('div', { class: 'sr-empty' }, tr('Nothing discarded yet')));
     else box.append(h('div', { class: 'sr-tiles' }, ...p.discards.map((t) => tileImg(t.kind, 'mini', this.settings.labels, isRed(this.game.state, t.id)))));
     el.append(box);
+    // Upright screens put the side plates just above your hand: a card that would run down over your
+    // tiles, the hand tools or the dock opens above the plate instead (where there is more room).
+    const b = box.getBoundingClientRect();
+    const tops = [...this.root.querySelectorAll<HTMLElement>('.bottom > *, .dock-bar')]
+      .filter((e) => e.offsetParent !== null)
+      .map((e) => e.getBoundingClientRect())
+      .filter((r) => r.height > 0 && r.width > 0 && r.left < b.right && r.right > b.left && r.bottom > b.top)
+      .map((r) => r.top);
+    const floor = Math.min(window.innerHeight - 8, ...tops);
+    const plate = el.getBoundingClientRect();
+    if (b.bottom > floor && plate.top - b.height - 8 > (this.root.querySelector('.hud-top')?.getBoundingClientRect().bottom ?? 0)) box.classList.add('up');
   }
 
   /** What a seat's hand is worth now: your own in full, another player's only as far as it is on show. */
@@ -1768,6 +1779,7 @@ export class MatchController {
       for (const [k, v] of Object.entries(vars)) hud.style.setProperty(k, v);
     }
     if (!upright && this.hudMode !== 'console') this.liftRightPlate();
+    if (!upright) this.keepSidePlatesAboveHand();
     this.levelSidePlates(upright);
     this.measureBottomClear();
   }
@@ -1818,6 +1830,38 @@ export class MatchController {
       }
       plate.dataset.level = '1';
       plate.style.top = `${Math.round(mid - plate.offsetHeight / 2)}px`;
+    }
+  }
+
+  /**
+   * Wide screens: the side players' plates stay above your hand (the 3D rack's top edge, or the top of
+   * Split View's hand strip), never across it. Runs after unstackPlates and liftRightPlate.
+   */
+  private keepSidePlatesAboveHand() {
+    const hud = this.root;
+    const plates = ['.seat-1', '.seat-3'].map((s) => hud.querySelector<HTMLElement>(s)).filter((p): p is HTMLElement => !!p);
+    // unstackPlates (left) and liftRightPlate (right, outside the console layout) set each plate's place
+    // afresh first; in the console layout the right plate's earlier lift is cleared here.
+    for (const p of plates) {
+      if (p.dataset.aboveHand && this.hudMode === 'console' && p.classList.contains('seat-1')) p.style.top = '';
+      delete p.dataset.aboveHand;
+    }
+    const clear = parseFloat(getComputedStyle(hud).getPropertyValue('--hand-clear'));
+    if (!hud.hasAttribute('data-hand-clear') || !(clear > 0)) return;
+    const box = hud.getBoundingClientRect();
+    // --hand-clear already keeps 8px clear of the hand.
+    const limit = box.bottom - clear;
+    for (const p of plates) {
+      // A left plate stepped beside your own plate (unstackPlates) is already level with it, above the hand.
+      if (!p.offsetParent || p.style.left) continue;
+      const r = p.getBoundingClientRect();
+      // Your own plate rides just above the hand on the left: a left plate lifted over the line stays above it too.
+      const mine = p.classList.contains('seat-3') ? hud.querySelector<HTMLElement>('.seat-0') : null;
+      const m = mine?.offsetParent ? mine.getBoundingClientRect() : null;
+      const lim = m && m.height && m.left < r.right && r.left < m.right ? Math.min(limit, m.top - 8) : limit;
+      if (r.height <= 0 || r.bottom <= limit) continue;
+      p.style.top = `${Math.round(Math.max(0, lim - r.height - box.top))}px`;
+      p.dataset.aboveHand = '1';
     }
   }
 
