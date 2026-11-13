@@ -42,13 +42,16 @@ On by default now (144 tiles). Your own flower and your own season are 1 faan ea
 - This is separate from the Goulash *mode* (a goulash after a wall game), which stays as it was.
 
 ### The cards (South and North)
-The cards are the club's own deck from the Mahjong Calling rulebook: the 55 Small Cards (`indiaCards.ts`) and the 29 Big Cards (`indiaBig.ts`), the same cards India Rules plays. Each card keeps its own calling rules and jokers (some take no discard at all, not even to win).
+Since 2026-10-30 (the user's choice) both card rounds use the club's own cards: the 55 Small Cards and 29 Big Cards of the Mahjong Calling rulebook, exactly as India Rules plays them (`indiaCards.ts`, `indiaBig.ts`), with each card's own calling rules and jokers.
 
-- South: each player is dealt three Small Cards in secret, keeps one, and wins only with the hand it names.
-- North: before the deal East picks one Big Card, and everyone plays to it.
-- The table keeps its own faan scoring (`CARD_FAAN` in `windRounds.ts`): a half-limit card is 3 faan, a limit card 4, a double-limit card 5. A Big Card is 4 faan, or 5 when concealed (nothing claimed; the last tile may be a discard). Then self-drawn +1 and flowers as usual.
+- South: every player is dealt three Small Cards in secret after seeing their tiles, keeps one, and wins only with the hand it names. A card marked "all from the wall" takes no discard, not even to win.
+- North: before the deal East picks one Big Card and everyone plays to it (kongs, qwongs and runs laid down for extra tiles, the card's own jokers).
+- The table keeps its own faan scoring. A card's limit becomes faan so the book's 500 / 1000 / 2000 keep their ratio: half limit 3, limit 4, double limit 5. A Big Card pays 4, or 5 when nothing was claimed. Self-drawn adds 1 and flowers score as usual (on a Big Card only when the card treats flowers as bonus tiles). (`CARD_FAAN` in windRounds.ts; confirmed by the user 2026-10-30)
+- India Rules' compulsory exchange, Tic-Tac-Toe and buying stay in India Rules only (confirmed by the user 2026-10-30).
 
-(An earlier version used two short JongClub cards, `SMALL_CARD` and `BIG_CARD` in `special.ts`; they now only supply guide pictures.)
+JongClub's earlier Small and Big Card lists (`SMALL_CARD`, `BIG_CARD` in special.ts) are no longer dealt; they remain as reference shapes.
+
+Each card has its own printed face (`src/ui/cardArt.ts`): a palette from its name and tiles, an emblem from its name, an engraved pattern, foil frame and corner numbers.
 
 ## Sources
 WebFetch was blocked; read through search extracts only.
