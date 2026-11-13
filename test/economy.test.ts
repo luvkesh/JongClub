@@ -72,6 +72,17 @@ describe('Jong Points economy', () => {
     const before = p.jongPoints;
     expect(buyBundleJp(p, 'mastery', all)).toBe(true);
     expect(before - p.jongPoints).toBe(100);
+    // The bundle is kept, and a second buy charges nothing.
+    expect(econOf(p).bundles).toContain('mastery');
+    expect(buyBundleJp(p, 'mastery', all)).toBe(true);
+    expect(before - p.jongPoints).toBe(100);
+    // A bundle bought at full price with the lesson list is kept too.
+    const q = fresh();
+    q.jongPoints = 5_000;
+    expect(buyBundleJp(q, 'foundations', all)).toBe(true);
+    expect(q.jongPoints).toBe(5_000 - 1_800);
+    expect(econOf(q).bundles).toEqual(['foundations']);
+    expect(canOpen(q, 'strategy', all)).toBe(true);
     for (const b of BUNDLES) {
       const q = fresh();
       for (const l of b.lessons(all).slice(0, 1)) econOf(q).lessons.push(l);

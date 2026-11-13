@@ -271,12 +271,13 @@ export function bundlePrice(p: Profile, b: Bundle, all: string[]): Price {
 
 export function buyBundleJp(p: Profile, id: string, all?: string[]): boolean {
   const b = BUNDLES.find((x) => x.id === id);
-  const e = econOf(p);
-  if (!b || e.bundles.includes(id)) return !!b;
+  if (!b || econOf(p).bundles.includes(id)) return !!b;
   const { jp } = all ? bundlePrice(p, b, all) : b.price;
   if (p.jongPoints < jp) return false;
   p.jongPoints -= jp;
-  e.bundles.push(id);
+  // econOf rebuilds the economy on every call (bundlePrice just did), so take it fresh:
+  // pushing onto one read before the price charged the points and lost the bundle.
+  econOf(p).bundles.push(id);
   return true;
 }
 
