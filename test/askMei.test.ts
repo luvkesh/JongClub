@@ -192,7 +192,13 @@ describe('the Gemini provider', () => {
 
   it('knows what a Google key looks like', () => {
     expect(looksLikeKey('AIzaSyA-0123456789abcdefghijklmnopqrstu')).toBe(true);
+    expect(looksLikeKey('AQ.Ab0123456789abcdefghijklmnopqrstuvwxyz_-ABCDEFGHIJKLMN')).toBe(true);
     expect(looksLikeKey('sk-not-a-google-key')).toBe(false);
+  });
+
+  it('tells a key that needs billing from a refused key', () => {
+    expect(() => readGemini(403, { error: { message: 'The Gemini API free tier is not available for this project. Please set up billing.' } })).toThrowError(expect.objectContaining({ code: 'billing' }));
+    expect(() => readGemini(403, { error: { message: 'API key not valid.' } })).toThrowError(expect.objectContaining({ code: 'bad-key' }));
   });
 });
 

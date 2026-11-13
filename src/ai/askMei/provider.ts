@@ -25,7 +25,7 @@ export interface AskProvider {
   ask(system: string, turns: ChatTurn[], signal?: AbortSignal): Promise<string>;
 }
 
-export type AskErrorCode = 'needs-key' | 'bad-key' | 'quota' | 'network' | 'blocked' | 'server' | 'empty' | 'aborted';
+export type AskErrorCode = 'needs-key' | 'bad-key' | 'billing' | 'quota' | 'network' | 'blocked' | 'server' | 'empty' | 'aborted';
 
 export class AskMeiError extends Error {
   constructor(
@@ -72,8 +72,8 @@ export function setDeviceKey(key: string | null) {
   store.set(DEVICE_KEY, k ? k : null);
 }
 
-/** Looks like a Google API key (AIza… and about 39 characters) so a paste of something else is caught early. */
-export const looksLikeKey = (k: string) => /^AIza[0-9A-Za-z_-]{30,}$/.test(k.trim());
+/** Looks like a Google API key, so a paste of something else is caught early: the older AIza… keys and the newer AQ.… ones. */
+export const looksLikeKey = (k: string) => /^(AIza[0-9A-Za-z_-]{30,}|AQ\.[0-9A-Za-z_-]{30,})$/.test(k.trim());
 
 /** The server route that answers for Ask Mei, or null when the game runs without one. */
 export function askEndpoint(): string | null {
@@ -106,6 +106,8 @@ interface GeminiReply {
 
 /** The reply text out of a Gemini response, or an AskMeiError. */
 export function readGemini(status: number, body: GeminiReply): string {
+  // A good key whose Google project has no free tier: Google asks for billing to be turned on.
+  if (status === 403 && /billing|free tier/i.test(body.error?.message ?? '')) throw new AskMeiError('billing', body.error?.message ?? 'The key needs billing.');
   if (status === 400 || status === 403) throw new AskMeiError('bad-key', body.error?.message ?? 'The key was refused.');
   if (status === 429) throw new AskMeiError('quota', body.error?.message ?? 'Too many questions for now.');
   if (status >= 500 || status === 404) throw new AskMeiError('server', body.error?.message ?? `Gemini answered ${status}.`);
