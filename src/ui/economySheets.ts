@@ -41,9 +41,13 @@ const demoNote = () => h('p', { class: 'ec-demo' }, h('span', { html: glyph('loc
 /** Pay real money for something. In the demo the player confirms and it is granted without charge. */
 export function payMoney(ctx: AppCtx, sku: string, title: string, inr: number, done: () => void) {
   const pay = paymentProvider();
+  // One purchase per sheet: a second tap while the provider is still working must not grant it twice.
+  let busy = false;
   const run = async () => {
-    const ok = await pay.purchase(sku, inr);
-    if (!ok) return;
+    if (busy) return;
+    busy = true;
+    const ok = await pay.purchase(sku, inr).catch(() => false);
+    if (!ok) return void (busy = false);
     grantPurchase(ctx.profile, sku, pay.demo);
     saveProfile(ctx.profile);
     s.close();

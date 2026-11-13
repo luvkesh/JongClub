@@ -71,7 +71,15 @@ export function showSettings(app: App) {
     r.oninput = () => {
       s.volumes[key] = Number(r.value);
       // Raising the music or ambient slider while the music button has them off turns them back on.
-      if ((key === 'music' || key === 'ambient') && s.musicOff && s.volumes[key] > 0) setMusicOff(s, false, () => {});
+      if ((key === 'music' || key === 'ambient') && s.musicOff && s.volumes[key] > 0) {
+        setMusicOff(s, false, () => {});
+        // Keep the Background music switch above in step.
+        for (const [v, on] of [['on', true], ['off', false]] as const) {
+          const b = document.getElementById(`music-on-${v}`);
+          b?.classList.toggle('on', on);
+          b?.setAttribute('aria-checked', String(on));
+        }
+      }
       applyVolumes(s);
       persistSettings(app);
     };

@@ -149,8 +149,27 @@ export function loadProfile(): Profile {
       // Older saves kept cosmetics at the top level or with fewer slots.
       p.loadout = { ...base.loadout, ...(typeof s.tileSet === 'string' ? { tileSet: s.tileSet } : {}), ...(isObj(s.loadout) ? s.loadout : {}) };
       p.avatar = { ...base.avatar, ...(isObj(s.avatar) ? s.avatar : {}) };
+      // Every look and slot must keep its type: a number where a colour belongs stopped the avatar drawing (and the app opening on Profile).
+      const av = p.avatar as unknown as Record<string, unknown>;
+      for (const k of Object.keys(av)) {
+        const d = (base.avatar as unknown as Record<string, unknown>)[k];
+        if (d === undefined ? typeof av[k] !== 'string' : typeof av[k] !== typeof d || (typeof d === 'number' && !Number.isFinite(av[k]))) {
+          if (d === undefined) delete av[k];
+          else av[k] = d;
+        }
+      }
+      const lo = p.loadout as unknown as Record<string, unknown>;
+      for (const k of Object.keys(lo)) {
+        if (typeof lo[k] === 'string') continue;
+        const d = (base.loadout as unknown as Record<string, unknown>)[k];
+        if (d === undefined) delete lo[k];
+        else lo[k] = d;
+      }
       for (const k of ['ratings', 'ratedByVariation', 'varStats', 'daily', 'variationGames', 'variationWins', 'achievements'] as const) if (!isObj(s[k])) (p as unknown as Record<string, unknown>)[k] = base[k];
       for (const k of ['ratingHistory', 'owned', 'following', 'friends', 'trophies', 'history', 'daysPlayed', 'lessonsDone'] as const) if (!Array.isArray(s[k])) (p as unknown as Record<string, unknown>)[k] = base[k];
+      // Lists keep only entries of the right kind: a null game or trophy broke the Profile screen.
+      for (const k of ['owned', 'following', 'daysPlayed', 'lessonsDone'] as const) (p as unknown as Record<string, unknown[]>)[k] = (p[k] as unknown[]).filter((x) => typeof x === 'string');
+      for (const k of ['ratingHistory', 'friends', 'trophies', 'history'] as const) (p as unknown as Record<string, unknown[]>)[k] = (p[k] as unknown[]).filter(isObj);
       // Counters must be plain non-negative numbers: a string would concatenate on +=, NaN would spread.
       for (const k of ['jongPoints', 'xp', 'rating', 'ratedGames', 'games', 'gamesWon', 'handsPlayed', 'handsWon', 'selfDrawWins', 'streak', 'longestStreak'] as const) {
         const v: unknown = p[k];

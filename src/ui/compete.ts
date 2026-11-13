@@ -150,13 +150,13 @@ function clubToday(seedKey: string, mine: number | undefined, label: (n: number)
   const rows = ROSTER.slice()
     .sort((a, b) => ((a.rating * 7 + x) % 97) - ((b.rating * 7 + x) % 97))
     .slice(0, 9)
-    .map((m) => ({ name: m.name, city: m.city, v: Math.round(((m.rating - 800) / 1500) * 900 + ((x ^ (m.rating * 2654435761)) % 300)) }));
-  if (mine !== undefined) rows.push({ name: 'You', city: '', v: mine });
+    .map((m): { name: string; city: string; v: number; me?: boolean } => ({ name: m.name, city: m.city, v: Math.round(((m.rating - 800) / 1500) * 900 + ((x ^ (m.rating * 2654435761)) % 300)) }));
+  if (mine !== undefined) rows.push({ name: tr('You'), city: '', v: mine, me: true });
   rows.sort((a, b) => b.v - a.v);
   return h(
     'ol',
     { class: 'board' },
-    ...rows.map((r, i) => h('li', { class: r.name === 'You' ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'nm' }, r.name, r.city ? h('em', {}, ` ${r.city}`) : ''), h('span', { class: 'num' }, label(r.v)))),
+    ...rows.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'nm' }, r.name, r.city ? h('em', {}, ` ${r.city}`) : ''), h('span', { class: 'num' }, label(r.v)))),
   );
 }
 

@@ -51,7 +51,13 @@ const write = (key: string, v: unknown) => {
   }
 };
 
-let current: Account | null = read<Account>(SESSION_KEY);
+/** A saved session only counts if it names a known provider and an account id (anything else plays as a guest). */
+const validSession = (a: unknown): Account | null => {
+  const x = a as Partial<Account> | null;
+  return x && typeof x === 'object' && typeof x.id === 'string' && x.id && typeof x.name === 'string' && typeof x.provider === 'string' && Object.prototype.hasOwnProperty.call(PROVIDER_LABEL, x.provider) ? (x as Account) : null;
+};
+
+let current: Account | null = validSession(read<unknown>(SESSION_KEY));
 
 /** The signed-in account (a guest counts once chosen), or null if nobody has chosen yet. */
 export const currentAccount = () => current;

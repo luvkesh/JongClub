@@ -172,14 +172,26 @@ export function accountField(): HTMLElement {
       : `${a.name}${a.email ? ` · ${a.email}` : ''}`;
   const via = a.provider === 'guest' ? tr('Progress is saved on this device only.') : tr(a.demo ? 'Signed in with {provider} (demo)' : 'Signed in with {provider}', { provider: PROVIDER_LABEL[a.provider] });
   const switchTo = () => {
+    // Escape closes it like Cancel (the Settings dialog behind ignores Escape while it is open).
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || !screen.isConnected) return;
+      e.preventDefault();
+      close();
+    };
+    const close = () => {
+      document.removeEventListener('keydown', onKey, true);
+      screen.remove();
+    };
     const screen = signInScreen({
-      onCancel: () => screen.remove(),
+      onCancel: close,
       onAccount: (next) => {
+        document.removeEventListener('keydown', onKey, true);
         activate(next);
         location.reload();
       },
     });
     document.body.append(screen);
+    document.addEventListener('keydown', onKey, true);
   };
   return h(
     'div',

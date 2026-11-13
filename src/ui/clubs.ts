@@ -324,7 +324,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
   const league = h(
     'ol',
     { class: 'board club-league' },
-    ...c.league.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'nm' }, r.name, h('em', {}, ` ${trn(r.games, '{n} game', '{n} games')} · ${trn(r.wins, '{n} win', '{n} wins')}`)), h('span', { class: 'num' }, tr('{n} pts', { n: r.points })))),
+    ...c.league.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'nm' }, r.me && c.local ? tr('{name} (you)', { name: ctx.profile.name }) : r.name, h('em', {}, ` ${trn(r.games, '{n} game', '{n} games')} · ${trn(r.wins, '{n} win', '{n} wins')}`)), h('span', { class: 'num' }, tr('{n} pts', { n: r.points })))),
   );
   const weekEnd = new Date(Date.parse(`${c.week}T00:00:00Z`) + 7 * 86_400_000);
   const days = Math.max(0, Math.ceil((weekEnd.getTime() - Date.now()) / 86_400_000));
@@ -334,7 +334,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
   void clubsBackend()
     .leaderboard(c, { id: c.members.find((m) => m.role === 'founder' && c.local)?.id ?? '', rating: ctx.profile.ratings[c.variation] ?? ctx.profile.rating })
     .then((rows) => {
-      clear(board).append(...rows.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), avatarEl(r.avatar, r.name, 28), h('span', { class: 'nm' }, r.me && c.local ? tr('{name} (you)', { name: ctx.profile.name }) : r.name), h('span', { class: 'num' }, fmt(r.rating)))));
+      clear(board).append(...rows.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), avatarEl(r.me ? ctx.profile.avatar : r.avatar, r.name, 28), h('span', { class: 'nm' }, r.me && c.local ? tr('{name} (you)', { name: ctx.profile.name }) : r.name), h('span', { class: 'num' }, fmt(r.rating)))));
     })
     .catch((e: Error) => clear(board).append(h('li', {}, h('span', { class: 'muted small' }, e.message))));
 
@@ -342,7 +342,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
   const people = h(
     'div',
     { class: 'people' },
-    ...c.members.map((m) => h('div', { class: 'person' }, avatarEl(m.avatar, m.name, 40), h('div', { class: 'pmain' }, h('div', { class: 'pn' }, m.name === 'You' ? tr('{name} (you)', { name: ctx.profile.name }) : m.name, m.role === 'founder' ? h('span', { class: 'chip sm' }, tr('Founder')) : ''), h('div', { class: 'muted small' }, m.ai ? tr('Club roster member') : tr('Member since {date}', { date: new Date(m.joined).toLocaleDateString(lang()) }))))),
+    ...c.members.map((m) => h('div', { class: 'person' }, avatarEl(m.name === 'You' && c.local ? ctx.profile.avatar : m.avatar, m.name, 40), h('div', { class: 'pmain' }, h('div', { class: 'pn' }, m.name === 'You' ? tr('{name} (you)', { name: ctx.profile.name }) : m.name, m.role === 'founder' ? h('span', { class: 'chip sm' }, tr('Founder')) : ''), h('div', { class: 'muted small' }, m.ai ? tr('Club roster member') : tr('Member since {date}', { date: new Date(m.joined).toLocaleDateString(lang()) }))))),
   );
 
   const leave = h(
