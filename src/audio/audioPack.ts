@@ -1,6 +1,6 @@
 // Recorded audio: Mei's narration and the table callers' voices.
-// Normal builds embed the clips, but in their own chunks (narration.gen.ts is
-// tens of megabytes), loaded with import() after the first screen is up: the
+// Normal builds embed the clips, but in their own chunks (narration.gen.ts merges
+// parts of over 100 MB together), loaded with import() after the first screen is up: the
 // plain build fetches them as separate files, the single-file builds inline
 // them but still parse them only when asked. The Artifact build (which has a
 // page size limit) leaves them out and loads two packs published next to the page:

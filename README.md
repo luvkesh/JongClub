@@ -42,7 +42,8 @@ owned cosmetics) that point at what arrives later.
 Every lesson (Basics, Riichi, Taiwanese, American, Dubai club) is a short story told
 one scene at a time by Mei, the club host, with a board diagram or tiles on screen,
 captions, and Mei's recorded voiceover (Kokoro TTS, Apache-2.0: a warm female voice with a light
-Chinese accent), embedded in `src/audio/narration.gen.ts`. After editing lesson text, re-record with
+Chinese accent), embedded in `src/audio/narration.gen.<n>.ts` parts, each under 50 MB so GitHub accepts them,
+merged by `src/audio/narration.gen.ts`. After editing lesson text, re-record with
 `npx vite-node scripts/narration-lines.ts > lines.json` and `python3 scripts/record-narration.py lines.json
 "af_heart+zf_xiaoxiao@0.5"`. Lines without a clip fall back to the device's most natural voice; Settings has
 a Tutorial voice picker. Captions are always shown, and voice can be switched off per device.
