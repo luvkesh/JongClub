@@ -310,7 +310,12 @@ def main():
         for r, ks in enumerate(rows):
             for i, k in enumerate(ks):
                 tile(mats, d, k, ((i - 4) * 0.34, (2.5 - r) * 0.46, tm.TD / 2), Euler((0, 0, 0)))
-        c = camera((0, -1.9, 4.1), (0, 0.02, 0), 38)
+        # Lying face up, the faces would mirror the overhead light straight into the lens: light them from
+        # the sides instead, and look from lower down.
+        for o in list(bpy.data.objects):
+            if o.name.startswith(('top', 'rim')) or (o.name.startswith('Plane') and abs(o.location.x) < 0.01 and o.location.z > 0.8):
+                bpy.data.objects.remove(o)
+        c = camera((0, -3.3, 3.3), (0, 0.05, 0), 40)
         c.data.dof.aperture_fstop = 16
     elif scene.startswith('row:'):
         ks = [int(k) for k in scene[4:].split(',')]
