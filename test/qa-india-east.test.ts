@@ -250,8 +250,8 @@ describe('Classic has no passports (spec 46-48)', () => {
   });
 });
 
-describe('Multiple winners (table option)', () => {
-  it('two Mahjongs on one discard: each paid by the others', () => {
+describe('Two Mahjong calls on one discard (book p. 9)', () => {
+  it('only the player nearest in turn wins, even with a saved "multiple winners" choice', () => {
     const g = table(['1m 1m 9m 3p 7p 2s 6s E S W N Rd Gd Wd', '5p 5m 9m 3p 7p 2s 6s E S W N Rd Gd', '123m 456p 789s 111s 5p', '123m 456p 789s EEE 5p'], { multipleWinners: 'on' });
     g.discard(0, tileOf(g, 0, k('Wd')).id);
     passAll(g);
@@ -259,10 +259,11 @@ describe('Multiple winners (table option)', () => {
     g.respond(3, { type: 'win' });
     g.respond(2, { type: 'win' });
     passAll(g);
-    const r = (g.state.phase as { result: { winners?: number[]; deltas: number[] } }).result;
-    expect(r.winners).toEqual([2, 3]);
-    // Concealed 1000 each, East 2000. Seats 2 and 3 pay each other 1000 (net 0).
-    expect(r.deltas).toEqual([-4000, -2000, 3000, 3000]);
+    const r = (g.state.phase as { result: { winner?: number; winners?: number[]; deltas: number[] } }).result;
+    expect(r.winner).toBe(2);
+    expect(r.winners ?? [2]).toEqual([2]);
+    // Concealed: 1000 from each player, East 2000.
+    expect(r.deltas).toEqual([-2000, -1000, 4000, -1000]);
   });
 });
 

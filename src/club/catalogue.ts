@@ -195,7 +195,6 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
       { name: tr('Last tile'), status: 'playable' },
       { name: tr('Abortive draws'), status: 'playable', where: tr('Riichi, Sanma') },
       { name: tr('Self-draw only'), status: 'playable', where: tr('Table option, every rule set') },
-      { name: tr('Multiple winners'), status: 'playable', where: tr('Table option, every rule set') },
     ],
   },
   {
@@ -251,7 +250,7 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
 /** Which group a profile's house rule belongs to, for the lobby's House rules panel. */
 export function houseRuleGroup(id: string): HouseRuleGroup {
   if (id.startsWith('goulash')) return 'goulash';
-  if (id === 'minValue' || id === 'minFan' || id === 'abortive' || id === 'tripleRon' || id === 'selfDrawOnly' || id === 'multipleWinners') return 'winning';
+  if (id === 'minValue' || id === 'minFan' || id === 'abortive' || id === 'tripleRon' || id === 'selfDrawOnly') return 'winning';
   if (id === 'cumulativeLeaderboard' || id === 'teamPlay') return 'competitive';
   if (id === 'dealerRetention') return 'dealer';
   if (['flowers', 'jokers', 'jokerPair', 'jokerCalls', 'bites', 'redFives', 'animals', 'characters'].includes(id)) return 'tiles';

@@ -550,9 +550,30 @@ function koreanOpenPath(game: MahjongGame, seat: number, calledKind: number, usi
 
 /** True when calling `o` on `kind` would leave `seat` with no winning hand left to build (a set that fits none of
  *  their cards, say) though the hand can still win now. The table warns before such a call; it never blocks it. */
+/**
+ * India Rules Goulash: can the hand still be clean once `extra` (the kinds of a set about to be
+ * called) is laid down? Laid-down sets never change, so only they decide it: a clean hand is one
+ * suit with or without honours, all honours, or 1s and 9s only (book p. 29). Sets in two suits
+ * rule all of these out unless every suit tile is a 1 or 9 and there are no honours.
+ */
+export function westCleanPossible(game: MahjongGame, seat: number, extra: number[]): boolean {
+  const kinds: number[] = [...extra];
+  for (const m of game.players[seat].melds) {
+    for (const t of m.tiles) kinds.push(m.wild?.find((w) => w.id === t.id)?.as ?? t.kind);
+  }
+  const fixed = kinds.filter((k) => k < 34);
+  const suits = new Set(fixed.filter((k) => k < 27).map((k) => Math.floor(k / 9)));
+  if (suits.size < 2) return true;
+  const terminal = (k: number) => k % 9 === 0 || k % 9 === 8;
+  return !fixed.some((k) => k >= 27) && fixed.filter((k) => k < 27).every(terminal);
+}
+
 export function callLeavesNoWin(game: MahjongGame, seat: number, o: ClaimOption, kind: number): boolean {
   if (o.type === 'win' || o.type === 'buy') return false;
   if (currentShanten(game, seat) >= 99) return false;
+  // India Rules Goulash: a win needs a clean hand (book p. 28-29), so a set that rules every clean
+  // pattern out leaves no win, however the rest of the hand falls.
+  if (game.profile.specialRound === 'indiaWest' && !westCleanPossible(game, seat, o.type === 'chow' ? [...(o.using ?? []), kind] : [kind])) return true;
   const using = o.using ?? new Array(o.type === 'kong' ? 3 : 2).fill(kind);
   // Whether any winning hand is left depends on the sets, not on which tile goes next, so one look at the hand
   // straight after the call does (trying every discard, as shantenAfterCall does, takes seconds on card rounds).
