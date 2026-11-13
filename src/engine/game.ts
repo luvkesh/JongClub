@@ -7,9 +7,10 @@ import { Rng } from './rng';
 import { openingRules, wallBreak } from './opening';
 import { advanceRound, initialRound, prevailingWind, seatWind } from './rounds';
 import { roundOverlay } from './rules/windRounds';
+import { teamOf } from './rules/tableOptions';
 import type { AbortiveKind, HandScore, Payment, RuleProfile, SeatInfo } from './rules/types';
 import type { InstantEvent } from './rules/types';
-import type { ClaimOption, ClaimResponse, GameEvent, GameState, HandResult, IndiaExchangeStep, Meld, PlayerState } from './state';
+import type { ClaimOption, ClaimResponse, CoWinner, GameEvent, GameState, HandResult, IndiaExchangeStep, Meld, PlayerState } from './state';
 import { FLOWER_BASE, FLOWER_COUNT, JOKER_KIND, KIND_COUNT, Tile, extraTileIds, isFlower, isJoker, isRed, isTerminalOrHonor, isWind, redFiveIds, toCounts, wildCovers, wildTargets, windKind } from './tiles';
 import { FL, bigCallKinds, bigDistance, bigGroups, bigScore, bigWins, type BigCtx, type BigGroup, type MInfo } from './rules/indiaBig';
 
@@ -798,7 +799,38 @@ export class MahjongGame {
     return !pl.riichi || ph.drawn?.kind === k;
   }
 
+  /** The table options the host chose (self-draw only, multiple winners, winner takes all, teams). */
+  get table() {
+    return this.baseProfile.table;
+  }
+
+  /** May anyone win on a thrown tile (a discard, a robbed kong, a set-aside North)? Off at a self-draw-only table. */
+  discardWins(): boolean {
+    return !this.table?.selfDrawOnly;
+  }
+
+  /** Team play: which team a seat is on (0: East and West, 1: South and North), or null. */
+  teamOf(seat: number): number | null {
+    return this.table?.teams && this.profile.players === 4 ? teamOf(seat) : null;
+  }
+
+  /** Team play: do two seats play together? */
+  sameTeam(a: number, b: number): boolean {
+    const t = this.teamOf(a);
+    return t !== null && t === this.teamOf(b);
+  }
+
+  /** Could a tile `discarder` throws cost them a win by `seat`? Not at a self-draw-only table, and not between partners. */
+  dealInRisk(discarder: number, seat: number): boolean {
+    return discarder !== seat && this.discardWins() && !this.sameTeam(discarder, seat);
+  }
+
   private claimOptionsFor(seat: number, discarder: number, tile: Tile): ClaimOption[] {
+    const out = this.claimOptionsRaw(seat, discarder, tile);
+    return this.discardWins() ? out : out.filter((o) => o.type !== 'win');
+  }
+
+  private claimOptionsRaw(seat: number, discarder: number, tile: Tile): ClaimOption[] {
     const p = this.profile;
     const out: ClaimOption[] = [];
     const pl = this.players[seat];
@@ -985,7 +1017,11 @@ export class MahjongGame {
       return this.abortiveDraw('tripleRon');
     }
     const winner = pick(['win']);
-    if (winner !== undefined) return this.finishWin(winner, ph.discarder, ph.tile, false, !!ph.robKong && !ph.kita, !!ph.kita);
+    if (winner !== undefined) {
+      // Multiple winners: everyone who called the win takes it, in turn order; otherwise the first in turn wins (head bump).
+      const more = this.table?.multipleWinners ? order.filter((s) => s !== winner && ph.responses[s]?.type === 'win') : [];
+      return this.finishWin(winner, ph.discarder, ph.tile, false, !!ph.robKong && !ph.kita, !!ph.kita, more);
+    }
     // Nobody robbed the kong (or the North): it stands and its owner draws a replacement.
     if (ph.robKong) return ph.kita ? this.completeKita(ph.discarder, ph.tile) : ph.concealedKong ? this.completeConcealedKong(ph.discarder, ph.tile) : this.completeAddedKong(ph.discarder, ph.tile);
     this.settleRiichi(ph.discarder);
@@ -1364,7 +1400,7 @@ export class MahjongGame {
       const i = pl.hand.findIndex((t) => t.kind === kind);
       const [tile] = pl.hand.splice(i, 1);
       // Robbing the kong: before the kong stands, others may win on the added tile.
-      if (this.profile.robKong) {
+      if (this.profile.robKong && this.discardWins()) {
         const options: Record<number, ClaimOption[]> = {};
         let any = false;
         for (let s = 0; s < this.profile.players; s++) {
@@ -1389,7 +1425,7 @@ export class MahjongGame {
       const options: Record<number, ClaimOption[]> = {};
       let any = false;
       for (let s = 0; s < this.profile.players; s++) {
-        if (s === seat) continue;
+        if (s === seat || !this.discardWins()) continue;
         const ev = this.evaluateWin(s, kind, false, true, false, { robbedKong: true, winTileId: tile.id, discarder: seat });
         if (ev?.decomposition.shape === 'thirteenOrphans' && !this.isFuriten(s)) {
           options[s] = [{ type: 'win' }];
@@ -1445,7 +1481,7 @@ export class MahjongGame {
     const options: Record<number, ClaimOption[]> = {};
     let any = false;
     for (let s = 0; s < this.profile.players; s++) {
-      if (s === seat) continue;
+      if (s === seat || !this.discardWins()) continue;
       if (this.evaluateWin(s, k, false, true, false, { winTileId: tile.id, discarder: seat }) && !this.isFuriten(s)) {
         options[s] = [{ type: 'win' }];
         any = true;
@@ -1573,9 +1609,11 @@ export class MahjongGame {
     return deltas;
   }
 
-  private finishWin(winner: number, discarder: number | null, tile: Tile, afterKong: boolean, robbedKong = false, kita = false) {
+  private finishWin(winner: number, discarder: number | null, tile: Tile, afterKong: boolean, robbedKong = false, kita = false, more: number[] = []) {
     const selfDrawn = discarder === null;
     const ev = this.evaluateWin(winner, tile.kind, selfDrawn, !selfDrawn, afterKong, { robbedKong, winTileId: tile.id, discarder: discarder ?? undefined })!;
+    // Co-winners (multiple winners on one discard) are scored before the tile moves; the tile itself joins the first winner's hand.
+    const co: CoWinner[] = more.map((s) => ({ seat: s, score: this.evaluateWin(s, tile.kind, false, true, false, { robbedKong, winTileId: tile.id, discarder: discarder ?? undefined })!.score, revealedHand: [...this.players[s].hand, tile], revealedMelds: this.players[s].melds.slice() }));
     const pl = this.players[winner];
     if (robbedKong) {
       // The robbed tile never reached the pung, which stays a pung.
@@ -1596,18 +1634,21 @@ export class MahjongGame {
       }
       pl.hand.push(tile);
     }
-    this.settleWin(winner, discarder, tile, ev.score, robbedKong);
+    this.settleWin(winner, discarder, tile, ev.score, robbedKong, co);
   }
 
   /** Pay out a win and end the hand. */
-  private settleWin(winner: number, discarder: number | null, tile: Tile, score: HandScore, robbedKong: boolean) {
+  private settleWin(winner: number, discarder: number | null, tile: Tile, score: HandScore, robbedKong: boolean, co: CoWinner[] = []) {
     const selfDrawn = discarder === null;
     const pl = this.players[winner];
     const bonus = this.state.round.repeat;
     const instant = this.state.instant ?? [];
     // Goulash stakes: a win in the hand after a wall game may pay more.
     const stakes = this.state.goulash ? (this.profile.goulashStakes ?? 1) : 1;
-    const won = this.profile.payments(winner, discarder, score, this.dealer, this.profile.players, bonus).map((x) => (stakes === 1 ? x : { ...x, amount: x.amount * stakes }));
+    // Winner takes all: a win on a discard is paid by every other player, the way the rule set pays a self-draw.
+    const payer = this.table?.winnerTakesAll ? null : discarder;
+    const payFor = (w: number, sc: HandScore) => this.profile.payments(w, payer, sc, this.dealer, this.profile.players, bonus).map((x) => (stakes === 1 ? x : { ...x, amount: x.amount * stakes }));
+    const won = [...payFor(winner, score), ...co.flatMap((c) => payFor(c.seat, c.score))];
     const payments = [...instant, ...won, ...this.handEndPayments(winner, discarder, score)];
     const deltas = this.applyPayments(payments);
     const pot = this.state.riichiPot;
@@ -1631,6 +1672,10 @@ export class MahjongGame {
       bonusCounters: bonus,
       robbedKong: robbedKong || undefined,
     };
+    if (co.length) {
+      result.winners = [winner, ...co.map((c) => c.seat)];
+      result.coWinners = co;
+    }
     if (instant.length) result.instant = instant;
     this.state.phase = { kind: 'handOver', result };
   }
@@ -1675,7 +1720,7 @@ export class MahjongGame {
     // An abortive draw is replayed with the same dealer and one more honba.
     const rounds = goulash || r.abortive ? { ...this.profile.rounds, dealerRetention: 'onDealerWinOrDraw' as const } : this.profile.rounds;
     const round = advanceRound(rounds, this.state.round, this.profile.players, {
-      dealerWon: r.type === 'win' && r.winner === this.dealer,
+      dealerWon: r.type === 'win' && (r.winners ?? [r.winner]).includes(this.dealer),
       drawn: r.type === 'draw',
       dealerTenpai: r.tenpai?.[this.dealer],
     });

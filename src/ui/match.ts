@@ -27,6 +27,7 @@ import { GAME_LENGTHS, roundLabel, roundProfileFor, seatWind, timedMatchOver, ty
 import { eastRoll, openingRules, type EastRound } from '../engine/opening';
 import { runOpening } from './opening';
 import { VARIATIONS, getProfile, withHouseRules } from '../engine/rules';
+import { allHouseRules, partnerOf, teamTotals } from '../engine/rules/tableOptions';
 import { CARD, CARD_KEY, progress } from '../engine/rules/american';
 import { classicProfile } from '../engine/rules/classic';
 import type { ClaimOption, ClaimResponse, GameEvent, HandResult } from '../engine/state';
@@ -1367,7 +1368,7 @@ export class MatchController {
         h(
           'div',
           { class: 'seat-info' },
-          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, p.name), s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
+          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, p.name), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
           h('div', { class: 'seat-sub' }, h('span', { class: 'wind', title: { E: tr('East seat'), S: tr('South seat'), W: tr('West seat'), N: tr('North seat') }[wind] }, wind), this.seats[s].kind === 'ai' ? PERSONALITIES[ai.personality].label : s === this.you ? tr('You') : tr('Club member')),
           reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
         ),
@@ -2210,7 +2211,7 @@ export class MatchController {
   private houseSummary() {
     const p = this.game.profile;
     const c = p.houseChoices ?? {};
-    return p.houseRules
+    return allHouseRules(p)
       .map((r) => {
         const o = r.options.find((x) => x.value === (c[r.id] ?? r.default));
         return o ? `${tr(r.label)}: ${tr(o.label).replace(/\s*\(.*\)$/, '')}` : '';
@@ -3336,26 +3337,30 @@ export class MatchController {
     this.renderWaits();
     let winMoment = false;
     if (r.type === 'win' && winner !== undefined) {
-      const name = winner === this.you ? tr('You') : g.players[winner].name;
+      const winners = r.winners ?? [winner];
+      const nameOf = (s: number) => (s === this.you ? tr('You') : g.players[s].name);
+      const name = winners.length > 1 ? andList(winners.map(nameOf)) : nameOf(winner);
       const from = r.discarder === this.me ? tr('your') : tr('{name}’s', { name: g.players[r.discarder ?? 0].name });
       const how = r.robbedKong ? tr('by robbing {whose} kong', { whose: from }) : r.discarder === null ? tr('by self-draw') : tr('on {whose} discard', { whose: from });
       // The win moment: the hand lifts into a sweep of gold light, the camera leans in, and a calligraphy banner names the win.
       t.celebrateWin(winner, { selfDrawn: r.discarder === null, from: r.discarder ?? null, camera: this.settings.speed !== 'minimal' });
-      this.showWinBanner(r, winner === this.me ? tr('You win {how}', { how }) : tr('{name} wins {how}', { name, how }));
+      this.showWinBanner(r, winners.length > 1 ? tr('{name} win {how}', { name, how }) : winner === this.me ? tr('You win {how}', { how }) : tr('{name} wins {how}', { name, how }));
       winMoment = true;
-      if (winner === this.me) {
+      // Your own win: the first winner's score, or yours among several winners on one discard.
+      const mine = winner === this.me ? r.score : r.coWinners?.find((c) => c.seat === this.me)?.score;
+      if (mine) {
         this.stats.handsWon++;
         if (r.discarder === null) this.stats.selfDraws++;
         if (g.players[this.me].riichi) this.stats.riichiWins++;
-        if (r.score!.limit) this.stats.limit = true;
-        this.stats.winValue += r.score!.points;
-        const best = { points: r.score!.points, value: r.score!.value, name: r.score!.tier ?? r.score!.items[0]?.name ?? tr('Mahjong') };
+        if (mine.limit) this.stats.limit = true;
+        this.stats.winValue += mine.points;
+        const best = { points: mine.points, value: mine.value, name: mine.tier ?? mine.items[0]?.name ?? tr('Mahjong') };
         if (!this.stats.best || best.points > this.stats.best.points) this.stats.best = best;
       }
       if (r.discarder === this.me) this.stats.dealIns++;
       // Opponents applaud.
       setTimeout(() => {
-        for (let s = 0; s < this.n; s++) if (s !== winner && s !== this.you && Math.random() < 0.4) this.react(s, Math.random() < 0.7 ? '👏' : '😮');
+        for (let s = 0; s < this.n; s++) if (!winners.includes(s) && s !== this.you && Math.random() < 0.4) this.react(s, Math.random() < 0.7 ? '👏' : '😮');
       }, 900);
     } else {
       this.toast(tr('DRAWN HAND'), tr('The wall is empty'));
@@ -3391,6 +3396,16 @@ export class MatchController {
       for (const it of s.items) items.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
       const summary = `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;
       card.append(items, h('div', { class: 'score-total' }, h('span', {}, summary), h('strong', {}, tr('{n} pts', { n: fmt(s.points) }))));
+      // Multiple winners: each other winner's hand and score, under the first.
+      for (const c of r.coWinners ?? []) {
+        const cs = c.score;
+        card.append(h('h3', { class: 'co-win-head' }, c.seat === this.me ? tr('You win the hand too') : tr('{name} wins the hand too', { name: g.players[c.seat].name })));
+        card.append(winHandSection({ hand: c.revealedHand, melds: c.revealedMelds, flowers: g.players[c.seat].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(c.revealedHand, c.revealedMelds), winFrom: this.winFrom(r) }));
+        const citems = h('ul', { class: 'score-items' });
+        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
+        const csum = `${fmt(cs.value)} ${tr(cs.unit)}${cs.fu ? ` ${cs.fu} ${tr('fu')}` : ''}${cs.tier ? ` · ${cs.tier}` : cs.limit ? ` · ${tr('Limit')}` : ''}`;
+        card.append(citems, h('div', { class: 'score-total' }, h('span', {}, csum), h('strong', {}, tr('{n} pts', { n: fmt(cs.points) }))));
+      }
       const extras: string[] = [];
       if (r.bonusCounters) extras.push(tr('Honba {n}', { n: r.bonusCounters }));
       if (r.potWon) extras.push(`${g.profile.riichi?.cost ? tr('Riichi sticks') : g.profile.goulashPot ? tr('Goulash pot') : tr('Bank')} +${fmt(r.potWon)}`);
@@ -3444,6 +3459,14 @@ export class MatchController {
       deltas.append(h('div', { class: 'delta-row' }, h('span', {}, i === this.me ? tr('{name} (you)', { name: p.name }) : p.name, split), h('span', { class: `num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}` }, signed(d)), h('span', { class: 'num muted' }, fmt(p.score))));
     });
     card.append(deltas);
+    if (g.teamOf(0) !== null) {
+      // Team play: the two teams' totals, yours first.
+      const totals = teamTotals(g.players.map((p) => p.score));
+      const team = (t: number) => andList(g.players.filter((p) => g.teamOf(p.seat) === t).map((p) => (p.seat === this.me ? tr('You') : p.name)));
+      const mineT = this.spectator ? 0 : g.teamOf(this.me)!;
+      const row = (t: number) => h('div', { class: `delta-row team-row ${t === mineT && !this.spectator ? 'mine' : ''}` }, h('span', {}, team(t)), h('span', { class: `num ${totals[t] > totals[1 - t] ? 'up' : totals[t] < totals[1 - t] ? 'down' : ''}` }, fmt(totals[t])));
+      card.append(h('h4', { class: 'instant-head' }, tr('Teams')), h('div', { class: 'deltas team-totals' }, row(mineT), row(1 - mineT)));
+    }
     await new Promise<void>((resolve) => {
       const cont = h('button', { class: 'btn primary', onclick: () => resolve() }, over ? tr('See results') : tr('Next hand')) as HTMLButtonElement;
       // A win can fold its summary away to look at the hand on the table; the camera frames it.
@@ -3564,10 +3587,14 @@ export class MatchController {
     // Ties never favour you: you are listed after anyone on the same score, and
     // a shared place counts as the lower one (a drawn game is no win).
     const standings = g.players.map((p) => ({ name: p.name, score: p.score, seat: p.seat })).sort((a, b) => b.score - a.score || (a.seat === this.me ? 1 : b.seat === this.me ? -1 : a.seat - b.seat));
-    const placement = this.spectator ? 0 : g.players.filter((p) => p.seat !== this.me && p.score >= g.players[this.me].score).length + 1;
+    // Team play: the team with more points takes first place for both partners; a tie is second (no win).
+    const teams = !this.spectator && g.teamOf(this.me) !== null ? teamTotals(g.players.map((p) => p.score)) : null;
+    const myTeam = teams ? g.teamOf(this.me)! : 0;
+    const placement = this.spectator ? 0 : teams ? (teams[myTeam] > teams[1 - myTeam] ? 1 : 2) : g.players.filter((p) => p.seat !== this.me && p.score >= g.players[this.me].score).length + 1;
     const len = this.config.length;
     const summary: MatchSummary = {
       placement,
+      team: teams ? { partner: g.players[partnerOf(this.me)].name, mine: teams[myTeam], theirs: teams[1 - myTeam] } : undefined,
       finalScore: g.players[this.me].score,
       handsWon: this.stats.handsWon,
       handsPlayed: this.stats.handsPlayed,

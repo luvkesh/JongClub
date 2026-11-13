@@ -211,7 +211,8 @@ export function readOpponent(game: MahjongGame, opp: number): OpponentRead {
 }
 
 export function readOpponents(game: MahjongGame, seat: number): OpponentRead[] {
-  return game.players.map((_, o) => (o === seat ? null : readOpponent(game, o))).filter((r): r is OpponentRead => !!r);
+  // Only seats a discard could feed: not yourself, nobody at a self-draw-only table, never your partner.
+  return game.players.map((_, o) => (game.dealInRisk(seat, o) ? readOpponent(game, o) : null)).filter((r): r is OpponentRead => !!r);
 }
 
 const avail = (n: number) => (n <= 0 ? 0 : n === 1 ? 0.4 : n === 2 ? 0.75 : 1);
