@@ -1462,6 +1462,26 @@ html:lang(hi) body * { letter-spacing: normal !important; }
 @media (prefers-reduced-motion: reduce) { #car-tiles .car-view .case img { transform: none; } }
 /* Phone: the family rows keep their words clear of the gold landscapes. */
 @media (max-width: 700px) { .fam-art { opacity: 0.22; height: 48px; } }
+
+/* Ask Mei (2026-11-13): a short block after Learn with a sample conversation set in HTML. */
+.askmei { position: relative; background: radial-gradient(60% 90% at 78% 50%, rgba(28, 58, 48, 0.55), transparent 70%), var(--felt); }
+.askmei .wrap { padding-top: clamp(56px, 7vw, 96px); padding-bottom: clamp(56px, 7vw, 96px); }
+.am-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
+.am-cta { margin: 26px 0 0; }
+.am-chat { display: flex; flex-direction: column; gap: 14px; padding: clamp(18px, 2.4vw, 30px); border: 1px solid var(--line-strong); border-radius: 14px; background: linear-gradient(180deg, rgba(22, 44, 37, 0.78), rgba(9, 14, 12, 0.9)); box-shadow: 0 34px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 190, 0.08); }
+.am-q { align-self: flex-end; max-width: 82%; margin: 0; padding: 12px 18px; border: 1px solid rgba(227, 194, 124, 0.45); border-radius: 16px 16px 4px 16px; background: linear-gradient(180deg, rgba(227, 194, 124, 0.2), rgba(227, 194, 124, 0.08)); color: var(--ivory); font-size: 17px; line-height: 1.4; }
+.am-a { display: flex; align-items: flex-start; gap: 12px; max-width: 92%; }
+.am-a > img { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--gold); object-fit: cover; background: var(--felt-3); }
+.am-bubble { padding: 14px 18px; border: 1px solid var(--line); border-radius: 4px 16px 16px 16px; background: rgba(6, 10, 9, 0.72); }
+.am-bubble p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--text); }
+.am-bubble p + p { margin-top: 8px; }
+.am-lesson { display: inline-flex; align-items: center; gap: 9px; margin-top: 12px; padding: 7px 14px; border: 1px solid rgba(227, 194, 124, 0.5); border-radius: 999px; color: var(--gold-hi); font: 500 14px/1.2 var(--ui); }
+.am-lesson .icon { width: 16px; height: 16px; flex: none; }
+.am-lesson .icon svg { width: 100%; height: 100%; display: block; }
+[dir="rtl"] .am-q { border-radius: 16px 16px 16px 4px; }
+[dir="rtl"] .am-bubble { border-radius: 16px 4px 16px 16px; }
+@media (max-width: 899px) { .am-grid { grid-template-columns: 1fr; } .am-q, .am-a { max-width: 100%; } .am-q { max-width: 90%; } }
+@media (max-width: 480px) { .am-a > img { width: 38px; height: 38px; } .am-q, .am-bubble p { font-size: 16px; } }
 </style>
 
 <header class="top">
@@ -1581,6 +1601,40 @@ html:lang(hi) body * { letter-spacing: normal !important; }
         <li style="--x: 1180"><span class="dot"><span class="icon">{{ICON:calendar-check}}</span></span><h4 role="heading" aria-level="3">Daily Drills</h4><p>Five fresh challenges a day.</p></li>
         <li style="--x: 1468"><span class="dot"><span class="icon">{{ICON:chart-line}}</span></span><h4 role="heading" aria-level="3">Game Analysis</h4><p>See what went right and wrong.</p></li>
       </ol>
+    </div>
+  </section>
+
+  <!-- Ask Mei: a short block after Learn -->
+  <section class="chapter askmei" id="askmei">
+    <div class="wrap">
+      <div class="am-grid">
+        <div class="head">
+          <p class="kicker"><span class="ring"><span class="icon">{{ICON:circle-help}}</span></span>Ask Mei</p>
+          <h2 class="title">Ask Mei Anything</h2>
+          <div class="rule"></div>
+          <p class="sub">A question at the table? Just ask.</p>
+          <div class="story">
+            <p>Mei answers from the club's own rule sheets and lessons, across all 31 variations, and points you to the lesson that explains it.</p>
+          </div>
+          <p class="am-cta"><a class="btn gold" href="{{GAME}}" target="_blank" rel="noopener"><span class="icon">{{ICON:graduation-cap}}</span>Ask Mei in the Academy</a></p>
+        </div>
+        <div class="am-chat" role="group" aria-label="A sample conversation with Mei">
+          <p class="am-q">What is a passport in the East round?</p>
+          <div class="am-a">
+            <img src="tour/mei.webp" alt="Mei" width="512" height="512" loading="lazy">
+            <div class="am-bubble">
+              <p>A passport is a small pattern, such as three pairs in one suit, that can take the place of sets in the East round.</p>
+              <p>Your table may make one compulsory to win.</p>
+              <span class="am-lesson"><span class="icon">{{ICON:graduation-cap}}</span><span>Lesson: India Rules, the East round</span></span>
+            </div>
+          </div>
+          <p class="am-q">Can I win without one?</p>
+          <div class="am-a">
+            <img src="tour/mei.webp" alt="" width="512" height="512" loading="lazy">
+            <div class="am-bubble"><p>Yes, unless your table made it compulsory before the game.</p></div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
