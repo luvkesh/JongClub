@@ -35,6 +35,7 @@ import type { Payment } from '../engine/rules/types';
 import { ANIMAL_BASE, CAT, CENTIPEDE, JOKER_KIND, KIND_COUNT, MOUSE, ROOSTER, isAnimal, isFlower, isHonor, isJoker, isRed, tileName, type HandSort } from '../engine/tiles';
 import { avatarSvg } from '../cosmetics/avatar';
 import { avatarPortraitUrl } from '../render/avatar3d';
+import { castPortrait } from '../cosmetics/castArt';
 
 import type { MatchSummary } from '../progression/profile';
 import type { TableRenderer } from '../render/table3d';
@@ -73,8 +74,9 @@ import { applyVolumes, type MusicSettings } from './musicToggle';
 import './matchControls.css';
 
 /** A seat plate's portrait: the 3D figure's head and shoulders, or the flat bust where WebGL is unavailable. */
-const seatPortrait = (a: AvatarSpec) => {
-  const url = avatarPortraitUrl(a, 48);
+const seatPortrait = (a: AvatarSpec, name = '') => {
+  // The regulars in their own look show their painted portrait, as on the website.
+  const url = castPortrait(name, a) ?? avatarPortraitUrl(a, 48);
   return url ? `<img src="${url}" alt="" width="40" height="40" draggable="false">` : avatarSvg(a, 40);
 };
 
@@ -1370,7 +1372,7 @@ export class MatchController {
       const wind = g.state.seatWinds[s];
       const ai = this.ais[s];
       el.append(
-        this.avatars[s] ? h('div', { class: 'avatar svg', 'aria-hidden': 'true', html: seatPortrait(this.avatars[s]!) }) : h('div', { class: 'avatar', 'aria-hidden': 'true' }, p.name[0]),
+        this.avatars[s] ? h('div', { class: 'avatar svg', 'aria-hidden': 'true', html: seatPortrait(this.avatars[s]!, p.name) }) : h('div', { class: 'avatar', 'aria-hidden': 'true' }, p.name[0]),
         h(
           'div',
           { class: 'seat-info' },

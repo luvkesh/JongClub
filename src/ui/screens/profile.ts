@@ -437,7 +437,8 @@ export function avatarEditor(ctx: AppCtx) {
   };
   const PARTS: Record<NonNullable<AvatarSpec['hairPart']>, string> = { left: tr('Left'), centre: tr('Centre'), right: tr('Right') };
   const FACES: Record<NonNullable<AvatarSpec['face']>, string> = { oval: tr('Oval'), round: tr('Round'), long: tr('Oblong'), square: tr('Square'), heart: tr('Heart') };
-  const EYES: Record<NonNullable<AvatarSpec['eyes']>, string> = { almond: tr('Almond'), round: tr('Round'), narrow: tr('Narrow'), hooded: tr('Hooded'), upturned: tr('Upturned') };
+  // 'closed' is Amara's serene look, not offered in the editor.
+  const EYES: Record<Exclude<NonNullable<AvatarSpec['eyes']>, 'closed'>, string> = { almond: tr('Almond'), round: tr('Round'), narrow: tr('Narrow'), hooded: tr('Hooded'), upturned: tr('Upturned') };
   const BROWS: Record<NonNullable<AvatarSpec['brows']>, string> = { soft: tr('Soft'), straight: tr('Straight'), arched: tr('Arched'), thick: tr('Thick') };
   const NOSES: Record<NonNullable<AvatarSpec['nose']>, string> = { button: tr('Button'), straight: tr('Straight'), broad: tr('Broad'), aquiline: tr('Aquiline') };
   const LIPS: Record<NonNullable<AvatarSpec['lips']>, string> = { thin: tr('Thin'), medium: tr('Medium'), full: tr('Full') };
@@ -491,7 +492,7 @@ export function avatarEditor(ctx: AppCtx) {
       'face',
       tr('Face'),
       [tr('Face shape'), options('pill', keys(FACES), () => spec.face ?? 'oval', (v) => (spec.face = v), (v) => FACES[v])],
-      [tr('Eyes'), options('pill', keys(EYES), () => spec.eyes ?? 'almond', (v) => (spec.eyes = v), (v) => EYES[v])],
+      [tr('Eyes'), options('pill', keys(EYES), () => spec.eyes ?? 'almond', (v) => (spec.eyes = v), (v) => EYES[v as keyof typeof EYES] ?? v)],
       [tr('Eye colour'), options('swatch', EYE_COLORS, () => spec.eyeColor ?? EYE_COLORS[0]!, (v) => (spec.eyeColor = v), (v) => tr('Colour {n}', { n: EYE_COLORS.indexOf(v) + 1 }))],
       [tr('Brows'), options('pill', keys(BROWS), () => spec.brows ?? 'soft', (v) => (spec.brows = v), (v) => BROWS[v])],
       [tr('Nose'), options('pill', keys(NOSES), () => spec.nose ?? 'straight', (v) => (spec.nose = v), (v) => NOSES[v])],
