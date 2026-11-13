@@ -5,6 +5,7 @@
 
 import { countryName, placeOf } from '../../club/location';
 import { VARIATION_IDS, leaderboard, memberById, onlineNow, type ClubMember } from '../../club/roster';
+import { loadLadder, sortLadder } from '../../club/ladder';
 import { avatarSvg } from '../../cosmetics/avatar';
 import type { AvatarSpec } from '../../cosmetics/catalog';
 import { VARIATIONS } from '../../engine/rules';
@@ -165,6 +166,7 @@ export function clubScreen(ctx: AppCtx) {
         ? h('p', { class: 'cl-note' }, tr('No club members near you yet, so you top this board. Global shows everyone.'))
         : null,
     h('p', { class: 'cl-note' }, tr('You are {rank} of {n}. Ratings only move in ranked games.', { rank: ordinal(myRank), n: rows.length }), ' ', tr('Club members are JongClub’s AI players until online play opens.')),
+    ladderBoard(p.name, portrait),
   );
 
   // ------------------------------------------------ leagues and friends
@@ -230,5 +232,42 @@ function leagueNext(tier: LeagueName, rating: number): HTMLElement | null {
       h('span', { class: 'xpbar' }, h('i', { style: { width: `${share * 100}%` } })),
       h('small', {}, tr('{n} rating to go, in ranked games', { n: fmt(min - rating) })),
     ),
+  );
+}
+
+/**
+ * The cumulative leaderboard: every match played with the "Cumulative leaderboard"
+ * table option on adds its net points and first places here (src/club/ladder.ts).
+ */
+function ladderBoard(me: string, portrait: (a: AvatarSpec | undefined, name: string, size: number, cls?: string) => HTMLElement): HTMLElement {
+  const rows = sortLadder(loadLadder());
+  const head = h('div', { class: 'cl-head cl-ladder-head' }, h('h3', {}, tr('Cumulative leaderboard')));
+  if (!rows.length)
+    return h('div', { class: 'cl-ladder' }, head, h('p', { class: 'cl-note' }, tr('Turn on Cumulative leaderboard under House rules when you set up a table. Every match played with it on adds its points and wins here, for you and everyone at the table.')));
+  const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : '0');
+  const rankMark = (n: number) => (n <= 3 ? h('span', { class: 'cl-rk medal', html: leagueEmblem(n === 1 ? 'Gold' : n === 2 ? 'Silver' : 'Bronze', 24), 'aria-label': String(n) }) : h('span', { class: 'cl-rk' }, String(n)));
+  const mine = rows.findIndex((r) => r.name === me);
+  const shown = rows.filter((_, i) => i < 10 || i === mine);
+  return h(
+    'div',
+    { class: 'cl-ladder' },
+    head,
+    h(
+      'div',
+      { class: 'cl-board cl-ladder-board', role: 'table', 'aria-label': tr('Cumulative leaderboard') },
+      h('div', { class: 'cl-row head', role: 'row' }, ...[tr('#'), tr('Player'), tr('Matches'), tr('Wins'), tr('Points')].map((t, i) => h('span', { role: 'columnheader', class: i >= 2 ? 'num' : '' }, t))),
+      ...shown.map((r) =>
+        h(
+          'div',
+          { class: `cl-row ${r.name === me ? 'me' : ''}`, role: 'row' },
+          rankMark(rows.indexOf(r) + 1),
+          h('span', { class: 'cl-player' }, portrait(undefined, r.name, 28, 'sm'), h('span', { class: 'cl-nm' }, r.name === me ? tr('{name} (you)', { name: r.name }) : r.name)),
+          h('span', { class: 'num' }, fmt(r.matches)),
+          h('span', { class: 'num' }, fmt(r.wins)),
+          h('span', { class: `num cl-pts ${r.points > 0 ? 'up' : r.points < 0 ? 'down' : ''}` }, signed(r.points)),
+        ),
+      ),
+    ),
+    h('p', { class: 'cl-note' }, mine >= 0 ? tr('You are {rank} of {n}. Points are each match’s result over the starting score, added up; a first place counts as a win.', { rank: ordinal(mine + 1), n: rows.length }) : tr('Points are each match’s result over the starting score, added up; a first place counts as a win.')),
   );
 }

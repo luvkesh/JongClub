@@ -241,6 +241,12 @@ export interface AvatarSpec {
   headwear?: 'cap' | 'beanie' | 'beret' | 'fedora' | 'visor';
   /** Colour of the bot's cap, beanie, beret or visor. */
   wearColor?: string;
+  /** Signature pieces of the named table characters (src/cosmetics/cast.ts); not sold in the shop. */
+  garment?: 'cape' | 'straps' | 'suspenders' | 'scarf' | 'shawl';
+  badge?: 'knight' | 'spade' | 'lotus';
+  /** A bun worn with long hair, high at the side or on top. */
+  hairBun?: 'side' | 'top';
+  turtleneck?: boolean;
 }
 
 /** Skin tones. New tones are appended so saved indices keep their colour; SKIN_ORDER lists them light to deep. */

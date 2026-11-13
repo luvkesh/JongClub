@@ -21,6 +21,7 @@ import { seasonsScreen } from './seasons';
 import { ambience } from '../audio/ambience';
 import { DEFAULT_AVATAR, HAIR_COLORS, SKIN_TONES, VARIATION_TABLE, tileSetStyle, type AvatarSpec } from '../cosmetics/catalog';
 import { withBotAccessories } from '../cosmetics/avatar';
+import { castLook } from '../cosmetics/cast';
 import { clear, h } from './dom';
 import { MatchController, type MatchOptions, type TableConfig } from './match';
 import { renameMe, type ReplayRecord } from '../net/replay';
@@ -396,7 +397,7 @@ export class App {
     }, opts);
     if (opts.coach instanceof CoachMode) opts.coach.attach(this.match.game, this.match.me, cfg.hints);
     this.applyLoadout(cfg.variation);
-    this.match.avatars = this.match.seats.map((x, i) => (i === this.match!.me ? this.profile.avatar : x.kind === 'ai' ? withBotAccessories(x.avatar ?? avatarForName(x.name), x.name) : (x.avatar ?? avatarForName(x.name))));
+    this.match.avatars = this.match.seats.map((x, i) => (i === this.match!.me ? this.profile.avatar : x.kind === 'ai' ? (x.avatar ? withBotAccessories(x.avatar, x.name) : (castLook(x.name) ?? withBotAccessories(avatarForName(x.name), x.name))) : (x.avatar ?? avatarForName(x.name))));
     this.table.setSeatAvatars(this.match.avatars.map((a, i) => (i === this.match!.me ? null : a)));
     this.match.run();
   }

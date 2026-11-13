@@ -1,0 +1,763 @@
+{
+ "models": [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-latest"
+ ],
+ "lang": "hi",
+ "reviewed": 3935,
+ "suggestions": [
+  {
+   "id": 5,
+   "file": "app.ts",
+   "en": "Today’s Hand, the Perfect Discard and three more are waiting at the club.",
+   "current": "आज का हाथ, परफ़ेक्ट डिस्कार्ड और तीन और चुनौतियाँ क्लब में आपका इंतज़ार कर रही हैं।",
+   "verdict": "wrong",
+   "suggested": "आज का हाथ, सटीक फेंक और तीन और चुनौतियाँ क्लब में आपका इंतज़ार कर रही हैं।",
+   "reason": "Avoids the English loanword 'discard' as per instructions.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 6,
+   "file": "app.ts",
+   "en": "Your {n}-day streak ends tonight",
+   "current": "आपकी {n} दिन की लगातार लय आज रात टूट जाएगी",
+   "verdict": "unnatural",
+   "suggested": "आपका {n} दिनों का सिलसिला आज रात टूट जाएगा",
+   "reason": "'लय' means rhythm; 'सिलसिला' is the natural term for a streak in Hindi apps.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 7,
+   "file": "app.ts",
+   "en": "One game or one daily challenge keeps it going.",
+   "current": "एक खेल या एक दैनिक चुनौती से यह जारी रहेगी।",
+   "verdict": "inconsistent",
+   "suggested": "एक खेल या एक दैनिक चुनौती इसे जारी रखेगी।",
+   "reason": "Adjusted for grammatical consistency with the masculine noun 'सिलसिला'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 81,
+   "file": "app.ts",
+   "en": "Quick Play",
+   "current": "क्विक प्ले",
+   "verdict": "wrong",
+   "suggested": "तेज़ खेल",
+   "reason": "Avoids English loanwords 'quick' and 'play' as per the owner's preference.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 88,
+   "file": "app.ts",
+   "en": "Quick, daily and weekend events.",
+   "current": "क्विक, दैनिक और वीकेंड इवेंट।",
+   "verdict": "unnatural",
+   "suggested": "तेज़, दैनिक और सप्ताहांत के कार्यक्रम।",
+   "reason": "Replaces English loanwords with natural Hindi equivalents for a 'pure Hindi' feel.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 203,
+   "file": "app.ts",
+   "en": "NEWS MATCH COMPLETE",
+   "current": "चारों हवाओं का मैच पूरा",
+   "verdict": "unnatural",
+   "suggested": "चारों हवाओं का खेल पूरा",
+   "reason": "Replaces the English loanword 'match' with the preferred Hindi term 'खेल'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 264,
+   "file": "app.ts",
+   "en": "How long each player has to claim a discard and to play a turn. Untimed has no clock.",
+   "current": "हर खिलाड़ी को कॉल करने और बारी खेलने का कितना समय मिलता है। बिना समय में घड़ी नहीं होती।",
+   "verdict": "unnatural",
+   "suggested": "हर खिलाड़ी को कॉल करने और बारी खेलने का कितना समय मिलता है। समय-रहित मोड में घड़ी नहीं होती।",
+   "reason": "The phrase 'बिना समय में' is grammatically awkward; 'समय-रहित मोड' is a more natural way to describe an untimed mode.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 268,
+   "file": "app.ts",
+   "en": " Email reminders are saved and start once the club sends email.",
+   "current": "ईमेल रिमाइंडर सहेज लिए गए हैं और क्लब के ईमेल भेजना शुरू करने पर चालू होंगे।",
+   "verdict": "wrong",
+   "suggested": "ईमेल रिमाइंडर सहेज लिए गए हैं और क्लब द्वारा ईमेल भेजना शुरू करने पर चालू होंगे।",
+   "reason": "The grammar 'क्लब के ईमेल भेजना' is incorrect; it should be 'क्लब द्वारा' (by the club).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 289,
+   "file": "auth.ts",
+   "en": "Sign in to keep your result and the lessons it marked as done with your own account.",
+   "current": "अपना परिणाम और उससे पूरे चिह्नित पाठ अपने खाते में रखने के लिए साइन इन करें।",
+   "verdict": "unnatural",
+   "suggested": "अपना परिणाम और उसके द्वारा पूरे किए गए पाठ अपने खाते में रखने के लिए साइन इन करें।",
+   "reason": "The phrase 'पूरे चिह्नित पाठ' is awkward; 'पूरे किए गए पाठ' is more natural for 'lessons marked as done'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 372,
+   "file": "ccp.ts",
+   "en": "Gold-framed sunglasses for a poker face.",
+   "current": "सुनहरे फ्रेम का चश्मा, बेझिझक चेहरे के लिए।",
+   "verdict": "unnatural",
+   "suggested": "सुनहरे फ्रेम का चश्मा, भावशून्य चेहरे के लिए।",
+   "reason": "The word 'बेझिझक' means unhesitating; 'भावशून्य' (expressionless) is the correct term for a poker face.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 420,
+   "file": "ccp.ts",
+   "en": "Goatee",
+   "current": "बकरा दाढ़ी",
+   "verdict": "unnatural",
+   "suggested": "ठोड़ी की दाढ़ी",
+   "reason": "The term 'बकरा दाढ़ी' is a literal translation of goatee and sounds informal; 'ठोड़ी की दाढ़ी' is more appropriate for a premium app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 501,
+   "file": "club.ts",
+   "en": "Every table except Korean",
+   "current": "कोरियाई को छोड़ हर टेबल",
+   "verdict": "unnatural",
+   "suggested": "कोरियाई के अलावा हर टेबल",
+   "reason": "The phrase 'कोरियाई को छोड़' sounds slightly unnatural in a UI context compared to 'के अलावा'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 507,
+   "file": "club.ts",
+   "en": "A wall game simply passes the deal (or keeps it, as the house rules say).",
+   "current": "वॉल गेम पर बँटवारा बस आगे बढ़ता है (या हाउस रूल के अनुसार बना रहता है)।",
+   "verdict": "wrong",
+   "suggested": "वॉल गेम होने पर बारी बस आगे बढ़ जाती है (या हाउस रूल के अनुसार बनी रहती है)।",
+   "reason": "In Mahjong, 'the deal' refers to the dealer's turn, which is 'बारी' or 'डीलरशिप', not 'बँटवारा' (distribution).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 681,
+   "file": "club.ts",
+   "en": "Call {win} to win, on a discard or your own draw.",
+   "current": "जीतने के लिए “{win}” बोलें, फेंकी टाइल पर या अपनी खींची पर।",
+   "verdict": "unnatural",
+   "suggested": "जीतने के लिए “{win}” बोलें, फेंकी टाइल पर या अपनी खींची हुई टाइल पर।",
+   "reason": "The phrase 'अपनी खींची पर' is clipped; adding 'हुई टाइल' makes it clearer and more natural.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 682,
+   "file": "club.ts",
+   "en": "Win with {win} on a discard or {self} on your own draw.",
+   "current": "फेंकी टाइल पर “{win}” से या अपनी खींची पर “{self}” से जीतें।",
+   "verdict": "unnatural",
+   "suggested": "फेंकी टाइल पर “{win}” से या अपनी खींची हुई टाइल पर “{self}” से जीतें।",
+   "reason": "The phrase 'अपनी खींची पर' is clipped; adding 'हुई टाइल' makes it clearer and more natural.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 810,
+   "file": "club.ts",
+   "en": "Loading the table…",
+   "current": "तालिका लोड हो रही है…",
+   "verdict": "inconsistent",
+   "suggested": "टेबल लोड हो रही है…",
+   "reason": "Consistency with other strings using 'टेबल' for mahjong table.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 935,
+   "file": "compete.ts",
+   "en": "Perfect discard!",
+   "current": "परफ़ेक्ट डिस्कार्ड!",
+   "verdict": "wrong",
+   "suggested": "सटीक फेंक!",
+   "reason": "Avoids the forbidden loanword 'डिस्कार्ड' as per instructions.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 941,
+   "file": "compete.ts",
+   "en": "Perfect Discard",
+   "current": "परफ़ेक्ट डिस्कार्ड",
+   "verdict": "wrong",
+   "suggested": "सटीक फेंक",
+   "reason": "Avoids the forbidden loanword 'डिस्कार्ड' as per instructions.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 972,
+   "file": "compete.ts",
+   "en": "Points",
+   "current": "पॉइंट",
+   "verdict": "unnatural",
+   "suggested": "अंक",
+   "reason": "'अंक' is more natural for a table header than 'पॉइंट'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1023,
+   "file": "compete.ts",
+   "en": "Saved link",
+   "current": "सहेजा लिंक",
+   "verdict": "unnatural",
+   "suggested": "सहेजा हुआ लिंक",
+   "reason": "Grammatically unnatural for a noun phrase in Hindi.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1165,
+   "file": "cosmetics.ts",
+   "en": "Amethyst Regalia",
+   "current": "नीलम-बैंगनी राजसी",
+   "verdict": "wrong",
+   "suggested": "जमुनिया राजसी",
+   "reason": "'Neelam' refers to blue sapphire, while amethyst is 'Jamuniya'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1295,
+   "file": "economy.ts",
+   "en": "Play 5 games",
+   "current": "5 गेम खेलें",
+   "verdict": "unnatural",
+   "suggested": "5 खेल खेलें",
+   "reason": "Uses the English loanword 'गेम' instead of the preferred Hindi word 'खेल'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1296,
+   "file": "economy.ts",
+   "en": "Win 3 games",
+   "current": "3 गेम जीतें",
+   "verdict": "unnatural",
+   "suggested": "3 खेल जीतें",
+   "reason": "Uses the English loanword 'गेम' instead of the preferred Hindi word 'खेल'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1341,
+   "file": "economy.ts",
+   "en": "Win games",
+   "current": "गेम जीतें",
+   "verdict": "unnatural",
+   "suggested": "खेल जीतें",
+   "reason": "Uses the English loanword 'गेम' instead of the preferred Hindi word 'खेल'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1342,
+   "file": "economy.ts",
+   "en": "Every game pays 50 JP, each hand you win 40, first place 200 and a limit hand 300. Your first win each day adds {n}.",
+   "current": "हर गेम पर 50 JP, हर जीते हाथ पर 40, पहले स्थान पर 200 और लिमिट हाथ पर 300। हर दिन की पहली जीत पर {n} और।",
+   "verdict": "typo",
+   "suggested": "हर खेल पर 50 JP, हर जीते हाथ पर 40, पहले स्थान पर 200 और लिमिट हाथ पर 300। हर दिन की पहली जीत पर {n} और मिलते हैं।",
+   "reason": "The sentence was incomplete and used the loanword 'गेम' instead of 'खेल'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1349,
+   "file": "economy.ts",
+   "en": "Up to {n} JP a day from each mini-game, plus a bonus for the daily puzzle.",
+   "current": "हर मिनी-गेम से दिन में {n} JP तक, और दैनिक पहेली पर बोनस।",
+   "verdict": "unnatural",
+   "suggested": "हर मिनी-खेल से दिन में {n} JP तक, और दैनिक पहेली पर बोनस।",
+   "reason": "Uses the English loanword 'गेम' instead of the preferred Hindi word 'खेल'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1355,
+   "file": "economy.ts",
+   "en": "Tile sets, racks, tables, rooms, outfits and win effects in The Atelier. They never change how the game plays.",
+   "current": "द एटेलियर में टाइल सेट, रैक, टेबल, कमरे, पोशाक और जीत के प्रभाव। ये खेल का तरीका कभी नहीं बदलते।",
+   "verdict": "inconsistent",
+   "suggested": "अटेलियर में टाइल सेट, रैक, टेबल, कमरे, पोशाक और जीत के प्रभाव। ये खेल का तरीका कभी नहीं बदलते।",
+   "reason": "Uses 'द एटेलियर' which is inconsistent with other entries that use just 'अटेलियर'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1500,
+   "file": "expansion.ts",
+   "en": "Gold is wild for any tile in your hand, never in a claimed set. Three golds win at once on your own draw.",
+   "current": "सोना आपके हाथ में किसी भी टाइल की जगह ले सकता है, क्लेम किए सेट में कभी नहीं। तीन सोने आपकी अपनी खींच पर तुरंत जीतते हैं।",
+   "verdict": "unnatural",
+   "suggested": "सोना आपके हाथ में किसी भी टाइल की जगह ले सकता है, क्लेम किए सेट में कभी नहीं। तीन सोने ख़ुद खींचने पर तुरंत जीतते हैं।",
+   "reason": "'अपनी खींच' is unnatural; 'ख़ुद खींचने पर' is the standard term for self-draw in this app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1505,
+   "file": "expansion.ts",
+   "en": "Three golds in hand: an instant win on your own draw",
+   "current": "हाथ में तीन सोने: अपनी खींच पर तुरंत जीत",
+   "verdict": "unnatural",
+   "suggested": "हाथ में तीन सोने: ख़ुद खींचने पर तुरंत जीत",
+   "reason": "'अपनी खींच' is unnatural; 'ख़ुद खींचने पर' is the standard term for self-draw in this app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1561,
+   "file": "expansion.ts",
+   "en": "The everyday Cantonese game: any hand wins, and no chow calls.",
+   "current": "रोज़ का कैंटोनीज़ खेल: कोई भी हाथ जीतता है, और चाउ नहीं।",
+   "verdict": "inconsistent",
+   "suggested": "रोज़ का कैंटोनीज़ खेल: कोई भी हाथ जीतता है, और चाउ क्लेम नहीं।",
+   "reason": "Inconsistent terminology for 'no chow calls'; using 'क्लेम' matches other strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1566,
+   "file": "expansion.ts",
+   "en": "Pung, Gong, Wu, Zi Mo. No chow calls; runs in your own hand still count",
+   "current": "पुंग, गोंग, वू, ज़ी मो। कोई चाउ नहीं; अपने हाथ के क्रम फिर भी गिने जाते हैं",
+   "verdict": "inconsistent",
+   "suggested": "पुंग, गोंग, वू, ज़ी मो। कोई चाउ क्लेम नहीं; अपने हाथ के क्रम फिर भी गिने जाते हैं",
+   "reason": "Inconsistent terminology for 'no chow calls'; using 'क्लेम' matches other strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1569,
+   "file": "expansion.ts",
+   "en": "No minimum, no chow calls, and fan that double a small base.",
+   "current": "कोई न्यूनतम नहीं, कोई चाउ नहीं, और फ़ान जो छोटे आधार को दोगुना करते हैं।",
+   "verdict": "inconsistent",
+   "suggested": "कोई न्यूनतम नहीं, कोई चाउ क्लेम नहीं, और फ़ान जो छोटे आधार को दोगुना करते हैं।",
+   "reason": "Inconsistent terminology for 'no chow calls'; using 'क्लेम' matches other strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1570,
+   "file": "expansion.ts",
+   "en": "Push-down rules vary from town to town. JongClub plays the common core: no flowers, no chow calls and a five-fan cap.",
+   "current": "पुश-डाउन के नियम शहर-दर-शहर बदलते हैं। JongClub साझा मूल नियम खेलता है: कोई फूल नहीं, कोई चाउ नहीं और पाँच फ़ान की सीमा।",
+   "verdict": "inconsistent",
+   "suggested": "पुश-डाउन के नियम शहर-दर-शहर बदलते हैं। JongClub साझा मूल नियम खेलता है: कोई फूल नहीं, कोई चाउ क्लेम नहीं और पाँच फ़ान की सीमा।",
+   "reason": "Inconsistent terminology for 'no chow calls'; using 'क्लेम' matches other strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1577,
+   "file": "expansion.ts",
+   "en": "The whole set, no chow calls, and two points to win.",
+   "current": "पूरा सेट, कोई चाउ नहीं, और जीत के लिए दो अंक।",
+   "verdict": "inconsistent",
+   "suggested": "पूरा सेट, कोई चाउ क्लेम नहीं, और जीत के लिए दो अंक।",
+   "reason": "Inconsistent terminology for 'no chow calls'; using 'क्लेम' matches other strings.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1655,
+   "file": "expansion.ts",
+   "en": "Three Golds Fall: hold three golds and win at once on your own draw",
+   "current": "तीन सोने गिरे (Three Golds Fall): तीन सोने रखें और अपनी खींच पर तुरंत जीतें",
+   "verdict": "unnatural",
+   "suggested": "तीन सोने गिरे (Three Golds Fall): तीन सोने रखें और ख़ुद खींचने पर तुरंत जीतें",
+   "reason": "'अपनी खींच' is unnatural; 'ख़ुद खींचने पर' is the standard term for self-draw in this app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1733,
+   "file": "guide.ts",
+   "en": "Allowed (3 phán)",
+   "current": "अनुमति (3 फान)",
+   "verdict": "typo",
+   "suggested": "अनुमति (3 फ़ान)",
+   "reason": "Missing nukta on 'फ़ान' for consistency.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1831,
+   "file": "guide.ts",
+   "en": "Each tai adds 100 to a base of 300. Only the discarder pays; a self-draw is paid by everyone, and the dealer pays their own tai on top.",
+   "current": "हर ताई 300 के आधार में 100 जोड़ता है। सिर्फ़ फेंकने वाला देता है; ख़ुद खींचने पर सब देते हैं, और डीलर अपनी ताई ऊपर से देता है।",
+   "verdict": "inconsistent",
+   "suggested": "हर ताई 300 के आधार में 100 जोड़ता है। सिर्फ़ फेंकने वाला देता है; ख़ुद खींचने पर सब देते हैं, और डीलर अपना ताई ऊपर से देता है।",
+   "reason": "The term 'tai' is treated as masculine elsewhere in the text, so 'अपना' should be used instead of 'अपनी'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1887,
+   "file": "handScore.ts",
+   "en": "Ready: {n} tiles win",
+   "current": "{\"one\":\"तैयार: एक टाइल से जीत\",\"other\":\"तैयार: {n} टाइलों से जीत\"}",
+   "verdict": "wrong",
+   "suggested": "{\"one\":\"तैयार: {n} टाइल से जीत\",\"other\":\"तैयार: {n} टाइलों से जीत\"}",
+   "reason": "The placeholder {n} must be kept exactly in the 'one' form as per the instructions.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1919,
+   "file": "handScore.ts",
+   "en": "Concealed kong",
+   "current": "छिपा कोंग",
+   "verdict": "inconsistent",
+   "suggested": "छिपा कॉन्ग",
+   "reason": "The spelling of 'kong' should be consistent with the other instances (कॉन्ग) used throughout the app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2008,
+   "file": "learn.ts",
+   "en": "A chow is three numbers in a row in one suit.",
+   "current": "चाउ एक सूट में लगातार तीन संख्याएँ है।",
+   "verdict": "inconsistent",
+   "suggested": "चाउ एक सूट में लगातार तीन संख्याएँ हैं।",
+   "reason": "Grammatical error: the plural subject 'संख्याएँ' requires the plural verb 'हैं'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2055,
+   "file": "learn.ts",
+   "en": "Complete a full NEWS match.",
+   "current": "पूरा पू-द-प-उ मैच पूरा करें।",
+   "verdict": "unnatural",
+   "suggested": "पू-द-प-उ का एक पूरा मैच खेलें।",
+   "reason": "The current phrasing is redundant and sounds like 'Complete a complete match'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2192,
+   "file": "learn.ts",
+   "en": "Which tile is the 7 of Cracks?",
+   "current": "क्रैक्स का 7 कौन-सी टाइल है?",
+   "verdict": "inconsistent",
+   "suggested": "अक्षर का 7 कौन-सी टाइल है?",
+   "reason": "Consistency: 'Characters' was translated as 'अक्षर' in row 2003; 'Cracks' is the same suit.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2193,
+   "file": "learn.ts",
+   "en": "Cracks carry the number in Chinese, with 萬 beneath it.",
+   "current": "क्रैक्स पर ऊपर चीनी अंक और नीचे 萬 लिखा होता है।",
+   "verdict": "inconsistent",
+   "suggested": "अक्षर टाइलों पर संख्या चीनी में होती है, नीचे 萬 के साथ।",
+   "reason": "Consistency: this explanation should match the terminology and style used in row 2004.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2318,
+   "file": "match.ts",
+   "en": "Spring flower",
+   "current": "वसंत",
+   "verdict": "inconsistent",
+   "suggested": "वसंत का फूल",
+   "reason": "Added 'का फूल' to match the pattern of other flower tiles like Plum and Orchid.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2319,
+   "file": "match.ts",
+   "en": "Summer flower",
+   "current": "ग्रीष्म",
+   "verdict": "inconsistent",
+   "suggested": "ग्रीष्म का फूल",
+   "reason": "Added 'का फूल' to match the pattern of other flower tiles like Plum and Orchid.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2320,
+   "file": "match.ts",
+   "en": "Autumn flower",
+   "current": "शरद",
+   "verdict": "inconsistent",
+   "suggested": "शरद का फूल",
+   "reason": "Added 'का फूल' to match the pattern of other flower tiles like Plum and Orchid.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2321,
+   "file": "match.ts",
+   "en": "Winter flower",
+   "current": "शीत",
+   "verdict": "inconsistent",
+   "suggested": "शीत का फूल",
+   "reason": "Added 'का फूल' to match the pattern of other flower tiles like Plum and Orchid.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2453,
+   "file": "match.ts",
+   "en": "Winning a hand takes points from the player who threw your winning tile, or from everyone when you draw it yourself. Declaring riichi puts a 1,000-point stick on the table.",
+   "current": "हाथ जीतने पर अंक उस खिलाड़ी से मिलते हैं जिसने आपकी जीतने वाली टाइल फेंकी, या खुद खींचने पर सबसे। रीची घोषित करने पर 1,000 अंक की स्टिक टेबल पर रखी जाती है।",
+   "verdict": "typo",
+   "suggested": "हाथ जीतने पर अंक उस खिलाड़ी से मिलते हैं जिसने आपकी जीतने वाली टाइल फेंकी, या खुद खींचने पर सभी से। रीची घोषित करने पर 1,000 अंक की स्टिक टेबल पर रखी जाती है।",
+   "reason": "Changed 'सबसे' (most) to 'सभी से' (from everyone) for grammatical accuracy.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2454,
+   "file": "match.ts",
+   "en": "Winning a hand takes points from the player who threw your winning tile, or from everyone when you draw it yourself.",
+   "current": "हाथ जीतने पर अंक उस खिलाड़ी से मिलते हैं जिसने आपकी जीतने वाली टाइल फेंकी, या खुद खींचने पर सबसे।",
+   "verdict": "typo",
+   "suggested": "हाथ जीतने पर अंक उस खिलाड़ी से मिलते हैं जिसने आपकी जीतने वाली टाइल फेंकी, या खुद खींचने पर सभी से।",
+   "reason": "Changed 'सबसे' (most) to 'सभी से' (from everyone) for grammatical accuracy.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2506,
+   "file": "match.ts",
+   "en": "I’m nearly there, so the {tile} goes.",
+   "current": "मैं लगभग तैयार हूँ, इसलिए {tile} जाती है।",
+   "verdict": "unnatural",
+   "suggested": "मैं लगभग तैयार हूँ, इसलिए {tile} फेंक रहा हूँ।",
+   "reason": "'{tile} जाती है' is an unnatural literal translation of 'the tile goes'; discarding a tile is expressed using 'फेंकना'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2570,
+   "file": "match.ts",
+   "en": "{n} from each other player",
+   "current": "हर दूसरे खिलाड़ी से {n}",
+   "verdict": "wrong",
+   "suggested": "बाकी हर खिलाड़ी से {n}",
+   "reason": "'हर दूसरे खिलाड़ी' means 'every alternate player'; 'बाकी हर खिलाड़ी' correctly translates 'each other player'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2634,
+   "file": "match.ts",
+   "en": "You buy the {tile} for {n}",
+   "current": "आपने {tile} {n} में खरीदा",
+   "verdict": "wrong",
+   "suggested": "आपने {tile} {n} में खरीदी",
+   "reason": "'टाइल' is grammatically feminine, so the verb must agree as 'खरीदी' rather than masculine 'खरीदा'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2635,
+   "file": "match.ts",
+   "en": "{name} buys the {tile} for {n}",
+   "current": "{name} ने {tile} {n} में खरीदा",
+   "verdict": "wrong",
+   "suggested": "{name} ने {tile} {n} में खरीदी",
+   "reason": "'टाइल' is grammatically feminine, so the verb must agree as 'खरीदी' rather than masculine 'खरीदा'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2750,
+   "file": "minigames.ts",
+   "en": "Clear the board before the clock runs out. Every pair wins back a few seconds.",
+   "current": "घड़ी ख़त्म होने से पहले बोर्ड साफ़ करें। हर जोड़ी कुछ सेकंड वापस दिलाती है।",
+   "verdict": "unnatural",
+   "suggested": "समय ख़त्म होने से पहले बोर्ड साफ़ करें। हर जोड़ी कुछ सेकंड वापस दिलाती है।",
+   "reason": "'घड़ी ख़त्म होने' is an unnatural literal translation of 'clock runs out'; 'समय ख़त्म होने' is standard and consistent.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2820,
+   "file": "minigames.ts",
+   "en": "Solitaire that will not sit still: every few pairs, the tiles left change places.",
+   "current": "ऐसा सॉलिटेयर जो रुकता नहीं: हर कुछ जोड़ों के बाद बची टाइलें जगह बदल लेती हैं।",
+   "verdict": "inconsistent",
+   "suggested": "ऐसा सॉलिटेयर जो रुकता नहीं: हर कुछ जोड़ियों के बाद बची टाइलें जगह बदल लेती हैं।",
+   "reason": "Uses masculine oblique 'जोड़ों' instead of feminine 'जोड़ियों', inconsistent with 'जोड़ी' used for mahjong pairs.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2823,
+   "file": "minigames.ts",
+   "en": "Every few pairs the tiles left on the board change places, so plan only a little ahead.",
+   "current": "हर कुछ जोड़ों के बाद बोर्ड पर बची टाइलें जगह बदलती हैं, इसलिए थोड़ा ही आगे की सोचें।",
+   "verdict": "inconsistent",
+   "suggested": "हर कुछ जोड़ियों के बाद बोर्ड पर बची टाइलें जगह बदलती हैं, इसलिए थोड़ा ही आगे की सोचें।",
+   "reason": "Uses masculine oblique 'जोड़ों' instead of feminine 'जोड़ियों', inconsistent with 'जोड़ी' used for mahjong pairs.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 2976,
+   "file": "names.ts",
+   "en": "Dubai Asian · Goulash & Hands",
+   "current": "दुबई एशियाई · गूलाश और हैंड्स",
+   "verdict": "wrong",
+   "suggested": "दुबई एशियाई · गूलाश और हाथ",
+   "reason": "Uses the English loanword 'हैंड्स' instead of the required Hindi term 'हाथ'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3085,
+   "file": "rounds.ts",
+   "en": "Crochet: the same number once in each suit, like 5 Characters, 5 Dots, 5 Bamboo. Concealed, each one",
+   "current": "क्रोशिया: हर सूट में एक ही अंक एक बार, जैसे 5 कैरेक्टर, 5 डॉट्स, 5 बाँस। छिपा हुआ, हर एक का",
+   "verdict": "wrong",
+   "suggested": "क्रोशिया: हर सूट में एक ही अंक एक बार, जैसे 5 कैरेक्टर, 5 डॉट्स, 5 बाँस। हर एक छिपा हुआ",
+   "reason": "'हर एक का' is an ungrammatical mistranslation of 'each one' in this context.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3142,
+   "file": "rules.ts",
+   "en": "Played: nine terminals, four winds, four kongs, four riichi",
+   "current": "लागू: नौ टर्मिनल, चार हवाएँ, चार कॉन्ग, चार रीची",
+   "verdict": "inconsistent",
+   "suggested": "लागू: नौ टर्मिनल, चार पवन, चार कॉन्ग, चार रीची",
+   "reason": "Uses 'हवाएँ' instead of the established term 'पवन' used for mahjong winds throughout the app.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3242,
+   "file": "rules.ts",
+   "en": "The Indian club game from the club rulebook: 35,000 points each, East pays and receives double, and the East round is played with passports, flowers and seasons.",
+   "current": "क्लब नियम-पुस्तिका से भारतीय क्लब खेल: हर खिलाड़ी के 35,000 अंक, ईस्ट दोगुना देता और लेता है, और ईस्ट राउंड पासपोर्ट, फूलों और ऋतुओं के साथ खेला जाता है।",
+   "verdict": "inconsistent",
+   "suggested": "क्लब नियम-पुस्तिका से भारतीय क्लब खेल: हर खिलाड़ी के 35,000 अंक, पूर्व दोगुना देता और लेता है, और पूर्व राउंड पासपोर्ट, फूल और मौसम के साथ खेला जाता है।",
+   "reason": "Uses 'ईस्ट' and 'ऋतुओं' instead of the established terms 'पूर्व' (East wind/round) and 'मौसम'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3244,
+   "file": "rules.ts",
+   "en": "East round: Passport",
+   "current": "ईस्ट राउंड: पासपोर्ट",
+   "verdict": "inconsistent",
+   "suggested": "पूर्व राउंड: पासपोर्ट",
+   "reason": "Uses 'ईस्ट' instead of the established term 'पूर्व' for the East round.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3245,
+   "file": "rules.ts",
+   "en": "Passport in the East round",
+   "current": "ईस्ट राउंड में पासपोर्ट",
+   "verdict": "inconsistent",
+   "suggested": "पूर्व राउंड में पासपोर्ट",
+   "reason": "Uses 'ईस्ट' instead of the established term 'पूर्व' for the East round.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 3344,
+   "file": "rules.ts",
+   "en": "A knit may be the pair only when the hand also holds a crochet.",
+   "current": "निट जोड़ी तभी बन सकता है जब हाथ में क्रोशे भी हो।",
+   "verdict": "typo",
+   "suggested": "निट जोड़ी तभी बन सकती है जब हाथ में क्रोशे भी हो।",
+   "reason": "'जोड़ी' is feminine, so 'बन सकती है' should be used instead of 'बन सकता है'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3354,
+   "file": "rules.ts",
+   "en": "Flowers and seasons numbered 1 to 4",
+   "current": "1 से 4 नंबर के फूल और ऋतु",
+   "verdict": "typo",
+   "suggested": "1 से 4 नंबर के फूल और ऋतुएँ",
+   "reason": "'Seasons' is plural and should be translated as 'ऋतुएँ' rather than singular 'ऋतु'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3355,
+   "file": "rules.ts",
+   "en": "All four flowers or all four seasons",
+   "current": "चारों फूल या चारों ऋतु",
+   "verdict": "typo",
+   "suggested": "चारों फूल या चारों ऋतुएँ",
+   "reason": "'Seasons' is plural and should be translated as 'ऋतुएँ' rather than singular 'ऋतु'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3458,
+   "file": "rules.ts",
+   "en": "Chow, mixed chow, crochet, pung, kong; the pair may be a knit with a crochet",
+   "current": "चाउ, मिक्स्ड चाउ, क्रोशे, पुंग, कोंग; क्रोशे के साथ जोड़ा निट भी हो सकता है",
+   "verdict": "inconsistent",
+   "suggested": "चाउ, मिक्स्ड चाउ, क्रोशे, पुंग, कॉन्ग; क्रोशे के साथ जोड़ी निट भी हो सकती है",
+   "reason": "Uses 'कोंग' instead of standard 'कॉन्ग' and 'जोड़ा' instead of 'जोड़ी'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3459,
+   "file": "rules.ts",
+   "en": "Chow from the left, Pung, Kong, Mahjong; mixed chows, crochets, knits and pairs only to win",
+   "current": "बाईं ओर से चाउ, पुंग, कोंग, माहजोंग; मिक्स्ड चाउ, क्रोशे, निट और जोड़े सिर्फ़ जीतने के लिए",
+   "verdict": "inconsistent",
+   "suggested": "बाईं ओर से चाउ, पुंग, कॉन्ग, माहजोंग; मिक्स्ड चाउ, क्रोशे, निट और जोड़ियाँ सिर्फ़ जीतने के लिए",
+   "reason": "Uses 'कोंग' instead of standard 'कॉन्ग' and 'जोड़े' instead of 'जोड़ियाँ'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3517,
+   "file": "screens.ts",
+   "en": "Music and room sound are off. Turn them on",
+   "current": "संगीत और कमरे की आवाज़ बंद है। चालू करें",
+   "verdict": "typo",
+   "suggested": "संगीत और कमरे की आवाज़ बंद हैं। चालू करें",
+   "reason": "Plural subject requires the plural verb form 'बंद हैं'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3518,
+   "file": "screens.ts",
+   "en": "Music and room sound are on. Turn them off",
+   "current": "संगीत और कमरे की आवाज़ चालू है। बंद करें",
+   "verdict": "typo",
+   "suggested": "संगीत और कमरे की आवाज़ चालू हैं। बंद करें",
+   "reason": "Plural subject requires the plural verb form 'चालू हैं'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3674,
+   "file": "tips.ts",
+   "en": "Plain traditional faces with no corner label. Suit-marked tiles, under Accessibility, still add their own corner index.",
+   "current": "बिना कोने के लेबल वाले सादे पारंपरिक चेहरे। सुलभता में सूट-चिह्नित टाइलें फिर भी अपना कोने का संकेत जोड़ती हैं।",
+   "verdict": "wrong",
+   "suggested": "बिना कोने के लेबल वाले सादे पारंपरिक फ़ेस। सुलभता में सूट-चिह्नित टाइलें फिर भी अपना कोने का संकेत जोड़ती हैं।",
+   "reason": "'Faces' referring to tile faces was mistranslated as human faces ('चेहरे').",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3767,
+   "file": "variations.ts",
+   "en": "Five sets and a pair. On a discard win, only the discarder pays, and the dealer’s streak raises the stakes.",
+   "current": "पाँच सेट और एक जोड़ी। फेंकी टाइल पर जीत में केवल फेंकने वाला देता है, और डीलर की लय दाँव बढ़ाती है।",
+   "verdict": "wrong",
+   "suggested": "पाँच सेट और एक जोड़ी। फेंकी टाइल पर जीत में केवल फेंकने वाला देता है, और डीलर की जीत का सिलसिला दाँव बढ़ाता है।",
+   "reason": "'लय' means rhythm; 'dealer's streak' refers to consecutive wins.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3896,
+   "file": "variations.ts",
+   "en": "A club profile for Malaysian four-player tables: 148 tiles with flowers and four animals, tai scoring, bites and kong money on the spot. Our defaults: the discarder pays double, seven pairs scores three tai. Tables vary, so the host sets the house rules.",
+   "current": "मलेशियाई चार-खिलाड़ी टेबलों की क्लब प्रोफ़ाइल: फूलों और चार जानवरों के साथ 148 टाइलें, ताई स्कोरिंग, काट और कॉन्ग का तुरंत भुगतान। हमारे डिफ़ॉल्ट: फेंकने वाला दोगुना देता है, सात जोड़ियाँ तीन ताई। टेबल अलग होती हैं, इसलिए हाउस रूल मेज़बान तय करता है।",
+   "verdict": "unnatural",
+   "suggested": "मलेशियाई चार-खिलाड़ी टेबलों की क्लब प्रोफ़ाइल: फूलों और चार जानवरों के साथ 148 टाइलें, ताई स्कोरिंग, काट और कॉन्ग का तुरंत भुगतान। हमारे डिफ़ॉल्ट: फेंकने वाला दोगुना देता है, सात जोड़ियाँ तीन ताई देती हैं। टेबल अलग होती हैं, इसलिए हाउस रूल मेज़बान तय करता है।",
+   "reason": "'सात जोड़ियाँ तीन ताई' is missing a verb; adding 'देती हैं' completes the phrase naturally.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3902,
+   "file": "variations.ts",
+   "en": "Build your own UAE table: flowers, chow, seven pairs, minimum, who pays, dealer rules, and Goulash with its options. Every choice is the host’s.",
+   "current": "अपनी UAE टेबल बनाएँ: फूल, चाउ, सात जोड़ियाँ, न्यूनतम, कौन देता है, डीलर नियम, और गूलाश अपने विकल्पों के साथ। हर चुनाव मेज़बान का है।",
+   "verdict": "unnatural",
+   "suggested": "अपनी UAE टेबल बनाएँ: फूल, चाउ, सात जोड़ियाँ, न्यूनतम, कौन देता है, डीलर नियम, और गूलाश के विकल्प। हर चुनाव मेज़बान का है।",
+   "reason": "'गूलाश अपने विकल्पों के साथ' is a literal translation; 'गूलाश के विकल्प' is more natural.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3933,
+   "file": "variations.ts",
+   "en": "16-tile hands, flowers, tai and the dealer streak.",
+   "current": "16-टाइल हाथ, फूल, ताई और डीलर की लय।",
+   "verdict": "wrong",
+   "suggested": "16-टाइल हाथ, फूल, ताई और डीलर की जीत का सिलसिला।",
+   "reason": "'लय' means rhythm; 'dealer streak' refers to consecutive dealer wins.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 3934,
+   "file": "variations.ts",
+   "en": "{visited} of {total} destinations visited. Every destination has its own rules, lesson, table, challenges and stamps.",
+   "current": "{total} में से {visited} गंतव्य देखे गए। हर गंतव्य के अपने नियम, पाठ, टेबल, चुनौतियाँ और मुहरें हैं।",
+   "verdict": "unnatural",
+   "suggested": "{total} में से {visited} गंतव्यों की यात्रा की गई। हर गंतव्य के अपने नियम, पाठ, टेबल, चुनौतियाँ और मुहरें हैं।",
+   "reason": "'देखे गए' literally means viewed; 'यात्रा की गई' naturally conveys visiting destinations.",
+   "model": "gemini-3.6-flash"
+  }
+ ]
+}

@@ -41,6 +41,12 @@ const TIPS: Record<string, () => string> = {
   limit: () => tr('The most a single hand can score.'),
   minFlowers: () => tr('How many flowers you must have set aside before you may win.'),
   closed: () => tr('Whether you need a called set to win, or may also win concealed by drawing the winning tile yourself.'),
+  // Table options (every rule set): src/engine/rules/tableOptions.ts.
+  selfDrawOnly: () => tr('Only a tile you draw from the wall can complete your hand. Nobody can win on a discard, a robbed kong or a set-aside North, so nobody needs to defend.'),
+  multipleWinners: () => tr('When two or three players can all win on the same discard, every one of them wins and the discarder pays each hand. Otherwise only the first in turn order wins.'),
+  winnerTakesAll: () => tr('Every win is paid by all the other players, whoever threw the tile: a win on a discard pays the way the rule set pays a self-draw.'),
+  cumulativeLeaderboard: () => tr('Adds this match to the running table in the Club: points over the start and wins add up across every match played with this on.'),
+  teamPlay: () => tr('Two teams of two. You and the player across the table pool your scores, the team with more points at the end wins, and partners never defend against each other.'),
 };
 
 /** The tooltip for a house rule's label, or null when its options explain themselves. */
