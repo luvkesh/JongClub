@@ -13,6 +13,7 @@ import { TILE_SET, drawFace, faceDetail, faceUrl, mix, setFaceDetail, setTileSet
 import { handTileScale, reduceMotionSetting } from './tileAccess';
 import { environmentStyle, tableStyle, type AvatarSpec, type EnvironmentStyle } from '../cosmetics/catalog';
 import { SeatFigure } from './avatar3d';
+import { castModels, seatFigure, type CastFigure, type CastModelEntry } from './castModel';
 import { Backdrop } from './backdrop';
 import { applyTileFinish, clearFaceSurfaces, dressFace, setTileLight } from './tileMaterials';
 import { Effects } from './fx';
@@ -338,7 +339,10 @@ export class TableRenderer {
   private fx: Effects;
   private envId = '';
   private tableId = '';
-  private figures: (SeatFigure | null)[] = [null, null, null, null];
+  private figures: (SeatFigure | CastFigure | null)[] = [null, null, null, null];
+  /** Sculpted models of the regulars that exist (castModel.ts); filled once the manifest is read. */
+  private castModels: Record<string, CastModelEntry> = {};
+  private seatSpecs: (AvatarSpec | null)[] = [];
   /** Whose turn it is (from the compass), so the others can glance their way. */
   private turnSeat = -1;
   private avatarKeys: string[] = ['', '', '', ''];
@@ -457,6 +461,13 @@ export class TableRenderer {
   onHover?: (id: number | null) => void;
 
   constructor(private container: HTMLElement) {
+    // The regulars' sculpted models, where they exist: seats already showing a regular switch to theirs.
+    void castModels().then((m) => {
+      if (!Object.keys(m).length) return;
+      this.castModels = m;
+      this.avatarKeys = ['', '', '', ''];
+      this.setSeatAvatars(this.seatSpecs);
+    });
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.q = qualitySpec(detectQuality(this.renderer.getContext()));
     setFaceDetail(tierFaceDetail(this.q));
@@ -1158,6 +1169,7 @@ export class TableRenderer {
    * playing and look down at their own tiles on their turn.
    */
   setSeatAvatars(specs: (AvatarSpec | null)[]) {
+    this.seatSpecs = specs;
     for (let seat = 0; seat < 4; seat++) {
       const spec = seat === this.humanSeat ? null : (specs[seat] ?? null);
       const key = spec ? JSON.stringify(spec) : '';
@@ -1166,7 +1178,7 @@ export class TableRenderer {
       this.figures[seat]?.dispose();
       this.figures[seat] = null;
       if (!spec) continue;
-      const fig = new SeatFigure(spec);
+      const fig = seatFigure(spec, this.castModels);
       this.scene.add(fig.group);
       this.figures[seat] = fig;
     }

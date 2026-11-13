@@ -210,7 +210,7 @@ export const ENVIRONMENTS: EnvironmentStyle[] = [
 
 export type HairStyle = 'short' | 'long' | 'bun' | 'bob' | 'shaved' | 'wavy' | 'sidepart' | 'slicked' | 'buzz' | 'curly' | 'afro' | 'ponytail' | 'braids' | 'topknot';
 export type FaceShape = 'oval' | 'round' | 'long' | 'square' | 'heart';
-export type EyeShape = 'almond' | 'round' | 'narrow' | 'hooded' | 'upturned';
+export type EyeShape = 'almond' | 'round' | 'narrow' | 'hooded' | 'upturned' | 'closed';
 export type BrowStyle = 'soft' | 'straight' | 'arched' | 'thick';
 export type NoseShape = 'button' | 'straight' | 'broad' | 'aquiline';
 export type LipShape = 'thin' | 'medium' | 'full';

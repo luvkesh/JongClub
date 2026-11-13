@@ -18,9 +18,9 @@ const UP = new THREE.Vector3(0, 1, 0);
 const HEAD_Y = 1.7;
 const HEAD_R = 0.42;
 /** The head group's scale on the shoulders: a big, friendly head, as stylised characters wear it. */
-const HEAD_SCALE = 1.02;
+const HEAD_SCALE = 0.92;
 /** Where the head pivots (top of the neck). */
-const NECK_Y = 1.14;
+const NECK_Y = 1.24;
 /** Where the head's centre ends up, after HEAD_SCALE. */
 const HEAD_AT = NECK_Y + (HEAD_Y - NECK_Y) * HEAD_SCALE;
 
@@ -29,17 +29,17 @@ const FACE: Record<string, [number, number, number]> = { oval: [1, 1, 1], round:
 
 /** Head ellipsoid radii (x, upper y, lower y, z); the lower half tapers toward the chin. */
 /** How much the head narrows toward the chin. */
-const JAW = 0.36;
+const JAW = 0.42;
 const HEAD_AX = HEAD_R * 0.88,
   HEAD_UP = HEAD_R * 1.08,
-  HEAD_DN = HEAD_R * 1.06,
+  HEAD_DN = HEAD_R * 1.14,
   HEAD_AZ = HEAD_R * 0.95;
 
 /** Eye centre (x either side, height above the head centre): big eyes set low and wide. */
-const EYE_X = 0.145,
-  EYE_Y = -0.005;
+const EYE_X = 0.135,
+  EYE_Y = 0.012;
 /** Eyeball radius. */
-const EYE_R = 0.085;
+const EYE_R = 0.071;
 
 /**
  * Mesh and texture detail, fixed for the session: smooth silhouettes and fine
@@ -56,7 +56,7 @@ const gauss = (x: number, y: number, cx: number, cy: number, sx: number, sy: num
 
 /** Nose shapes for the sculpt: [tip height, tip size, width, bridge]. Small and soft on every face. */
 const NOSE_SHAPE: Record<string, [number, number, number, number]> = {
-  button: [0.085, 0.03, 0.022, 0.006],
+  button: [0.09, 0.038, 0.024, 0.012],
   straight: [0.088, 0.034, 0.022, 0.012],
   broad: [0.09, 0.034, 0.03, 0.008],
   aquiline: [0.09, 0.036, 0.02, 0.016],
@@ -82,7 +82,7 @@ function sculpt(x: number, dy: number, nose: string) {
   // Full, round cheeks.
   d += 0.012 * gauss(ax, dy, 0.19, -0.1, 0.07, 0.06);
   // A small round chin.
-  d += 0.016 * gauss(x, dy, 0, -0.29, 0.07, 0.045);
+  d += 0.022 * gauss(x, dy, 0, -0.33, 0.075, 0.05);
   return d;
 }
 
@@ -211,7 +211,7 @@ const hairMat = (hair: string) => {
   const c = shade(hair, 0.05);
   return leanGraphics()
     ? std(c, 0.5, 0, { side: THREE.DoubleSide, emissiveIntensity: 0.1 })
-    : new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.55, metalness: 0, emissive: c, emissiveIntensity: 0.1, clearcoat: 0.2, clearcoatRoughness: 0.4, sheen: 0.3, sheenColor: tint(hair, 0.5), sheenRoughness: 0.35, side: THREE.DoubleSide });
+    : new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.5, metalness: 0, emissive: c, emissiveIntensity: 0.06, clearcoat: 0.12, clearcoatRoughness: 0.35, sheen: 0.08, sheenColor: tint(hair, 0.3), sheenRoughness: 0.45, specularIntensity: 0.35, envMapIntensity: 0.4, side: THREE.DoubleSide });
 };
 
 /**
@@ -288,7 +288,7 @@ function hairTexture() {
   c.width = S;
   c.height = S;
   const g = c.getContext('2d')!;
-  g.fillStyle = '#d8d8d8';
+  g.fillStyle = '#e6e6e6';
   g.fillRect(0, 0, S, S);
   let n = 7;
   const rnd = () => ((n = (n * 16807) % 2147483647) / 2147483647);
@@ -296,9 +296,9 @@ function hairTexture() {
   g.filter = `blur(${S / 128}px)`;
   for (let i = 0; i < 26; i++) {
     const x = rnd() * S;
-    const v = Math.round(205 + rnd() * 50);
+    const v = Math.round(200 + rnd() * 55);
     g.strokeStyle = `rgb(${v},${v},${v})`;
-    g.globalAlpha = 0.35;
+    g.globalAlpha = 0.14;
     g.lineWidth = S * (0.02 + rnd() * 0.04);
     g.beginPath();
     g.moveTo(x, -4);
@@ -373,11 +373,15 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   for (const side of [-1, 1]) {
     spot(side * 0.34, 0.04, 0.08, 0.16, deep, 0.14);
     // Rosy round cheeks.
-    spot(side * 0.205, -0.115, 0.075, 0.055, blush, dark ? 0.3 : 0.42);
+    spot(side * 0.205, -0.115, 0.08, 0.06, blush, dark ? 0.12 : 0.16);
     spot(side * 0.215, -0.1, 0.03, 0.02, tint(skin, 0.4), 0.25);
   }
-  spot(0, -0.09, 0.03, 0.022, blush, 0.25);
+  spot(0, -0.09, 0.03, 0.022, blush, 0.1);
   spot(0, 0.22, 0.2, 0.1, tint(skin, 0.25), 0.35);
+  // The nose reads as form: a soft shadow under its tip and down its shaded side, a highlight on the bridge.
+  spot(0, -0.122, 0.04, 0.014, deep, 0.32);
+  spot(0.03, -0.06, 0.016, 0.05, deep, 0.16);
+  spot(-0.008, -0.04, 0.012, 0.05, tint(skin, 0.35), 0.3);
   spot(0, -0.27, 0.07, 0.035, tint(skin, 0.18), 0.25);
   const jaw = g.createLinearGradient(0, H * 0.7, 0, H);
   jaw.addColorStop(0, rgba(deep, 0));
@@ -431,7 +435,7 @@ function faceTexture(spec: AvatarSpec, skin: string, hair: string) {
   const lip = mix(skin, '#c4525a', dark ? 0.35 : 0.5);
   const lw = spec.lips === 'full' ? 0.06 : spec.lips === 'thin' ? 0.048 : 0.054;
   const lh = spec.lips === 'full' ? 0.024 : spec.lips === 'thin' ? 0.012 : 0.018;
-  const my = -0.175;
+  const my = -0.2;
   const mouthLine = (x: number) => my + 0.022 * (x / lw) ** 2;
   const line: [number, number][] = [];
   for (let i = 0; i <= 20; i++) {
@@ -869,7 +873,7 @@ export class SeatFigure {
     // A slender build: the body (not the head) narrowed across the shoulders and front to back.
     const body = new THREE.Group();
     for (const c of [...this.group.children]) if (c !== this.head) body.add(c);
-    body.scale.set(0.74, 1, 0.86);
+    body.scale.set(0.68, 0.94, 0.84);
     this.group.add(body);
   }
 
@@ -879,7 +883,8 @@ export class SeatFigure {
     this.torso = mesh(lathe, m.outfit, this.group);
     this.torso.scale.set(TORSO_SX, 1, TORSO_SZ);
     // Neck.
-    mesh(geo('neck', () => new THREE.CylinderGeometry(0.145, 0.17, 0.4, seg(14))), m.skinShade, this.group, 0, 1.25, 0);
+    // A slender neck with room to show between the chin and the collar.
+    mesh(geo('neck', () => new THREE.CylinderGeometry(0.15, 0.19, 0.5, seg(14))), m.skinShade, this.group, 0, 1.3, 0);
     // Arms: upper arm down from the shoulder, forearm forward onto the rim, a hand at rest.
     for (const side of [-1, 1]) {
       const sh = new THREE.Vector3(side * 0.86, 0.86, 0);
@@ -1194,23 +1199,26 @@ export class SeatFigure {
       const eye = new THREE.Group();
       const ey0 = HEAD_Y + EYE_Y;
       eye.position.set(side * EYE_X, at(ey0), fz(side * EYE_X, ey0) - EYE_R * 0.42);
-      const EYE: Record<string, [number, number, number]> = { almond: [1.06, 1.0, 0.62], round: [1.0, 1.1, 0.5], narrow: [1.1, 0.84, 0.8], hooded: [1.04, 0.96, 0.72], upturned: [1.06, 1.02, 0.6] };
+      const EYE: Record<string, [number, number, number]> = { almond: [1.08, 0.94, 0.7], round: [1.0, 1.04, 0.62], narrow: [1.1, 0.84, 0.85], hooded: [1.04, 0.96, 0.8], upturned: [1.08, 0.98, 0.68], closed: [1.1, 0.9, 1.68] };
+      const shut = sp.eyes === 'closed';
       const [ex, ey, lidCover] = EYE[sp.eyes ?? 'round'] ?? EYE.round;
       const white = mesh(geo('eyeW', () => new THREE.SphereGeometry(EYE_R, seg(20), seg(14))), m.white, eye);
       white.scale.set(ex, ey, 0.62);
       const front = EYE_R * 0.62;
+      if (!shut) {
       const irisDisc = mesh(geo('irisDisc', () => new THREE.CircleGeometry(EYE_R * 0.78, seg(28))), m.ink, eye, 0, -EYE_R * 0.06, front + 0.0006);
       irisDisc.scale.set(1, sp.eyes === 'narrow' ? 0.9 : 1.04, 1);
       const cornea = mesh(geo('cornea', () => new THREE.SphereGeometry(EYE_R * 0.82, seg(18), seg(8), 0, Math.PI * 2, 0, 1.0)), m.cornea, eye, 0, -EYE_R * 0.06, front - EYE_R * 0.55);
       cornea.rotation.x = Math.PI / 2;
       mesh(geo('glint', () => new THREE.SphereGeometry(EYE_R * 0.17, seg(8), seg(6))), m.glint, eye, -side * EYE_R * 0.05 - EYE_R * 0.22, EYE_R * 0.22, front + 0.006).scale.set(1, 1, 0.3);
       mesh(geo('glint2', () => new THREE.SphereGeometry(EYE_R * 0.08, seg(8), seg(6))), m.glint, eye, EYE_R * 0.24, -EYE_R * 0.3, front + 0.005).scale.set(1, 1, 0.3);
+      }
       if (sp.eyes === 'upturned') eye.rotation.z = side * 0.12;
       const upper = mesh(geo(`lidU${lidCover}`, () => new THREE.SphereGeometry(EYE_R * 1.05, seg(20), seg(8), 0, Math.PI * 2, 0, lidCover)), m.skin, eye, 0, EYE_R * 0.02, 0);
       upper.scale.set(ex * 1.04, ey * 1.04, 0.68);
       upper.rotation.x = 0.1;
       // The lash line: a bold dark rim along the lid's edge, flicking out at the outer corner.
-      const lash = mesh(geo(`lash${lidCover}`, () => new THREE.TorusGeometry(EYE_R * 1.05 * Math.sin(lidCover), EYE_R * 0.085, seg(5), seg(24), Math.PI)), m.lash, upper, 0, EYE_R * 1.05 * Math.cos(lidCover), 0);
+      const lash = mesh(geo(`lash${lidCover}`, () => new THREE.TorusGeometry(EYE_R * 1.05 * Math.sin(lidCover), EYE_R * 0.07, seg(5), seg(24), Math.PI)), m.lash, upper, 0, EYE_R * 1.05 * Math.cos(lidCover), 0);
       lash.rotation.x = Math.PI / 2;
       const flick = limb(eye, m.lash, new THREE.Vector3(side * EYE_R * 0.95 * ex, EYE_R * 0.42, EYE_R * 0.2), new THREE.Vector3(side * EYE_R * 1.22 * ex, EYE_R * 0.62, EYE_R * 0.05), EYE_R * 0.05);
       flick.scale.set(1, 1, 0.6);
@@ -1283,7 +1291,7 @@ export class SeatFigure {
     // A full fringe for the styles that wear one, swept to the side of a parting.
     if (style === 'bob' || style === 'long' || style === 'wavy' || style === 'bun' || style === 'ponytail' || style === 'braids') {
       const slant = part === 'centre' ? 0 : 0.2 * flip;
-      const bangs = mesh(geo(`bangs${slant}`, () => locks(bangsGeometry(slant), 0.03, 16)), m.hair, h, 0, at(HEAD_Y), 0);
+      const bangs = mesh(geo(`bangs${slant}`, () => locks(bangsGeometry(slant), 0.018, 16)), m.hair, h, 0, at(HEAD_Y), 0);
       bangs.scale.set(cr * 0.97 * fx, cr * 1.08 * fy, cr * 1.06 * fzs);
     }
     // The sides and back, open at the face. [lowest theta, gap at the front in radians]
@@ -1471,20 +1479,29 @@ export class SeatFigure {
     const head = s.headwear ?? (s.accessory === 'hat' ? 'fedora' : null);
     const topY = at(HEAD_Y);
     if (head === 'fedora') {
-      const felt = std(luma(s.hairColor || '#000') < 0.25 ? '#2e2823' : '#2a2520', 0.7);
+      // A felt fedora: a tall pinched crown, a dark band and a brim that curls up at the sides.
+      const feltCol = s.wearColor ?? (luma(s.hairColor || '#000') < 0.25 ? '#2e2823' : '#2a2520');
+      const felt = std(feltCol, 0.78, 0, { side: THREE.DoubleSide });
       m.extra.push(felt);
       const hat = new THREE.Group();
-      mesh(geo('brim', () => new THREE.CylinderGeometry(0.66, 0.66, 0.035, seg(28))), felt, hat);
-      const crownG = geo('fcrown', () => new THREE.CylinderGeometry(0.34, 0.4, 0.28, seg(24), 1, true));
-      mesh(crownG, felt, hat, 0, 0.14, 0);
-      const band = s.wearColor ? std(s.wearColor, 0.55) : std(shade(GOLD, 0.35), 0.5, 0.4);
+      const brim = mesh(geo('brim2', () => new THREE.LatheGeometry([new THREE.Vector2(0.38, 0.0), new THREE.Vector2(0.5, -0.008), new THREE.Vector2(0.6, 0.01), new THREE.Vector2(0.68, 0.06), new THREE.Vector2(0.69, 0.075)], seg(32))), felt, hat);
+      brim.scale.set(1, 1, 0.9);
+      const crownG = geo('fcrown2', () => new THREE.CylinderGeometry(0.31, 0.4, 0.36, seg(24), 1, true));
+      mesh(crownG, felt, hat, 0, 0.18, 0);
+      const band = std(shade(feltCol, 0.55), 0.6);
       m.extra.push(band);
-      mesh(geo('band', () => new THREE.CylinderGeometry(0.405, 0.405, 0.08, seg(24), 1, true)), band, hat, 0, 0.05, 0);
-      // A soft rounded top.
-      const top = mesh(geo('ftop', () => new THREE.SphereGeometry(0.34, seg(20), seg(8), 0, Math.PI * 2, 0, Math.PI / 2)), felt, hat, 0, 0.28, 0);
-      top.scale.set(1, 0.3, 1);
-      hat.position.set(0, topY + 0.34, -0.02);
-      hat.rotation.x = -0.12;
+      mesh(geo('band2', () => new THREE.CylinderGeometry(0.392, 0.405, 0.075, seg(24), 1, true)), band, hat, 0, 0.045, 0);
+      // The crown's top, pinched into a soft crease front to back.
+      const top = mesh(geo('ftop2', () => {
+        const g = new THREE.SphereGeometry(0.31, seg(20), seg(10), 0, Math.PI * 2, 0, Math.PI / 2);
+        const p = g.attributes.position as THREE.BufferAttribute;
+        for (let i = 0; i < p.count; i++) p.setY(i, p.getY(i) - 0.12 * Math.exp(-((p.getX(i) / 0.09) ** 2)) * (p.getY(i) / 0.31));
+        g.computeVertexNormals();
+        return g;
+      }), felt, hat, 0, 0.36, 0);
+      top.scale.set(1, 0.42, 1);
+      hat.position.set(0, topY + 0.32, -0.02);
+      hat.rotation.set(-0.1, 0, 0.08);
       h.add(hat);
     } else if (head === 'cap') {
       const cap = new THREE.Group();
@@ -1512,8 +1529,8 @@ export class SeatFigure {
       mesh(geo('pom', () => new THREE.SphereGeometry(0.1, seg(10), seg(8))), m.wear, h, 0, topY + 0.56, -0.03);
     } else if (head === 'beret') {
       const beret = mesh(geo('beret', () => new THREE.SphereGeometry(0.5, seg(22), seg(12))), m.wear, h, 0.08, topY + 0.33, -0.02);
-      beret.scale.set(1.05, 0.28, 1.0);
-      beret.rotation.z = -0.22;
+      beret.scale.set(1.12, 0.32, 1.06);
+      beret.rotation.z = -0.26;
       mesh(geo('stalk', () => new THREE.CylinderGeometry(0.015, 0.02, 0.06, seg(6))), m.wear, h, 0.1, topY + 0.47, -0.02);
     }
   }
