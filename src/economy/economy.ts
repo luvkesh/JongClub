@@ -154,8 +154,19 @@ function counters(p: Profile, week: string): Record<string, number> {
     hands: p.handsWon,
     lessons: p.lessonsDone.length,
     // Daily hands are counted from the week's own days, so this one starts at 0.
-    dailies: Object.keys(p.daily).filter((d) => d >= week && p.daily[d]?.hand !== undefined).length,
+    dailies: dailyHandsInWeek(p, week),
   };
+}
+
+/**
+ * Daily Hands played on the seven days from this week's Monday. A Daily Hand
+ * is keyed by its UTC day, which west of Greenwich can already be next Monday
+ * on a local Sunday evening: without the end of the week it counted in two weeks.
+ */
+export function dailyHandsInWeek(p: Profile, week: string): number {
+  const [y, m, d] = week.split('-').map(Number);
+  const end = localDay(new Date(y, m - 1, d + 7));
+  return Object.keys(p.daily).filter((k) => k >= week && k < end && p.daily[k]?.hand !== undefined).length;
 }
 
 /** Three challenges a week, rotating through the list. */
