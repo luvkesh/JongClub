@@ -71,11 +71,14 @@ export class Rows {
   /** Deal the live tiles' kinds round again so that at least one pair is free. */
   shuffle(rng: Rng): boolean {
     const ids = this.rows.flatMap((r) => this.live(r));
+    const was = ids.map((id) => this.kinds[id]);
     for (let t = 0; t < 30; t++) {
-      const ks = rng.shuffle(ids.map((id) => this.kinds[id]));
+      const ks = rng.shuffle([...was]);
       ids.forEach((id, i) => (this.kinds[id] = ks[i]));
       if (this.pairs().length) return true;
     }
+    // No arrangement gives a pair (no two live tiles match): leave the tiles as they were.
+    ids.forEach((id, i) => (this.kinds[id] = was[i]));
     return false;
   }
 }
@@ -130,7 +133,7 @@ class SurvivalSession implements MiniSession {
     host.camera.reset();
     b.build(kinds.map((kind, id) => ({ id, kind, pos: this.pos(id, -2), quat: FLAT })));
     for (let id = 0; id < kinds.length; id++) b.hide(id);
-    b.fitExtra = new THREE.Box3(new THREE.Vector3(-(st.w / 2) * b.w - 0.1, 0, this.rowZ(0) - b.h), new THREE.Vector3((st.w / 2) * b.w + 0.1, 0.2, this.rowZ(st.max - 1) + b.h * 1.6));
+    b.fitExtra = new THREE.Box3(new THREE.Vector3(-(st.w / 2) * b.w - 0.1, 0, this.rowZ(0) - b.h * 0.6), new THREE.Vector3((st.w / 2) * b.w + 0.1, 0.2, this.rowZ(st.max - 1) + b.h * 0.8));
     for (let i = 0; i < st.start; i++) this.pushRow(true);
     host.fit(true);
     this.refresh();
@@ -342,6 +345,7 @@ registerMiniGame({
     tr('Last until the clock runs out to win.'),
   ],
   tools: { hint: true, shuffle: true },
-  reward: (r, level) => (r.won ? Math.round(Math.min(200, 60 + r.score * 0.12) * PAY[level] - r.hints * 4 - r.shuffles * 6) : Math.round((r.cleared / Math.max(1, r.total)) * 30 * PAY[level])),
+  // A win never pays less than the best loss, however many hints it took.
+  reward: (r, level) => (r.won ? Math.max(Math.round(30 * PAY[level]), Math.round(Math.min(200, 60 + r.score * 0.12) * PAY[level] - r.hints * 4 - r.shuffles * 6)) : Math.round((r.cleared / Math.max(1, r.total)) * 30 * PAY[level])),
   start: (host) => new SurvivalSession(host),
 });

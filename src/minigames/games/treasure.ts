@@ -164,8 +164,14 @@ class TreasureSession implements MiniSession {
       this.host.toast(tr('Treasure!'), 'good');
     } else this.host.sound(opened.length > 1 ? 'shuffle' : 'click');
     this.refresh();
-    if (this.g.found === this.st.treasures) window.setTimeout(() => this.end(true), 700);
-    else if (this.digs <= 0) window.setTimeout(() => this.end(false), 700);
+    // The hunt is decided: no more digs while the end shows.
+    if (this.g.found === this.st.treasures) {
+      this.busy = true;
+      window.setTimeout(() => this.end(true), 700);
+    } else if (this.digs <= 0) {
+      this.busy = true;
+      window.setTimeout(() => this.end(false), 700);
+    }
   }
 
   suggest(): number[] | null {

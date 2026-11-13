@@ -132,7 +132,8 @@ class SlideSession implements MiniSession {
   private score = 0;
   private moves = 0;
   private ended = false;
-  private history: number[][] = [];
+  /** Boards before each move, with the points the move scored (an undo takes them back). */
+  private history: { cells: number[]; gain: number }[] = [];
   private total: number;
   private hints: number;
   private hintIds: number[] = [];
@@ -157,6 +158,7 @@ class SlideSession implements MiniSession {
     this.buildGrid();
     host.fit(true);
     this.refresh();
+    this.checkStuck();
   }
 
   private world(x: number, y: number) {
@@ -229,8 +231,15 @@ class SlideSession implements MiniSession {
   private busy = false;
 
   onPick(id: number) {
-    if (this.ended || this.busy) return;
+    if (this.ended || this.busy || this.closing) return;
     if (this.sel !== null && this.sel !== id && this.g.canPair(this.sel, id)) return this.clear(this.sel, id);
+    // A tap on a tile in front of the picked one, which it would push along: a slide to that place
+    // (unless that tile can clear by itself). The glowing places include these.
+    if (this.sel !== null && this.sel !== id && this.g.matchFor(id) < 0) {
+      const q = this.g.pos(id);
+      const next = this.g.slide(this.sel, q.x, q.y);
+      if (next && new SlideBoard(this.g.w, this.g.h, next, this.g.kinds).matchFor(this.sel) >= 0) return this.slideTo(q.x, q.y);
+    }
     this.sel = this.sel === id ? null : id;
     // A tile already facing its match clears on its own.
     if (this.sel !== null) {
@@ -248,10 +257,14 @@ class SlideSession implements MiniSession {
 
   /** A tap on an empty place: slide the picked tile there. */
   onCell(cell: number) {
-    if (this.ended || this.busy || this.sel === null) return;
+    if (this.ended || this.busy || this.closing || this.sel === null) return;
     if (this.g.cells[cell] >= 0) return this.onPick(this.g.cells[cell]);
-    const tx = cell % this.g.w,
-      ty = Math.floor(cell / this.g.w);
+    this.slideTo(cell % this.g.w, Math.floor(cell / this.g.w));
+  }
+
+  /** Slide the picked tile so it ends at (tx, ty); it stays only when it lines up its match. */
+  private slideTo(tx: number, ty: number) {
+    if (this.sel === null) return;
     const next = this.g.slide(this.sel, tx, ty);
     if (!next) {
       this.host.sound('click');
@@ -276,40 +289,54 @@ class SlideSession implements MiniSession {
       this.host.sound('slide');
       return;
     }
-    this.history.push([...this.g.cells]);
+    this.history.push({ cells: [...this.g.cells], gain: 0 });
     this.g.cells = next;
     this.moves++;
     this.host.sound('slide');
     this.busy = true;
     window.setTimeout(() => {
+      // The board is shared: after a restart it holds the next game's tiles.
+      if (this.disposed) return;
       this.busy = false;
       this.clear(id, m, true);
     }, 260);
   }
 
   private clear(a: number, b: number, slid = false) {
-    if (!slid) this.history.push([...this.g.cells]);
+    if (!slid) this.history.push({ cells: [...this.g.cells], gain: 0 });
     const bd = this.host.board;
     const mid = bd.pose(a)!.pos.add(bd.pose(b)!.pos).multiplyScalar(0.5);
     this.g.cells = this.g.cells.map((v) => (v === a || v === b ? -1 : v));
     bd.remove(a, { to: mid });
     bd.remove(b, { to: mid });
     window.setTimeout(() => this.host.burst(mid.clone().setY(0.3)), 300);
-    this.score += slid ? 15 : 10;
+    const gain = slid ? 15 : 10;
+    this.score += gain;
+    this.history[this.history.length - 1].gain = gain;
     this.sel = null;
     this.hintIds = [];
     this.host.sound('pung');
-    if (!this.g.cells.some((c) => c >= 0)) window.setTimeout(() => this.win(), 700);
-    else if (!this.g.pairs().length && !this.g.slideMove()) {
-      this.stuck = true;
-      if (this.shuffles > 0) this.host.toast(tr('No more moves. Shuffle the tiles to carry on.'), 'bad');
-      else window.setTimeout(() => this.lose(), 900);
-    }
+    if (!this.g.cells.some((c) => c >= 0)) {
+      // Nothing may change the board while the win is on its way (an undo would bring tiles back).
+      this.closing = true;
+      window.setTimeout(() => this.win(), 700);
+    } else this.checkStuck();
     this.refresh();
   }
 
+  /** With no pair and no slide left: ask for a shuffle, or end the game when none are left. */
+  private checkStuck() {
+    this.stuck = !this.g.pairs().length && !this.g.slideMove();
+    if (!this.stuck) return;
+    if (this.shuffles > 0) this.host.toast(tr('No more moves. Shuffle the tiles to carry on.'), 'bad');
+    else {
+      this.closing = true;
+      window.setTimeout(() => this.lose(), 900);
+    }
+  }
+
   suggest(): number[] | null {
-    if (this.ended || this.busy) return [];
+    if (this.ended || this.busy || this.closing) return [];
     const p = this.g.pairs()[0];
     if (p) return [...p];
     const s = this.g.slideMove();
@@ -317,7 +344,7 @@ class SlideSession implements MiniSession {
   }
 
   hint() {
-    if (this.ended || this.hints <= 0) return false;
+    if (this.ended || this.busy || this.closing || this.hints <= 0) return false;
     const p = this.g.pairs()[0];
     if (p) this.hintIds = [...p];
     else {
@@ -336,7 +363,7 @@ class SlideSession implements MiniSession {
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && (tool === 'hint' ? this.hints > 0 : this.shuffles > 0);
+    return !this.ended && !this.busy && !this.closing && (tool === 'hint' ? this.hints > 0 : this.shuffles > 0);
   }
   badges() {
     const n = (v: number) => (Number.isFinite(v) ? String(v) : undefined);
@@ -347,15 +374,18 @@ class SlideSession implements MiniSession {
   }
   private shuffles = this.host.level === 'easy' ? Infinity : this.host.level === 'medium' ? 2 : 1;
   private stuck = false;
+  /** The game is about to end (board cleared, or no move and no shuffle left): the board is fixed. */
+  private closing = false;
+  private disposed = false;
 
   /** Scatter the tiles left over the grid again. */
   shuffle() {
-    if (this.ended || this.shuffles <= 0) return false;
+    if (this.ended || this.busy || this.closing || this.shuffles <= 0) return false;
     const ids = this.g.cells.filter((c) => c >= 0);
     const spots = this.host.rng.shuffle(Array.from({ length: this.g.w * this.g.h }, (_, i) => i)).slice(0, ids.length);
     const next = Array(this.g.w * this.g.h).fill(-1);
     ids.forEach((id, n) => (next[spots[n]] = id));
-    this.history.push([...this.g.cells]);
+    this.history.push({ cells: [...this.g.cells], gain: 0 });
     this.g.cells = next;
     ids.forEach((id, n) => this.host.board.moveTo(id, { pos: this.world(spots[n] % this.g.w, Math.floor(spots[n] / this.g.w)) }, { dur: 0.5, arc: 0.4, delay: n * 0.01 }));
     this.shuffles--;
@@ -363,14 +393,16 @@ class SlideSession implements MiniSession {
     this.stuck = false;
     this.host.sound('shuffle');
     this.refresh();
+    // A new scatter can leave no move at all: say so, or end the game when that was the last shuffle.
+    this.checkStuck();
     return true;
   }
   canUndo() {
-    return !this.ended && this.history.length > 0;
+    return !this.ended && !this.busy && !this.closing && this.history.length > 0;
   }
   undo() {
-    const prev = this.history.pop();
-    if (!prev) return false;
+    if (!this.canUndo()) return false;
+    const { cells: prev, gain } = this.history.pop()!;
     const bd = this.host.board;
     const was = new Set(this.g.cells.filter((c) => c >= 0));
     this.g.cells = prev;
@@ -381,7 +413,10 @@ class SlideSession implements MiniSession {
       else bd.moveTo(id, { pos }, { dur: 0.22 });
     });
     this.sel = null;
-    this.score = Math.max(0, this.score - 10);
+    this.hintIds = [];
+    // Points the move scored go back, and an undo costs a little more.
+    this.score = Math.max(0, this.score - gain - 10);
+    this.stuck = !this.g.pairs().length && !this.g.slideMove();
     this.host.sound('slide');
     this.refresh();
     return true;
@@ -407,7 +442,7 @@ class SlideSession implements MiniSession {
     this.host.finish({ won: false, score: this.score, seconds: this.clock.elapsed, cleared: this.total - this.g.cells.filter((c) => c >= 0).length, total: this.total, notes: [tr('No more moves')] });
   }
   dispose() {
-    this.ended = true;
+    this.ended = this.disposed = true;
     this.ghosts.removeFromParent();
     this.cellsMesh?.removeFromParent();
     this.cellsMesh?.dispose();
@@ -428,6 +463,7 @@ registerMiniGame({
     tr('A slide only stays when it lines the tile up with its match.'),
   ],
   tools: { hint: true, undo: true, shuffle: true },
-  reward: (r, level) => (r.won ? Math.max(20, Math.round((40 + r.total) * PAY[level] - r.hints * 4 - r.undos * 2 - r.shuffles * 8)) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
+  // A win never pays less than the best loss could (25 × PAY).
+  reward: (r, level) => (r.won ? Math.max(Math.round(25 * PAY[level]), Math.round((40 + r.total) * PAY[level] - r.hints * 4 - r.undos * 2 - r.shuffles * 8)) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
   start: (host) => new SlideSession(host),
 });
