@@ -657,6 +657,7 @@ export class MahjongGame {
         tilesTaken: (pl.tilesTaken ?? 0) + (selfDrawn ? 0 : 1),
         heavenly: selfDrawn && seat === this.dealer && this.state.turnCount === 0 && this.state.callsMade === 0,
         earthly: !selfDrawn && win.discarder === this.dealer && this.state.turnCount === 1 && this.state.callsMade === 0,
+        firstDraw: selfDrawn && seat !== this.dealer && pl.discards.length === 0 && this.state.callsMade === 0,
         dice: this.state.dice,
         card: this.state.cards?.[seat],
       });

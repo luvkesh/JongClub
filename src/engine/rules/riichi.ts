@@ -6,7 +6,9 @@
 // draws (nine terminals, four winds, four kongs, four riichi, triple ron) and
 // nagashi mangan are played as in most clubs and online rooms; each is a house
 // rule, since leagues such as the WRC and EMA leave some or all of them out.
-// Thirteen orphans may rob a concealed kong. Two players winning on one tile:
+// Tenhou (the dealer wins on the deal) and chiihou (another player self-draws
+// on their first draw, before any call) are yakuman, as in every modern rule
+// set. Thirteen orphans may rob a concealed kong. Two players winning on one tile:
 // head bump (the first in turn order wins).
 
 import type { Decomposition } from '../hand';
@@ -119,6 +121,12 @@ function scoreReading(ctx: ScoringContext, d: Decomposition, place: number | 'pa
   const round = windKind(ctx.prevailingWind);
   const tsumo = ctx.selfDrawn;
   const counts = ctx.concealedCounts;
+
+  // ---------------------------------------------------------- won on the deal
+  // Tenhou: the dealer wins on the deal. Chiihou: another player self-draws on
+  // their first draw. Either way nobody has called (a concealed kong counts).
+  if (ctx.heavenly && ctx.isDealer) ym('Tenhou');
+  else if (ctx.firstDraw && !ctx.isDealer) ym('Chiihou');
 
   // ---------------------------------------------------------- special shapes
   if (d.shape === 'thirteenOrphans') {
