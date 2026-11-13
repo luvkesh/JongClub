@@ -8,8 +8,8 @@
 //     sit in state.riichiPot), uma checked separately at the match end
 //   - every win (each co-winner too) re-evaluates with evaluateWin to the same
 //     score from the position just before it, reaches the minimum and qualifies
-//   - table options: no discard win at a self-draw-only table; multiple winners
-//     lists every seat that called; winner takes all makes every other seat pay;
+//   - table options: no discard win at a self-draw-only table; one winner per discard, the
+//     first caller in turn order (head bump); winner takes all makes every other seat pay;
 //     no teams at a three-seat table
 //   - chow offered only to the next seat when the rule set says so; never a
 //     claim for the discarder; a riichi seat waiting on its own discard is never
@@ -20,7 +20,7 @@
 //     game continues identically
 //
 // Usage: npx vite-node scripts/qa/fuzz-invariants.ts [seedsPerRuleSet=6] [ruleSetFilter|all] [firstSeed=1] [forcedOptions]
-//   e.g. npx vite-node scripts/qa/fuzz-invariants.ts 30 all 1 multipleWinners,winnerTakesAll
+//   e.g. npx vite-node scripts/qa/fuzz-invariants.ts 30 all 1 teamPlay,winnerTakesAll
 
 import { AiPlayer, type Difficulty, type Personality } from '../../src/ai/players';
 import { MahjongGame } from '../../src/engine/game';
@@ -285,19 +285,16 @@ export function fuzzMatch(variation: string, seed: number, stats: FuzzStats, for
         // A seven-flower hand robbing the eighth is the only thrown-tile win allowed (a flower, not a discard).
         if (last?.t === 'c' || last?.t === 'k' || last?.t === 'n') fail(h, 'won on a thrown tile at a self-draw-only table');
       }
-      if (winners.length > 1 && !g.table?.multipleWinners) fail(h, 'several winners with the option off');
+      if (winners.length > 1) fail(h, 'several winners on one discard');
       if (winners.includes(res.discarder ?? -1)) fail(h, 'discarder among winners');
-      // The claim window just before: every seat that called a win is a winner (multiple winners on).
+      // The claim window just before: the first caller in turn order is the only winner (head bump).
       if (last?.t === 'c' && before.phase.kind === 'claims') {
         const bp = before.phase;
         const callers = Object.keys(bp.options)
           .map(Number)
           .filter((s) => (s === last.s ? last.r.type : bp.responses[s]?.type) === 'win');
-        if (g.table?.multipleWinners && callers.length !== winners.length) fail(h, `callers ${callers} vs winners ${winners}`);
-        if (!g.table?.multipleWinners) {
-          const order = Array.from({ length: n - 1 }, (_, i) => (bp.discarder + 1 + i) % n);
-          if (order.find((s) => callers.includes(s)) !== res.winner) fail(h, 'head bump: not the first caller in turn order');
-        }
+        const order = Array.from({ length: n - 1 }, (_, i) => (bp.discarder + 1 + i) % n);
+        if (order.find((s) => callers.includes(s)) !== res.winner) fail(h, 'head bump: not the first caller in turn order');
         // Re-evaluate each winner from the position just before the last response.
         const re = restore(profile, g);
         re.state = structuredClone(before);
@@ -320,8 +317,6 @@ export function fuzzMatch(variation: string, seed: number, stats: FuzzStats, for
       if (g.table?.winnerTakesAll && !selfDrawn) {
         for (const w of winners) for (let s = 0; s < n; s++) if (s !== w && !res.payments.some((p) => p.from === s && p.to === w)) fail(h, `winner takes all: seat ${s} paid nothing to ${w}`);
       }
-      // Multiple winners, without winner takes all: the discarder pays every winner.
-      if (g.table?.multipleWinners && !g.table?.winnerTakesAll && !selfDrawn) for (const w of winners) if (!res.payments.some((p) => p.from === res.discarder && p.to === w)) fail(h, `discarder did not pay winner ${w}`);
     } else {
       stats.draws++;
       if (!res.abortive && last && ['d', 'c', 'k', 'n', 'j', 'g'].includes(last.t) && g.liveRemaining !== 0) fail(h, `wall game with ${g.liveRemaining} live tiles left`);
@@ -390,7 +385,7 @@ if (isMain) {
   const per = Number(args[0] ?? 6);
   const filter = args[1] && args[1] !== 'all' ? args[1].split(',') : null;
   const first = Number(args[2] ?? 1);
-  // Optional 4th argument: options forced on, e.g. multipleWinners,selfDrawOnly=off (the rest stay random).
+  // Optional 4th argument: options forced on, e.g. teamPlay,selfDrawOnly=off (the rest stay random).
   const force = args[3] ? Object.fromEntries(args[3].split(',').map((x) => [x.split('=')[0], x.split('=')[1] ?? 'on'])) : undefined;
   const failures: string[] = [];
   for (const v of VARIATIONS) {

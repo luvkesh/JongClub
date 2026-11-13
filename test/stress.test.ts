@@ -277,14 +277,17 @@ export function stressMatch(variation: string, seed: number, opts: { length?: Ga
     if (deltas.join() !== res.deltas.join()) fail(`deltas ${res.deltas} vs payments ${deltas}`, h);
     hands.push(log);
     finals.push(structuredClone(g.state));
+    const bankBefore = g.state.riichiPot ?? 0;
     const over = g.advance();
+    // India Rules (book p. 16): the last game drawn with buy money in the bank is followed by an extra game.
+    const indiaExtra = profile.id === 'india' && res.type === 'draw' && bankBefore > 0;
     // Round framework.
     const r = g.state.round;
     if (r.handsPlayed !== roundBefore.handsPlayed + 1) fail('handsPlayed did not advance', h);
     const dealerKept = r.dealerSeat === roundBefore.dealerSeat;
     if (!dealerKept && r.dealerSeat !== (roundBefore.dealerSeat + 1) % n) fail('dealer skipped a seat', h);
     if (dealerKept && r.windIndex !== roundBefore.windIndex) fail('wind advanced while dealer stayed', h);
-    if (profile.rounds.dealerRetention === 'never' && dealerKept && !(profile.goulash && res.type === 'draw')) fail('dealer kept with retention never', h);
+    if (profile.rounds.dealerRetention === 'never' && dealerKept && !(profile.goulash && res.type === 'draw') && !indiaExtra) fail('dealer kept with retention never', h);
     if (res.type === 'win' && res.winner === roundBefore.dealerSeat && profile.rounds.dealerRetention !== 'never' && profile.rounds.dealerRetention !== 'onDraw' && !dealerKept) fail('dealer won but lost the deal', h);
     if (profile.rounds.dealerRetention === 'onDraw' && dealerKept !== (res.type === 'draw')) fail('India Rules: the deal passes after a win and stays after a draw', h);
     if (length === 'oneHand' && !over) fail('single hand match did not end', h);
@@ -355,15 +358,14 @@ describe('mass simulation', () => {
   }, 300_000);
 });
 
-// The five table options (self-draw only, multiple winners, winner takes all, cumulative leaderboard,
+// The four table options (self-draw only, winner takes all, cumulative leaderboard,
 // team play) are not in a profile's own houseRules, so randomHouseRules above never switches them on.
 describe('table options under mass simulation', () => {
   const COMBOS: Record<string, string>[] = [
     { selfDrawOnly: 'on' },
-    { multipleWinners: 'on' },
     { winnerTakesAll: 'on' },
     { teamPlay: 'on' },
-    { multipleWinners: 'on', winnerTakesAll: 'on', teamPlay: 'on', cumulativeLeaderboard: 'on' },
+    { winnerTakesAll: 'on', teamPlay: 'on', cumulativeLeaderboard: 'on' },
   ];
   for (const v of VARIATIONS) {
     it(`${v.id}: every table option keeps every invariant`, () => {

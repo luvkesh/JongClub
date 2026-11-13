@@ -1,12 +1,11 @@
 // The five table options from the user's options catalogue: self-draw only,
-// multiple winners, winner takes all, cumulative leaderboard and team play.
+// winner takes all, cumulative leaderboard and team play (multiple winners was taken out 2026-11-13).
 // They are house rules every rule set offers (src/engine/rules/tableOptions.ts).
 
 import { describe, expect, it } from 'vitest';
 import { MahjongGame } from '../src/engine/game';
 import { getProfile, withHouseRules } from '../src/engine/rules';
 import { classicProfile } from '../src/engine/rules/classic';
-import { riichiProfile } from '../src/engine/rules/riichi';
 import { sanmaProfile } from '../src/engine/rules/sanma';
 import { allHouseRules, partnerOf, tableOptionRules, tableOptionsFrom, teamOf, teamTotals, usesLadder, usesTeams, TABLE_OPTION_IDS } from '../src/engine/rules/tableOptions';
 import type { RuleProfile } from '../src/engine/rules/types';
@@ -53,18 +52,18 @@ function setup(base: RuleProfile, choices: Record<string, string> = {}) {
 }
 
 describe('table options in the lobby and catalogue', () => {
-  it('every rule set offers the five options after its own house rules; three-seat tables skip team play', () => {
+  it('every rule set offers the four options after its own house rules; three-seat tables skip team play', () => {
     const ids = allHouseRules(classicProfile).map((r) => r.id);
     for (const id of TABLE_OPTION_IDS) expect(ids).toContain(id);
-    expect(ids.slice(-5)).toEqual(TABLE_OPTION_IDS);
+    expect(ids.slice(-TABLE_OPTION_IDS.length)).toEqual(TABLE_OPTION_IDS);
     expect(tableOptionRules(sanmaProfile.players).map((r) => r.id)).not.toContain('teamPlay');
     expect(allHouseRules(sanmaProfile).map((r) => r.id)).toContain('selfDrawOnly');
   });
 
   it('withHouseRules turns the choices into profile.table, off by default', () => {
-    expect(withHouseRules(classicProfile, {}).table).toEqual({ selfDrawOnly: false, multipleWinners: false, winnerTakesAll: false, teams: false, ladder: false });
+    expect(withHouseRules(classicProfile, {}).table).toEqual({ selfDrawOnly: false, winnerTakesAll: false, teams: false, ladder: false });
     const on = withHouseRules(classicProfile, { selfDrawOnly: 'on', multipleWinners: 'on', winnerTakesAll: 'on', cumulativeLeaderboard: 'on', teamPlay: 'on' }).table!;
-    expect(on).toEqual({ selfDrawOnly: true, multipleWinners: true, winnerTakesAll: true, teams: true, ladder: true });
+    expect(on).toEqual({ selfDrawOnly: true, winnerTakesAll: true, teams: true, ladder: true });
     // No teams at a three-seat table even if the choice is sent.
     expect(tableOptionsFrom({ teamPlay: 'on' }, 3).teams).toBe(false);
     expect(usesLadder({ cumulativeLeaderboard: 'on' })).toBe(true);
@@ -79,12 +78,11 @@ describe('table options in the lobby and catalogue', () => {
   it('each option has a tooltip and a catalogue group, and the catalogue now lists them as playable', () => {
     for (const id of TABLE_OPTION_IDS) expect(houseRuleTip(id), id).toBeTruthy();
     expect(houseRuleGroup('selfDrawOnly')).toBe('winning');
-    expect(houseRuleGroup('multipleWinners')).toBe('winning');
     expect(houseRuleGroup('winnerTakesAll')).toBe('scoring');
     expect(houseRuleGroup('cumulativeLeaderboard')).toBe('competitive');
     expect(houseRuleGroup('teamPlay')).toBe('competitive');
     const items = HOUSE_RULE_GROUPS.flatMap((g) => g.items);
-    for (const name of ['Self-draw only', 'Multiple winners', 'Winner takes all', 'Cumulative leaderboard', 'Team play']) {
+    for (const name of ['Self-draw only', 'Winner takes all', 'Cumulative leaderboard', 'Team play']) {
       expect(items.find((i) => i.name === name)?.status, name).toBe('playable');
     }
     expect(items.some((i) => i.status === 'coming')).toBe(false);
@@ -151,7 +149,7 @@ describe('self-draw only', () => {
   });
 });
 
-describe('multiple winners', () => {
+describe('one winner per discard', () => {
   it('off: only the first in turn order wins (head bump)', () => {
     const { g, five } = setup(classicProfile);
     g.discard(0, five.id);
@@ -165,49 +163,17 @@ describe('multiple winners', () => {
     expect(ph.result.deltas[2]).toBeLessThan(0);
   });
 
-  it('on: both win, the discarder pays each hand, and the dealer keeps the deal if either winner is the dealer', () => {
+  it('only one winner, ever: a saved "multiple winners" choice is ignored (user ruling 2026-11-13)', () => {
     const { g, five } = setup(classicProfile, { multipleWinners: 'on' });
-    const before = g.players.map((p) => p.score);
+    expect(TABLE_OPTION_IDS).not.toContain('multipleWinners');
     g.discard(0, five.id);
     g.respond(1, { type: 'win' });
     g.respond(2, { type: 'win' });
     const ph = g.state.phase;
     expect(ph.kind).toBe('handOver');
     if (ph.kind !== 'handOver') return;
-    const r = ph.result;
-    expect(r.winner).toBe(1);
-    expect(r.winners).toEqual([1, 2]);
-    expect(r.coWinners?.map((c) => c.seat)).toEqual([2]);
-    const s1 = r.score!.points;
-    const s2 = r.coWinners![0].score.points;
-    // Classic: the discarder pays double, the others half each, for each winning hand.
-    expect(g.players[0].score - before[0]).toBe(-(2 * s1 + 2 * s2));
-    expect(g.players[1].score - before[1]).toBe(2 * s1 + s1 / 2 + s1 / 2 - s2 / 2);
-    expect(g.players[2].score - before[2]).toBe(2 * s2 + s2 / 2 + s2 / 2 - s1 / 2);
-    expect(g.players[3].score - before[3]).toBe(-(s1 / 2 + s2 / 2));
-    // The points balance.
-    expect(g.players.reduce((a, p) => a + p.score, 0)).toBe(before.reduce((a, b) => a + b, 0));
-    // The co-winner's revealed hand holds the winning tile too.
-    expect(r.coWinners![0].revealedHand.some((t) => t.id === five.id)).toBe(true);
-    // Dealer retention: seat 0 dealt; nobody who won is the dealer, so the deal passes.
-    expect(g.dealer).toBe(0);
-    expect(g.peekNextRound().dealerSeat).toBe(1);
-  });
-
-  it('on: a dealer among the winners keeps the deal', () => {
-    const { g, five } = setup(withHouseRules(classicProfile, { dealerRetention: 'onDealerWin' }), { multipleWinners: 'on' });
-    g.state.round = { ...g.state.round, dealerSeat: 2 };
-    g.discard(0, five.id);
-    g.respond(1, { type: 'win' });
-    g.respond(2, { type: 'win' });
-    expect(g.state.phase.kind).toBe('handOver');
-    expect(g.peekNextRound().dealerSeat).toBe(2);
-  });
-
-  it('Riichi: three winners stay an abortive draw when sanchahou is on', () => {
-    const profile = withHouseRules(riichiProfile, { multipleWinners: 'on' });
-    expect(profile.abortiveDraws?.tripleRon).toBe(true);
-    expect(profile.table?.multipleWinners).toBe(true);
+    expect(ph.result.winner).toBe(1);
+    expect(ph.result.coWinners ?? []).toEqual([]);
   });
 });
 
@@ -274,7 +240,7 @@ describe('team play', () => {
     const r = simulateMatch({
       variation: 'classic',
       length: 'eastRound',
-      houseRules: { selfDrawOnly: 'off', multipleWinners: 'on', winnerTakesAll: 'on', teamPlay: 'on', cumulativeLeaderboard: 'on' },
+      houseRules: { selfDrawOnly: 'off', winnerTakesAll: 'on', teamPlay: 'on', cumulativeLeaderboard: 'on' },
       difficulties: ['casual', 'casual', 'casual', 'casual'],
       personalities: ['zen', 'shark', 'wall', 'gambler'],
       names: ['A', 'B', 'C', 'D'],

@@ -187,12 +187,26 @@ describe('dead-call warning', () => {
     expect(callLeavesNoWin(g, 0, { type: 'chow', using: parseKinds('1m 2m') }, parseKinds('3m')[0])).toBe(true);
   });
 
-  it.fails('India West: a pung in a second suit leaves no clean hand, so no win (not flagged today)', () => {
+  it('India West: a pung in a second suit leaves no clean hand, so the call is flagged (user ruling 2026-11-13)', () => {
     // Exposed 5m pung; calling 5p makes every clean pattern impossible (not one suit, not 1s and 9s, not honours).
     const { g, kind, options } = claimAt('india', { indiaRounds: 'W' }, '5p 5p 6m 6m 7m 7m 8m 8m 9m E', '5p', [{ type: 'pung', kinds: '5m 5m 5m' }]);
     const pung = options.find((o) => o.type === 'pung')!;
     expect(pung).toBeDefined();
     expect(callLeavesNoWin(g, 0, pung, kind)).toBe(true);
+  });
+
+  it('India West: a second-suit pung of 1s or 9s next to a 9 pung keeps the terminal hand open, so no warning', () => {
+    const { g, kind, options } = claimAt('india', { indiaRounds: 'W' }, '1p 1p 1m 1m 9s 9s 9p 9p 9m E', '1p', [{ type: 'pung', kinds: '9m 9m 9m' }]);
+    const pung = options.find((o) => o.type === 'pung');
+    if (!pung) return;
+    expect(callLeavesNoWin(g, 0, pung, kind)).toBe(false);
+  });
+
+  it('India West: a pung in the same suit is never flagged for cleanliness', () => {
+    const { g, kind, options } = claimAt('india', { indiaRounds: 'W' }, '5m 5m 6m 6m 7m 7m 8m 8m 9m E', '5m', [{ type: 'pung', kinds: '2m 2m 2m' }]);
+    const pung = options.find((o) => o.type === 'pung')!;
+    expect(pung).toBeDefined();
+    expect(callLeavesNoWin(g, 0, pung, kind)).toBe(false);
   });
 });
 

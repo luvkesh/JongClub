@@ -124,6 +124,34 @@ describe('QA South: buying from the left', () => {
     g.advance();
     expect(g.dealer).toBe((dealer + 1) % 4); // the deal always passes
   });
+
+  /** The same drawn South hand, set as the last game of the round or match. */
+  function lastDraw(pot: number) {
+    const { g, seat } = southAt('Silly Bee', '123m 456p 789s 2m 3p 4s E 9m');
+    g.state.riichiPot = pot;
+    g.state.drawnFromFront = g.state.wall.length - g.state.drawnFromBack;
+    g.discard(seat, g.players[seat].hand.find((t) => t.kind === k1('9m'))!.id);
+    for (let i = 0; i < 4 && g.state.phase.kind === 'claims'; i++) answer(g, -1, 'pass');
+    expect(g.state.phase.kind).toBe('handOver');
+    // Make this the round's fourth (last) game.
+    const r = g.state.round;
+    g.state.round = { ...r, dealerHand: g.profile.rounds.handsPerWind - 1, windIndex: g.profile.rounds.prevailingWinds.length - 1 };
+    return g;
+  }
+
+  it('book p. 16: the last game drawn with buy money in the bank -> East keeps the deal and an extra game is played', () => {
+    const g = lastDraw(300);
+    const dealer = g.dealer;
+    expect(g.willEnd()).toBe(false);
+    expect(g.advance()).toBe(false);
+    expect(g.dealer).toBe(dealer);
+    expect(g.state.riichiPot).toBe(300);
+  });
+
+  it('the last game drawn with an empty bank still ends the match', () => {
+    const g = lastDraw(0);
+    expect(g.willEnd()).toBe(true);
+  });
 });
 
 describe('QA South: a call that fits no card', () => {

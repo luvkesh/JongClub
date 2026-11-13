@@ -1023,9 +1023,8 @@ export class MahjongGame {
     }
     const winner = pick(['win']);
     if (winner !== undefined) {
-      // Multiple winners: everyone who called the win takes it, in turn order; otherwise the first in turn wins (head bump).
-      const more = this.table?.multipleWinners ? order.filter((s) => s !== winner && ph.responses[s]?.type === 'win') : [];
-      return this.finishWin(winner, ph.discarder, ph.tile, false, !!ph.robKong && !ph.kita, !!ph.kita, more);
+      // Only one winner: the first in turn order after the discarder (head bump, Mahjong Calling p. 9).
+      return this.finishWin(winner, ph.discarder, ph.tile, false, !!ph.robKong && !ph.kita, !!ph.kita);
     }
     // Nobody robbed the kong (or the North): it stands and its owner draws a replacement.
     if (ph.robKong) return ph.kita ? this.completeKita(ph.discarder, ph.tile) : ph.concealedKong ? this.completeConcealedKong(ph.discarder, ph.tile) : this.completeAddedKong(ph.discarder, ph.tile);
@@ -1744,11 +1743,17 @@ export class MahjongGame {
     const goulash = !!this.profile.goulash && r.type === 'draw';
     // An abortive draw is replayed with the same dealer and one more honba.
     const rounds = goulash || r.abortive ? { ...this.profile.rounds, dealerRetention: 'onDealerWinOrDraw' as const } : this.profile.rounds;
-    const round = advanceRound(rounds, this.state.round, this.profile.players, {
+    let round = advanceRound(rounds, this.state.round, this.profile.players, {
       dealerWon: r.type === 'win' && (r.winners ?? [r.winner]).includes(this.dealer),
       drawn: r.type === 'draw',
       dealerTenpai: r.tenpai?.[this.dealer],
     });
+    // India Rules: when the last game is a draw with buy money in the bank, the book's rule applies
+    // (p. 16): the deal stays with East and an extra game is played for the next winner to collect it.
+    if (round.finished && r.type === 'draw' && this.baseProfile.id === 'india' && (this.state.riichiPot ?? 0) > 0) {
+      const cur = this.state.round;
+      round = { ...cur, handsPlayed: cur.handsPlayed + 1, repeat: cur.repeat + 1, finished: false };
+    }
     return { round, goulash, over: round.finished || (this.profile.endOnBust && this.players.some((p) => p.score < 0)) };
   }
 

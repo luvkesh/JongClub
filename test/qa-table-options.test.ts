@@ -1,4 +1,4 @@
-// QA: the five table options alone and in combination (src/engine/rules/tableOptions.ts,
+// QA: the four table options alone and in combination (src/engine/rules/tableOptions.ts,
 // MahjongGame.settleWin / resolveClaims, src/club/ladder.ts).
 
 import { describe, expect, it } from 'vitest';
@@ -35,39 +35,37 @@ function sumDeltas(g: MahjongGame) {
 }
 
 describe('pairs and triples of table options', () => {
-  it('multiple winners + winner takes all: each winner is paid by every other seat (co-winners pay each other), zero-sum', () => {
+  it('two callers + winner takes all: only the first in turn wins and every other seat pays, zero-sum', () => {
     const { g, five } = twoWaiting(getProfile('classic')!, ON('multipleWinners', 'winnerTakesAll'));
     const t0 = total(g);
     g.discard(0, five.id);
     g.respond(1, { type: 'win' });
     g.respond(2, { type: 'win' });
     const r = sumDeltas(g);
-    expect(r.winners).toEqual([1, 2]);
-    const s1 = r.score!.points;
-    const s2 = r.coWinners![0].score.points;
-    // As two self-draw payments: discarder pays s1 + s2 (no double count); seat 2 pays s1, seat 1 pays s2.
-    expect(r.deltas).toEqual([-(s1 + s2), 3 * s1 - s2, 3 * s2 - s1, -(s1 + s2)]);
+    expect(r.winner).toBe(1);
+    expect(r.coWinners ?? []).toEqual([]);
+    expect(r.payments.map((p) => p.from).sort()).toEqual([0, 2, 3]);
     expect(total(g)).toBe(t0);
   });
 
-  it('self-draw only + multiple winners: inert (nobody may win on the discard)', () => {
-    const { g, five } = twoWaiting(getProfile('classic')!, ON('selfDrawOnly', 'multipleWinners'));
+  it('self-draw only: nobody may win on the discard, however many are waiting', () => {
+    const { g, five } = twoWaiting(getProfile('classic')!, ON('selfDrawOnly'));
     g.discard(0, five.id);
     const ph = g.state.phase;
     if (ph.kind === 'claims') for (const o of Object.values(ph.options)) expect(o.some((x) => x.type === 'win')).toBe(false);
   });
 
-  it('team play + multiple winners: partners both win on a rival discard, team totals move together and stay zero-sum', () => {
+  it('team play: when partners both call the win, only the one nearest in turn wins; team totals stay zero-sum', () => {
     // Seats 1 and 3 are partners (South + North); seat 0 throws.
-    const { g, five } = twoWaiting(getProfile('classic')!, ON('teamPlay', 'multipleWinners'), { seat3Waits: true });
+    const { g, five } = twoWaiting(getProfile('classic')!, ON('teamPlay'), { seat3Waits: true });
     // Make seat 2's hand dead and seat 3 wait on 5p.
     g.discard(0, five.id);
     const ph = g.state.phase;
     expect(ph.kind).toBe('claims');
     for (const s of g.pendingClaimSeats()) g.respond(s, (ph as { options: Record<number, { type: string }[]> }).options[s].some((o) => o.type === 'win') ? { type: 'win' } : { type: 'pass' });
     const r = sumDeltas(g);
-    expect(r.winners).toContain(1);
-    expect(r.winners).toContain(3);
+    expect(r.winner).toBe(1);
+    expect(r.coWinners ?? []).toEqual([]);
     const team = (d: number[]) => [d[0] + d[2], d[1] + d[3]];
     const [a, b] = team(r.deltas);
     expect(a + b).toBe(0);
@@ -81,13 +79,13 @@ describe('pairs and triples of table options', () => {
       const g = new MahjongGame(p, ['A', 'B', 'C'], 1);
       expect(g.teamOf(0)).toBeNull();
       expect(g.dealInRisk(0, 2)).toBe(true);
-      // The other four options stay on.
-      expect(p.table).toMatchObject({ selfDrawOnly: false, multipleWinners: true, winnerTakesAll: true, ladder: true });
+      // The other options stay on.
+      expect(p.table).toMatchObject({ selfDrawOnly: false, winnerTakesAll: true, ladder: true });
     }
     expect(VARIATIONS.filter((x) => (x.profile?.players ?? 4) === 3).map((v) => v.id).sort()).toEqual(['korean3', 'malaysian3', 'sanma']);
   });
 
-  it('robbing the kong with multiple winners: both robbers win, the kong maker pays each, the pung stays a pung', () => {
+  it('robbing the kong with two robbers: only the first in turn wins, the kong maker pays, the pung stays a pung', () => {
     const g = new MahjongGame(withHouseRules(getProfile('classic')!, ON('multipleWinners')), ['A', 'B', 'C', 'D'], 9);
     g.startHand(9);
     rig(g, [
@@ -106,7 +104,9 @@ describe('pairs and triples of table options', () => {
     for (const s of g.pendingClaimSeats()) g.respond(s, { type: 'win' });
     const res = sumDeltas(g);
     expect(res.robbedKong).toBe(true);
-    for (const w of res.winners ?? [res.winner!]) expect(res.payments.some((p) => p.from === 0 && p.to === w)).toBe(true);
+    expect(res.winner).toBe(1);
+    expect(res.coWinners ?? []).toEqual([]);
+    expect(res.payments.some((p) => p.from === 0 && p.to === 1)).toBe(true);
     expect(g.players[0].melds[0].type).toBe('pung');
     expect(total(g)).toBe(t0);
   });
@@ -132,14 +132,15 @@ describe('table options with Riichi sticks and honba', () => {
     return { g, five: r.tile(0, '5p') };
   }
 
-  it('double ron: the first winner in turn order takes the sticks, each pays honba, total conserved', () => {
+  it('two rons: head bump, the first in turn order wins and takes the sticks, total conserved', () => {
     const { g, five } = riichiTwo(ON('multipleWinners'));
     const t0 = total(g);
     g.discard(0, five.id);
     g.respond(1, { type: 'win' });
     g.respond(2, { type: 'win' });
     const r = sumDeltas(g);
-    expect(r.winners).toEqual([1, 2]);
+    expect(r.winner).toBe(1);
+    expect(r.coWinners ?? []).toEqual([]);
     expect(r.potWon).toBe(2000);
     expect(g.state.riichiPot).toBe(0);
     expect(total(g)).toBe(t0);
@@ -158,7 +159,7 @@ describe('table options with Riichi sticks and honba', () => {
     expect(total(g)).toBe(t0);
   });
 
-  it('three rons with multiple winners and sanchahou off: all three win', () => {
+  it('three rons with sanchahou off: head bump, only the first in turn wins', () => {
     const g = new MahjongGame(withHouseRules(getProfile('riichi')!, { multipleWinners: 'on', tripleRon: 'headBump' }), ['A', 'B', 'C', 'D'], 3);
     g.startHand(3);
     expect(g.profile.abortiveDraws?.tripleRon).toBe(false);
@@ -173,7 +174,8 @@ describe('table options with Riichi sticks and honba', () => {
     g.discard(0, r.tile(0, '5p').id);
     for (const s of g.pendingClaimSeats()) g.respond(s, { type: 'win' });
     const res = sumDeltas(g);
-    expect(res.winners).toEqual([1, 2, 3]);
+    expect(res.winner).toBe(1);
+    expect(res.coWinners ?? []).toEqual([]);
     expect(total(g)).toBe(t0);
   });
 });

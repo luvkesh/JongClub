@@ -1,7 +1,9 @@
-// Table options: five house rules that belong to the table, not to any one
+// Table options: four house rules that belong to the table, not to any one
 // rule set, so every variation offers them. They come from the user's
-// options catalogue (self-draw only, multiple winners, winner takes all,
-// cumulative leaderboard, team play) and sit in the House rules panel next
+// options catalogue (self-draw only, winner takes all, cumulative leaderboard,
+// team play). "Multiple winners" was taken out on the user's ruling
+// (2026-11-13): only one player wins a discard, the one nearest in turn,
+// as the Mahjong Calling book says (p. 9) and sit in the House rules panel next
 // to the rule set's own options. withHouseRules turns the choices into
 // `profile.table`, which the game reads from its base profile (a special
 // wind round's overlay never loses them).
@@ -13,8 +15,6 @@ type HouseRule = RuleProfile['houseRules'][number];
 export interface TableOptions {
   /** Only a self-drawn tile wins: no win on a discard, a robbed kong or a set-aside North. */
   selfDrawOnly: boolean;
-  /** Everyone who can win on the same discard wins; the discarder pays each of them. */
-  multipleWinners: boolean;
   /** A win on a discard is paid by every other player, as the rule set pays a self-draw. */
   winnerTakesAll: boolean;
   /** Partners sit across the table (East with West, South with North) and score together. */
@@ -24,7 +24,6 @@ export interface TableOptions {
 }
 
 export const SELF_DRAW_ONLY = 'selfDrawOnly';
-export const MULTIPLE_WINNERS = 'multipleWinners';
 export const WINNER_TAKES_ALL = 'winnerTakesAll';
 export const CUMULATIVE_LEADERBOARD = 'cumulativeLeaderboard';
 export const TEAM_PLAY = 'teamPlay';
@@ -36,15 +35,6 @@ export const TABLE_OPTION_RULES: HouseRule[] = [
     options: [
       { value: 'off', label: 'Off: a discard can be won on' },
       { value: 'on', label: 'On: only a tile you draw yourself wins' },
-    ],
-    default: 'off',
-  },
-  {
-    id: MULTIPLE_WINNERS,
-    label: 'Multiple winners',
-    options: [
-      { value: 'off', label: 'Off: the first in turn order wins' },
-      { value: 'on', label: 'On: everyone who can win on the tile wins' },
     ],
     default: 'off',
   },
@@ -94,7 +84,6 @@ export function tableOptionsFrom(choices: Record<string, string> | undefined, pl
   const on = (id: string) => choices?.[id] === 'on';
   return {
     selfDrawOnly: on(SELF_DRAW_ONLY),
-    multipleWinners: on(MULTIPLE_WINNERS),
     winnerTakesAll: on(WINNER_TAKES_ALL),
     teams: players === 4 && on(TEAM_PLAY),
     ladder: on(CUMULATIVE_LEADERBOARD),
