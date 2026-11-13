@@ -448,6 +448,8 @@ export class TableRenderer {
   riskKinds = new Set<number>();
   /** Tiles in your hand matching the latest discard (a soft cue for claims). */
   matchKind: number | null = null;
+  /** Every hand face up (the practice table). */
+  revealAll = false;
   /** Extra line under a hovered tile's name plaque (e.g. how many are still unseen). */
   tipNote?: (id: number, kind: number) => string | undefined;
   interactive = new Set<number>();
@@ -2717,7 +2719,7 @@ export class TableRenderer {
 
     const phase = state.phase;
     const drawnId = phase.kind === 'turn' && phase.drawn ? phase.drawn.id : -1;
-    const reveal = new Set([...(opts.reveal ?? []), ...devRevealAll(n)]);
+    const reveal = new Set([...(opts.reveal ?? []), ...devRevealAll(n), ...(this.revealAll ? Array.from({ length: n }, (_, i) => i) : [])]);
     let lastDiscard: THREE.Vector3 | null = null;
     // The most recent discard still lying in a river gets a glow and a marker.
     let lastDiscardId = -1;

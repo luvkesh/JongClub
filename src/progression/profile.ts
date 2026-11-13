@@ -261,6 +261,8 @@ export function unlock(p: Profile, id: string): boolean {
 // ------------------------------------------------------------ rewards
 
 export interface MatchSummary {
+  /** A practice table (hands open): counted as played, but no Jong Points, XP or rating. */
+  practice?: boolean;
   placement: number;
   finalScore: number;
   handsWon: number;
@@ -306,20 +308,20 @@ export interface Rewards {
 
 export function applyMatch(p: Profile, m: MatchSummary): Rewards {
   econOf(p); // a new week's challenges count from before this game
-  const breakdown: { label: string; points: number }[] = [{ label: tr('Game played'), points: 50 }];
-  if (m.handsWon) breakdown.push({ label: tr('Hands won × {n}', { n: m.handsWon }), points: 40 * m.handsWon });
-  const place = [200, 100, 50, 0][m.placement - 1] ?? 0;
+  const breakdown: { label: string; points: number }[] = m.practice ? [] : [{ label: tr('Game played'), points: 50 }];
+  if (m.handsWon && !m.practice) breakdown.push({ label: tr('Hands won × {n}', { n: m.handsWon }), points: 40 * m.handsWon });
+  const place = m.practice ? 0 : ([200, 100, 50, 0][m.placement - 1] ?? 0);
   if (place) breakdown.push({ label: tr('{place} place', { place: ordinal(m.placement) }), points: place });
-  if (m.limitHand) breakdown.push({ label: tr('Limit hand'), points: 300 });
+  if (m.limitHand && !m.practice) breakdown.push({ label: tr('Limit hand'), points: 300 });
   // The day's first win pays a bonus on top (src/economy).
-  const firstWin = m.placement === 1 ? takeFirstWin(p) : 0;
+  const firstWin = m.placement === 1 && !m.practice ? takeFirstWin(p) : 0;
   if (firstWin) breakdown.push({ label: tr('First win of the day'), points: firstWin });
   const jp = breakdown.reduce((a, b) => a + b.points, 0);
   const levelBefore = levelOf(p.xp).level;
   const ratingBefore = p.rating;
 
   p.jongPoints += jp;
-  p.xp += jp + m.handsPlayed * 10;
+  p.xp += m.practice ? 0 : jp + m.handsPlayed * 10;
   p.games++;
   p.handsPlayed += m.handsPlayed;
   p.handsWon += m.handsWon;

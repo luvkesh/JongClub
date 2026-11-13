@@ -46,6 +46,8 @@ import type { ReplayRecord } from '../net/replay';
 import type { ClaimKind, TutorialCoach } from './coach';
 import { clear, fmt, h, sleep, tileImg } from './dom';
 import { openArea, winTableSets, summaryToggle, winHandSection } from './winReveal';
+import { passportReviewSection } from './passportReview';
+import { aimingReads, isPassportRound } from '../ai/passportAdvice';
 import { ALL_HANDS_ICON, allHandsList } from './allHands';
 import { arrangeHand, moveTile, type HandLayout, type HandSlot } from './handOrder';
 import { viewControls } from './viewControls';
@@ -164,6 +166,8 @@ export interface MatchOptions {
   resume?: { hand: number; round: RoundState; scores: number[]; pot: number };
   /** Guided game: Mei talks the player through the hand. */
   coach?: TutorialCoach;
+  /** Practice table: every opponent plays face up, so you can watch their hands come together. No points, no rating. */
+  openHands?: boolean;
 }
 
 /**
@@ -301,6 +305,7 @@ export class MatchController {
   ) {
     const rp = withHouseRules(getProfile(config.variation) ?? classicProfile, config.houseRules);
     rp.rounds = roundProfileFor(config.length, rp.rounds);
+    table.revealAll = !!opts.openHands;
     this.matchSeed = opts.seed ?? randomSeed();
     const seed = this.matchSeed;
     // Default table: you at seat 0 and an AI player in every other seat (three, or two at a three-player table).
@@ -1352,7 +1357,8 @@ export class MatchController {
     const scoreTip = (s: number) =>
       `${s === this.you ? tr('Points: your score in this match.') : tr('Points: {name}’s score in this match.', { name: g.players[s].name })} ${tr('Everyone starts with {n}.', { n: start })} ${how} ${tr('The most points when the match ends takes first place.')} ${tr('Tap a plate to see what that hand is worth now.')}`;
     // The target each other player's exposed sets point to (while JongBot is on).
-    const reads = this.hintsOn && !this.spectator && ph.kind !== 'handOver' ? likelyTargets(g, this.me) : new Map();
+    // At the practice table the hands are open, so each plate names the passport that player is nearest to.
+    const reads: Map<number, { name: string; line: string; tag?: string }> = this.opts.openHands && isPassportRound(g) && ph.kind !== 'handOver' ? aimingReads(g, this.me) : this.hintsOn && !this.spectator && ph.kind !== 'handOver' ? likelyTargets(g, this.me) : new Map();
     // Before the deal is done nobody has flowers to show yet, and on the first hand East is not known until the throw.
     const preDeal = performance.now() < this.trayHold;
     const eastKnown = !(this.trayHold === Infinity && this.handNo === 0);
@@ -1370,7 +1376,7 @@ export class MatchController {
           { class: 'seat-info' },
           h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, p.name), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
           h('div', { class: 'seat-sub' }, h('span', { class: 'wind', title: { E: tr('East seat'), S: tr('South seat'), W: tr('West seat'), N: tr('North seat') }[wind] }, wind), this.seats[s].kind === 'ai' ? PERSONALITIES[ai.personality].label : s === this.you ? tr('You') : tr('Club member')),
-          reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
+          reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
         ),
         h('div', { class: 'seat-score', title: scoreTip(s) }, h('span', { class: 'pts-num' }, fmt(p.score)), h('span', { class: 'pts-cap' }, tr('pts'))),
         // Narrow upright screens: the side racks run off the screen's edges, so their claimed sets show here (CSS shows it there only).
@@ -2246,6 +2252,8 @@ export class MatchController {
         this.ais = this.seats.map((x, i) => new AiPlayer(i, x.difficulty ?? this.config.difficulty, x.personality ?? 'zen', handSeed(this.matchSeed + i * 101, this.handNo)));
       }
       this.handStartScores = this.game.players.map((p) => p.score);
+      // Where this hand began, so its summary can walk the hand again (the passport review).
+      this.handStart = { hand: this.handNo, round: structuredClone(this.game.state.round), scores: this.handStartScores, pot: this.game.state.riichiPot, goulash: this.game.state.goulash };
       this.game.startHand(handSeed(this.matchSeed, this.handNo));
       this.tea.startHand(this.handNo);
       this.opts.link?.handStarted(this.handNo, this.game);
@@ -2557,6 +2565,7 @@ export class MatchController {
   private timerFrame = 0;
   /** Everyone's score as the current hand was dealt, to reconcile the summary rows with the bank. */
   private handStartScores?: number[];
+  private handStart?: { hand: number; round: RoundState; scores: number[]; pot: number; goulash?: boolean | 1 };
 
   /** Solo tables stop the clock while something else has your attention. */
   private clockPaused() {
@@ -3421,6 +3430,12 @@ export class MatchController {
       } else if (g.profile.drawPot) card.append(h('p', { class: 'muted' }, tr('The live wall ran out before anyone completed a hand. Everyone puts {n} in the bank for the next winner.', { n: fmt(g.profile.drawPot) })));
       else card.append(h('p', { class: 'muted' }, tr('The live wall ran out before anyone completed a hand. No points change hands.')));
     }
+    // India Rules East round: which passport you were closest to, and the discard that let it slip (passportReview.ts).
+    if (isPassportRound(g) && !this.spectator && this.handStart && this.handLog.some((a) => a.t === 'd' && a.s === this.me)) {
+      const { hand, ...at } = this.handStart;
+      const rec: ReplayRecord = { id: '', date: '', config: this.config, names: g.players.map((p) => p.name), me: this.me, matchSeed: this.matchSeed, hands: [this.handLog], start: { hand, ...at }, finalScores: [], placement: 0, mode: 'ai' };
+      card.append(passportReviewSection(rec, this.me, this.settings.labels));
+    }
     const lines = instantLines(g, r);
     const nameOf = (s: number) => (s === this.me ? tr('You') : g.players[s].name);
     const signed = (d: number) => (d > 0 ? `+${fmt(d)}` : d < 0 ? `−${fmt(-d)}` : '0');
@@ -3607,6 +3622,7 @@ export class MatchController {
       length: len,
       winds: [...g.profile.rounds.prevailingWinds],
       ranked: !!this.opts.ranked,
+      practice: !!this.opts.openHands,
       mode: this.opts.mode ?? 'ai',
       decisions: this.stats.decisions,
       goodDecisions: this.stats.goodDecisions,

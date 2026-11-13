@@ -13,7 +13,7 @@ import { CAT, CENTIPEDE, FLOWER_BASE, JOKER_KIND, MOUSE, ROOSTER, parseKinds } f
 import { lt } from '../../i18n/lessons';
 import './learn.css';
 import type { TableConfig } from '../match';
-import { drillsCard } from '../drills';
+import { drillsCard, passportDrillsCard } from '../drills';
 import { luxCard, luxRow } from '../luxCard';
 import type { LuxArtId } from '../luxArt';
 import { promptSignIn } from '../../auth/prompt';
@@ -304,7 +304,18 @@ function learnChoices(app: App, levels: Level[], open: (l: Lesson) => () => void
       },
     });
   });
-  return h('section', { class: 'lx-choices', 'aria-label': tr('Learn') }, luxRow([cont, ...cats, drillsCard(app.ctx())]));
+  // The passport practice table: an East round where every opponent plays face up (India Rules). No points or rating.
+  const practiceTable = luxCard({
+    art: 'openTable',
+    title: tr('Passport practice table'),
+    line: tr('An East round with every hand face up, so you can watch passports form'),
+    run: () => {
+      const base = tableFor('india');
+      app.settings.hintDepth = 'learning';
+      app.startMatch({ ...base, name: tr('Passport Practice'), length: 'eastRound', difficulty: 'casual', personalities: ['teacher', 'zen', 'teacher'], hints: true, timer: 0, pace: 'untimed', houseRules: { ...base.houseRules, indiaRounds: 'E' } }, { tag: 'practice:passport', openHands: true });
+    },
+  });
+  return h('section', { class: 'lx-choices', 'aria-label': tr('Learn') }, luxRow([cont, ...cats, drillsCard(app.ctx()), passportDrillsCard(app.ctx()), practiceTable], 'lx-seven'));
 }
 
 const path = { cat: '' as '' | Category, q: '', sort: 'level' as 'level' | 'todo' | 'done', more: false, open: new Set<string>() };

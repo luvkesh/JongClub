@@ -8,8 +8,8 @@ import { applyAction, handSeed, type Action } from '../../src/net/actions';
 import { profileFor, type ReplayRecord } from '../../src/net/replay';
 import type { TableConfig } from '../../src/ui/match';
 
-export function recordMatch(variation: string, seed: number, length: GameLength = 'oneHand', meLevel: Difficulty = 'beginner'): ReplayRecord {
-  const config: TableConfig = { name: 'Test', variation, length, difficulty: 'strategic', personalities: ['zen', 'shark', 'wall'], houseRules: {}, timer: 0, hints: true };
+export function recordMatch(variation: string, seed: number, length: GameLength = 'oneHand', meLevel: Difficulty = 'beginner', houseRules: Record<string, string> = {}): ReplayRecord {
+  const config: TableConfig = { name: 'Test', variation, length, difficulty: 'strategic', personalities: ['zen', 'shark', 'wall'], houseRules, timer: 0, hints: true };
   const rp = profileFor(config);
   const names = ['You', 'Mei', 'Rex', 'Hiro'].slice(0, rp.players);
   const game = new MahjongGame(rp, names, seed);

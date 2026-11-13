@@ -54,6 +54,7 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
     const line = dailyOnFinish(app.ctx(), tag, summary);
     if (line) extra.push(infoLine('daily', line));
   }
+  if (summary.practice) extra.push(infoLine('academy', tr('Practice table: hands were open, so no Jong Points, Club Level or rating change.')));
   const seasonLine = spectated ? null : seasonOnGame(summary);
   if (seasonLine) extra.push(infoLine('season', seasonLine));
   // Team play: the two team totals decide the match (the placement already is the team's).

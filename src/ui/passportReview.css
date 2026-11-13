@@ -1,0 +1,25 @@
+/* The after-hand passport review on the hand summary (passportReview.ts). */
+.pp-review { margin: 14px 0 6px; padding: 12px 14px 10px; border-radius: 12px; background: rgba(201, 165, 107, 0.06); box-shadow: inset 0 0 0 1px rgba(201, 165, 107, 0.22); text-align: start; }
+.pp-review .eyebrow { margin: 0 0 6px; }
+.pp-review .ppr-wait { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; }
+.pp-review .ppr-line { margin: 0 0 8px; font-size: 14px; line-height: 1.45; }
+.pp-review .ppr-line strong { color: var(--brass-hi); font-weight: 600; }
+.ppr-strip { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 10px; }
+.ppr-cell { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 26px; height: 32px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); line-height: 1; }
+.ppr-cell b { font: 500 9px var(--ui); color: var(--muted); letter-spacing: 0.04em; }
+.ppr-cell i { font: 600 13px var(--display-clear, var(--ui)); font-style: normal; color: var(--ivory); margin-top: 2px; }
+.ppr-cell.closest { background: rgba(201, 165, 107, 0.2); box-shadow: inset 0 0 0 1px var(--brass-hi); }
+.ppr-cell.closest i { color: var(--brass-hi); }
+.ppr-cell.left, .ppr-cell.slip { box-shadow: inset 0 0 0 1px rgba(216, 138, 122, 0.8); }
+.ppr-cell.left i, .ppr-cell.slip i { color: #e2a08f; }
+.ppr-moment { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 6px 10px; margin: 6px 0; font-size: 13px; line-height: 1.4; }
+.ppr-moment p { margin: 0; }
+.ppr-k { font: 500 10.5px var(--ui); letter-spacing: 0.14em; text-transform: uppercase; color: #e2a08f; white-space: nowrap; }
+.ppr-moment.slip .ppr-k { color: var(--brass-hi); }
+.ppr-tiles { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.ppr-tiles .tile2d { width: 26px; }
+.ppr-arrow { color: var(--muted); }
+@media (max-width: 520px) {
+  .ppr-moment { grid-template-columns: auto 1fr; }
+  .ppr-moment p { grid-column: 1 / -1; }
+}

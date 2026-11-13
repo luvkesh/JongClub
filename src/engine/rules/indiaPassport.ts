@@ -109,6 +109,14 @@ export class PassportMeter {
   }
 }
 
+/** Fewest tiles missing for the passport hands named `names` (as PassportPlan.names, joined with +):
+ *  the after-hand review tracks one passport this way. 99 when none of them can be made. */
+export function passportNamedMissing(key: string, counts: number[], melds: MeldShape[], budget = 99): number {
+  let best = budget;
+  for (const h of PASSPORT_HANDS) if (h.names.join('+') === key) best = Math.min(best, price(h, counts.slice(0, 34), melds, best));
+  return best;
+}
+
 /** Tiles missing for one passport hand: its passports filled from the tiles held, and the sets and
  *  pair beside them priced as plain sets (melds not in a passport count as sets). */
 function price(h: PassportHand, c: number[], melds: MeldShape[], budget: number): number {
