@@ -64,7 +64,7 @@ function variationCard(ctx: AppCtx, s: SkillSummary): HTMLElement {
           h('span', { class: 'k' }, SKILL_LABEL[id], weak === id ? h('span', { class: 'sk-tag' }, tr('Work on this')) : null),
           h('span', { class: 'v' }, shown(id, value[id])),
           h('span', { class: 'sk-note' }, NOTE[id]),
-          trendSvg(s.trend[id], tr('{skill} over your last {n} games', { skill: SKILL_LABEL[id], n: s.trend[id].length })),
+          trendSvg(s.trend[id], trn(s.trend[id].length, '{skill} over your last game', '{skill} over your last {n} games', { skill: SKILL_LABEL[id] })),
           h('button', { class: 'link sk-practise', onclick: () => openDrills(ctx, { focus: SKILL_DRILL[id] }) }, tr('Practise this ›')),
         ),
       ),

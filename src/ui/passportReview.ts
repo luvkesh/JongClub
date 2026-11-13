@@ -70,7 +70,7 @@ function render(r: PassportReview, labels: boolean): HTMLElement[] {
     strip.append(h('span', { class: cls.join(' '), role: 'listitem', title: `${tr('Discard {n}', { n: t.turn })}: ${tileLabel(t.tile)}, ${fromReady(t.after)}` }, h('b', {}, String(t.turn)), h('i', {}, t.after >= 99 ? '×' : String(t.after))));
   }
   out.push(strip);
-  const pair = (tile: number, better: number) => h('span', { class: 'ppr-tiles' }, tileImg(tile, 'mini', labels), h('span', { class: 'ppr-arrow', 'aria-hidden': 'true' }, '→'), tileImg(better, 'mini', labels));
+  const pair = (tile: number, better: number) => h('span', { class: 'ppr-tiles' }, tileImg(tile, 'mini', labels), h('span', { class: 'ppr-arrow ico-fwd', 'aria-hidden': 'true' }, '→'), tileImg(better, 'mini', labels));
   if (r.leftBehind) {
     const l = r.leftBehind;
     out.push(
