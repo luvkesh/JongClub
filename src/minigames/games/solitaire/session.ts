@@ -48,6 +48,12 @@ export class SolitaireSession implements MiniSession {
   private pairsDone = 0;
   /** The board is cleared and the win is on its way: the clock stops and nothing more can be done. */
   private clearing = false;
+  /** Points each pair on the undo history scored (with its combo bonus), so an undo takes back exactly those. */
+  private gains: number[] = [];
+  /** Set by dispose (a restart or leaving): late timers must not reach the next game's board. */
+  private disposed = false;
+  /** Mahjong Shuffle: the tiles are about to change places by themselves. */
+  private mixing = false;
   private rng: Rng;
   /** Hints and pause suggestions draw from their own stream, so pausing never changes later deals or shuffles. */
   private hintRng: Rng;
@@ -84,6 +90,7 @@ export class SolitaireSession implements MiniSession {
     const near = this.host.level === 'easy' ? 0.6 : this.host.level === 'medium' ? 0.25 : 0;
     const d = deal(this.layout.slots, this.rng, near);
     this.g = new Solitaire(this.layout.slots, d.kinds);
+    this.gains = [];
     const b = this.host.board;
     b.build(
       d.kinds.map((kind, id) => {
@@ -156,7 +163,9 @@ export class SolitaireSession implements MiniSession {
     this.combo = t - this.lastPair <= COMBO_GAP ? this.combo + 1 : 1;
     this.bestCombo = Math.max(this.bestCombo, this.combo);
     this.lastPair = t;
-    this.score += 10 + (this.combo > 1 ? 5 * (this.combo - 1) : 0);
+    const gain = 10 + (this.combo > 1 ? 5 * (this.combo - 1) : 0);
+    this.score += gain;
+    this.gains.push(gain);
     if (this.mode.clock === 'timed') this.clock.add(this.host.level === 'hard' ? 2 : 3);
     // The two tiles rise and meet between them.
     const pa = board.pose(a)!.pos,
@@ -164,7 +173,7 @@ export class SolitaireSession implements MiniSession {
     const mid = pa.clone().add(pb).multiplyScalar(0.5);
     board.remove(a, { to: mid });
     board.remove(b, { to: mid });
-    window.setTimeout(() => this.host.burst(mid.clone().add(new THREE.Vector3(0, board.d * 3, 0))), 380);
+    window.setTimeout(() => !this.disposed && this.host.burst(mid.clone().add(new THREE.Vector3(0, board.d * 3, 0))), 380);
     this.host.sound(this.combo > 2 ? 'kong' : 'pung');
     if (this.combo > 2) this.host.toast(tr('Combo ×{n}', { n: this.combo }), 'good');
     this.afterMove();
@@ -188,7 +197,9 @@ export class SolitaireSession implements MiniSession {
     }
     const every = this.mode.reshuffleEvery;
     if (every && (this.pairsDone % every === 0 || !this.g.pairs().length)) {
-      window.setTimeout(() => this.autoShuffle(), 520);
+      // Until the tiles change places a hint or undo would be swept away with them.
+      if (!this.mixing) window.setTimeout(() => this.autoShuffle(), 520);
+      this.mixing = true;
       this.refresh();
       return;
     }
@@ -203,7 +214,7 @@ export class SolitaireSession implements MiniSession {
 
   suggest(): number[] | null {
     // Nothing to show while a cleared board waits for the win or the next Blitz board.
-    if (this.ended || this.clearing || !this.g.left) return [];
+    if (this.ended || this.clearing || this.mixing || !this.g.left) return [];
     const p = this.g.pairs();
     return p.length ? [...p[this.hintRng.int(p.length)]] : null;
   }
@@ -222,7 +233,7 @@ export class SolitaireSession implements MiniSession {
   }
 
   hint(): boolean {
-    if (this.ended || this.hintsLeft <= 0) return false;
+    if (this.ended || this.mixing || this.hintsLeft <= 0) return false;
     const pairs = this.g.pairs();
     if (!pairs.length) return false;
     // The pair that frees the most next: prefer tiles with others on their sides or below.
@@ -237,7 +248,7 @@ export class SolitaireSession implements MiniSession {
   }
 
   canUndo() {
-    return !this.ended && !this.clearing && this.g.history.length > 0;
+    return !this.ended && !this.clearing && !this.mixing && this.g.history.length > 0;
   }
 
   undo(): boolean {
@@ -247,7 +258,7 @@ export class SolitaireSession implements MiniSession {
     const b = this.host.board;
     if (m.kind === 'pair') {
       for (const id of [m.a, m.b]) b.restore(id, { pos: this.worldOf(this.layout.slots[this.g.slotOf[id]]), quat: FLAT, scale: 1 });
-      this.score = Math.max(0, this.score - 10);
+      this.score = Math.max(0, this.score - (this.gains.pop() ?? 10));
       this.combo = 0;
       this.pairsDone = Math.max(0, this.pairsDone - 1);
     } else this.moveAll();
@@ -260,7 +271,7 @@ export class SolitaireSession implements MiniSession {
   }
 
   canUse(tool: 'hint' | 'shuffle') {
-    if (this.ended || this.clearing) return false;
+    if (this.ended || this.clearing || (tool === 'hint' && this.mixing)) return false;
     return tool === 'hint' ? this.hintsLeft > 0 && this.g.pairs().length > 0 : this.shufflesLeft > 0 && this.g.left >= 2;
   }
 
@@ -284,11 +295,13 @@ export class SolitaireSession implements MiniSession {
 
   /** Mahjong Shuffle: the board mixes itself, free of charge. */
   private autoShuffle() {
+    this.mixing = false;
     if (this.ended || !this.g.left) return;
     if (!this.g.shuffle(this.rng)) return this.deadEnd(tr('No more moves'));
     this.sel = null;
     this.hintPair = null;
     this.g.history = [];
+    this.gains = [];
     this.moveAll();
     this.host.sound('shuffle');
     this.host.toast(tr('The tiles change places'), 'info');
@@ -370,7 +383,7 @@ export class SolitaireSession implements MiniSession {
   }
 
   dispose() {
-    this.ended = true;
+    this.ended = this.disposed = true;
   }
 }
 

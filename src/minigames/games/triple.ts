@@ -169,7 +169,8 @@ class TripleSession implements MiniSession {
   }
   canUse(tool: 'hint' | 'shuffle') {
     if (this.ended) return false;
-    return tool === 'hint' ? this.hints > 0 : this.shuffles > 0;
+    // A shuffle mixes the tiles on the board: with fewer than two there it would only use one up.
+    return tool === 'hint' ? this.hints > 0 && this.g.free().length > 0 : this.shuffles > 0 && this.g.boardLeft >= 2;
   }
   canUndo() {
     return !this.ended && this.undos > 0 && this.g.history.length > 0 && this.g.history[this.g.history.length - 1].clearedBefore === this.g.cleared.length;
@@ -187,7 +188,7 @@ class TripleSession implements MiniSession {
     return true;
   }
   shuffle() {
-    if (this.ended || this.shuffles <= 0) return false;
+    if (!this.canUse('shuffle')) return false;
     // Tiles change places rather than faces: shuffle by moving each board tile to another's spot.
     const ids = this.g.spots.map((_, i) => i).filter((i) => this.g.onBoard[i]);
     this.g.shuffle(this.host.rng);
@@ -243,7 +244,11 @@ class TripleSession implements MiniSession {
     this.disposed = true;
     this.host.board.fitExtra = null;
     this.tray.removeFromParent();
-    this.tray.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+    this.tray.traverse((o) => {
+      const m = o as THREE.Mesh;
+      m.geometry?.dispose();
+      (m.material as THREE.Material | undefined)?.dispose?.();
+    });
   }
 }
 

@@ -133,10 +133,11 @@ class SlideSession implements MiniSession {
   private moves = 0;
   private ended = false;
   /** Boards before each move, with the points the move scored (an undo takes them back). */
-  private history: { cells: number[]; gain: number }[] = [];
+  private history: { cells: number[]; gain: number; slid?: boolean }[] = [];
   private total: number;
   private hints: number;
   private hintIds: number[] = [];
+  private hintTok = 0;
   private ghosts: THREE.Group = new THREE.Group();
   private ghostMat = new THREE.MeshBasicMaterial({ color: '#ead09a', transparent: true, opacity: 0.22, depthWrite: false });
 
@@ -289,7 +290,7 @@ class SlideSession implements MiniSession {
       this.host.sound('slide');
       return;
     }
-    this.history.push({ cells: [...this.g.cells], gain: 0 });
+    this.history.push({ cells: [...this.g.cells], gain: 0, slid: true });
     this.g.cells = next;
     this.moves++;
     this.host.sound('slide');
@@ -309,7 +310,7 @@ class SlideSession implements MiniSession {
     this.g.cells = this.g.cells.map((v) => (v === a || v === b ? -1 : v));
     bd.remove(a, { to: mid });
     bd.remove(b, { to: mid });
-    window.setTimeout(() => this.host.burst(mid.clone().setY(0.3)), 300);
+    window.setTimeout(() => !this.disposed && this.host.burst(mid.clone().setY(0.3)), 300);
     const gain = slid ? 15 : 10;
     this.score += gain;
     this.history[this.history.length - 1].gain = gain;
@@ -356,7 +357,10 @@ class SlideSession implements MiniSession {
     this.hints--;
     this.score = Math.max(0, this.score - 5);
     this.refresh();
+    // Only the latest hint's timer puts the tiles back to normal.
+    const tok = ++this.hintTok;
     window.setTimeout(() => {
+      if (tok !== this.hintTok || this.disposed) return;
       this.hintIds = [];
       if (!this.ended) this.refresh();
     }, 2600);
@@ -402,7 +406,8 @@ class SlideSession implements MiniSession {
   }
   undo() {
     if (!this.canUndo()) return false;
-    const { cells: prev, gain } = this.history.pop()!;
+    const { cells: prev, gain, slid } = this.history.pop()!;
+    if (slid) this.moves = Math.max(0, this.moves - 1);
     const bd = this.host.board;
     const was = new Set(this.g.cells.filter((c) => c >= 0));
     this.g.cells = prev;
@@ -444,7 +449,11 @@ class SlideSession implements MiniSession {
   dispose() {
     this.ended = this.disposed = true;
     this.ghosts.removeFromParent();
+    for (const m of this.ghosts.children as THREE.Mesh[]) m.geometry.dispose();
+    this.ghostMat.dispose();
     this.cellsMesh?.removeFromParent();
+    this.cellsMesh?.geometry.dispose();
+    (this.cellsMesh?.material as THREE.Material | undefined)?.dispose();
     this.cellsMesh?.dispose();
   }
 }

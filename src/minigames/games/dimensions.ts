@@ -33,6 +33,8 @@ class DimensionsSession implements MiniSession {
   private hintTok = 0;
   private hintPair: [number, number] | null = null;
   private center: THREE.Vector3;
+  /** Points each pair on the undo history scored (with its combo bonus), so an undo takes back exactly those. */
+  private gains: number[] = [];
 
   constructor(private host: MiniHost) {
     let blocks = (SHAPES[host.options.shape] ?? SHAPES.cube)(host.level);
@@ -92,7 +94,9 @@ class DimensionsSession implements MiniSession {
       this.combo = t - this.lastPair <= 4 ? this.combo + 1 : 1;
       this.bestCombo = Math.max(this.bestCombo, this.combo);
       this.lastPair = t;
-      this.score += 10 + 5 * (this.combo - 1);
+      const gain = 10 + 5 * (this.combo - 1);
+      this.score += gain;
+      this.gains.push(gain);
       if (this.clock.limit) this.clock.add(2);
       this.host.sound(this.combo > 2 ? 'kong' : 'pung');
       if (this.g.left === 0) {
@@ -134,7 +138,7 @@ class DimensionsSession implements MiniSession {
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && tool === 'hint' && this.hints > 0;
+    return !this.ended && tool === 'hint' && this.hints > 0 && this.g.pairs().length > 0;
   }
   badges() {
     return { hint: Number.isFinite(this.hints) ? String(this.hints) : undefined };
@@ -150,7 +154,7 @@ class DimensionsSession implements MiniSession {
     if (this.clock.limit) this.clock.add(-2);
     this.hintPair = null;
     for (const id of m) this.host.board.restore(id, { pos: this.world(this.g.blocks[id]), quat: new THREE.Quaternion(), scale: 1 });
-    this.score = Math.max(0, this.score - 10);
+    this.score = Math.max(0, this.score - (this.gains.pop() ?? 10));
     this.combo = 0;
     this.sel = null;
     this.host.sound('slide');
