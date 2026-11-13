@@ -37,10 +37,17 @@ export class MeshRoom implements NamedRoom {
     };
     if (room)
       this.offs.push(
-        room.onPeers(changed, (e) => {
-          this.roomError = e.code;
-          changed();
-        }),
+        room.onPeers(
+          () => {
+            // The room is talking again: an earlier error no longer stands.
+            if (room.connected()) this.roomError = null;
+            changed();
+          },
+          (e) => {
+            this.roomError = e.code;
+            changed();
+          },
+        ),
       );
     if (store) this.offs.push(store.onPeers(changed));
   }
@@ -50,9 +57,12 @@ export class MeshRoom implements NamedRoom {
     const sent: Promise<void>[] = [];
     if (this.room)
       sent.push(
-        this.room.presence({ ...p, tab: TAB }).catch((e: { code?: string }) => {
-          this.roomError = e?.code ?? 'presence_failed';
-        }),
+        this.room.presence({ ...p, tab: TAB }).then(
+          () => void (this.roomError = null),
+          (e: { code?: string }) => {
+            this.roomError = e?.code ?? 'presence_failed';
+          },
+        ),
       );
     if (this.store) sent.push(this.store.presence(p));
     return Promise.all(sent).then(() => undefined);
