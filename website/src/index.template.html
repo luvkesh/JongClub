@@ -1673,7 +1673,12 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   const MUSIC = 'jongclub.site.music.v1';
   const btn = document.getElementById('music-btn');
   let ctx = null, gain = null, zen = null;
+  // iPhone and iPad (iOS 17+): Web Audio is silenced by the ring/silent switch unless the page asks for playback,
+  // so music and Mei's tour stayed mute for anyone with the switch on. The visitor turned the sound on themselves.
+  const playback = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {} };
+  window.__playback = playback;
   const play = () => {
+    playback();
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     ctx.resume();
     if (!zen) { gain = ctx.createGain(); gain.gain.value = 0; gain.connect(ctx.destination); zen = new JCZen.ZenMusic(ctx, gain); }
@@ -1768,6 +1773,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   // <audio> started from a scroll timer, so every later section would stay silent otherwise.
   let actx = null, voice = null;
   const unlock = () => {
+    window.__playback && window.__playback();
     if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; actx = new C(); voice = actx.createGain(); voice.connect(actx.destination); }
     if (actx.state !== 'running' && !paused) actx.resume().catch(() => {});
     const b = actx.createBuffer(1, 1, 22050), s0 = actx.createBufferSource(); s0.buffer = b; s0.connect(actx.destination); try { s0.start(0); } catch {}

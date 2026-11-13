@@ -91,6 +91,9 @@ export class ZenMusic {
       d[i] = v * (i < 64 ? i / 64 : 1);
       p = next;
     }
+    // Low strings still ring when the buffer ends: fade the last 0.4 s, or every bass note ends in a click.
+    const fade = Math.floor(sr * 0.4);
+    for (let i = 0; i < fade; i++) d[len - fade + i] *= 0.5 + 0.5 * Math.cos((Math.PI * i) / fade);
     return b;
   }
 
@@ -218,15 +221,20 @@ export class ZenMusic {
       src.buffer = this.pipaStrings[idx];
       const g = c.createGain();
       // A tremolo swells a little, then fades.
-      g.gain.value = gain * (tremolo ? 0.55 + 0.25 * Math.sin((k / hits) * Math.PI) : 1) * (k % 2 ? 0.8 : 1);
+      const level = gain * (tremolo ? 0.55 + 0.25 * Math.sin((k / hits) * Math.PI) : 1) * (k % 2 ? 0.8 : 1);
       const hp = c.createBiquadFilter();
       hp.type = 'highpass';
       hp.frequency.value = 180;
       src.connect(hp).connect(g);
       this.send(g, 0.7);
       const at = t + k * 0.075;
+      const end = at + (tremolo ? 0.3 : 1.8);
+      // Each tremolo stroke is cut while it still rings: a short fade instead of a click.
+      g.gain.setValueAtTime(level, at);
+      g.gain.setValueAtTime(level, end - 0.05);
+      g.gain.linearRampToValueAtTime(0, end);
       src.start(at);
-      src.stop(at + (tremolo ? 0.3 : 1.8));
+      src.stop(end);
     }
   }
 

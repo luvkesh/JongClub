@@ -1,6 +1,8 @@
 """Record Mei's narration with the open Kokoro TTS model (Apache-2.0) and embed it.
 
-Usage: [OUT=src/audio/x.gen.ts] python3 scripts/record-narration.py <lines.json> <voice> [workdir]
+Usage: [OUT=src/audio/x.gen.ts] [SEED=1 [KEEP_SPECIAL=1]] [REDO=key,key] python3 scripts/record-narration.py <lines.json> <voice> [workdir]
+  SEED=1 reuses the clips already recorded (lines with words from pronounce.py are re-synthesised unless
+  KEEP_SPECIAL=1); REDO lists clip keys to synthesise again even when seeded (a clip found cut off, say).
   voice: a Kokoro voice id (e.g. zf_xiaoxiao) or a blend "a+b@w" (w = share of b).
 Writes src/audio/narration.gen.<n>.ts parts (each under 50 MB, so GitHub accepts them) with every line as an
 MP3 data URL keyed by clipKey(), and src/audio/narration.gen.ts, the index that merges the parts.
@@ -107,16 +109,23 @@ def write_narration_parts(entries, header):
 
 # Seed the cache from the clips already recorded, so only new lines
 # (and lines with words from pronounce.py) are synthesised.
+redo = set(filter(None, os.environ.get('REDO', '').split(',')))
+keep_special = os.environ.get('KEEP_SPECIAL') == '1'
+for key in redo:
+    for ext in ('.mp3', '.wav'):
+        if os.path.exists(os.path.join(cache, key + ext)):
+            os.remove(os.path.join(cache, key + ext))
 if os.environ.get('SEED') == '1':
     have = {}
-    for gen in narration_files():
+    # With OUT (the Atelier pitches), the clips already in that file seed it too.
+    for gen in narration_files() + ([os.environ['OUT']] if os.environ.get('OUT') else []):
         if os.path.exists(gen):
             have.update(re.findall(r'"([0-9a-z]+)": \'data:audio/mpeg;base64,([^\']+)\'', open(gen).read()))
     seeded = 0
     for l in lines:
         key = clip_key(l)
         mp3 = os.path.join(cache, key + '.mp3')
-        if key in have and not has_special(l) and not os.path.exists(mp3):
+        if key in have and key not in redo and (keep_special or not has_special(l)) and not os.path.exists(mp3):
             open(mp3, 'wb').write(base64.b64decode(have[key]))
             seeded += 1
     print('seeded', seeded, 'clips from the narration files', flush=True)
@@ -158,6 +167,10 @@ if not only_render:
         sf.write(wav, np.concatenate(parts), sr)
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav, '-af', 'loudnorm=I=-18', '-ac', '1', '-ar', '24000', '-b:a', '48k', mp3], check=True)
         os.remove(wav)
+        # A clip must end in the silence padded after its last sentence; one that ends mid-word was cut off.
+        pcm = np.frombuffer(subprocess.run(['ffmpeg', '-v', 'error', '-i', mp3, '-ac', '1', '-f', 'f32le', '-'], capture_output=True).stdout, dtype=np.float32)
+        if len(pcm) and np.sqrt(np.mean(pcm[-int(0.03 * sr):] ** 2)) > 10 ** (-50 / 20):
+            print(f'WARNING {key} ends mid-sound (cut off?): listen to it and REDO={key}', flush=True)
         print(f'{i + 1}/{len(lines)} {key}', flush=True)
 
 if shard[1] == 1 or only_render:

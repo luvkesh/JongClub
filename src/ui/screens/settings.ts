@@ -22,16 +22,19 @@ import type { App } from '../app';
 const SETTINGS_KEY = 'jongclub.settings.v1';
 
 export interface StoredSettings extends Settings {
-  volumes: { effects: number; music: number; ambient: number };
+  volumes: { effects: number; music: number; ambient: number; voices?: number };
   /** The music button (musicToggle.ts) switched the background music off. */
   musicOff?: boolean;
 }
 
 export function loadSettings(): StoredSettings {
-  const d: StoredSettings = { speed: 'classic', hintDepth: 'beginner', labels: true, sort: 'suit', groupSets: false, volumes: { effects: 0.8, music: 0.25, ambient: 0.35 } };
+  const d: StoredSettings = { speed: 'classic', hintDepth: 'beginner', labels: true, sort: 'suit', groupSets: false, volumes: { effects: 0.8, music: 0.25, ambient: 0.35, voices: 1 } };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) return { ...d, ...JSON.parse(raw) };
+    if (raw) {
+      const saved = JSON.parse(raw);
+      return { ...d, ...saved, volumes: { ...d.volumes, ...saved.volumes } };
+    }
   } catch {
     /* defaults */
   }
@@ -63,8 +66,8 @@ export function showSettings(app: App) {
     el.querySelector('span')?.setAttribute('title', text);
     return el;
   };
-  const slider = (key: 'effects' | 'music' | 'ambient', label: string) => {
-    const r = h('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(s.volumes[key]), id: `vol-${key}` }) as HTMLInputElement;
+  const slider = (key: 'effects' | 'music' | 'ambient' | 'voices', label: string) => {
+    const r = h('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(s.volumes[key] ?? 1), id: `vol-${key}` }) as HTMLInputElement;
     r.oninput = () => {
       s.volumes[key] = Number(r.value);
       // Raising the music or ambient slider while the music button has them off turns them back on.
@@ -213,6 +216,7 @@ export function showSettings(app: App) {
           slider('music', tr('Music')),
           slider('effects', tr('Effects')),
           slider('ambient', tr('Ambient')),
+          slider('voices', tr('Voice volume')),
         ),
         sub(
           tr('Voices'),
@@ -267,11 +271,12 @@ export function showSettings(app: App) {
   o.append(settingsShell(cats, () => (o.hidden = true)));
 }
 
-/** What each volume slider governs (the three mixer buses in sound.ts; callers and Mei play outside them). */
-const SLIDER_TIPS: Record<'effects' | 'music' | 'ambient', () => string> = {
+/** What each volume slider governs (the four mixer buses in sound.ts). */
+const SLIDER_TIPS: Record<'effects' | 'music' | 'ambient' | 'voices', () => string> = {
   music: () => tr('The background music.'),
   effects: () => tr('Tile clacks, dice and the other table and button sounds. Player calls and Mei are not on this slider.'),
   ambient: () => tr('The room around the table: its quiet room tone, and the teahouse, jansō and majlis soundscapes.'),
+  voices: () => tr('Mei’s voice and the players’ tile calls.'),
 };
 
 interface Category {

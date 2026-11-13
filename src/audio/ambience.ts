@@ -14,6 +14,9 @@ export const SCAPES: Record<string, Scape> = { 'hk-teahouse': 'teahouse', 'tokyo
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 
+/** Evens the three venues out (measured offline with perf/audio): the teahouse and majlis were 13 and 9 dB quieter than the jansō. */
+const LEVEL: Record<Scape, number> = { teahouse: 2.66, janso: 0.6, majlis: 1.74 };
+
 class Soundscape {
   private bus: GainNode;
   private timers: number[] = [];
@@ -28,7 +31,7 @@ class Soundscape {
   ) {
     this.bus = ctx.createGain();
     this.bus.gain.value = 0;
-    this.bus.gain.setTargetAtTime(0.55, ctx.currentTime, 1.2);
+    this.bus.gain.setTargetAtTime(0.55 * LEVEL[kind], ctx.currentTime, 1.2);
     this.bus.connect(out);
     if (kind === 'teahouse') this.teahouse();
     else if (kind === 'janso') this.janso();

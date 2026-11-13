@@ -12,6 +12,7 @@ from kokoro_onnx import Kokoro
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pronounce import WORDS  # noqa: E402
+from audio_level import CALL_DISCARD_DB, CALL_SHOUT_DB, level  # noqa: E402
 
 work = sys.argv[1] if len(sys.argv) > 1 else '/tmp/claude-0/tts'
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -61,7 +62,7 @@ if os.environ.get('SEED') == '1' and os.path.exists(gen):
 
 out = []
 for cid, name, gender, spec in CALLERS:
-    cache = os.path.join(work, 'callers', hashlib.sha1((spec + '|c1').encode()).hexdigest()[:10])
+    cache = os.path.join(work, 'callers', hashlib.sha1((spec + '|c2').encode()).hexdigest()[:10])
     os.makedirs(cache, exist_ok=True)
     style = style_for(k, spec)
     clips = {}
@@ -77,12 +78,15 @@ for cid, name, gender, spec in CALLERS:
                 audio, sr = k.create(speakable(p), voice=style, speed=1.15 if p in CALLS else 1.08, lang='en-us')
             wav = os.path.join(cache, f'_t{os.getpid()}.wav')
             sf.write(wav, audio, sr)
-            # Trim silence, lift the pitch a touch for energy, and make it loud.
+            # Trim silence and lift the pitch a touch for energy, then level the speech (audio_level.py:
+            # loudnorm is unreliable on clips under a second and left the voices 10 dB apart).
+            raw = os.path.join(cache, f'_r{os.getpid()}.wav')
             subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav, '-af',
                             'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,' +
-                            ('rubberband=pitch=1.12:formant=preserved,loudnorm=I=-11:TP=-0.5,apad=pad_dur=0.05' if p in CALLS else
-                             'rubberband=pitch=1.04:formant=preserved,loudnorm=I=-13:TP=-1.0,apad=pad_dur=0.05'),
-                            '-ac', '1', '-ar', '24000', '-b:a', '40k', mp3], check=True)
+                            ('rubberband=pitch=1.12:formant=preserved,apad=pad_dur=0.05' if p in CALLS else
+                             'rubberband=pitch=1.04:formant=preserved,apad=pad_dur=0.05'), raw], check=True)
+            level(raw, mp3, CALL_SHOUT_DB if p in CALLS else CALL_DISCARD_DB)
+            os.remove(raw)
         clips[p] = 'data:audio/mpeg;base64,' + base64.b64encode(open(mp3, 'rb').read()).decode()
     out.append({'id': cid, 'name': name, 'gender': gender, 'clips': clips})
     print(name, 'done', flush=True)
