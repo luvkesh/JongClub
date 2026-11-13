@@ -154,8 +154,19 @@ function counters(p: Profile, week: string): Record<string, number> {
     hands: p.handsWon,
     lessons: p.lessonsDone.length,
     // Daily hands are counted from the week's own days, so this one starts at 0.
-    dailies: Object.keys(p.daily).filter((d) => d >= week && p.daily[d]?.hand !== undefined).length,
+    dailies: dailyHandsInWeek(p, week),
   };
+}
+
+/**
+ * Daily Hands played on the seven days from this week's Monday. A Daily Hand
+ * is keyed by its UTC day, which west of Greenwich can already be next Monday
+ * on a local Sunday evening: without the end of the week it counted in two weeks.
+ */
+export function dailyHandsInWeek(p: Profile, week: string): number {
+  const [y, m, d] = week.split('-').map(Number);
+  const end = localDay(new Date(y, m - 1, d + 7));
+  return Object.keys(p.daily).filter((k) => k >= week && k < end && p.daily[k]?.hand !== undefined).length;
 }
 
 /** Three challenges a week, rotating through the list. */
@@ -263,20 +274,32 @@ export function unlockLessonJp(p: Profile, id: string, all: string[]): boolean {
 export function bundlePrice(p: Profile, b: Bundle, all: string[]): Price {
   const list = b.lessons(all);
   const open = list.filter((l) => canOpen(p, l, all));
+  const e = econOf(p);
+  const owned = BUNDLES.filter((x) => e.bundles.includes(x.id));
+  // A lesson bought (or kept) on its own counts at its single price; one opened by
+  // another bundle counts at that bundle's price per lesson, so a big bundle can't
+  // make a bigger one free (World then Complete Academy cost 0 before).
+  const credit = (l: string, k: keyof Price) => {
+    if (e.lessons.includes(l) || e.kept.includes(l)) return lessonPrice(l)[k];
+    const shares = owned.filter((x) => x.lessons(all).includes(l)).map((x) => x.price[k] / x.lessons(all).length);
+    return shares.length ? Math.min(lessonPrice(l)[k], ...shares) : lessonPrice(l)[k];
+  };
   const sum = (ls: string[], k: keyof Price) => ls.reduce((n, l) => n + lessonPrice(l)[k], 0);
+  const paid = (k: keyof Price) => open.reduce((n, l) => n + credit(l, k), 0);
   const rest = list.filter((l) => !open.includes(l));
-  const of = (k: keyof Price) => (open.length ? Math.min(sum(rest, k), Math.max(0, b.price[k] - sum(open, k))) : b.price[k]);
+  const of = (k: keyof Price) => (open.length ? Math.min(sum(rest, k), Math.max(0, Math.round(b.price[k] - paid(k)))) : b.price[k]);
   return { jp: of('jp'), inr: of('inr') };
 }
 
 export function buyBundleJp(p: Profile, id: string, all?: string[]): boolean {
   const b = BUNDLES.find((x) => x.id === id);
-  const e = econOf(p);
-  if (!b || e.bundles.includes(id)) return !!b;
+  if (!b || econOf(p).bundles.includes(id)) return !!b;
   const { jp } = all ? bundlePrice(p, b, all) : b.price;
   if (p.jongPoints < jp) return false;
   p.jongPoints -= jp;
-  e.bundles.push(id);
+  // econOf rebuilds the economy on every call (bundlePrice just did), so take it fresh:
+  // pushing onto one read before the price charged the points and lost the bundle.
+  econOf(p).bundles.push(id);
   return true;
 }
 

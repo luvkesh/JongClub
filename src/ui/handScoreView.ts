@@ -5,15 +5,14 @@
 
 import type { HandNow, OnShow, WaitScore, WinValue } from '../ai/handScore';
 import type { HandScore } from '../engine/rules/types';
-import { tr, trn } from '../i18n';
+import { scoreLine, tr, trn } from '../i18n';
 import { fmt, h, tileImg } from './dom';
 import './handScore.css';
 
 /** "5 faan · Mangan", as the hand result writes it. */
 /** A score line's name in the player's language; India's passport lines read "Passport: <hand>". */
 export function lineName(name: string): string {
-  const m = /^Passport: (.+)$/.exec(name);
-  return m ? `${tr('Passport')}: ${tr(m[1])}` : tr(name);
+  return scoreLine(name);
 }
 
 export function scoreSummary(s: HandScore): string {

@@ -138,6 +138,14 @@ describe('a conversation', () => {
     expect(chat.messages).toEqual([]);
   });
 
+  it('a question left waiting when the page closed comes back as stopped', () => {
+    const store = memory();
+    store.set(JSON.stringify([{ role: 'user', text: 'Still there?', at: 1 }]));
+    const chat = new AskMeiChat(store, () => null);
+    expect(chat.messages.map((m) => [m.role, m.error])).toEqual([['user', undefined], ['mei', 'aborted']]);
+    expect(chat.turnsFor('Next').map((t) => t.text)).toEqual(['Next']);
+  });
+
   it('refuses to ask without a provider or while busy', async () => {
     const chat = new AskMeiChat(memory(), () => null);
     await expect(chat.ask('Anyone there?')).rejects.toMatchObject({ code: 'needs-key' });

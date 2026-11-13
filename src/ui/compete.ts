@@ -4,6 +4,7 @@ import { PERSONALITIES, type Personality } from '../ai/players';
 import { pointsText, setTournamentScoringPref, tournamentScoringPref } from './placementUi';
 import {
   DAILY_SWEEP_BONUS,
+  dailySweepDone,
   clubRegular,
   dailyChallenges,
   dailyKey,
@@ -30,12 +31,13 @@ import { GAME_LENGTHS } from '../engine/rounds';
 import { VARIATIONS, seatsOf } from '../engine/rules';
 import type { HandResult } from '../engine/state';
 import { leagueOf, saveProfile, unlock, type MatchSummary } from '../progression/profile';
+import { accountKey } from '../progression/accountKey';
 import type { AppCtx } from './ctx';
 import { clear, fmt, h, tileImg } from './dom';
 import { icon } from './icons';
 import './daily.css';
 import type { SeatSpec, TableConfig } from './match';
-import { lang, tr, trn } from '../i18n';
+import { lang, listSep, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 
 const vinfo = (id: string) => VARIATIONS.find((v) => v.id === id) ?? VARIATIONS[0];
@@ -71,11 +73,8 @@ function recordDaily(ctx: AppCtx, id: DailyChallengeId, field: 'hand' | 'discard
     p.jongPoints += dailyRewards[id];
     note = tr('+{n} Jong Points', { n: dailyRewards[id] });
     addSeasonXp('daily', SEASON_XP.daily);
-    const all = ['hand', 'discard', 'speed', 'winds', 'variation'].every((f) => {
-      const v = (rec as Record<string, unknown>)[f];
-      return v !== undefined && v !== false;
-    });
-    if (all) {
+    // A lost Speed Jong keeps 0, which is not done: counting it paid the sweep early, and again once it was won.
+    if (dailySweepDone(rec)) {
       p.jongPoints += DAILY_SWEEP_BONUS;
       note += ` · ${tr('all five done: +{n}', { n: DAILY_SWEEP_BONUS })}`;
     }
@@ -338,7 +337,7 @@ export function openRanked(ctx: AppCtx) {
       h('p', { class: 'muted small' }, games < 10 ? tr('Placement: {n} of 10 games played. Your rating moves faster until then.', { n: games }) : tr('{n} ranked {name} games.', { n: games, name: tr(vinfo(variation).short) })),
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': tr('Variation') }, ...playable.map((v) => h('button', { class: v.id === variation ? 'on' : '', role: 'radio', 'aria-checked': String(v.id === variation), onclick: () => ((variation = v.id), render()) }, `${v.flag} ${tr(v.short)}`))),
       h('ul', { class: 'rules-list' }, h('li', {}, tr('One East round against three club members near your rating.')), h('li', {}, tr('JongBot is off and turns are timed (20 seconds).')), h('li', {}, tr('Your rating changes by where you finish against each opponent. Nothing you buy ever changes it.'))),
-      h('p', { class: 'small' }, tr('Your table: '), field.map((m) => `${m.name} (${fmt(m.ratings[variation as keyof ClubMember['ratings']] ?? m.rating)})`).join(', ')),
+      h('p', { class: 'small' }, tr('Your table: '), field.map((m) => `${m.name} (${fmt(m.ratings[variation as keyof ClubMember['ratings']] ?? m.rating)})`).join(listSep())),
       h(
         'div',
         { class: 'btn-row' },
@@ -369,11 +368,12 @@ export const rankedFieldFromTag = (tag: string | undefined) => (tag?.startsWith(
 
 // ================================================================ tournaments
 
-const T_KEY = 'jongclub.tournament.v1';
+// Per account, like the profile: an entry paid by one account must not be played (and paid out) by another.
+const T_KEY = () => accountKey('jongclub.tournament.v1');
 
 export function loadTournament(): TournamentState | null {
   try {
-    const raw = localStorage.getItem(T_KEY);
+    const raw = localStorage.getItem(T_KEY());
     return raw ? (JSON.parse(raw) as TournamentState) : null;
   } catch {
     return null;
@@ -382,8 +382,8 @@ export function loadTournament(): TournamentState | null {
 
 export function saveTournament(s: TournamentState | null) {
   try {
-    if (s) localStorage.setItem(T_KEY, JSON.stringify(s));
-    else localStorage.removeItem(T_KEY);
+    if (s) localStorage.setItem(T_KEY(), JSON.stringify(s));
+    else localStorage.removeItem(T_KEY());
   } catch {
     /* ignore */
   }
@@ -403,7 +403,7 @@ function playMyTable(ctx: AppCtx, s: TournamentState) {
 }
 
 /** The app calls this when your tournament table finishes. Simulates the rest of the round in small steps. */
-const PENDING_KEY = 'jongclub.tournament.pending.v1';
+const PENDING_KEY = () => accountKey('jongclub.tournament.pending.v1');
 let resolving = false;
 
 /** True while the other tables of a round are still being played out. */
@@ -414,7 +414,7 @@ export function tournamentOnFinish(ctx: AppCtx, standingsAtTable: { seat: number
   if (!s || resolving) return;
   // Keep your result first, so a reload or a quick click elsewhere cannot lose or replay it.
   try {
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ id: s.id, round: s.roundsPlayed, result: standingsAtTable }));
+    localStorage.setItem(PENDING_KEY(), JSON.stringify({ id: s.id, round: s.roundsPlayed, result: standingsAtTable }));
   } catch {
     /* ignore */
   }
@@ -422,7 +422,7 @@ export function tournamentOnFinish(ctx: AppCtx, standingsAtTable: { seat: number
   const finish = (line: string) => {
     resolving = false;
     try {
-      localStorage.removeItem(PENDING_KEY);
+      localStorage.removeItem(PENDING_KEY());
     } catch {
       /* ignore */
     }
@@ -470,11 +470,11 @@ export function tournamentOnFinish(ctx: AppCtx, standingsAtTable: { seat: number
 function resumePending(ctx: AppCtx) {
   if (resolving) return;
   try {
-    const raw = localStorage.getItem(PENDING_KEY);
+    const raw = localStorage.getItem(PENDING_KEY());
     const pend = raw ? JSON.parse(raw) : null;
     const s = loadTournament();
     if (!pend || !s || pend.id !== s.id || pend.round !== s.roundsPlayed) {
-      if (raw) localStorage.removeItem(PENDING_KEY);
+      if (raw) localStorage.removeItem(PENDING_KEY());
       return;
     }
     tournamentOnFinish(ctx, pend.result, () => ctx.go('tournaments'));
@@ -577,7 +577,7 @@ export function tournamentsScreen(ctx: AppCtx): HTMLElement {
   };
   body.push(h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h3', {}, tr('Events')), h('p', { class: 'muted' }, tr('Tournaments are played against the club’s members. Prizes are Jong Points, trophies and frames.'))), h('label', { class: 'muted small t-scoring' }, tr('Scoring for your next event: '), scoringSel), ruleLine, list));
 
-  if (p.trophies.length) body.push(h('section', { class: 'section' }, h('h3', {}, tr('Your trophies')), h('div', { class: 'trophies' }, ...p.trophies.map((t) => h('div', { class: 'trophy' }, h('span', { class: 'tr-mark', 'aria-hidden': 'true' }, '🏆'), h('span', {}, t.name), h('span', { class: 'muted small' }, new Date(t.date).toLocaleDateString()))))));
+  if (p.trophies.length) body.push(h('section', { class: 'section' }, h('h3', {}, tr('Your trophies')), h('div', { class: 'trophies' }, ...p.trophies.map((t) => h('div', { class: 'trophy' }, h('span', { class: 'tr-mark', 'aria-hidden': 'true' }, '🏆'), h('span', {}, t.name), h('span', { class: 'muted small' }, new Date(t.date).toLocaleDateString(lang())))))));
   return page(tr('Tournaments'), tr('Compete for the cup'), h('button', { class: 'btn sm ghost clubs-back page-back', onclick: () => ctx.go('play') }, tr('‹ Play')), ...body);
 }
 

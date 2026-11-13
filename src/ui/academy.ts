@@ -625,7 +625,7 @@ export function lessonPlayer(lesson: Lesson, opts: LessonPlayerOptions): HTMLEle
         ),
         h('button', { type: 'button', class: 'lp-seg quiz-dot', title: tr('Take the test'), 'aria-label': tr('Take the test'), onclick: () => go(quiz) }),
       ),
-      h('div', { class: 'story-head' }, h('p', { class: 'eyebrow' }, `${lt(lesson.title)} · ${tr('{n} of {total}', { n: i + 1, total: lesson.scenes.length })}`), voiceBtn()),
+      h('div', { class: 'story-head' }, h('p', { class: 'eyebrow' }, h('span', {}, h('bdi', { lang: lessonsTranslated() ? null : 'en' }, lt(lesson.title)), ` · ${tr('{n} of {total}', { n: i + 1, total: lesson.scenes.length })}`)), voiceBtn()),
       lessonNote() ? h('p', { class: 'lesson-lang-note' }, lessonNote()) : '',
       h('h3', { lang: lessonsTranslated() ? null : 'en' }, lt(s.title)),
       pic ?? '',
