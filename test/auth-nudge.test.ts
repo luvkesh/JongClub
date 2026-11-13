@@ -66,11 +66,20 @@ describe('play first, sign in later', () => {
     expect(q.lessonsDone).toEqual(['basics']);
     expect(q.name).toBe('Ana');
 
-    // The account keeps its own slot; signing out returns to the guest's.
+    // The progress moved, not copied: signing out leaves a fresh guest, and a
+    // second new account starts fresh too, so points can't be multiplied.
     q.jongPoints = 300;
     saveProfile(q);
     signOut();
-    expect(loadProfile().jongPoints).toBe(120);
+    expect(loadProfile().jongPoints).not.toBe(120);
+    expect(loadProfile().lessonsDone).toEqual([]);
+    activate({ id: 'email-b', provider: 'email', name: 'Ben', email: 'b@b.co', since: '' });
+    expect(loadProfile().lessonsDone).toEqual([]);
+    expect(loadProfile().jongPoints).not.toBe(120);
+    // Signing back in to the first account still finds its own progress.
+    activate({ id: 'google-demo-a@b.co', provider: 'google', name: 'Ana', email: 'a@b.co', demo: true, since: '' });
+    expect(loadProfile().jongPoints).toBe(300);
+    signOut();
   });
 });
 

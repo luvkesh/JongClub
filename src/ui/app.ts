@@ -247,7 +247,14 @@ export class App {
     narrator.stop();
     this.screen = screen;
     try {
-      history.replaceState(null, '', `#${screen}`);
+      // Each new screen is its own history entry, so Back returns to the previous
+      // tab (user 2026-11-13); the first screen replaces the entry it opened on.
+      const target = `#${screen}`;
+      if (location.hash !== target) {
+        if (this.navigated) history.pushState(null, '', target);
+        else history.replaceState(null, '', target);
+      }
+      this.navigated = true;
     } catch {
       /* sandboxed */
     }
@@ -288,6 +295,8 @@ export class App {
   }
 
   private rendered: Screen | null = null;
+  /** Set after the first screen, so later screens push a history entry (Back goes to the previous tab). */
+  private navigated = false;
 
   /** Fade whichever edge of the tab strip has more tabs past it, so a cut-off tab reads as "scroll for more". */
   private navEdges = () => {

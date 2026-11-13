@@ -72,7 +72,9 @@ export function activate(a: Account) {
   }
   const slot = `${GUEST_PROFILE_KEY}:${a.id}`;
   try {
-    // First time on this device: carry the guest's progress over to the account.
+    // First time on this device: MOVE the guest's progress to the account (user
+    // 2026-11-13: progress must not be copied over and over). The guest slot is
+    // emptied, so signing out and making another account starts that one fresh.
     // Either way an account never plays under the placeholder name "Guest".
     const own = localStorage.getItem(slot);
     const guest = own ? null : localStorage.getItem(GUEST_PROFILE_KEY);
@@ -80,6 +82,7 @@ export function activate(a: Account) {
     if (!own || !p.name || p.name === 'Guest') {
       if (!p.name || p.name === 'Guest') p.name = a.name;
       localStorage.setItem(slot, JSON.stringify(p));
+      if (guest) localStorage.removeItem(GUEST_PROFILE_KEY);
     }
   } catch {
     /* ignore */
