@@ -1273,6 +1273,91 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .scene-about .scene-bg { object-position: right bottom; }
 @media (min-width: 1000px) { .scene-about div.house-tile { display: none; } .scene-about { min-height: min(45.8vw, 962px); } }
 @media (max-width: 999px) { .scene-about .scene-bg { display: none; } }
+/* V64 (2026-11-13): prologue on its reference painting, the reference room opens the interlude, the numbers band
+   sits in the reference arches, The Club on its reference scene, Variations and Mini-games open on reference strips. */
+.q-out em { font-style: italic; color: var(--gold-hi); }
+.scene-pro > img { transform: none; will-change: auto; object-position: 22% 50%; }
+@media (min-width: 900px) {
+  .scene-pro { --u: calc(100vw / 1893); min-height: 0; height: calc(831 * var(--u)); display: block; }
+  .scene-pro::after { background: radial-gradient(34% 30% at 31% 68%, rgba(3, 20, 13, 0.5), transparent 100%); }
+  .scene-pro .wrap { position: absolute; left: calc(285 * var(--u)); top: calc(430 * var(--u)); width: calc(655 * var(--u)); max-width: none; padding: 0; }
+  .scene-pro .quote { max-width: none; font-size: calc(57.5 * var(--u)); line-height: 1.02; color: #fbf4e2; }
+  .scene-pro .quote .icon { width: calc(40 * var(--u)); height: calc(40 * var(--u)); margin-bottom: calc(14 * var(--u)); }
+  .scene-pro .rule.knot { margin-top: calc(30 * var(--u)); width: calc(332 * var(--u)); }
+}
+.rt-still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; transition: opacity 1.2s ease; }
+.rt-still.off { opacity: 0; }
+.rt-n { flex-direction: column; gap: 14px; font: 400 clamp(13px, 1.25vw, 22px)/1.2 var(--ui); letter-spacing: 0.32em; text-transform: uppercase; padding: 0 clamp(90px, 11vw, 200px);
+  background: linear-gradient(90deg, transparent, var(--gold-hi)) left bottom 0.55em / clamp(60px, 6.6vw, 126px) 1px no-repeat, linear-gradient(270deg, transparent, var(--gold-hi)) right bottom 0.55em / clamp(60px, 6.6vw, 126px) 1px no-repeat; }
+.rt-n::before { content: ""; width: clamp(28px, 2.4vw, 44px); aspect-ratio: 1; background: var(--knot) center / contain no-repeat; }
+.rt-n::after { content: none; }
+.rt-title { top: clamp(18px, 2.2vw, 46px); }
+.scene-int .rtour::after { background: linear-gradient(180deg, rgba(6, 8, 7, 0.3), transparent 30%); }
+#interlude.scene-int::after { background: linear-gradient(180deg, rgba(8, 9, 10, 0) 45%, rgba(8, 9, 10, 0.5) 100%); }
+.scene-int .quote .icon { width: 150px; background: linear-gradient(90deg, var(--gold-hi), transparent) 64px 50% / 86px 1px no-repeat; }
+.scene-int .quote .icon svg { width: 44px; height: 44px; display: block; }
+@media (min-width: 900px) {
+  .scene-int { min-height: 0; height: 44.65vw; }
+  .scene-int .wrap { max-width: none; padding: 0 7.8vw 8vw; }
+  .scene-int .quote { font-size: 3.75vw; max-width: 46vw; line-height: 1.12; }
+}
+
+.scene-num { display: flex; flex-wrap: wrap; background: #06110d; max-width: 2172px; margin-inline: auto; }
+.scene-num::before, .scene-num::after { content: none; }
+.nrow { position: relative; z-index: 1; width: 50%; aspect-ratio: 1086 / 724; container-type: inline-size; background: url(scenes/stats.jpg) 0 0 / 200% 100% no-repeat; }
+.nrow + .nrow { background-position: 100% 0; }
+.sn { position: absolute; left: calc(var(--cx) * 1%); top: 59.2%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+.sn b { font: 600 11cqw/1 var(--display); padding-block: 0.12em; margin-block: -0.12em; background: linear-gradient(180deg, #fbe7b4, #e3c27c 52%, #b58a3e); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0.4cqw 1cqw rgba(0, 0, 0, 0.6)); }
+.sn span { margin-top: 0.2cqw; font: 400 max(10px, 2.05cqw)/1.2 var(--ui); letter-spacing: 0.3em; margin-inline-end: -0.3em; text-transform: uppercase; color: #f1ead8; }
+@media (max-width: 899px) { .nrow { width: 100%; } .nrow:first-child { -webkit-mask-image: linear-gradient(#000 88%, transparent); mask-image: linear-gradient(#000 88%, transparent); } }
+
+.cl-art { display: none; }
+@media (min-width: 1280px) {
+  .scene-club { --sh: min(44.52vw, 1000px); --u: calc(var(--sh) / 837); height: var(--sh); background: #06140f; padding: 0; }
+  .scene-club::before, .scene-club > .deco { display: none; content: none; }
+  .cl-art { display: block; position: absolute; inset: 0; z-index: 0; }
+  .cl-art img { display: block; height: 100%; width: auto; margin: 0 auto; }
+  .scene-club > .wrap { position: absolute; top: 0; bottom: 0; left: 50%; width: calc(1880 * var(--u)); max-width: none; transform: translateX(-50%); padding: 0; display: block; }
+  .scene-club .split { display: block; }
+  .scene-club .head { position: absolute; left: calc(1040 * var(--u)); top: calc(100 * var(--u)); width: calc(700 * var(--u)); gap: calc(16 * var(--u)); }
+  .scene-club .kicker { font-size: max(11px, calc(17 * var(--u))); gap: calc(22 * var(--u)); }
+  .scene-club .kicker .ring { width: calc(56 * var(--u)); height: calc(56 * var(--u)); }
+  .scene-club .title { font-size: calc(98 * var(--u)); line-height: 1; }
+  .scene-club .head .rule { margin-block: calc(4 * var(--u)); }
+  #club.scene-club .sub { font-size: calc(34 * var(--u)); max-width: none; }
+  .scene-club .story { display: flex; flex-direction: column; gap: calc(18 * var(--u)); }
+  .scene-club .story p { font-size: max(13px, calc(24 * var(--u))); line-height: 1.34; margin: 0; max-width: calc(640 * var(--u)); }
+  .scene-club .shot.device.tablet { position: absolute; left: calc(254 * var(--u)); top: calc(120 * var(--u)); width: calc(690 * var(--u)); height: calc(382 * var(--u)); margin: 0; padding: 0; border-radius: calc(20 * var(--u)); overflow: hidden; }
+  .scene-club .shot.device.tablet::after, .scene-club .shot.device.tablet::before { content: none; }
+  .scene-club .shot.device.tablet img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; padding: 0; border-radius: 0; box-shadow: none; background: none; }
+  .scene-club .club4 { display: block; position: static; margin: 0; }
+  .scene-club .club4 li { position: absolute; left: calc(var(--x) * var(--u)); top: calc(622 * var(--u)); width: calc(var(--w) * var(--u)); height: calc(121 * var(--u)); padding: 0; }
+  .scene-club .club4 li img { width: 100%; height: 100%; transform: none; }
+}
+
+.var-top { position: absolute; top: 0; right: 0; z-index: 0; width: 100%; min-width: 1000px; max-width: none; height: auto; pointer-events: none; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.scene-var::before { content: none; }
+.scene-var > .wrap > .head { margin-bottom: clamp(20px, 2.4vw, 34px); }
+.vsplit { display: grid; grid-template-columns: 1.75fr 1fr; gap: clamp(18px, 2.4vw, 34px); align-items: stretch; margin-bottom: clamp(28px, 4vw, 56px); }
+.vsplit .families { margin: 0; justify-content: space-between; }
+.vsplit .families li { flex: 1; }
+.vsplit .vkit { align-self: stretch; }
+@media (max-width: 900px) { .vsplit { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .var-top { width: 520px; min-width: 0; right: -128px; top: 8px; } }
+
+.mg-top { position: absolute; top: 0; z-index: 0; width: 50%; height: max(152px, 16.92vw); pointer-events: none; background: url(scenes/mg-top.jpg) left top / max(900px, 200%) auto no-repeat; }
+.mg-top.l { left: 0; -webkit-mask-image: linear-gradient(90deg, #000 62%, transparent), linear-gradient(#000 60%, transparent); mask-image: linear-gradient(90deg, #000 62%, transparent), linear-gradient(#000 60%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; }
+.mg-top.r { right: 0; background-position: right top; -webkit-mask-image: linear-gradient(270deg, #000 62%, transparent), linear-gradient(#000 60%, transparent); mask-image: linear-gradient(270deg, #000 62%, transparent), linear-gradient(#000 60%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; }
+.scene-mg::before { content: none; }
+/* Play: the heading and notes at the reference's scale. */
+#play .title { font-size: clamp(54px, 7vw, 104px); }
+#play .head .sub { font-size: clamp(22px, 2.3vw, 34px); }
+@media (min-width: 900px) {
+  #play .story p { font-size: clamp(17px, 1.45vw, 21px); line-height: 1.5; }
+  #play .notes li { padding: 22px 24px; }
+  #play .notes li > div > b { font-size: clamp(21px, 1.7vw, 25px); }
+  #play .notes li > div > span { font-size: clamp(15px, 1.2vw, 17px); }
+}
 </style>
 
 <header class="top">
@@ -1330,10 +1415,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="band" id="prologue" aria-label="Prologue">
-    <video autoplay muted loop playsinline preload="metadata" poster="video/opening-poster.jpg" aria-label="The match opening in the Taipei Night Market room: the automatic table shuffles and builds the walls."><source src="video/opening.mp4" type="video/mp4"></video>
+  <section class="band scene-pro" id="prologue" aria-label="Prologue">
+    <img src="scenes/prologue.jpg" srcset="scenes/prologue-1200.jpg 1200w, scenes/prologue.jpg 1893w" sizes="100vw" width="1893" height="831" loading="lazy" alt="The club table set for the evening: green felt, walls of tiles, tea and a lantern, cherry blossom at the edge.">
     <div class="wrap">
-      <p class="quote"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1A4.6 4.6 0 1 1 7 3.5z"/><path d="M17.3 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1a4.6 4.6 0 1 1-1.6-7.9z"/></svg></span>Every great evening begins with tiles on felt and a seat pulled out for you.</p>
+      <p class="quote"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1A4.6 4.6 0 1 1 7 3.5z"/><path d="M17.3 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1a4.6 4.6 0 1 1-1.6-7.9z"/></svg></span><span class="q-src" data-hl="tiles on felt">Every great evening begins with tiles on felt and a seat pulled out for you.</span><span class="q-out" aria-hidden="true"></span></p>
       <div class="rule knot" aria-hidden="true"></div>
     </div>
   </section>
@@ -1459,9 +1544,9 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="chapter" id="variations">
+  <section class="chapter scene-var" id="variations">
+    <img class="var-top" src="scenes/var-top.jpg" alt="" aria-hidden="true" width="1122" height="237">
     <div class="wrap">
-      <div class="split flip">
         <div class="head">
           <p class="kicker"><span class="ring"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" /><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" /><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" /></svg></span></span>The Mahjong family</p>
           <div class="vhead"><span class="big">31</span><p>ways to play, from India to Hong Kong, Riichi and Dubai.</p></div>
@@ -1469,12 +1554,13 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
           <div class="story">
             <p>Every version played properly, with its own scoring, lesson and cheat sheet.</p>
           </div>
+        </div>
+      <div class="vsplit">
           <ul class="families">
             <li><b>7</b><div><h4>Formal Rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div></li>
             <li><b>19</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div></li>
             <li><b>4</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div></li>
           </ul>
-        </div>
         <figure class="vkit" aria-label="Every variation comes with its own rules, a voiced lesson, a scoring guide, AI players who know it and a one-page cheat sheet.">
           <div class="vk-head"><img src="winds/wind-east.webp" alt="" width="200" height="200"><span>Each one comes with</span></div>
           <ul>
@@ -1544,7 +1630,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="chapter alt" id="minigames">
+  <section class="chapter alt scene-mg" id="minigames">
+    <div class="mg-top l" aria-hidden="true"></div><div class="mg-top r" aria-hidden="true"></div>
     <div class="wrap">
       <div class="head">
         <p class="kicker"><span class="ring"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></svg></span></span>Games for one</p>
@@ -1606,13 +1693,14 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="numerals" aria-label="The club in numbers">
-    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
-    <div class="wrap">
-      <div class="num"><img class="num-ic" src="assets/stats/variations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>31</b><span>Variations</span></div>
-      <div class="num"><img class="num-ic" src="assets/stats/destinations.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>18</b><span>Destinations</span></div>
-      <div class="num"><img class="num-ic" src="assets/stats/tilesets.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>22</b><span>Tile sets</span></div>
-      <div class="num"><img class="num-ic" src="assets/stats/rooms.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><b>12</b><span>Rooms</span></div>
+  <section class="numerals scene-num" aria-label="The club in numbers">
+    <div class="nrow">
+      <div class="sn" style="--cx: 32.7"><b>31</b><span>Variations</span></div>
+      <div class="sn" style="--cx: 77.8"><b>18</b><span>Destinations</span></div>
+    </div>
+    <div class="nrow">
+      <div class="sn" style="--cx: 22.5"><b>22</b><span>Tile sets</span></div>
+      <div class="sn" style="--cx: 67.9"><b>12</b><span>Rooms</span></div>
     </div>
   </section>
 
@@ -1664,16 +1752,17 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="band" id="interlude" aria-label="Interlude">
-    <div class="rtour" data-clips="[[&quot;video/room-al-fahidi-majlis.mp4&quot;, &quot;Al Fahidi Majlis&quot;], [&quot;video/room-tokyo-janso.mp4&quot;, &quot;Tokyo Jansō&quot;], [&quot;video/room-hk-teahouse.mp4&quot;, &quot;Hong Kong Tea House&quot;], [&quot;video/room-imperial.mp4&quot;, &quot;Forbidden City&quot;]]" aria-label="A slow walk through the club&#x27;s rooms, from the Dubai Majlis to Tokyo and Hong Kong." role="img"><video muted playsinline preload="auto" poster="video/room-al-fahidi-majlis-poster.jpg" src="video/room-al-fahidi-majlis.mp4"></video><video muted playsinline preload="none"></video><p class="rt-title" aria-hidden="true"><span class="rt-n" data-i="0">Al Fahidi Majlis</span><span class="rt-n" data-i="1">Tokyo Jansō</span><span class="rt-n" data-i="2">Hong Kong Tea House</span><span class="rt-n" data-i="3">Forbidden City</span></p></div>
+  <section class="band scene-int" id="interlude" aria-label="Interlude">
+    <div class="rtour" data-clips="[[&quot;video/room-al-fahidi-majlis.mp4&quot;, &quot;Al Fahidi Majlis&quot;], [&quot;video/room-tokyo-janso.mp4&quot;, &quot;Tokyo Jansō&quot;], [&quot;video/room-hk-teahouse.mp4&quot;, &quot;Hong Kong Tea House&quot;], [&quot;video/room-imperial.mp4&quot;, &quot;Forbidden City&quot;]]" aria-label="A slow walk through the club&#x27;s rooms, from the Dubai Majlis to Tokyo and Hong Kong." role="img"><video muted playsinline preload="metadata" poster="video/room-al-fahidi-majlis-poster.jpg" src="video/room-al-fahidi-majlis.mp4"></video><img class="rt-still" src="scenes/interlude.jpg" srcset="scenes/interlude-1200.jpg 1200w, scenes/interlude.jpg 1877w" sizes="100vw" width="1877" height="838" alt="" loading="lazy"><video muted playsinline preload="none"></video><p class="rt-title" aria-hidden="true"><span class="rt-n" data-i="0">Al Fahidi Majlis</span><span class="rt-n" data-i="1">Tokyo Jansō</span><span class="rt-n" data-i="2">Hong Kong Tea House</span><span class="rt-n" data-i="3">Forbidden City</span></p></div>
     <div class="wrap">
       <p class="quote"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1A4.6 4.6 0 1 1 7 3.5z"/><path d="M17.3 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1a4.6 4.6 0 1 1-1.6-7.9z"/></svg></span>One game, played differently in every city it reached.</p>
     </div>
   </section>
 
   <!-- VI. Compete -->
-  <section class="chapter alt" id="club">
+  <section class="chapter alt scene-club" id="club">
     <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
+    <div class="cl-art" aria-hidden="true"><img src="scenes/club.jpg" alt="" width="1880" height="837" loading="lazy"></div>
     <div class="wrap">
       <div class="split flip">
         <div class="head">
@@ -1689,10 +1778,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <figure class="shot device tablet"><img src="shots/club-1800.jpg" srcset="shots/club-1800.jpg 1800w, shots/club.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Club: seasons, ranked play, tournaments and members to follow."></figure>
       </div>
       <ul class="notes pcards club4">
-        <li><img src="cards/club-ratings.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Ratings</b><span>One per variation</span></div></li>
-        <li><img src="cards/club-seasons.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Seasons</b><span>Six weeks, one city</span></div></li>
-        <li><img src="cards/club-tournaments.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
-        <li><img src="cards/club-clubs.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Private Clubs</b><span>Your own weekly league</span></div></li>
+        <li style="--x: 116; --w: 400"><img src="cards/club-ratings.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Ratings</b><span>One per variation</span></div></li>
+        <li style="--x: 543; --w: 373"><img src="cards/club-seasons.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Seasons</b><span>Six weeks, one city</span></div></li>
+        <li style="--x: 943; --w: 395"><img src="cards/club-tournaments.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
+        <li style="--x: 1365; --w: 399"><img src="cards/club-clubs.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Private Clubs</b><span>Your own weekly league</span></div></li>
       </ul>
     </div>
   </section>
@@ -1899,6 +1988,9 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     // Titles stay on one line: wide scripts count each character a little larger.
     titles.forEach((h) => { const t = h.textContent.trim(); let n = 0; for (const c of t) n += /[\u3000-\u9fff\uac00-\ud7af]/.test(c) ? 1.45 : 1; h.style.setProperty('--len', Math.max(n, 4)); });
     menu.querySelectorAll('button').forEach((b) => b.toggleAttribute('aria-current', b.dataset.lang === l) || (b.dataset.lang === l && b.setAttribute('aria-current', 'true')));
+    document.querySelectorAll('.q-src').forEach((q) => { const out = q.nextElementSibling, hl = q.dataset.hl, txt = q.textContent; out.textContent = '';
+      const k = l === 'en' ? txt.indexOf(hl) : -1; if (k < 0) out.textContent = txt; else { const em = document.createElement('em'); em.textContent = hl; out.append(txt.slice(0, k), em, txt.slice(k + hl.length)); }
+      q.hidden = true; out.removeAttribute('aria-hidden'); });
     store.set(LANG, l);
   };
   lbtn.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; lbtn.setAttribute('aria-expanded', open); });
@@ -2064,7 +2156,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   if (still || !('IntersectionObserver' in window)) return;
   root.classList.add('js');
   // Reveal: chapter heads, copy, pictures, cards, each group staggered.
-  const groups = ['.head', '.story', '.shot', '.media', '.notes li', '.cast article', '.timeline li', '.vcard', '.piece', '.earn article', '.extra', '.ritual-notes article', '.wind', '.stamp', '.num', '.card', '.subhead', '.quote', '.promise'];
+  const groups = ['.head', '.story', '.shot', '.media', '.notes li', '.cast article', '.timeline li', '.vcard', '.piece', '.earn article', '.extra', '.ritual-notes article', '.wind', '.stamp', '.num', '.sn', '.card', '.subhead', '.quote', '.promise'];
   const els = [];
   for (const sel of groups) document.querySelectorAll(sel).forEach((el, i) => {
     if (el.closest('.hero')) return;
@@ -2076,7 +2168,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
   els.forEach((el) => io.observe(el));
   // Count the big numerals up once.
-  document.querySelectorAll('.num b, .vhead .big').forEach((b) => {
+  document.querySelectorAll('.num b, .sn b, .vhead .big').forEach((b) => {
     const to = +b.textContent; if (!to) return;
     const o = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; o.disconnect(); const t0 = performance.now();
       const step = (t) => { const k = Math.min(1, (t - t0) / 1400); b.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }, { threshold: 0.6 });
@@ -2127,10 +2219,14 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     };
     vs.forEach((v) => v.addEventListener('timeupdate', () => { if (v === vs[cur] && v.duration && v.currentTime > v.duration - 0.9) next(); }));
     vs[0].classList.add('on');
-    if (still) { ns[0] && ns[0].classList.add('show'); return; }
+    const pic = t.querySelector('.rt-still'), last = ns.length - 1;
+    if (still) { ns[pic ? last : 0] && ns[pic ? last : 0].classList.add('show'); return; }
     new IntersectionObserver((es) => es.forEach((e) => {
       const v = vs[cur];
-      if (e.isIntersecting) { v.play().catch(() => {}); if (!started) { started = true; title(0); load(vs[1], 1); } }
+      if (e.isIntersecting) {
+        if (!started && pic) { started = true; title(last); load(vs[1], 1); setTimeout(() => { pic.classList.add('off'); vs[cur].play().catch(() => {}); title(i); }, 6500); return; }
+        if (pic && !pic.classList.contains('off')) return;
+        v.play().catch(() => {}); if (!started) { started = true; title(0); load(vs[1], 1); } }
       else v.pause();
     }), { threshold: 0.35 }).observe(t);
   });

@@ -52,7 +52,8 @@ def rooms_tour(alt):
     k0 = clips[0][0]
     names = "".join(f'<span class="rt-n" data-i="{i}">{html.escape(n)}</span>' for i, (k, n) in enumerate(clips))
     return (f'<div class="rtour" data-clips="{data}" aria-label="{html.escape(alt)}" role="img">'
-            f'<video muted playsinline preload="auto" poster="video/room-{k0}-poster.jpg" src="video/room-{k0}.mp4"></video>'
+            f'<video muted playsinline preload="metadata" poster="video/room-{k0}-poster.jpg" src="video/room-{k0}.mp4"></video>'
+            f'<img class="rt-still" src="scenes/interlude.jpg" srcset="scenes/interlude-1200.jpg 1200w, scenes/interlude.jpg 1877w" sizes="100vw" width="1877" height="838" alt="" loading="lazy">'
             f'<video muted playsinline preload="none"></video>'
             f'<p class="rt-title" aria-hidden="true">{names}</p></div>')
 

@@ -339,3 +339,18 @@ def detail_cards():
 
 
 detail_cards()
+
+
+def tops():
+    """Top strips of Variations (the tile dish under its light) and Mini-games (lanterns and the fret arch), words painted out."""
+    v = load("variations")
+    R = [(30, 58, 528, 262), (30, 262, 600, 298)]
+    v = fill_smooth(paint_out(v, R, radius=12), R)
+    Image.fromarray(cv2.cvtColor(v[55:292], cv2.COLOR_BGR2RGB)).save(os.path.join(OUT, "var-top.jpg"), quality=88, optimize=True, progressive=True)
+    m = load("minigames")
+    R = [(480, 12, 965, 84), (465, 84, 985, 152), (670, 156, 780, 178), (360, 182, 1095, 228)]
+    m = fill_smooth(paint_out(m, R, radius=12), R)
+    Image.fromarray(cv2.cvtColor(m[0:245], cv2.COLOR_BGR2RGB)).save(os.path.join(OUT, "mg-top.jpg"), quality=88, optimize=True, progressive=True)
+
+
+tops()
