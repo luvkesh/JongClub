@@ -364,7 +364,7 @@ function americanTurnHint(game: MahjongGame, seat: number, depth: HintDepth, can
   if (kit) hint.targets = { title: kit.list, plans: hintPlans(kit.plans(game, seat, best.tile.kind), unseenCounts(game, seat)) };
   const reads = targetReads(game, seat);
   if (reads.length) hint.keepBack = reads.map((t) => t.line);
-  const hot = game.players.find((p, s) => s !== seat && p.melds.length >= 3);
+  const hot = game.players.find((p, s) => s !== seat && !game.sameTeam(seat, s) && p.melds.length >= 3);
   if (hot) hint.warning = `${hot.name} has ${hot.melds.length} exposures and may be close to Mah Jongg. Avoid tiles that match them.`;
   return hint;
 }

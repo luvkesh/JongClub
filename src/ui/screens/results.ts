@@ -9,7 +9,7 @@ import { LESSONS } from '../academy';
 import { dailyOnFinish, rankedFieldFromTag, tournamentOnFinish } from '../compete';
 import { seasonOnGame } from '../../progression/season';
 import { clear, copyWithNote, fmt, h } from '../dom';
-import { saveReplay, type ReplayRecord } from '../../net/replay';
+import { profileFor, saveReplay, type ReplayRecord } from '../../net/replay';
 import { clubOnFinish } from '../../club/privateClubs';
 import { ladderLine, recordLadder } from '../../club/ladder';
 import { usesLadder, usesTeams, teamTotals } from '../../engine/rules/tableOptions';
@@ -64,7 +64,7 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
   }
   // Cumulative leaderboard (table option): the match joins the running table in the Club.
   if (!spectated && usesLadder(app.lastConfig.houseRules)) {
-    const startingScore = getProfile(app.lastConfig.variation)?.startingScore ?? 0;
+    const startingScore = profileFor(app.lastConfig).startingScore;
     const seats = replay.names.map((name, seat) => ({ name: seat === me ? app.profile.name : name, score: replay.finalScores[seat] }));
     const teams = usesTeams(app.lastConfig.houseRules, replay.names.length) ? teamTotals(replay.finalScores) : undefined;
     const l = recordLadder({ variation: app.lastConfig.variation, seats, startingScore, teams, date: replay.date }, app.profile.name);
@@ -93,7 +93,7 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
     tourney.textContent = line;
     if (app.screen === 'tournaments' && !app.match && o.hidden) app.go('tournaments');
   });
-  const uma = tablePlacement(app.lastConfig.houseRules, replay.finalScores, getProfile(app.lastConfig.variation)?.startingScore ?? 0);
+  const uma = tablePlacement(app.lastConfig.houseRules, replay.finalScores, profileFor(app.lastConfig).startingScore);
   const ratingNote = summary.ranked ? tr('Ranked: {change}', { change: `${rewards.ratingAfter >= rewards.ratingBefore ? '+' : '−'}${fmt(Math.abs(rewards.ratingAfter - rewards.ratingBefore))}` }) : tr('Unranked game');
   const card = h(
     'div',

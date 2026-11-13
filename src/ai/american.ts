@@ -83,7 +83,8 @@ export function charlestonPick(hand: Tile[], noise = 0, rnd: () => number = () =
 export function exposureDanger(game: MahjongGame, seat: number) {
   const exposed = new Map<number, number>();
   game.players.forEach((p, s) => {
-    if (s === seat) return;
+    // A partner (team play) is never a risk: feeding their exposures helps your own team.
+    if (s === seat || game.sameTeam(seat, s)) return;
     const urgency = p.melds.length >= 3 ? 3 : p.melds.length;
     for (const m of p.melds) exposed.set(meldKind(m), (exposed.get(meldKind(m)) ?? 0) + urgency);
   });
@@ -100,7 +101,7 @@ export function americanPlan(game: MahjongGame, seat: number, defenseWeight: num
   const pl = game.players[seat];
   const danger = exposureDanger(game, seat);
   if (!strong) return rankDiscards(pl.hand, pl.melds, (k) => danger(k) * defenseWeight);
-  const hottest = Math.max(0, ...game.players.map((p, s) => (s === seat ? 0 : p.melds.length)));
+  const hottest = Math.max(0, ...game.players.map((p, s) => (s === seat || game.sameTeam(seat, s) ? 0 : p.melds.length)));
   const myDistance = distance(pl.hand, pl.melds);
   let w = Math.max(defenseWeight, 0.15);
   if (hottest >= 3) w *= 3;
@@ -115,7 +116,7 @@ export function americanPlan(game: MahjongGame, seat: number, defenseWeight: num
     for (const m of p.melds) for (const t of m.tiles) see(t.kind);
   }
   const copies = (k: number) => (k === FLOWER ? 8 : 4);
-  const hotDiscards = new Set(game.players.filter((p, s) => s !== seat && p.melds.length >= 2).flatMap((p) => p.discardKinds.map(norm)));
+  const hotDiscards = new Set(game.players.filter((p, s) => s !== seat && !game.sameTeam(seat, s) && p.melds.length >= 2).flatMap((p) => p.discardKinds.map(norm)));
   return rankDiscards(pl.hand, pl.melds, (k) => {
     if ((seen.get(k) ?? 0) >= copies(k)) return 0;
     return danger(k) * w * (hotDiscards.has(k) ? 0.5 : 1);
