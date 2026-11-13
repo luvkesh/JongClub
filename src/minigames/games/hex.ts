@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT } from '../board';
-import { GameClock, UndoStack, freeLook, matchGroup, pairsFromSet, tilesMatch } from '../helpers';
+import { GameClock, UndoStack, freeLook, matchGroup, pairsFromSet, sidewaysPhone, tilesMatch } from '../helpers';
 import { Rng } from '../../engine/rng';
 import type { MiniHost, MiniLevel, MiniSession } from '../types';
 
@@ -47,6 +47,16 @@ export const TALL_ROWS: Record<MiniLevel, number[]> = {
   easy: [5, 6, 5, 4, 5, 6, 5],
   medium: [6, 7, 6, 7, 8, 7, 6, 7, 6],
   hard: [7, 8, 9, 8, 9, 8, 9, 8, 9, 8, 7],
+};
+
+/**
+ * Phones held sideways: a wide, shallow honeycomb (seven rows) for Medium and Hard, so the board
+ * is not limited by the screen's short height; same tile count, rows alternating so every row sits
+ * half a tile off its neighbours. Easy's round board is already shallow enough.
+ */
+export const WIDE_ROWS: Partial<Record<MiniLevel, number[]>> = {
+  medium: [9, 8, 9, 8, 9, 8, 9],
+  hard: [13, 12, 13, 14, 13, 12, 13],
 };
 
 /** A honeycomb from row lengths, each row centred under the one above. */
@@ -168,7 +178,8 @@ class HexSession implements MiniSession {
 
   constructor(private host: MiniHost) {
     const tall = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
-    this.g = dealHex(tall ? rowCells(TALL_ROWS[host.level]) : RADIUS[host.level], host.rng);
+    const wide = sidewaysPhone() ? WIDE_ROWS[host.level] : undefined;
+    this.g = dealHex(tall ? rowCells(TALL_ROWS[host.level]) : wide ? rowCells(wide) : RADIUS[host.level], host.rng);
     this.total = this.g.cells.length;
     this.hintRng = new Rng((host.seed ^ 0x2c1b3c6d) >>> 0);
     this.hints = HINTS[host.level];
