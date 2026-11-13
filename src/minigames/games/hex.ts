@@ -8,7 +8,7 @@ import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT } from '../board';
 import { GameClock, UndoStack, freeLook, matchGroup, pairsFromSet, tilesMatch } from '../helpers';
-import type { Rng } from '../../engine/rng';
+import { Rng } from '../../engine/rng';
 import type { MiniHost, MiniLevel, MiniSession } from '../types';
 
 /** Honeycomb radius per level; the centre cell stays empty so the count is even. */
@@ -140,10 +140,13 @@ class HexSession implements MiniSession {
   private ended = false;
   private hintPair: number[] = [];
   private total: number;
+  /** Pause suggestions draw from their own stream, so the deal's shuffles stay the same (daily puzzle). */
+  private hintRng: Rng;
 
   constructor(private host: MiniHost) {
     this.g = dealHex(RADIUS[host.level], host.rng);
     this.total = this.g.cells.length;
+    this.hintRng = new Rng((host.seed ^ 0x2c1b3c6d) >>> 0);
     this.hints = HINTS[host.level];
     this.shuffles = SHUFFLES[host.level];
     host.camera.home = { yaw: 0, pitch: 72 };
@@ -203,7 +206,19 @@ class HexSession implements MiniSession {
     if (this.combo > 2) this.host.toast(tr('Combo ×{n}', { n: this.combo }), 'good');
     this.refresh();
     if (!this.g.left) window.setTimeout(() => this.win(), 600);
-    else if (!this.g.pairs(1).length) this.host.toast(this.shuffles > 0 ? tr('No more moves. Shuffle the tiles to carry on.') : tr('No more moves'), 'bad');
+    else if (!this.g.pairs(1).length) {
+      this.host.toast(this.shuffles > 0 ? tr('No more moves. Shuffle the tiles to carry on.') : tr('No more moves'), 'bad');
+      if (this.shuffles <= 0) this.loseIfStuck();
+    }
+  }
+
+  /** A dead end with no shuffle left: the game ends, unless the player undoes a move in time. */
+  private loseIfStuck() {
+    window.setTimeout(() => {
+      if (this.ended || !this.g.left || this.g.pairs(1).length || this.shuffles > 0) return;
+      this.ended = true;
+      this.host.finish({ won: false, score: this.score, seconds: this.clock.elapsed, cleared: this.total - this.g.left, total: this.total });
+    }, 1500);
   }
 
   canUndo() {
@@ -230,9 +245,9 @@ class HexSession implements MiniSession {
   }
 
   suggest(): number[] | null {
-    if (this.ended) return [];
+    if (this.ended || !this.g.left) return [];
     const p = this.g.pairs(12);
-    return p.length ? p[this.host.rng.int(p.length)] : null;
+    return p.length ? p[this.hintRng.int(p.length)] : null;
   }
   hint() {
     if (this.ended || this.hints <= 0) return false;
@@ -294,7 +309,8 @@ class HexSession implements MiniSession {
     this.clock.paused = p;
   }
   private win() {
-    if (this.ended) return;
+    // An undo during the short pause before the win brings tiles back: play on.
+    if (this.ended || this.g.left) return;
     this.ended = true;
     const bonus = Math.max(0, Math.round(this.total * 3 - this.clock.elapsed));
     this.score += bonus;

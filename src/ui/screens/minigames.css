@@ -7,7 +7,7 @@
 .mini-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line-strong); border-radius: var(--r);
   background: linear-gradient(180deg, rgba(234, 208, 154, 0.05), transparent 60%), var(--surface); box-shadow: var(--hi); }
 .mini-stat-cell { display: flex; align-items: center; gap: 16px; padding: 12px 22px; min-width: 0; }
-.mini-stat-cell + .mini-stat-cell { border-left: 1px solid var(--line); }
+.mini-stat-cell + .mini-stat-cell { border-inline-start: 1px solid var(--line); }
 /* A ring round each stat's icon; Jong Points get a struck gold coin. */
 .mini-stat-ico { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 50%; color: var(--brass-hi);
   border: 1px solid rgba(234, 208, 154, 0.45); background: radial-gradient(circle at 50% 35%, rgba(234, 208, 154, 0.12), rgba(0, 0, 0, 0.25)); }
@@ -43,11 +43,11 @@
 
 .mini-games { gap: var(--s3); }
 .mini-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.mini-bar h3 { margin: 0 auto 0 0; font-size: 30px; }
+.mini-bar h3 { margin: 0; margin-inline-end: auto; font-size: 30px; }
 .mini-search, .mini-sort { position: relative; display: flex; align-items: center; }
-.mini-search .ico, .mini-sort .ico { position: absolute; left: 13px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+.mini-search .ico, .mini-sort .ico { position: absolute; inset-inline-start: 13px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
 .mini-sort .ico { color: var(--brass-hi); }
-.mini-search-input, .mini-sort-select { height: 38px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); color: var(--ivory); font: 400 14px var(--ui); padding: 0 14px 0 37px; }
+.mini-search-input, .mini-sort-select { height: 38px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); color: var(--ivory); font: 400 14px var(--ui); padding: 0; padding-inline: 37px 14px; }
 .mini-search-input { width: 230px; }
 .mini-search-input:focus, .mini-sort-select:focus { outline: none; border-color: var(--line-strong); box-shadow: 0 0 0 3px rgba(234, 208, 154, 0.12); }
 .mini-sort-select { padding-right: 14px; cursor: pointer; border-color: var(--line-strong); font-weight: 500; }
@@ -83,7 +83,7 @@
 .mini-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; font: 500 12px/1.3 var(--ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .mini-meta > span { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 .mini-meta .ico { width: 15px; height: 15px; flex: none; color: var(--brass-hi); }
-.mini-best-n { margin-left: 4px; padding-left: 10px; border-left: 1px solid var(--line); color: var(--faint); }
+.mini-best-n { margin-inline-start: 4px; padding-inline-start: 10px; border-inline-start: 1px solid var(--line); color: var(--faint); }
 .mini-coin { flex: none; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #fff1c4, #e8be6a 45%, #a8742c 100%); box-shadow: inset 0 0 0 1.5px rgba(255, 240, 200, 0.35), 0 1px 2px rgba(0, 0, 0, 0.5); }
 .mini-meta .full { color: var(--up); }
 
@@ -136,11 +136,13 @@
 .mini-sheet .field { display: flex; flex-direction: column; gap: 6px; }
 .mini-sheet .field > span { font: 500 var(--fs-2xs)/1.2 var(--ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .mini-sheet .btn-row { margin-top: 6px; }
-.mini-howto { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; color: var(--ivory); font-size: 14.5px; line-height: 1.5; }
+.mini-howto { margin: 0; padding: 0; padding-inline-start: 1.3em; display: flex; flex-direction: column; gap: 6px; color: var(--ivory); font-size: 14.5px; line-height: 1.5; }
+.mini-listen { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.mini-listen svg { width: 18px; height: 18px; flex: none; }
 .mini-howto li::marker { color: var(--brass); font-weight: 500; }
 .mini-result-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--line-soft); }
 .mini-best { color: var(--brass-hi); font: 500 12px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; }
-.mini-notes { margin: 0; padding-left: 1.1em; color: var(--muted); font-size: 14px; }
+.mini-notes { margin: 0; padding: 0; padding-inline-start: 1.1em; color: var(--muted); font-size: 14px; }
 .mini-pay { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line-strong); background: radial-gradient(120% 120% at 0% 0%, rgba(234, 208, 154, 0.12), transparent 60%); }
 .mini-pay-n { font: 400 34px/1 var(--display); color: var(--brass-hi); }
 .mini-pay small { flex: 1 1 100%; }
@@ -153,7 +155,7 @@
   display: flex; align-items: center; justify-content: space-between; gap: 10px; pointer-events: none;
 }
 .mini-top > * { pointer-events: auto; }
-.mini-title { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px 14px 6px 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
+.mini-title { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px; padding-inline-end: 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
 .mini-name { font: 400 18px/1.1 var(--display); color: var(--ivory); white-space: nowrap; }
 .mini-sub { font: 500 var(--fs-2xs)/1.2 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 .mini-stats { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
@@ -176,7 +178,7 @@
 .mini-tool:hover:not(:disabled) { background: rgba(234, 208, 154, 0.08); border-color: var(--line); color: #fff6e0; }
 .mini-tool:disabled { opacity: 0.4; cursor: default; }
 .mini-tool .mt-icon { display: grid; place-items: center; }
-.mini-tool .mt-badge { position: absolute; top: 3px; right: 6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--brass); color: var(--brass-ink); font: 600 10.5px/17px var(--ui); text-align: center; }
+.mini-tool .mt-badge { position: absolute; top: 3px; inset-inline-end: 6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--brass); color: var(--brass-ink); font: 600 10.5px/17px var(--ui); text-align: center; }
 .mini-tool.attn, .mini-tool.nudge { border-color: var(--brass-hi); background: rgba(234, 208, 154, 0.12); animation: mini-attn 1.3s ease-in-out infinite; }
 @keyframes mini-attn { 50% { box-shadow: 0 0 0 4px rgba(234, 208, 154, 0.18); } }
 .mini-toast {
@@ -204,5 +206,13 @@
   .mini-tools { bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); }
   .mini-tool { min-height: 38px; }
   .mini-tool .mt-label { display: none; }
+}
+/* Landscape phones: the tools stand up along the right edge, so the board keeps the screen's height. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mini-tools {
+    left: auto; right: calc(env(safe-area-inset-right, 0px) + var(--gutter)); top: 50%; bottom: auto; transform: translateY(-50%);
+    flex-direction: column; border-radius: 26px; max-width: none; max-height: calc(100vh - 80px);
+  }
+  .mini-tool { min-height: 0; height: 42px; width: 46px; padding: 0; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { .mini-tool.attn, .mini-tool.nudge { animation: none; } }

@@ -9,12 +9,12 @@ import { SolitaireSession, layoutName } from './solitaire/session';
 
 const LEVEL_PAY: Record<MiniLevel, number> = { easy: 1, medium: 1.5, hard: 2.2 };
 
-/** Wins pay by board size and level; a loss still pays a little for the tiles cleared. */
+/** Wins pay by board size and level; a loss still pays a little for the tiles cleared (always less than a win). */
 function pairsReward(r: MiniResult, level: MiniLevel, perTile = 0.9) {
   const k = LEVEL_PAY[level];
   if (!r.won) return Math.round((r.cleared / Math.max(1, r.total)) * 25 * k);
   const helps = r.hints * 4 + r.shuffles * 8 + r.undos;
-  return Math.max(20, Math.round((40 + r.total * perTile) * k - helps));
+  return Math.max(Math.round(30 * k), Math.round((40 + r.total * perTile) * k - helps));
 }
 
 registerMiniGame({

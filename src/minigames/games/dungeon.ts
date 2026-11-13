@@ -61,7 +61,7 @@ export class Dungeon {
     return this.rooms.findIndex((r) => r.t === t);
   }
   /** The least-damage route from `from` to `to` with `armour` (the door blocks unless it is the goal). Returns [cost, path]. */
-  route(from: number, to: number, armour: number): [number, number[]] | null {
+  route(from: number, to: number, armour: number, open: (i: number) => boolean = () => true): [number, number[]] | null {
     const n = this.rooms.length;
     const dist = Array(n).fill(Infinity);
     const prev = Array(n).fill(-1);
@@ -74,7 +74,7 @@ export class Dungeon {
       if (u === to) break;
       done.add(u);
       for (const v of this.near(u)) {
-        if (this.rooms[v].t === 'door' && v !== to) continue;
+        if ((this.rooms[v].t === 'door' || !open(v)) && v !== to) continue;
         // A small step cost prefers shorter routes among equally safe ones.
         const d = dist[u] + damage(this.rooms[v], armour) + 0.01;
         if (d < dist[v]) {
@@ -316,7 +316,8 @@ class DungeonSession implements MiniSession {
     this.at = i;
     this.visited.add(i);
     this.light();
-    this.busy = false;
+    // A fallen hero stays down (busy) until the end shows: no stepping on to the door at 0 health.
+    this.busy = this.hp <= 0;
     this.refresh();
     if (this.hp <= 0) {
       this.hp = 0;
@@ -331,7 +332,7 @@ class DungeonSession implements MiniSession {
   private plan(): number[] | null {
     const goal = this.g.find(this.hasKey ? 'door' : 'key');
     if (goal < 0 || !this.seen.has(goal)) return null;
-    const r = this.g.route(this.at, goal, this.armour);
+    const r = this.g.route(this.at, goal, this.armour, (c) => this.seen.has(c));
     return r ? r[1] : null;
   }
   suggest(): number[] | null {
@@ -412,6 +413,7 @@ registerMiniGame({
   ],
   tools: { hint: true },
   daily: true,
-  reward: (r, level) => (r.won ? Math.round(Math.min(200, 70 + r.score * 0.25) * PAY[level] - r.hints * 6) : Math.round(r.cleared * 30 * PAY[level])),
+  // A win never pays less than the best loss, however many hints it took (Easy has unlimited hints).
+  reward: (r, level) => (r.won ? Math.max(Math.round(15 * PAY[level]), Math.round(Math.min(200, 70 + r.score * 0.25) * PAY[level] - r.hints * 6)) : Math.round(r.cleared * 30 * PAY[level])),
   start: (host) => new DungeonSession(host),
 });

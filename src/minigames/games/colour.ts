@@ -141,6 +141,8 @@ class ColourSession implements MiniSession {
   private trayMat = woodMaterial();
   private trayGeo: THREE.BufferGeometry;
   private total: number;
+  /** Portrait phones lay the lanes out as rows, so the tiles can be twice the size. */
+  private rows = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
 
   constructor(private host: MiniHost) {
     const st = SETUP[host.level];
@@ -151,7 +153,7 @@ class ColourSession implements MiniSession {
     this.ids = d.lanes.map((l) => l.map(() => id++));
     this.total = id;
     const b = host.board;
-    this.trayGeo = new THREE.BoxGeometry(b.w + 0.1, 0.02, CAP * (b.h + 0.03) + 0.1);
+    this.trayGeo = this.rows ? new THREE.BoxGeometry(CAP * (b.w + 0.03) + 0.1, 0.02, b.h + 0.1) : new THREE.BoxGeometry(b.w + 0.1, 0.02, CAP * (b.h + 0.03) + 0.1);
     this.g.lanes.forEach((_, l) => {
       const m = new THREE.Mesh(this.trayGeo, this.trayMat);
       m.position.copy(this.slot(l, (CAP - 1) / 2)).setY(0.01);
@@ -162,7 +164,9 @@ class ColourSession implements MiniSession {
     host.camera.home = { yaw: 0, pitch: 70 };
     host.camera.reset();
     b.build(this.g.lanes.flatMap((lane, l) => lane.map((kind, s) => ({ id: this.ids[l][s], kind, pos: this.slot(l, s), quat: FLAT }))));
-    b.fitExtra = new THREE.Box3(this.slot(0, 0).sub(new THREE.Vector3(b.w, 0, b.h)), this.slot(this.g.lanes.length - 1, CAP - 1).add(new THREE.Vector3(b.w, 0.2, b.h)));
+    // Frame the trays (empty lanes included) with a small margin.
+    const half = new THREE.Vector3(b.w / 2 + 0.1, 0.2, b.h / 2 + 0.1);
+    b.fitExtra = new THREE.Box3(this.slot(0, 0).sub(half), this.slot(this.g.lanes.length - 1, CAP - 1).add(half));
     host.fit(true);
     this.refresh();
   }
@@ -171,6 +175,7 @@ class ColourSession implements MiniSession {
   private slot(l: number, s: number) {
     const b = this.host.board;
     const n = this.g.lanes.length;
+    if (this.rows) return new THREE.Vector3((s - (CAP - 1) / 2) * (b.w + 0.03), b.d / 2 + 0.02, (l - (n - 1) / 2) * (b.h + 0.2));
     return new THREE.Vector3((l - (n - 1) / 2) * (b.w + 0.2), b.d / 2 + 0.02, (s - (CAP - 1) / 2) * (b.h + 0.03));
   }
 
@@ -205,7 +210,8 @@ class ColourSession implements MiniSession {
     const b = this.host.board;
     for (let l = 0; l < this.g.lanes.length; l++) {
       const c = this.slot(l, (CAP - 1) / 2);
-      if (Math.abs(p.x - c.x) < b.w * 0.75 && Math.abs(p.z - c.z) < (CAP * (b.h + 0.03)) / 2 + 0.15) return this.lane(l);
+      const hit = this.rows ? Math.abs(p.z - c.z) < b.h * 0.65 && Math.abs(p.x - c.x) < (CAP * (b.w + 0.03)) / 2 + 0.15 : Math.abs(p.x - c.x) < b.w * 0.75 && Math.abs(p.z - c.z) < (CAP * (b.h + 0.03)) / 2 + 0.15;
+      if (hit) return this.lane(l);
     }
   }
 
@@ -227,6 +233,9 @@ class ColourSession implements MiniSession {
       return this.refresh();
     }
     this.sel = null;
+    // Following the plan keeps it; any other move needs a new one.
+    if (this.plan?.[0][0] === a && this.plan[0][1] === l) this.plan.shift();
+    else this.plan = null;
     this.doMove(a, l);
     this.undos.push([a, l]);
     this.moves++;
@@ -255,18 +264,31 @@ class ColourSession implements MiniSession {
     const m = this.undos.pop();
     if (!m || this.ended) return false;
     this.doMove(m[1], m[0], true);
+    this.plan = null;
     this.sel = null;
     this.hintIds = [];
     this.refresh();
     return true;
   }
 
+  /**
+   * The solution the hints follow. The solver's search is not shortest-first, so solving afresh after
+   * every hinted move can undo the last one and send a player who follows the hints round in circles:
+   * hints keep to one solution until the player leaves it.
+   */
+  private plan: [number, number][] | null = null;
+
   /** The next move of a solution from here, as tile ids (the tile to move and where it lands). */
   private nextMove(): number[] | null {
-    const s = new Sorter(this.g.lanes.map((l) => [...l]));
-    const sol = s.solve(40000);
-    if (!sol?.length) return null;
-    const [a, b] = sol[0];
+    if (!this.plan?.length) {
+      const s = new Sorter(this.g.lanes.map((l) => [...l]));
+      this.plan = s.solve(40000);
+    }
+    if (!this.plan?.length) {
+      this.plan = null;
+      return null;
+    }
+    const [a, b] = this.plan[0];
     const top = (l: number) => this.ids[l][this.ids[l].length - 1];
     return this.ids[b].length ? [top(a), top(b)] : [top(a)];
   }
@@ -303,7 +325,8 @@ class ColourSession implements MiniSession {
     this.clock.paused = p;
   }
   private win() {
-    if (this.ended) return;
+    // An undo (or another move) in the moment before the win can unsort a row again.
+    if (this.ended || !this.g.solved()) return;
     this.ended = true;
     const spare = Math.max(0, this.par - this.moves);
     const score = Math.max(100, 600 + spare * 25 - Math.max(0, this.moves - this.par) * 12 - Math.round(this.clock.elapsed));

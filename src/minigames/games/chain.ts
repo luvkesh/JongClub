@@ -244,7 +244,8 @@ class ChainSession implements MiniSession {
     this.clock.paused = p;
   }
   private end() {
-    if (this.ended) return;
+    // An undo in the moment before the end brings groups back: then play goes on.
+    if (this.ended || this.g.groups().length) return;
     this.ended = true;
     const left = this.g.left;
     const won = left <= this.st.target;
@@ -283,6 +284,7 @@ registerMiniGame({
   ],
   tools: { hint: true, undo: true },
   daily: true,
-  reward: (r, level) => (r.won ? Math.round(Math.min(200, 50 + r.score * 0.04) * PAY[level] - r.undos * 2) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
+  // A win never pays less than the best loss could (25 × PAY), however many undos it took.
+  reward: (r, level) => (r.won ? Math.max(Math.round(25 * PAY[level]), Math.round(Math.min(200, 50 + r.score * 0.04) * PAY[level] - r.undos * 2)) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
   start: (host) => new ChainSession(host),
 });

@@ -58,6 +58,9 @@ class BossSession implements MiniSession {
   private hints: number;
   private shuffles: number;
   private ended = false;
+  /** Set by dispose (a restart or leaving): late timers must not touch the next game. */
+  private disposed = false;
+  private hintTok = 0;
   private hintPair: number[] = [];
   private lines = new THREE.Group();
   private lineMat = goldMaterial(1);
@@ -95,8 +98,12 @@ class BossSession implements MiniSession {
     this.refresh();
   }
 
+  /** Portrait phones turn the board a quarter (columns become rows) so its tiles can be larger; the rules don't change. */
+  private turned = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
+
   private world(x: number, y: number, lift = 0) {
     const b = this.host.board;
+    if (this.turned) return new THREE.Vector3((y - (this.h - 1) / 2) * (b.w + 0.02), b.d / 2 + lift, (x - (this.w - 1) / 2) * (b.h + 0.02) + 0.35);
     return new THREE.Vector3((x - (this.w - 1) / 2) * (b.w + 0.02), b.d / 2 + lift, (y - (this.h - 1) / 2) * (b.h + 0.02) + 0.35);
   }
   private bossPos() {
@@ -162,22 +169,23 @@ class BossSession implements MiniSession {
     this.hp -= dmg;
     this.host.sound(this.combo > 2 ? 'kong' : 'pung');
     if (this.combo > 2) this.host.toast(tr('Combo ×{n}: {d} damage', { n: this.combo, d: dmg }), 'good');
-    window.setTimeout(() => {
+    this.later(() => {
       if (this.ended && this.hp > 0) return;
       this.host.burst(boss.clone().setY(this.host.board.h), this.combo > 2);
       this.host.board.shake(BOSS_ID);
     }, 420);
     if (this.hp <= 0) {
+      // Won at once: no time-out, heal or late "no moves" can take it back while the blow lands.
+      this.end(true, undefined, 700);
       this.refresh();
-      window.setTimeout(() => this.end(true), 700);
       return;
     }
     if (this.g.left === 0) {
       this.walls++;
       this.host.toast(tr('A new wall rises!'), 'info');
-      window.setTimeout(() => !this.ended && (this.deal(), this.host.fit()), 650);
+      this.later(() => !this.ended && (this.deal(), this.host.fit()), 650);
     } else if (!this.open(1).length && !this.locked.size && !this.shuffles) {
-      window.setTimeout(() => this.end(false, tr('No more moves')), 900);
+      this.later(() => !this.g.pairs(1).length && this.end(false, tr('No more moves')), 900);
     } else if (!this.g.pairs(1).length) this.host.toast(tr('No more moves. Shuffle the tiles to carry on.'), 'bad');
     this.refresh();
   }
@@ -226,12 +234,14 @@ class BossSession implements MiniSession {
         b.moveTo(i, { pos: this.world(i % this.w, Math.floor(i / this.w)) }, { dur: 0.22 });
       });
       this.sel = null;
+      this.hintPair = [];
       this.host.toast(tr('{boss} scrambles the wall!', { boss: this.boss.name }), 'bad');
     } else {
       const live = this.g.cells.map((k, i) => (k >= 0 && !this.locked.has(i) ? i : -1)).filter((i) => i >= 0);
       const pick = this.host.rng.shuffle(live).slice(0, this.boss.lock);
       for (const c of pick) this.locked.set(c, this.clock.elapsed + LOCK_SECS);
       if (this.sel !== null && this.locked.has(this.sel)) this.sel = null;
+      if (this.hintPair.some((c) => this.locked.has(c))) this.hintPair = [];
       this.host.toast(tr('{boss} locks {n} tiles!', { boss: this.boss.name, n: pick.length }), 'bad');
     }
     this.refresh();
@@ -250,7 +260,9 @@ class BossSession implements MiniSession {
     this.hints--;
     this.hintPair = p[0];
     this.refresh();
-    window.setTimeout(() => {
+    const tok = ++this.hintTok;
+    this.later(() => {
+      if (tok !== this.hintTok) return;
       this.hintPair = [];
       if (!this.ended) this.refresh();
     }, 2400);
@@ -262,6 +274,7 @@ class BossSession implements MiniSession {
     const b = this.host.board;
     this.g.cells.forEach((k, i) => k >= 0 && b.setKind(i, k));
     this.sel = null;
+    this.hintPair = [];
     this.host.sound('shuffle');
     this.refresh();
     return true;
@@ -307,17 +320,20 @@ class BossSession implements MiniSession {
     this.clock.paused = p;
   }
 
-  private end(won: boolean, why?: string) {
+  /** A timer that does nothing once the session is disposed. */
+  private later(fn: () => void, ms: number) {
+    window.setTimeout(() => !this.disposed && fn(), ms);
+  }
+
+  /** Ends the game now; the result shows after `delay` ms (the last blow landing). */
+  private end(won: boolean, why?: string, delay = 0) {
     if (this.ended) return;
     this.ended = true;
+    this.sel = null;
+    this.hintPair = [];
     const dealt = this.boss.hp - Math.max(0, this.hp);
-    if (won) {
-      const b = this.host.board;
-      // The boss topples.
-      b.moveTo(BOSS_ID, { pos: this.bossPos().setY(0.2), quat: new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)) }, { dur: 0.7 });
-    }
     const score = dealt * 2 + this.pairs * 5 + (won ? Math.round(this.clock.left) * 3 : 0);
-    this.host.finish({
+    const result = {
       won,
       score,
       seconds: this.clock.elapsed,
@@ -326,10 +342,18 @@ class BossSession implements MiniSession {
       headline: tr('Boss defeated'),
       tally: { label: tr('Damage dealt'), text: `${dealt} / ${this.boss.hp}` },
       notes: [won ? tr('{boss} is defeated!', { boss: this.boss.name }) : why ?? tr("Time's up"), tr('{n} pairs struck', { n: this.pairs }), ...(this.walls > 1 ? [tr('{n} walls dealt', { n: this.walls })] : []), ...(this.bestCombo > 1 ? [tr('Longest combo ×{n}', { n: this.bestCombo })] : [])],
-    });
+    };
+    const done = () => {
+      // The boss topples.
+      if (won) this.host.board.moveTo(BOSS_ID, { pos: this.bossPos().setY(0.2), quat: new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)) }, { dur: 0.7 });
+      this.host.finish(result);
+    };
+    if (delay) this.later(done, delay);
+    else done();
   }
   dispose() {
     this.ended = true;
+    this.disposed = true;
     this.clearPath();
     this.lines.removeFromParent();
     this.lineMat.dispose();
@@ -353,6 +377,7 @@ registerMiniGame({
     tr('Bring its health to zero before the clock runs out. A cleared wall is dealt again.'),
   ],
   tools: { hint: true, shuffle: true },
-  reward: (r, level) => (r.won ? Math.round(Math.min(200, 70 + r.score * 0.1) * PAY[level] - r.hints * 4 - r.shuffles * 6) : Math.round((r.cleared / Math.max(1, r.total)) * 40 * PAY[level])),
+  // A win never pays less than the best a loss could (40 × level).
+  reward: (r, level) => (r.won ? Math.max(Math.round(40 * PAY[level]), Math.round(Math.min(200, 70 + r.score * 0.1) * PAY[level] - r.hints * 4 - r.shuffles * 6)) : Math.round((r.cleared / Math.max(1, r.total)) * 40 * PAY[level])),
   start: (host) => new BossSession(host),
 });

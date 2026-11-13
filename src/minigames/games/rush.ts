@@ -171,7 +171,11 @@ class RushSession implements MiniSession {
       this.host.sound('click');
       this.host.toast(this.strikes >= this.st.strikes ? tr('Out of lives') : tr('Not a set. {n} lives left.', { n: this.st.strikes - this.strikes }), 'bad');
       this.refresh();
-      if (this.strikes >= this.st.strikes) window.setTimeout(() => this.end(false), 700);
+      if (this.strikes >= this.st.strikes) {
+        // Out of lives: no more picks (or hints) while the end shows.
+        this.busy = true;
+        window.setTimeout(() => this.end(false), 700);
+      }
     }
   }
 

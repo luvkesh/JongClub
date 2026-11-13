@@ -23,6 +23,9 @@ class TripleSession implements MiniSession {
   private clock = new GameClock();
   private score = 0;
   private ended = false;
+  /** Set by dispose (a restart or leaving): late timers must not touch the next game's board. */
+  private disposed = false;
+  private hintTok = 0;
   private undos: number;
   private shuffles: number;
   private hints: number;
@@ -129,16 +132,17 @@ class TripleSession implements MiniSession {
       this.lastSet = t;
       this.score += 30 + 10 * (this.chain - 1);
       const mid = this.trayPos(Math.max(0, slot - 1));
-      window.setTimeout(() => {
+      this.later(() => {
         for (const s of set) b.remove(s, { to: mid });
         this.host.burst(mid.clone().setY(mid.y + 0.25));
         this.host.sound('pung');
         this.layTray(0.2);
       }, 380);
     } else this.layTray(0.12);
-    if (this.g.won) window.setTimeout(() => this.win(), 900);
-    else if (this.g.lost) window.setTimeout(() => this.lose(), 700);
     this.refresh();
+    // Over at once (no undo or more picks in the gap); the result shows once the tiles land.
+    if (this.g.won) this.win(900);
+    else if (this.g.lost) this.lose(700);
   }
   private lastSet = -99;
 
@@ -155,7 +159,9 @@ class TripleSession implements MiniSession {
     this.hintId = id;
     this.hints--;
     this.refresh();
-    window.setTimeout(() => {
+    const tok = ++this.hintTok;
+    this.later(() => {
+      if (tok !== this.hintTok) return;
       this.hintId = null;
       if (!this.ended) this.refresh();
     }, 2500);
@@ -173,6 +179,7 @@ class TripleSession implements MiniSession {
     const id = this.g.undo();
     if (id === null) return false;
     this.undos--;
+    this.hintId = null;
     this.host.board.moveTo(id, { pos: this.world(this.g.spots[id]), quat: FLAT }, { dur: 0.32, arc: 0.3, now: true });
     this.layTray();
     this.host.sound('slide');
@@ -192,6 +199,7 @@ class TripleSession implements MiniSession {
     for (const i of this.g.cleared) b.remove(i);
     for (const i of ids) b.moveTo(i, { pos: this.world(this.g.spots[i]) }, { dur: 0.35, delay: (i % 11) * 0.02 });
     this.shuffles--;
+    this.hintId = null;
     this.host.sound('shuffle');
     this.refresh();
     return true;
@@ -208,22 +216,31 @@ class TripleSession implements MiniSession {
   pause(p: boolean) {
     this.clock.paused = p;
   }
-  private win() {
+  /** A timer that does nothing once the session is disposed. */
+  private later(fn: () => void, ms: number) {
+    window.setTimeout(() => !this.disposed && fn(), ms);
+  }
+  private win(delay = 0) {
     if (this.ended) return;
     this.ended = true;
     const n = this.g.spots.length;
     const bonus = Math.max(0, Math.round(n * 2.2 - this.clock.elapsed));
     this.score += bonus;
-    this.host.finish({ won: true, score: this.score, seconds: this.clock.elapsed, cleared: n, total: n, notes: [tr('{n} sets of three', { n: this.sets }), ...(bonus ? [tr('Time bonus +{n}', { n: bonus })] : [])] });
+    const result = { won: true, score: this.score, seconds: this.clock.elapsed, cleared: n, total: n, notes: [tr('{n} sets of three', { n: this.sets }), ...(bonus ? [tr('Time bonus +{n}', { n: bonus })] : [])] };
+    this.refresh();
+    this.later(() => this.host.finish(result), delay);
   }
-  private lose() {
+  private lose(delay = 0) {
     if (this.ended) return;
     this.ended = true;
     const n = this.g.spots.length;
-    this.host.finish({ won: false, score: this.score, seconds: this.clock.elapsed, cleared: this.g.cleared.length, total: n, notes: [tr('The tray is full')] });
+    const result = { won: false, score: this.score, seconds: this.clock.elapsed, cleared: this.g.cleared.length, total: n, notes: [tr('The tray is full')] };
+    this.refresh();
+    this.later(() => this.host.finish(result), delay);
   }
   dispose() {
     this.ended = true;
+    this.disposed = true;
     this.host.board.fitExtra = null;
     this.tray.removeFromParent();
     this.tray.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
@@ -245,6 +262,7 @@ registerMiniGame({
     tr('The tray holds seven tiles. Fill it without a set and the game is over.'),
   ],
   tools: { hint: true, undo: true, shuffle: true },
-  reward: (r, level) => (r.won ? Math.max(20, Math.round((40 + r.total * 0.8) * PAY[level] - r.hints * 4 - r.shuffles * 8 - r.undos * 2)) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
+  // A win never pays less than the best a loss could (25 × level).
+  reward: (r, level) => (r.won ? Math.max(Math.round(25 * PAY[level]), Math.round((40 + r.total * 0.8) * PAY[level] - r.hints * 4 - r.shuffles * 8 - r.undos * 2)) : Math.round((r.cleared / Math.max(1, r.total)) * 25 * PAY[level])),
   start: (host) => new TripleSession(host),
 });

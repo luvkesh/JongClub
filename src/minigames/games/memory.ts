@@ -85,6 +85,8 @@ class MemorySession implements MiniSession {
       this.score += 20 + 10 * (this.streak - 1);
       this.host.sound('pung');
       window.setTimeout(() => {
+        // The board is shared: after a restart it holds the next game's tiles.
+        if (this.disposed) return;
         const bd = this.host.board;
         const mid = bd.pose(a)!.pos.add(bd.pose(b)!.pos).multiplyScalar(0.5);
         bd.remove(a, { to: mid });
@@ -97,6 +99,7 @@ class MemorySession implements MiniSession {
       this.misses++;
       this.busy = true;
       window.setTimeout(() => {
+        if (this.disposed) return;
         this.up.delete(a);
         this.up.delete(b);
         this.flip(a, false);
@@ -113,6 +116,7 @@ class MemorySession implements MiniSession {
     const hidden = this.kinds.map((_, i) => i).filter((i) => !this.done.has(i) && !this.up.has(i));
     hidden.forEach((i, n) => this.flip(i, true, n * 0.012));
     window.setTimeout(() => {
+      if (this.disposed) return;
       hidden.forEach((i, n) => this.flip(i, false, n * 0.012));
       window.setTimeout(() => (this.busy = false), 400);
     }, sec * 1000);
@@ -150,8 +154,9 @@ class MemorySession implements MiniSession {
     this.score += bonus;
     this.host.finish({ won: true, score: this.score, seconds: this.clock.elapsed, cleared: this.kinds.length, total: this.kinds.length, notes: [tr('{n} turns for {p} pairs', { n: this.turns, p: pairs }), ...(this.best > 1 ? [tr('Best run of pairs ×{n}', { n: this.best })] : [])] });
   }
+  private disposed = false;
   dispose() {
-    this.ended = true;
+    this.ended = this.disposed = true;
   }
 }
 
