@@ -4,7 +4,7 @@
 // clearly marked demos and no money is ever taken.
 
 import { ACADEMY_ORDER } from './academy';
-import { BUNDLES, LOGIN_LADDER, buyBundleJp, canOpen, claimLogin, econOf, loginStatus, grantPurchase, lessonPrice, payAd, rupees, unlockLessonJp, AD_REWARD, type Bundle } from '../economy/economy';
+import { BUNDLES, LOGIN_LADDER, buyBundleJp, bundlePrice, canOpen, claimLogin, econOf, loginStatus, grantPurchase, lessonPrice, payAd, rupees, unlockLessonJp, AD_REWARD, type Bundle } from '../economy/economy';
 import { adProvider, paymentProvider } from '../economy/providers';
 import { profileSaveHooks, saveProfile, type Profile } from '../progression/profile';
 import type { AppCtx } from './ctx';
@@ -111,7 +111,7 @@ export function bundleState(ctx: AppCtx, b: Bundle) {
 
 /** Buy a bundle with Jong Points. */
 export function bundleJp(ctx: AppCtx, b: Bundle, done: () => void) {
-  if (!buyBundleJp(ctx.profile, b.id)) return;
+  if (!buyBundleJp(ctx.profile, b.id, allLessons())) return;
   saveProfile(ctx.profile);
   done();
 }
@@ -151,7 +151,9 @@ export function unlockLesson(ctx: AppCtx, id: string, title: string, done: () =>
 /** One bundle as a compact row: name, what it holds, and both prices. */
 export function bundleRow(ctx: AppCtx, b: Bundle, done: () => void) {
   const st = bundleState(ctx, b);
-  const short = ctx.profile.jongPoints < b.price.jp;
+  // Lessons already open count towards the bundle ("complete the set").
+  const price = bundlePrice(ctx.profile, b, allLessons());
+  const short = ctx.profile.jongPoints < price.jp;
   return h(
     'div',
     { class: `ec-bundle ${st.owned ? 'owned' : ''}` },
@@ -161,8 +163,9 @@ export function bundleRow(ctx: AppCtx, b: Bundle, done: () => void) {
       : h(
           'div',
           { class: 'ec-bundle-buy' },
-          h('button', { class: 'btn sm primary', disabled: short, onclick: () => bundleJp(ctx, b, done) }, `${fmt(b.price.jp)} JP`),
-          h('button', { class: 'btn sm ghost', onclick: () => payMoney(ctx, `bundle:${b.id}`, b.name, b.price.inr, done) }, rupees(b.price.inr)),
+          price.jp < b.price.jp ? h('s', { class: 'ec-was' }, `${fmt(b.price.jp)} JP`) : null,
+          h('button', { class: 'btn sm primary', disabled: short, onclick: () => bundleJp(ctx, b, done) }, `${fmt(price.jp)} JP`),
+          h('button', { class: 'btn sm ghost', onclick: () => payMoney(ctx, `bundle:${b.id}`, b.name, price.inr, done) }, rupees(price.inr)),
         ),
   );
 }

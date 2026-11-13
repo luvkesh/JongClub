@@ -255,12 +255,27 @@ export function unlockLessonJp(p: Profile, id: string, all: string[]): boolean {
   return true;
 }
 
-export function buyBundleJp(p: Profile, id: string): boolean {
+/**
+ * What a bundle costs this player: "complete the set" pricing (user 2026-11-13).
+ * Lessons already open count at their single price against the bundle price,
+ * and it never costs more than buying the rest one at a time.
+ */
+export function bundlePrice(p: Profile, b: Bundle, all: string[]): Price {
+  const list = b.lessons(all);
+  const open = list.filter((l) => canOpen(p, l, all));
+  const sum = (ls: string[], k: keyof Price) => ls.reduce((n, l) => n + lessonPrice(l)[k], 0);
+  const rest = list.filter((l) => !open.includes(l));
+  const of = (k: keyof Price) => (open.length ? Math.min(sum(rest, k), Math.max(0, b.price[k] - sum(open, k))) : b.price[k]);
+  return { jp: of('jp'), inr: of('inr') };
+}
+
+export function buyBundleJp(p: Profile, id: string, all?: string[]): boolean {
   const b = BUNDLES.find((x) => x.id === id);
   const e = econOf(p);
   if (!b || e.bundles.includes(id)) return !!b;
-  if (p.jongPoints < b.price.jp) return false;
-  p.jongPoints -= b.price.jp;
+  const { jp } = all ? bundlePrice(p, b, all) : b.price;
+  if (p.jongPoints < jp) return false;
+  p.jongPoints -= jp;
   e.bundles.push(id);
   return true;
 }
