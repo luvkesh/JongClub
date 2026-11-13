@@ -88,6 +88,7 @@ registerMiniGame({
 registerMiniGame({
   id: 'blitz',
   layered: true,
+  timeRecord: false,
   title: tr('Mahjong Blitz'),
   blurb: tr('Ninety seconds. Clear as many pairs as you can; every cleared board deals another.'),
   minutes: tr('1–2 min'),

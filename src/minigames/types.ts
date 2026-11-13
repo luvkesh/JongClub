@@ -143,6 +143,11 @@ export interface MiniGameDef {
   layered?: boolean;
   /** Keep the game's own camera angle on portrait phones (it lays its board out for them). */
   ownPortraitCamera?: boolean;
+  /**
+   * False for games whose length is set by the clock, not by the player (Blitz's 90 seconds,
+   * Survival's hold): a shorter win is not better there, so no fastest time is kept or announced.
+   */
+  timeRecord?: boolean;
   /** Buttons the HUD shows. */
   tools?: { hint?: boolean; undo?: boolean; shuffle?: boolean };
   /** Jong Points for a result before the daily cap (rewards.ts adds the daily bonus). */

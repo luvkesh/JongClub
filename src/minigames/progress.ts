@@ -105,7 +105,8 @@ export interface RecordOutcome {
   best: MiniBest;
 }
 
-export function recordResult(key: string, r: MiniResult): RecordOutcome {
+/** `timed` false: the game's length is fixed by its clock, so no fastest time is kept (MiniGameDef.timeRecord). */
+export function recordResult(key: string, r: MiniResult, timed = true): RecordOutcome {
   const s = loadMini();
   const prev = s.best[key] ?? { score: 0, seconds: 0, wins: 0, plays: 0 };
   const next: MiniBest = { ...prev, plays: prev.plays + 1 };
@@ -114,7 +115,7 @@ export function recordResult(key: string, r: MiniResult): RecordOutcome {
   let newBestTime = false;
   if (r.won) {
     next.wins++;
-    if (!prev.seconds || r.seconds < prev.seconds) {
+    if (timed && (!prev.seconds || r.seconds < prev.seconds)) {
       newBestTime = prev.seconds > 0 || prev.wins > 0;
       next.seconds = Math.max(1, Math.round(r.seconds));
     }
@@ -144,7 +145,9 @@ export interface Payout {
  */
 export function payout(def: MiniGameDef, r: MiniResult, level: MiniLevel, daily: boolean, day = isoDay(new Date())): Payout {
   const s = loadMini();
-  const base = Math.max(0, Math.round(def.reward(r, level)));
+  // A broken reward (NaN, Infinity) pays nothing rather than spoiling the wallet.
+  const raw = Math.round(def.reward(r, level));
+  const base = Number.isFinite(raw) ? Math.max(0, raw) : 0;
   const before = s.earned[day]?.[def.id] ?? 0;
   const room = Math.max(0, MINI_DAILY_CAP - before);
   const paid = Math.min(base, room);
