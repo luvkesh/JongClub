@@ -118,8 +118,9 @@ export function learnScreen(app: App) {
   const id = app.learnLesson;
   rememberLesson(id);
   const [cta, table] = tables[id] ?? [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))];
-  // The current lesson's line in the level list, marked complete as soon as its test is passed.
-  const state = h('span', { class: 'lv-state' }, app.profile.lessonsDone.includes(id) ? tr('Completed') : openedLessons().includes(id) ? tr('In progress') : tr('Not started'));
+  // The level list, the counts above it and the top cards, redrawn in place when the lesson starts or its test is passed
+  // (the lesson card itself stays where it is). Set once the screen is built.
+  let refresh = () => {};
   // Lessons after Level 3 (except every India Rules lesson) are unlocked with Jong Points, money or a bundle (src/economy).
   const all = allLessons();
   const opens = (l: Lesson) => canOpen(app.profile, l, all);
@@ -133,7 +134,7 @@ export function learnScreen(app: App) {
       if (id === 'basics') unlock(app.profile, 'student');
       if ((Object.keys(tables) as Lesson[]).every((l) => OPTIONAL_LESSONS.includes(l) || app.profile.lessonsDone.includes(l))) unlock(app.profile, 'student-of-the-game');
       saveProfile(app.profile);
-      state.textContent = tr('Completed');
+      refresh();
       window.setTimeout(() => void promptSignIn('lesson', { points: app.profile.jongPoints }), 1500);
     },
     // Basics leads to the plain guided game; Words and Tradition each have a guided game of their own.
@@ -146,7 +147,7 @@ export function learnScreen(app: App) {
     onOpenLesson: (l) => open(l as Lesson)(),
     onStart: () => {
       markLessonOpened(id);
-      state.textContent = tr('In progress');
+      refresh();
     },
     autostart: takeAutostart(),
   });
@@ -208,7 +209,28 @@ export function learnScreen(app: App) {
 
   const isDone = (l: Level) => (l.guided ? app.profile.lessonsDone.includes('guided') : !!l.lesson && app.profile.lessonsDone.includes(l.lesson));
   const required = levels.filter((l) => !l.optional);
-  const completed = required.filter(isDone).length;
+  const counts = () => {
+    const completed = required.filter(isDone).length;
+    return [
+      h('p', { class: 'lx-sub' }, tr('Build your skills, one level at a time. {done} of {total} completed.', { done: completed, total: required.length })),
+      h('div', { class: 'lx-progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(required.length), 'aria-valuenow': String(completed) }, h('i', { style: { width: `${(completed / Math.max(1, required.length)) * 100}%` } })),
+    ];
+  };
+  let shownCounts = counts();
+  let choices = learnChoices(app, levels, open, isDone);
+  let pathEl = learningPath(app, levels, id, open, isDone, opens);
+  refresh = () => {
+    if (!pathEl.isConnected) return;
+    const c = counts();
+    shownCounts.forEach((el, k) => el.replaceWith(c[k]));
+    shownCounts = c;
+    const ch = learnChoices(app, levels, open, isDone);
+    choices.replaceWith(ch);
+    choices = ch;
+    const p = learningPath(app, levels, id, open, isDone, opens);
+    pathEl.replaceWith(p);
+    pathEl = p;
+  };
   return h(
     'div',
     { class: 'page learn' },
@@ -220,13 +242,12 @@ export function learnScreen(app: App) {
         { class: 'lx-head-text' },
         h('p', { class: 'eyebrow' }, tr('Mahjong Academy')),
         h('h2', {}, tr('Learning path')),
-        h('p', { class: 'lx-sub' }, tr('Build your skills, one level at a time. {done} of {total} completed.', { done: completed, total: required.length })),
-        h('div', { class: 'lx-progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(required.length), 'aria-valuenow': String(completed) }, h('i', { style: { width: `${(completed / Math.max(1, required.length)) * 100}%` } })),
+        ...shownCounts,
       ),
       h('div', { class: 'learn-head-links' }, placementLink(app.ctx()), h('button', { class: 'btn sm ghost', onclick: () => app.go('versions') }, tr('All variations: the Mahjong family'), h('span', { html: icon('chevronRight') }))),
     ),
     placementOffer(app.ctx()),
-    learnChoices(app, levels, open, isDone),
+    choices,
     askMeiSection(app),
     h(
       'section',
@@ -234,7 +255,7 @@ export function learnScreen(app: App) {
       nowLearning(levels, id),
       body,
     ),
-    learningPath(app, levels, id, open, isDone, opens),
+    pathEl,
   );
 }
 
