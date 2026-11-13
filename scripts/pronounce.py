@@ -32,7 +32,11 @@ VI = {
 # Cantonese and others that English spelling gets wrong.
 OTHER = {'faan': 'fˈɑːn', 'Faan': 'fˈɑːn', 'tai': 'tˈaɪ', 'han': 'hˈɑn', 'Han': 'hˈɑn',
          # India Rules
-         'qwong': 'kwˈɒŋ', 'Qwong': 'kwˈɒŋ', 'crochet': 'kɹoʊʃˈeɪ', 'crochets': 'kɹoʊʃˈeɪz', 'Ulta Pulta': 'ˈʊltə pˈʊltə'}
+         'qwong': 'kwˈɒŋ', 'Qwong': 'kwˈɒŋ', 'crochet': 'kɹoʊʃˈeɪ', 'crochets': 'kɹoʊʃˈeɪz', 'Ulta Pulta': 'ˈʊltə pˈʊltə',
+         # Found by the 2026-11-13 audio check (speech recognition against the captions): the English pass said
+         # "sight pairs", "zung yoong", "BUN-ot", "MADJ-liz" and "SITCH-yoo-en".
+         'Siete Pares': 'sjˈɛte pˈɑɾes', 'Zung Jung': 'zˈʊŋ ʤˈʊŋ', 'bunot': 'bʊnˈoʊt', 'Bunot': 'bʊnˈoʊt',
+         'Majlis': 'mˈæʤlɪs', 'majlis': 'mˈæʤlɪs', 'Sichuan': 'sɪʧwˈɑːn'}
 
 WORDS = {**OTHER, **VI, **ZH, **JA}
 _PAT = re.compile(r'(?<![\w])(' + '|'.join(sorted(map(re.escape, WORDS), key=len, reverse=True)) + r')(?![\w])')
@@ -61,7 +65,7 @@ def phonemes(text: str, phonemize) -> str:
 
 
 # The words the plain English pass got wrong: lines with any of them are re-recorded.
-_WRONG = re.compile(r'(?<![\w])(Chi|chi|Pon|Kan|Gang|Peng|Pong|Hu|Zimo|Ăn|ăn|Phỗng|Chiếu|Ù|phán|Phán|Xin chào|Mạt chược|Khung|萬|發|中|Dong|Nan|Xi|Bei|Zhong|Fa|Bai|yakuman|shanten|suji|Pin|Sou|Man|qwong|Qwong|crochet|crochets|Ulta Pulta)(?![\w])')
+_WRONG = re.compile(r'(?<![\w])(Chi|chi|Pon|Kan|Gang|Peng|Pong|Hu|Zimo|Ăn|ăn|Phỗng|Chiếu|Ù|phán|Phán|Xin chào|Mạt chược|Khung|萬|發|中|Dong|Nan|Xi|Bei|Zhong|Fa|Bai|yakuman|shanten|suji|Pin|Sou|Man|qwong|Qwong|crochet|crochets|Ulta Pulta|Siete Pares|Zung Jung|bunot|Bunot|Majlis|majlis|Sichuan)(?![\w])')
 
 
 def has_special(text: str) -> bool:

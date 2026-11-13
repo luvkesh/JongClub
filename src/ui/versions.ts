@@ -631,9 +631,9 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
     h(
       'footer',
       { class: 'vp-foot' },
-      h('button', { class: 'link', onclick: hop(prev) }, `‹ ${info(prev.id).short}`),
+      h('button', { class: 'link', onclick: hop(prev) }, `‹ ${tr(info(prev.id).short)}`),
       v.id !== 'american' ? h('button', { class: 'link', onclick: leave(() => ctx.openLesson('rounds')) }, done('rounds') ? tr('Winds and rounds ✓') : tr('Winds and rounds lesson')) : h('span', {}),
-      h('button', { class: 'link', onclick: hop(next) }, `${info(next.id).short} ›`),
+      h('button', { class: 'link', onclick: hop(next) }, `${tr(info(next.id).short)} ›`),
     ),
   );
   o.append(card);

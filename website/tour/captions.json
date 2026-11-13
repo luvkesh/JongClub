@@ -71,6 +71,24 @@
       "text": "And after every game, I'll show you what you did right, and what to do better."
     }
   ],
+  "askmei": [
+    {
+      "t": 0.12,
+      "text": "Got a question?"
+    },
+    {
+      "t": 1.87,
+      "text": "Ask me."
+    },
+    {
+      "t": 3.35,
+      "text": "In the Academy you can ask me anything about Mahjong, from a single rule to the whole of India Rules."
+    },
+    {
+      "t": 9.96,
+      "text": "I answer from the club's own rule sheets and lessons, and I'll point you to the lesson that explains it."
+    }
+  ],
   "play": [
     {
       "t": 0.12,
@@ -221,7 +239,7 @@
       "text": "A majlis in Dubai, a parlour in Tokyo, a Hong Kong tea house and the Imperial hall."
     },
     {
-      "t": 8.2,
+      "t": 8.23,
       "text": "Each one has its own light, chairs and sounds."
     }
   ],
@@ -232,10 +250,10 @@
     },
     {
       "t": 3.29,
-      "text": "There are eighteen destinations, each with its own rules, lesson and challenges that earn stamps."
+      "text": "There are thirty-four destinations, each with its own rules, lesson and challenges that earn stamps."
     },
     {
-      "t": 9.38,
+      "t": 9.65,
       "text": "Win in Hong Kong, Tokyo or a Dubai club, and that city's signature room opens for you."
     }
   ],
@@ -757,11 +775,11 @@
       "text": "The Dubai Majlis is hospitality made into a room."
     },
     {
-      "t": 4.03,
+      "t": 3.91,
       "text": "Carved mashrabiya arches, a hand-laid zellige floor and a pierced brass lantern casting patterns at desert sunset."
     },
     {
-      "t": 11.85,
+      "t": 11.72,
       "text": "Pure warmth."
     }
   ],
@@ -865,11 +883,11 @@
       "text": "Al Fahidi Majlis takes you back in time."
     },
     {
-      "t": 3.27,
+      "t": 3.18,
       "text": "Coral-stone walls, a palm-frond ceiling, sadu cushions and the scent of cardamom coffee."
     },
     {
-      "t": 9.14,
+      "t": 9.06,
       "text": "Old Dubai at its most welcoming."
     }
   ]

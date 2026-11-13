@@ -196,9 +196,9 @@ class Narrator {
   }
 
   /** Play one recorded clip to its end (or until stopped). */
-  private playClip(url: string): Promise<void> {
+  private playClip(url: string, volume = 1): Promise<void> {
     return new Promise<void>((resolve) => {
-      const a = playClip(url);
+      const a = playClip(url, volume);
       this.audio = a;
       this.release = resolve;
       void a.done.then(() => resolve());
@@ -219,12 +219,13 @@ class Narrator {
     const run = ++this.run;
     const urls = await Promise.all(parts.map((p) => ('line' in p ? narrationClip(clipKey(p.line)) : callerClipAsync('mei', partText(p)))));
     if (run !== this.run) return;
-    const play = urls.filter((u): u is string => !!u);
+    // Her tile names and call words are recorded table calls, levelled 2 dB above her lessons (scripts/audio_level.py): bring them down to match.
+    const play = urls.flatMap((u, i) => (u ? [{ u, v: 'line' in parts[i] ? 1 : 0.8 }] : []));
     if (!play.length) return;
     sound.duck(true);
     for (let i = 0; i < play.length; i++) {
       if (run !== this.run) return;
-      await this.playClip(play[i]);
+      await this.playClip(play[i].u, play[i].v);
       // A small breath between a tile name and the sentence after it.
       if (i < play.length - 1 && run === this.run) await new Promise((r) => window.setTimeout(r, 140));
     }

@@ -1,16 +1,17 @@
 // The one tile shape every 3D tile shares: the table, the Atelier portraits, the mini-games and the
 // website's showcase pictures all build their tiles from here, so a tile looks the same wherever it
-// is shown. A tile is two slabs that meet flush (the body, rounded only at the front, and the back,
-// rounded only at the back), so no groove or dark line runs round the join; the face is a rounded
-// plate set inside a polished metal bezel that shadeBody (tileMaterials.ts) lays on the body's front.
+// is shown. The tile is modelled in Blender (scripts/blender/tile_model.py; the Cycles renders of the
+// tiles use the very same model): one block bevelled on every edge, cut flush into the body and the
+// back so no groove or dark line runs round the join, and a domed metal bezel set round the face plate.
 
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { TILE_MESH, type TileMeshPart } from './tileMesh.gen';
 
 export const TW = 0.3,
   TH = 0.4,
   TD = 0.22;
-/** Radius of the slabs' rounded edges. */
+/** Radius of the block's bevelled edges (tile_model.py EDGE_R). */
 export const EDGE_R = 0.03;
 /** The body slab's depth range (z): TD * 0.64 deep, its front at the tile's front. */
 export const BODY_Z0 = TD / 2 - TD * 0.64,
@@ -20,34 +21,38 @@ export const FACE_HW = 0.116,
   FACE_HH = 0.161,
   FACE_R = 0.016,
   FACE_LIFT = 0.0012;
-/**
- * The bezel round the face plate (half sizes of its outer edge, corner radius, width). The plate covers
- * its inner part; the rest shows as a polished band with a rounded profile, all inside the flat front.
- */
-export const BEZEL_HW = 0.1205,
-  BEZEL_HH = 0.1665,
-  BEZEL_R = 0.022,
-  BEZEL_W = 0.0105;
 
 /**
- * A slab `d` deep, rounded on one side only: at the front (+z) when `front`, else at the back. The other
- * end is cut square so two slabs meet flush. Centred on z = 0.
+ * Blender's tile (scripts/blender/tile_model.py, exported into tileMesh.gen.ts): the block bevelled on
+ * every edge and cut flush into the body and the back, and the bezel, a domed band of real geometry
+ * round the face plate. `metal` marks the bezel's vertices (shadeBody gives them the set's trim metal).
+ * UVs are box-projected as the old rounded box's were: the back's frame spans the whole back face.
  */
-function slab(w: number, h: number, d: number, seg: number, front: boolean) {
-  const g = new RoundedBoxGeometry(w, h, d * 2, seg, EDGE_R);
-  const p = g.attributes.position;
-  const n = g.attributes.normal;
-  for (let i = 0; i < p.count; i++) {
-    let z = p.getZ(i);
-    if (front ? z < 0 : z > 0) {
-      z = 0;
-      // The squared-off end lies inside the other slab: its normals point straight out of it.
-      n.setXYZ(i, 0, 0, front ? -1 : 1);
-    }
-    p.setZ(i, (front ? z - d / 2 : z + d / 2));
+function fromBlender(part: TileMeshPart, metal = 0) {
+  const g = new THREE.BufferGeometry();
+  const n = part.p.length / 3;
+  const uv = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) {
+    const x = part.p[i * 3],
+      y = part.p[i * 3 + 1],
+      z = part.p[i * 3 + 2];
+    const nx = part.n[i * 3],
+      ny = part.n[i * 3 + 1],
+      nz = part.n[i * 3 + 2];
+    const ax = Math.abs(nx) > Math.abs(ny) ? (Math.abs(nx) > Math.abs(nz) ? 0 : 2) : Math.abs(ny) > Math.abs(nz) ? 1 : 2;
+    let u: number, v: number;
+    if (metal) (u = 0.5), (v = 0.5);
+    else if (ax === 2) (u = nz > 0 ? 0.5 + x / TW : 0.5 - x / TW), (v = 0.5 + y / TH);
+    else if (ax === 0) (u = 0.5 + (z / TD) * (nx < 0 ? 1 : -1)), (v = 0.5 + y / TH);
+    else (u = 0.5 + x / TW), (v = 0.5 + z / TD);
+    uv[i * 2] = u;
+    uv[i * 2 + 1] = v;
   }
-  g.computeBoundingBox();
-  g.computeBoundingSphere();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(part.p, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(part.n, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  g.setAttribute('metal', new THREE.BufferAttribute(new Float32Array(n).fill(metal), 1));
+  g.setIndex(part.t);
   return g;
 }
 
@@ -73,14 +78,18 @@ function facePlate(w: number, h: number, r: number) {
 }
 
 /**
- * The tile's three parts, in tile space (face toward +z, centred): `body` (the face block), `back` (the
- * coloured back) and `face` (the plate the face texture goes on). `seg`: smoothness of the rounded edges.
+ * The tile's three parts, in tile space (face toward +z, centred): `body` (the face block, with the
+ * bezel), `back` (the coloured back) and `face` (the plate the face texture goes on). `seg`: smoothness;
+ * up to 3 is the table's lean model, above that the finer one the portraits use.
  */
 export function tileGeometry(seg = 3) {
-  const body = slab(TW, TH, BODY_Z1 - BODY_Z0, seg, true);
-  body.translate(0, 0, (BODY_Z0 + BODY_Z1) / 2);
-  const back = slab(TW, TH, BODY_Z0 + TD / 2, seg, false);
-  back.translate(0, 0, (BODY_Z0 - TD / 2) / 2);
+  const lod = TILE_MESH[seg > 3 ? 'hi' : 'lo'];
+  const body = mergeGeometries([fromBlender(lod.body), fromBlender(lod.rim, 1)])!;
+  body.computeBoundingBox();
+  body.computeBoundingSphere();
+  const back = fromBlender(lod.back);
+  back.computeBoundingBox();
+  back.computeBoundingSphere();
   const face = facePlate(FACE_HW * 2, FACE_HH * 2, FACE_R);
   face.translate(0, 0, TD / 2 + FACE_LIFT);
   return { body, back, face };

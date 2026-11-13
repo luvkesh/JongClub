@@ -336,7 +336,7 @@ export function openRanked(ctx: AppCtx) {
       h('p', { class: 'eyebrow' }, tr('Ranked')),
       h('h3', {}, `${league.icon} ${league.name} · ${fmt(rating)}`),
       h('p', { class: 'muted small' }, games < 10 ? tr('Placement: {n} of 10 games played. Your rating moves faster until then.', { n: games }) : tr('{n} ranked {name} games.', { n: games, name: vinfo(variation).short })),
-      h('div', { class: 'seg', role: 'radiogroup', 'aria-label': tr('Variation') }, ...playable.map((v) => h('button', { class: v.id === variation ? 'on' : '', role: 'radio', 'aria-checked': String(v.id === variation), onclick: () => ((variation = v.id), render()) }, `${v.flag} ${v.short}`))),
+      h('div', { class: 'seg', role: 'radiogroup', 'aria-label': tr('Variation') }, ...playable.map((v) => h('button', { class: v.id === variation ? 'on' : '', role: 'radio', 'aria-checked': String(v.id === variation), onclick: () => ((variation = v.id), render()) }, `${v.flag} ${tr(v.short)}`))),
       h('ul', { class: 'rules-list' }, h('li', {}, tr('One East round against three club members near your rating.')), h('li', {}, tr('JongBot is off and turns are timed (20 seconds).')), h('li', {}, tr('Your rating changes by where you finish against each opponent. Nothing you buy ever changes it.'))),
       h('p', { class: 'small' }, tr('Your table: '), field.map((m) => `${m.name} (${fmt(m.ratings[variation as keyof ClubMember['ratings']] ?? m.rating)})`).join(', ')),
       h(
@@ -497,7 +497,7 @@ export function tournamentsScreen(ctx: AppCtx): HTMLElement {
       h(
         'section',
         { class: 'section t-live' },
-        h('div', { class: 'section-head' }, h('h3', {}, `${current.name} · ${vinfo(current.variation).flag} ${vinfo(current.variation).short}`), h('p', { class: 'muted' }, current.finished ? tr('Finished') : tr('Round {n} · you are {rank} of {total}', { n: Math.min(current.roundsPlayed + 1, current.swissRounds + (FORMATS[current.formatId].finalTable ? 1 : 0)), rank: me?.rank ?? '?', total: rows.length }))),
+        h('div', { class: 'section-head' }, h('h3', {}, `${current.name} · ${vinfo(current.variation).flag} ${tr(vinfo(current.variation).short)}`), h('p', { class: 'muted' }, current.finished ? tr('Finished') : tr('Round {n} · you are {rank} of {total}', { n: Math.min(current.roundsPlayed + 1, current.swissRounds + (FORMATS[current.formatId].finalTable ? 1 : 0)), rank: me?.rank ?? '?', total: rows.length }))),
         h(
           'div',
           { class: 'table-wrap' },
@@ -540,7 +540,7 @@ export function tournamentsScreen(ctx: AppCtx): HTMLElement {
         'article',
         { class: `t-card ${gate.locked ? 'locked' : ''}` },
         h('div', { class: 't-head' }, h('h3', {}, f.name), h('span', { class: 'chip sm' }, id === 'quick' ? tr('Now') : when.toLocaleString(lang(), { weekday: 'short', hour: '2-digit', minute: '2-digit' }))),
-        h('dl', { class: 't-facts' }, h('dt', {}, tr('Entry')), h('dd', {}, f.entry ? tr('{n} JP', { n: fmt(f.entry) }) : tr('Free')), h('dt', {}, tr('Players')), h('dd', {}, String(f.maxPlayers)), h('dt', {}, tr('Game')), h('dd', {}, `${v.flag} ${v.short}`), h('dt', {}, tr('Prize')), h('dd', {}, prizeText)),
+        h('dl', { class: 't-facts' }, h('dt', {}, tr('Entry')), h('dd', {}, f.entry ? tr('{n} JP', { n: fmt(f.entry) }) : tr('Free')), h('dt', {}, tr('Players')), h('dd', {}, String(f.maxPlayers)), h('dt', {}, tr('Game')), h('dd', {}, `${v.flag} ${tr(v.short)}`), h('dt', {}, tr('Prize')), h('dd', {}, prizeText)),
         h('p', { class: 'muted small' }, f.formatText),
         h('details', {}, h('summary', {}, tr('Rules')), h('p', { class: 'small' }, f.rulesText)),
         gate.locked

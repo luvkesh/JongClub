@@ -73,7 +73,8 @@ export function warmClips(urls: Iterable<string>) {
 
 function viaElement(url: string, volume: number): PlayingClip {
   const a = new Audio(url);
-  a.volume = Math.min(1, volume);
+  // Follows the Voices slider here too (iPhone ignores element volume; the Web Audio path below does not).
+  a.volume = Math.max(0, Math.min(1, volume * sound.volumes.voices));
   let settle!: () => void;
   const done = new Promise<void>((r) => (settle = r));
   a.onended = a.onerror = () => settle();
@@ -112,7 +113,8 @@ export function playClip(url: string, volume = 1): PlayingClip {
     src.buffer = buf;
     const g = ctx.createGain();
     g.gain.value = volume;
-    src.connect(g).connect(ctx.destination);
+    // Through the Voices bus, so the Voices slider governs Mei and the callers.
+    src.connect(g).connect(sound.voiceOut() ?? ctx.destination);
     src.onended = () => settle();
     src.start();
   });

@@ -354,3 +354,25 @@ describe('mass simulation', () => {
     for (const v of VARIATIONS) checkReplay(stressMatch(v.id, 31337, { length: v.id === 'american' ? 'oneHand' : 'eastRound' }));
   }, 300_000);
 });
+
+// The five table options (self-draw only, multiple winners, winner takes all, cumulative leaderboard,
+// team play) are not in a profile's own houseRules, so randomHouseRules above never switches them on.
+describe('table options under mass simulation', () => {
+  const COMBOS: Record<string, string>[] = [
+    { selfDrawOnly: 'on' },
+    { multipleWinners: 'on' },
+    { winnerTakesAll: 'on' },
+    { teamPlay: 'on' },
+    { multipleWinners: 'on', winnerTakesAll: 'on', teamPlay: 'on', cumulativeLeaderboard: 'on' },
+  ];
+  for (const v of VARIATIONS) {
+    it(`${v.id}: every table option keeps every invariant`, () => {
+      COMBOS.forEach((houseRules, i) => {
+        for (let j = 0; j < 3; j++) {
+          const m = stressMatch(v.id, 4242 + i * 97 + j * 13, { length: v.id === 'american' || j < 2 ? 'oneHand' : 'eastRound', houseRules });
+          if (j === 2) checkReplay(m);
+        }
+      });
+    }, 900_000);
+  }
+});

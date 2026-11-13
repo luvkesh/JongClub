@@ -1,6 +1,6 @@
 // Packs the embedded audio into sidecar files for the Artifact build:
 // dist-artifact/audio/<name>.json ({ parts, index: key -> [part, offset, length] }) and <name>-<part>.mp3.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 // Each .mp3 part stays under 12 MB (the host serves files up to 15 MB).
 const PART = 12 * 1024 * 1024;
@@ -27,7 +27,12 @@ function pack(name, entries) {
   console.log(`audio/${name}: ${entries.length} clips in ${parts.length} part(s), ${(total / 1024) | 0} KB`);
 }
 
-const narr = readFileSync('src/audio/narration.gen.ts', 'utf8');
+// Mei's narration lives in numbered parts, src/audio/narration.gen.<n>.ts (each under GitHub's size
+// limit, written by scripts/record-narration.py); an old single narration.gen.ts still works.
+const narrFiles = readdirSync('src/audio')
+  .filter((f) => /^narration\.gen\.\d+\.ts$/.test(f))
+  .sort((a, b) => Number(a.split('.')[2]) - Number(b.split('.')[2]));
+const narr = (narrFiles.length ? narrFiles : ['narration.gen.ts']).map((f) => readFileSync(`src/audio/${f}`, 'utf8')).join('\n');
 pack('narration', [...narr.matchAll(/"([0-9a-z]+)": '(data:audio\/mpeg;base64,[^']+)'/g)].map((m) => [m[1], m[2]]));
 
 // Mei's Atelier pitches, fetched only when an item's View pop-over opens.

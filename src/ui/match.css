@@ -587,6 +587,12 @@
 .seat-pp-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .seat-pp-tag { flex: none; padding: 1px 5px; border-radius: 4px; background: rgba(212, 85, 63, 0.28); border: 1px solid rgba(212, 85, 63, 0.6); color: #ffd9c9; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
 @media (max-width: 600px) { .seat-pp { max-width: 120px; font-size: 10px; } }
+/* Upright phones: the side plates are a narrow column, so the read stacks inside it instead of running
+   past the plate and off the screen edge ("LIKELY Like Nu…" cut at the right edge). */
+@media (max-width: 600px) and (orientation: portrait) {
+  .hud .seat-1 .seat-pp, .hud .seat-3 .seat-pp { max-width: 100%; flex-direction: column; align-items: flex-start; gap: 2px; white-space: normal; }
+  .hud .seat-1 .seat-pp-name, .hud .seat-3 .seat-pp-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: break-word; hyphens: auto; line-height: 1.15; }
+}
 .jongbot .bot-call { margin-top: 6px; padding: 5px 8px; border-inline-start: 3px solid var(--brass-hi); background: rgba(201, 162, 74, 0.12); border-radius: 4px; font-size: 12.5px; line-height: 1.35; }
 /* Your sets at the left of the tray's extras line, set-aside flowers at the right, so the two never merge. */
 .tray-extras > .tray-sets { margin-right: auto; }
