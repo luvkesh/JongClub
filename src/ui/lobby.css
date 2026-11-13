@@ -130,7 +130,7 @@
 .ts-bar-more > span:first-child .ico { width: 17px; height: 17px; color: var(--brass-hi); }
 .ts-bar-more-t { font: 500 14.5px var(--ui); white-space: nowrap; }
 .ts-bar-more-d { font-size: 13px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ts-bar-more-t + .ts-bar-more-d::before { content: '·'; margin-right: 10px; }
+.ts-bar-more-t + .ts-bar-more-d::before { content: '·'; margin-inline-end: 10px; }
 .ts-bar-more .ts-chev { margin-left: auto; color: var(--brass-hi); }
 .ts-bar-more .ts-chev .ico { width: 16px; height: 16px; }
 .ts-bar-more[aria-expanded='true'] .ts-chev { transform: rotate(180deg); }

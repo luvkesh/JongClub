@@ -3458,6 +3458,14 @@ export class MatchController {
       card.append(h('h4', { class: 'instant-head' }, tr('Paid on the spot')), list);
     }
     const deltas = h('div', { class: 'deltas' });
+    // The dealer often pays more than the others (Taiwanese dealer tai, East pays double): name that part,
+    // measured against what another player who neither won nor discarded paid the same winner.
+    const dealerExtra = (seat: number): number => {
+      if (r.type !== 'win' || r.winner === undefined || seat !== g.dealer || seat === r.winner || (r.winners?.length ?? 1) > 1 || seat === r.discarder) return 0;
+      const paid = (s: number) => r.payments.filter((x) => x.from === s && x.to === r.winner && !x.reason).reduce((a, x) => a + x.amount, 0);
+      const ref = g.players.map((_, s) => s).find((s) => s !== seat && s !== r.winner && s !== r.discarder && paid(s) > 0);
+      return ref === undefined ? 0 : Math.max(0, paid(seat) - paid(ref));
+    };
     g.players.forEach((p, i) => {
       const hd = r.deltas[i];
       const inst = r.instant?.length ? netOf(r.instant, i) : 0;
@@ -3470,7 +3478,9 @@ export class MatchController {
         ? h('span', { class: 'delta-split' }, inst ? tr('hand {a} · on the spot {b} · bank {c}', { a: signed(hd - inst), b: signed(inst), c: signed(bank) }) : tr('hand {a} · bank {b}', { a: signed(hd), b: signed(bank) }))
         : r.instant?.length
           ? h('span', { class: 'delta-split' }, tr('hand {a} · on the spot {b}', { a: signed(hd - inst), b: signed(inst) }))
-          : '';
+          : dealerExtra(i)
+            ? h('span', { class: 'delta-split' }, tr('hand {a} · as dealer {b}', { a: signed(hd + dealerExtra(i)), b: signed(-dealerExtra(i)) }))
+            : '';
       deltas.append(h('div', { class: 'delta-row' }, h('span', {}, i === this.me ? tr('{name} (you)', { name: p.name }) : p.name, split), h('span', { class: `num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}` }, signed(d)), h('span', { class: 'num muted' }, fmt(p.score))));
     });
     card.append(deltas);
@@ -3488,7 +3498,19 @@ export class MatchController {
       // The hand the table frames when the summary folds away: the winner's, or the one picked with View in All hands.
       let framed = winner ?? (this.spectator ? 0 : this.me);
       const reframe = () => t.frameHand(framed, openArea(o, card));
-      const hide = summaryToggle(o, cont, { onHide: reframe, onShow: reframe, strip: card.querySelector('.win-hand')?.cloneNode(true) as HTMLElement | undefined });
+      // Wide screens dock the summary at the right, where it covered the top player's plate: step that plate left of it.
+      const topPlate = this.root.querySelector<HTMLElement>('.seat-2');
+      const clearTopPlate = () => {
+        if (!topPlate) return;
+        topPlate.style.translate = '';
+        if (o.hidden || !o.classList.contains('win-sheet') || o.classList.contains('peek')) return;
+        const c = card.getBoundingClientRect();
+        const p = topPlate.getBoundingClientRect();
+        const over = p.right + 12 - c.left;
+        if (over > 0 && p.bottom > c.top && p.width) topPlate.style.translate = `${-Math.min(over, Math.max(0, p.left - 12))}px 0`;
+      };
+      const reframeAll = () => (reframe(), clearTopPlate());
+      const hide = summaryToggle(o, cont, { onHide: reframeAll, onShow: reframeAll, strip: card.querySelector('.win-hand')?.cloneNode(true) as HTMLElement | undefined });
       // View (All hands): fold the summary away and frame that player's whole hand in 3D on the table.
       const viewSeat = (seat: number) => {
         framed = seat;
@@ -3530,10 +3552,12 @@ export class MatchController {
       cont.focus({ preventScroll: true });
       // Beside a panel docked at the side (wide screens), the camera frames the winning hand in the open space.
       if (hide && o.classList.contains('win-sheet') && card.getBoundingClientRect().left > window.innerWidth * 0.35) requestAnimationFrame(reframe);
+      requestAnimationFrame(clearTopPlate);
       this.resolveHuman = () => resolve();
     });
     o.hidden = true;
     o.classList.remove('win-sheet', 'peek', 'free-cam');
+    this.root.querySelector<HTMLElement>('.seat-2')?.style.removeProperty('translate');
     endFreeCam();
     t.splitPaused = false;
     if (!over) t.setView('seat', 0.8);

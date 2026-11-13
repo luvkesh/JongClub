@@ -85,3 +85,7 @@ button.pl-start:hover .pl-start-go .ico { transform: translateX(3px); }
   .pl-head h3 { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) { .pl-way:hover .mode-icon { animation: none; } }
+
+/* Start playing uses the shared lux row (flex, centred, equal cards). The old grid above left a hole on
+   iPad portrait: two capped cards sat at the left of 1fr cells and the third wrapped to its own row. */
+.pl-starts.lux-row { display: flex; gap: clamp(10px, 1.4vw, 18px); }
