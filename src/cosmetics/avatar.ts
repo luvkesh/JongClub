@@ -4,6 +4,7 @@
 
 import { SKIN_TONES, type AvatarSpec } from './catalog';
 import { SEASON_FRAME_RINGS } from './seasonal';
+import { tr } from '../i18n';
 
 let uid = 0;
 
@@ -89,7 +90,7 @@ export function avatarSvg(spec: AvatarSpec, size = 64): string {
   if (frame) out.push(frameRing(spec.frame, frame, id, R));
   else out.push(`<circle cx="50" cy="50" r="${R - 0.4}" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.8"/>`);
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="Avatar"><defs>${defs.join('')}</defs>${out.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="${tr('Avatar')}"><defs>${defs.join('')}</defs>${out.join('')}</svg>`;
 }
 
 /** Picked once per page load, so a bot's look is random but holds for the whole session. */

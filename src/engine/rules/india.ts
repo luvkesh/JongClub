@@ -12,8 +12,9 @@
 //
 // A table plays all four rounds, any one or any mix of them, or Classic: the East round's game
 // without passports in all four (house rule indiaRounds).
-// The deal passes after every game, won or drawn: East never keeps it (the user,
-// 2026-10-25, over the book's extra game after a draw). East always pays and receives double. Flowers and seasons are
+// The deal passes after every game, won or drawn: East never keeps it (the user, 2026-10-25),
+// except that a drawn LAST game with buy money in the bank gets one extra game, East keeping the
+// deal (the book, user rulings 2026-11-13; game.nextRound); money still in the bank then goes to first place. East always pays and receives double. Flowers and seasons are
 // paid by everyone at the end of every game, drawn games included.
 //
 // Pieces (the book's words): pung, kong, chow (a pure run), mixed chow (a

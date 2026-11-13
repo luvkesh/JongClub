@@ -170,7 +170,7 @@ export function buy(ctx: AppCtx, c: Cosmetic, done: () => void = () => ctx.go('a
               },
               tr('Acquire and equip'),
             )
-          : '',
+          : h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), ctx.go('store')) }, tr('Earn Jong Points')),
       ),
     ),
   );

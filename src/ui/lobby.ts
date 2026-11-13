@@ -22,7 +22,7 @@ import { clear, h } from './dom';
 import { icon } from './icons';
 import type { TableConfig } from './match';
 import { placementField } from './placementUi';
-import { tr } from '../i18n';
+import { tr, trn } from '../i18n';
 import { houseRuleTip } from './houseRuleTips';
 
 export interface SetupDeps {
@@ -308,7 +308,7 @@ function houseRules(profile: RuleProfile, cfg: TableConfig, goulashOn: boolean):
       {},
       h('span', { html: icon('sliders') }),
       h('span', { class: 'ts-fold-t' }, tr('House rules')),
-      h('span', { class: 'ts-fold-n' }, rules.length ? (changed ? tr('{n} options, {changed} changed', { n: rules.length, changed }) : tr('{n} options', { n: rules.length })) : tr('none for this rule set')),
+      h('span', { class: 'ts-fold-n' }, rules.length ? (changed ? tr('{n} options, {changed} changed', { n: rules.length, changed }) : trn(rules.length, '{n} option', '{n} options')) : tr('none for this rule set')),
       h('span', { class: 'ts-chev', html: icon('chevronDown') }),
     ),
   );

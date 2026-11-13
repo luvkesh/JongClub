@@ -14,13 +14,18 @@ import { clear, h, tileImg } from './dom';
 import type { TableConfig } from './match';
 import './placement.css';
 import { tr } from '../i18n';
+import { lt } from '../i18n/lessons';
 
-const lessonTitle = (id: string) => (id === 'guided' ? tr('Your first guided game') : LESSONS[id]?.title ?? id);
+const lessonTitle = (id: string) => (id === 'guided' ? tr('Your first guided game') : LESSONS[id] ? lt(LESSONS[id].title) : id);
 
-/** The table the result suggests, or null when the guided game with Mei is the place to start. */
+/**
+ * The table the result suggests, or null when the guided game with Mei is the place to start.
+ * Always an India Rules table: the questions and the Academy teach India Rules, and mixing in
+ * Chinese Classical here confuses a new player (user 2026-11-13).
+ */
 export function placementTable(ctx: AppCtx, r: PlacementResult | null = loadPlacement()): TableConfig | null {
   if (!r?.suggestion.length) return null;
-  return { ...ctx.tableFor('classic'), name: 'Jade Room', difficulty: r.suggestion.difficulty, length: r.suggestion.length };
+  return { ...ctx.tableFor('india'), difficulty: r.suggestion.difficulty, length: r.suggestion.length };
 }
 
 /** Start where the result suggests: a table at that level, or the guided game. */
@@ -46,8 +51,10 @@ export function openPlacement(ctx: AppCtx) {
   const answers: number[] = [];
   // Mei reads every card aloud; closing the test (or moving on) cuts her off.
   let step = 0;
+  let left = false;
   const close = () => {
     step++;
+    left = true;
     narrator.stop();
     o.hidden = true;
   };
@@ -123,6 +130,17 @@ export function openPlacement(ctx: AppCtx) {
     ctx.save();
     savePlacement(r);
     document.querySelector('.placement-offer')?.remove();
+    // Learn behind the dialog shows the lessons now marked done and the link to retake, once the
+    // result is dismissed with Escape or the backdrop (its own buttons go on elsewhere).
+    const behind = new MutationObserver(() => {
+      if (!o.hidden && card.isConnected) return;
+      behind.disconnect();
+      if (o.hidden && card.isConnected && !left && document.querySelector('.page.learn')) {
+        narrator.stop();
+        ctx.go('learn');
+      }
+    });
+    behind.observe(o, { attributes: true, attributeFilter: ['hidden'], childList: true });
     const line = placementVerdict(r.score);
     void narrator.say(placementResultLine(r.score, r.total));
     clear(card).append(

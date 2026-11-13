@@ -4,7 +4,7 @@
 // sent unless the player switched that kind on. src/ui/reminders.ts shows them.
 
 import { currentStreak, dailyKey } from './daily';
-import { tr } from '../i18n';
+import { tr, trn } from '../i18n';
 
 export type ReminderKind = 'daily' | 'friend' | 'streak';
 
@@ -62,7 +62,7 @@ export function dueReminders(o: ReminderInput): { due: Reminder[]; log: Reminder
   const playedToday = o.streakDays.some((d) => dailyKey(d) === today);
   const streak = currentStreak(o.streakDays, o.now);
   if (o.prefs.streak && log.streak !== today && !playedToday && streak >= 2 && o.now.getUTCHours() >= STREAK_FROM_UTC_HOUR) {
-    due.push({ kind: 'streak', title: tr('Your {n}-day streak ends tonight', { n: streak }), body: tr('One game or one daily challenge keeps it going.'), tag: 'jc-streak' });
+    due.push({ kind: 'streak', title: trn(streak, 'Your {n}-day streak ends tonight', 'Your {n}-day streak ends tonight'), body: tr('One game or one daily challenge keeps it going.'), tag: 'jc-streak' });
     log.streak = today;
   }
   if (o.prefs.friend)

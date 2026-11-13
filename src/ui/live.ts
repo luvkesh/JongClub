@@ -13,7 +13,7 @@ import { icon } from './icons';
 import './live.css';
 import './etiquette.css';
 import type { MatchOptions, SeatSpec, TableConfig } from './match';
-import { tr, trn } from '../i18n';
+import { listSep, tr, trn } from '../i18n';
 
 export interface LiveHost {
   club: Club | null;
@@ -245,7 +245,7 @@ export function waitingRoom(host: LiveHost, s: TableSession) {
       h('div', { class: 'wr-code' }, h('span', { class: 'muted small' }, tr('Table code')), h('strong', {}, s.code.toUpperCase()), h('button', { class: 'btn sm copy-btn', onclick: (e: Event) => void copyWithNote(e.currentTarget as HTMLButtonElement, s.code.toUpperCase()) }, tr('Copy'))),
       s.spectating ? '' : h('div', { class: 'wr-invite' }, h('button', { class: 'btn sm', onclick: (e: Event) => void inviteFriend(e.currentTarget as HTMLButtonElement, s.code, t.title) }, tr('Invite a friend')), h('span', { class: 'muted small' }, tr('Sends a link that opens this table.'))),
       seats,
-      specs.length ? h('p', { class: 'muted small' }, tr('{n} watching: {names}', { n: specs.length, names: specs.map((x) => x.name).join(', ') })) : '',
+      specs.length ? h('p', { class: 'muted small' }, tr('{n} watching: {names}', { n: specs.length, names: specs.map((x) => x.name).join(listSep()) })) : '',
       s.spectating ? h('p', { class: 'muted small' }, tr('You are watching this table. You will see the game from the host’s seat.')) : '',
       !s.hostPresent() ? h('p', { class: 'muted small' }, tr('The host has left this table.')) : '',
       linkLine(s),
@@ -299,7 +299,7 @@ function beginLive(host: LiveHost, s: TableSession) {
     // Spectators: watch from the host's seat, joining at the current hand.
     const snap = s.hostSnapshot();
     opts.viewSeat = 0;
-    if (snap && snap.h > 0) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot };
+    if (snap && snap.h > 0) opts.resume = { hand: snap.h, round: snap.round as never, scores: snap.scores, pot: snap.pot, goulash: !!snap.goulash };
   }
   host.liveStarted(s);
   host.startMatch(t.cfg, opts);

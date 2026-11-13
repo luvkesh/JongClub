@@ -40,7 +40,7 @@ const DIFFS: Difficulty[] = ['beginner', 'casual', 'strategic', 'expert'];
 const PERS: Personality[] = ['teacher', 'shark', 'wall', 'gambler', 'zen'];
 const MAX_HANDS = 160;
 
-function tableIds(s: GameState): number[] {
+export function tableIds(s: GameState): number[] {
   const ids: number[] = [];
   for (const p of s.players) {
     for (const t of p.hand) ids.push(t.id);
@@ -54,7 +54,7 @@ function tableIds(s: GameState): number[] {
   return ids.sort((a, b) => a - b);
 }
 
-function checkTable(g: MahjongGame, total: number): string | null {
+export function checkTable(g: MahjongGame, total: number): string | null {
   const s = g.state;
   const p = g.profile;
   const ids = tableIds(s);
@@ -131,14 +131,14 @@ class Chaos {
 }
 
 /** Fresh game holding a copy of `state` (a snapshot / restore). */
-function restore(profile: RuleProfile, g: MahjongGame): MahjongGame {
+export function restore(profile: RuleProfile, g: MahjongGame): MahjongGame {
   const c = new MahjongGame(profile, g.players.map((p) => p.name), g.state.handSeed);
   c.state = structuredClone(g.state);
   c.matchOver = g.matchOver;
   return c;
 }
 
-function expectedKeep(profile: RuleProfile, res: HandResult, dealer: number): boolean {
+export function expectedKeep(profile: RuleProfile, res: HandResult, dealer: number): boolean {
   if (res.abortive) return true;
   if (profile.goulash && res.type === 'draw') return true;
   const won = res.type === 'win' && (res.winners ?? [res.winner]).includes(dealer);
@@ -379,7 +379,8 @@ export function fuzzMatch(variation: string, seed: number, stats: FuzzStats, for
 
 declare const process: { argv: string[]; exitCode: number; env: Record<string, string | undefined> };
 // Run as a script (vite-node), not when a test imports fuzzMatch.
-const isMain = typeof process !== 'undefined' && !process.env.VITEST;
+// Run as a script, not when a test or another fuzzer (fuzzLibFlag.ts) imports it.
+const isMain = typeof process !== 'undefined' && !process.env.VITEST && !(globalThis as { __fuzzLib?: boolean }).__fuzzLib;
 if (isMain) {
   const args = process.argv.slice(2);
   const per = Number(args[0] ?? 6);

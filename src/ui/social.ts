@@ -11,7 +11,7 @@ import { ACHIEVEMENTS, emptyVarStats, leagueOf, type Profile } from '../progress
 import { dailyKey, variationChallenge } from '../club/daily';
 import type { AppCtx } from './ctx';
 import { clear, fmt, h } from './dom';
-import { tr } from '../i18n';
+import { listSep, tr } from '../i18n';
 import { worldTourScreen } from './worldTour';
 
 /** What is in the set: flowers, jokers of every sort and animals, with the tile count. */
@@ -101,9 +101,9 @@ function destination(ctx: AppCtx, id: string) {
         'ul',
         { class: 'rules-list' },
         h('li', {}, tileSetLine(prof)),
-        h('li', {}, `${tr('Calls: {calls}.', { calls: [prof.calls.chow ? prof.callNames.chow : null, prof.callNames.pung, prof.callNames.kong].filter((x): x is string => !!x).map((x) => tr(x)).join(', ') })} ${prof.callNames.win === prof.callNames.selfDraw ? tr('Call {win} to win, on a discard or your own draw.', { win: tr(prof.callNames.win) }) : tr('Win with {win} on a discard or {self} on your own draw.', { win: tr(prof.callNames.win), self: tr(prof.callNames.selfDraw) })}`),
+        h('li', {}, `${tr('Calls: {calls}.', { calls: [prof.calls.chow ? prof.callNames.chow : null, prof.callNames.pung, prof.callNames.kong].filter((x): x is string => !!x).map((x) => tr(x)).join(listSep()) })} ${prof.callNames.win === prof.callNames.selfDraw ? tr('Call {win} to win, on a discard or your own draw.', { win: tr(prof.callNames.win) }) : tr('Win with {win} on a discard or {self} on your own draw.', { win: tr(prof.callNames.win), self: tr(prof.callNames.selfDraw) })}`),
         h('li', {}, tr('Usual length: {length}.', { length: tr(GAME_LENGTHS[ctx.tableFor(id).length].label) })),
-        prof.houseRules.length ? h('li', {}, tr('House rules: {rules}.', { rules: prof.houseRules.map((r) => tr(r.label)).join(', ') })) : '',
+        prof.houseRules.length ? h('li', {}, tr('House rules: {rules}.', { rules: prof.houseRules.map((r) => tr(r.label)).join(listSep()) })) : '',
       ),
       h('h4', {}, tr('Stamps')),
       h('ul', { class: 'stamps' }, ...stamps.map((s) => h('li', { class: s.done ? 'done' : '' }, h('span', { 'aria-hidden': 'true' }, s.done ? '◆' : '◇'), s.label))),

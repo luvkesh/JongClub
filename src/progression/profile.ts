@@ -419,9 +419,10 @@ function consecutiveDays(days: string[]) {
   const set = new Set(days);
   let n = 0;
   const d = new Date();
+  // Days are UTC days, so step back a UTC day: a local day is 23 or 25 hours when the clocks change.
   while (set.has(d.toISOString().slice(0, 10))) {
     n++;
-    d.setDate(d.getDate() - 1);
+    d.setUTCDate(d.getUTCDate() - 1);
   }
   return n;
 }
