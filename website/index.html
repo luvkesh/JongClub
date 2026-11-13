@@ -1265,6 +1265,14 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .pl-top { position: absolute; top: 0; right: 0; z-index: 0; width: 100%; min-width: 900px; max-width: none; height: auto; pointer-events: none; -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
 .scene-play::before { content: none; }
 @media (max-width: 700px) { .pl-top { opacity: 0.6; } }
+
+/* V63 (2026-11-13): the closing scene and The House sit on their reference rooms. */
+.scene-final::before, .scene-about::before { content: none; }
+.scene-final .scene-bg { inset: 0; width: 100%; height: 100%; object-position: center bottom; -webkit-mask-image: none; mask-image: none; }
+.scene-final > .wrap { position: relative; z-index: 1; }
+.scene-about .scene-bg { object-position: right bottom; }
+@media (min-width: 1000px) { .scene-about div.house-tile { display: none; } .scene-about { min-height: min(45.8vw, 962px); } }
+@media (max-width: 999px) { .scene-about .scene-bg { display: none; } }
 </style>
 
 <header class="top">
@@ -1689,8 +1697,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="final" id="final">
-    <img class="deco blossom" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
+  <section class="final scene-final" id="final">
+    <img class="scene-bg" src="scenes/final.jpg" srcset="scenes/final-1200.jpg 1200w, scenes/final.jpg 1973w" sizes="(max-width: 999px) 250vw, 100vw" alt="" aria-hidden="true" width="1973" height="797" loading="lazy">
     <div class="wrap">
       <img class="crest-md" src="assets/crest-256.webp" alt="">
       <h2>The Table Awaits.</h2>
@@ -1700,8 +1708,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     </div>
   </section>
 
-  <section class="chapter alt" id="about">
-    <img class="deco blossom flip" src="assets/deco/blossom.svg" alt="" aria-hidden="true" width="760" height="420" loading="lazy">
+  <section class="chapter alt scene-about" id="about">
+    <img class="scene-bg" src="scenes/about.jpg" srcset="scenes/about-1200.jpg 1200w, scenes/about.jpg 1746w" sizes="100vw" alt="" aria-hidden="true" width="1746" height="800" loading="lazy">
     <div class="wrap">
       <div class="head">
         <p class="kicker"><span class="ring"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg></span></span>The studio</p>
