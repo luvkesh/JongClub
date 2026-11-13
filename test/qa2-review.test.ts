@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { loadProfile } from '../src/progression/profile';
 import { dailyHandsInWeek, weekOf } from '../src/economy/economy';
-import { dailyKey } from '../src/club/daily';
+import { dailyFieldDone, dailyKey, dailySweepDone } from '../src/club/daily';
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -49,5 +49,17 @@ describe('Club Regular on the profile (30 days in a row)', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('daily challenges: the all-five sweep bonus', () => {
+  it('a Speed Jong hand that was not won is not done, so the sweep waits for it', () => {
+    // compete.ts keeps 0 for a Speed Jong hand that was lost.
+    const rec = { hand: 300, discard: 80, speed: 0, winds: true, variation: true };
+    expect(dailyFieldDone(rec, 'speed')).toBe(false);
+    expect(dailySweepDone(rec)).toBe(false);
+    expect(dailySweepDone({ ...rec, speed: 640 })).toBe(true);
+    expect(dailySweepDone({ ...rec, winds: false })).toBe(false);
+    expect(dailyFieldDone({ discard: 0 }, 'discard')).toBe(true);
   });
 });

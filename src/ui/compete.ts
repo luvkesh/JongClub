@@ -4,6 +4,7 @@ import { PERSONALITIES, type Personality } from '../ai/players';
 import { pointsText, setTournamentScoringPref, tournamentScoringPref } from './placementUi';
 import {
   DAILY_SWEEP_BONUS,
+  dailySweepDone,
   clubRegular,
   dailyChallenges,
   dailyKey,
@@ -71,11 +72,8 @@ function recordDaily(ctx: AppCtx, id: DailyChallengeId, field: 'hand' | 'discard
     p.jongPoints += dailyRewards[id];
     note = tr('+{n} Jong Points', { n: dailyRewards[id] });
     addSeasonXp('daily', SEASON_XP.daily);
-    const all = ['hand', 'discard', 'speed', 'winds', 'variation'].every((f) => {
-      const v = (rec as Record<string, unknown>)[f];
-      return v !== undefined && v !== false;
-    });
-    if (all) {
+    // A lost Speed Jong keeps 0, which is not done: counting it paid the sweep early, and again once it was won.
+    if (dailySweepDone(rec)) {
       p.jongPoints += DAILY_SWEEP_BONUS;
       note += ` · ${tr('all five done: +{n}', { n: DAILY_SWEEP_BONUS })}`;
     }

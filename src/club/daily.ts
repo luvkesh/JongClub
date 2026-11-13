@@ -481,6 +481,22 @@ export const dailyRewards: Record<DailyChallengeId, number> = {
 /** Extra Jong Points for completing all five on one day. */
 export const DAILY_SWEEP_BONUS = 250;
 
+/** The day's record of each challenge, as kept in the profile (progression/profile.ts DailyRecord). */
+export type DailyField = 'hand' | 'discard' | 'speed' | 'winds' | 'variation';
+export const DAILY_FIELDS: DailyField[] = ['hand', 'discard', 'speed', 'winds', 'variation'];
+
+/**
+ * Whether a challenge counts as done in a day's record. Speed Jong keeps 0 for
+ * a hand that was not won, and that is not done (its card says so too).
+ */
+export function dailyFieldDone(rec: Partial<Record<DailyField, number | boolean>>, f: DailyField): boolean {
+  const v = rec[f];
+  return f === 'speed' ? typeof v === 'number' && v > 0 : v !== undefined && v !== false;
+}
+
+/** All five done: the sweep bonus is due. */
+export const dailySweepDone = (rec: Partial<Record<DailyField, number | boolean>>) => DAILY_FIELDS.every((f) => dailyFieldDone(rec, f));
+
 export const CLUB_REGULAR_DAYS = 30;
 
 const uniqueDays = (dates: string[]) => [...new Set(dates.map((d) => isoDay(d)))].map(dayNumber).sort((a, b) => a - b);
