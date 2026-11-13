@@ -219,9 +219,10 @@ class BossSession implements MiniSession {
     b.moveTo(BOSS_ID, { pos: p }, { dur: 0.25 });
     this.host.sound('kong');
     if (kind === 'heal') {
-      const gain = Math.round(this.boss.hp * 0.08);
-      this.hp = Math.min(this.boss.hp, this.hp + gain);
-      this.host.toast(tr('{boss} heals {n}', { boss: this.boss.name, n: gain }), 'bad');
+      // What it really heals: a boss at full health gains nothing (and says nothing).
+      const gain = Math.max(0, Math.min(Math.round(this.boss.hp * 0.08), this.boss.hp - this.hp));
+      this.hp += gain;
+      if (gain) this.host.toast(tr('{boss} heals {n}', { boss: this.boss.name, n: gain }), 'bad');
     } else if (kind === 'scramble' && this.g.left > 2) {
       this.g.shuffle(this.host.rng);
       this.g.cells.forEach((k, i) => {

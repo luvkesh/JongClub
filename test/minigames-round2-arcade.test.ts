@@ -784,6 +784,30 @@ describe('round 2 regressions', () => {
     expect(r.finishes.length).toBe(1);
     expect(r.finishes[0].won).toBe(false);
   });
+
+  it('boss: a heal reports what it really heals, and a boss at full health heals nothing', () => {
+    const r = start('boss', 'easy', 2); // attacks: lock, heal
+    r.p.attackN = 1;
+    const toasts = r.toasts.length;
+    (r.s as any).attack();
+    expect(r.p.hp).toBe(160);
+    expect(r.toasts.slice(toasts).some((t) => /heals/.test(t))).toBe(false);
+    r.p.hp = 155;
+    r.p.attackN = 1;
+    (r.s as any).attack();
+    expect(r.p.hp).toBe(160);
+    expect(r.toasts[r.toasts.length - 1]).toBe('Jade Guardian heals 5');
+    // Locks stand still while paused, and free up on the clock.
+    r.p.attackN = 0;
+    (r.s as any).attack();
+    expect(r.p.locked.size).toBe(4);
+    pause(r, true);
+    for (let i = 0; i < 200; i++) r.s.tick!(0.1);
+    expect(r.p.locked.size).toBe(4);
+    pause(r, false);
+    for (let i = 0; i < 81; i++) r.s.tick!(0.1);
+    expect(r.p.locked.size).toBe(0);
+  });
 });
 
 // ------------------------------------------------------------ the rules as the how-to tells them
