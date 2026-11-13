@@ -165,7 +165,7 @@ export interface MatchOptions {
   /** Stop after this many hands (daily challenges). */
   maxHands?: number;
   /** Join a running match at the start of hand `hand` (late spectators). */
-  resume?: { hand: number; round: RoundState; scores: number[]; pot: number };
+  resume?: { hand: number; round: RoundState; scores: number[]; pot: number; /** The hand after a wall game (goulash): it deals and exchanges differently. */ goulash?: boolean };
   /** Guided game: Mei talks the player through the hand. */
   coach?: TutorialCoach;
   /** Practice table: every opponent plays face up, so you can watch their hands come together. No points, no rating. */
@@ -2309,6 +2309,7 @@ export class MatchController {
       this.game.state.round = resume.round;
       this.game.players.forEach((p, i) => (p.score = resume.scores[i] ?? p.score));
       this.game.state.riichiPot = resume.pot;
+      if (resume.goulash) this.game.state.goulash = true;
     }
     while (!this.aborted) {
       this.handLog = [];
