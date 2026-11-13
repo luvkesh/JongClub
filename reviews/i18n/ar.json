@@ -1,0 +1,854 @@
+{
+ "models": [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-flash-latest"
+ ],
+ "lang": "ar",
+ "reviewed": 3935,
+ "suggestions": [
+  {
+   "id": 56,
+   "file": "app.ts",
+   "en": "Variations",
+   "current": "الأنواع",
+   "verdict": "inconsistent",
+   "suggested": "التنويعات",
+   "reason": "In Mahjong, 'الأنواع' specifically refers to suits (dots, bamboo, characters), making it confusing for game variations.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 72,
+   "file": "app.ts",
+   "en": "Explore Variations",
+   "current": "اكتشف الأنواع",
+   "verdict": "inconsistent",
+   "suggested": "اكتشف التنويعات",
+   "reason": "Matches the corrected term for game variations and avoids confusion with tile suits ('الأنواع').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 157,
+   "file": "app.ts",
+   "en": "Melds, terminals, self-draw, seat and round wind, and every local name for Chow, Pung, Kong and the win",
+   "current": "المجموعات والأطراف والسحب الذاتي وريح المقعد والدورة، وكل الأسماء المحلية للتشاو والبونغ والكونغ والفوز",
+   "verdict": "wrong",
+   "suggested": "المجموعات والأطراف والسحب الذاتي ورياح المقعد والدورة، وكل الأسماء المحلية للتشاو والبونغ والكونغ والفوز",
+   "reason": "Using 'رياح المقعد والدورة' correctly applies 'winds' to both seat and round rather than translating it as seat wind and the round itself.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 243,
+   "file": "app.ts",
+   "en": "Discard layout",
+   "current": "ترتيب البلاطات المتخلَّص منها",
+   "verdict": "inconsistent",
+   "suggested": "ترتيب البلاطات المطروحة",
+   "reason": "Keeps terminology consistent with 'البلاطات المطروحة' used for discards in rows 21 and 22.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 244,
+   "file": "app.ts",
+   "en": "By variation",
+   "current": "حسب النوع من اللعبة",
+   "verdict": "unnatural",
+   "suggested": "حسب التنويع",
+   "reason": "A concise UI label that aligns with 'التنويعات' for variations instead of the clunky 'حسب النوع من اللعبة'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 248,
+   "file": "app.ts",
+   "en": "By variation lays discards out the way each game is really played: a Pond for Riichi, Rows for Chinese and Asian games, one Centre board for American tables.",
+   "current": "خيار «حسب النوع» يرتّب البلاطات كما تُلعب كل لعبة فعلاً: بركة للريتشي، وصفوف للألعاب الصينية والآسيوية، ولوحة وسطى واحدة للطاولات الأمريكية.",
+   "verdict": "inconsistent",
+   "suggested": "خيار «حسب التنويع» يرتّب البلاطات كما تُلعب كل لعبة فعلاً: بركة للريتشي، وصفوف للألعاب الصينية والآسيوية، ولوحة وسطى واحدة للطاولات الأمريكية.",
+   "reason": "Updates the option reference to match 'حسب التنويع'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 249,
+   "file": "app.ts",
+   "en": "Pull finished sets to the left of your hand, spaced apart, so the loose tiles stand out.",
+   "current": "انقل المجموعات المنتهية إلى يسار يدك مع مسافة بينها، لتبرز البلاطات المنفردة.",
+   "verdict": "wrong",
+   "suggested": "انقل المجموعات المكتملة إلى يسار يدك مع مسافة بينها، لتبرز البلاطات المنفردة.",
+   "reason": "Melds/sets in Mahjong are complete ('مكتملة', as in row 241), not finished/expired ('منتهية').",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 272,
+   "file": "app.ts",
+   "en": "Friend at a table",
+   "current": "صديق إلى طاولة",
+   "verdict": "wrong",
+   "suggested": "صديق على طاولة",
+   "reason": "The preposition 'إلى' means 'to'; 'على طاولة' correctly translates 'at a table'.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 436,
+   "file": "ccp.ts",
+   "en": "Listen to Mei",
+   "current": "استمع إلى مي",
+   "verdict": "wrong",
+   "suggested": "استمع إلى Mei",
+   "reason": "Mei must remain in Latin script per the project guidelines.",
+   "model": "gemini-3.8-flash"
+  },
+  {
+   "id": 669,
+   "file": "club.ts",
+   "en": "Win a hand",
+   "current": "افز بيد",
+   "verdict": "typo",
+   "suggested": "فُز بيد",
+   "reason": "The Arabic imperative for the verb 'فاز' is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 670,
+   "file": "club.ts",
+   "en": "Win a game",
+   "current": "افز بلعبة",
+   "verdict": "typo",
+   "suggested": "فُز بلعبة",
+   "reason": "The Arabic imperative for the verb 'فاز' is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 771,
+   "file": "club.ts",
+   "en": "Win a game of Hong Kong Mahjong",
+   "current": "افز بمباراة في ماهجونغ هونغ كونغ",
+   "verdict": "typo",
+   "suggested": "فُز بمباراة في ماهجونغ هونغ كونغ",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 772,
+   "file": "club.ts",
+   "en": "Win a game of Japanese Riichi",
+   "current": "افز بمباراة في الريتشي الياباني",
+   "verdict": "typo",
+   "suggested": "فُز بمباراة في الريتشي الياباني",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 773,
+   "file": "club.ts",
+   "en": "Win a game at a Dubai club table",
+   "current": "افز بمباراة على طاولة نادٍ في دبي",
+   "verdict": "typo",
+   "suggested": "فُز بمباراة على طاولة نادٍ في دبي",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 840,
+   "file": "club.ts",
+   "en": "{n} rating to go, in ranked games",
+   "current": "تبقّى {n} نقطة تصنيف، في المباريات المصنّفة",
+   "verdict": "typo",
+   "suggested": "تبقى {n} نقطة تصنيف، في المباريات المصنّفة",
+   "reason": "Use the present tense verb 'تبقى' for the feminine subject 'نقطة' instead of past masculine 'تبقّى'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 843,
+   "file": "clubCards.ts",
+   "en": "The North round plays a Big Card. Pick the card everyone plays this hand, before the tiles are dealt.",
+   "current": "جولة الشمال تُلعب ببطاقة كبيرة. اختر البطاقة التي يلعبها الجميع في هذه اليد قبل توزيع البلاطات.",
+   "verdict": "inconsistent",
+   "suggested": "دورة الشمال تُلعب ببطاقة كبيرة. اختر البطاقة التي يلعبها الجميع في هذه اليد قبل توزيع البلاطات.",
+   "reason": "'Round' is consistently translated as 'دورة' in mahjong terminology, not 'جولة'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 870,
+   "file": "compete.ts",
+   "en": "The next best choice, the {tile}, leaves only {n} useful tiles.",
+   "current": "الخيار التالي، {tile}، لا يترك سوى {n} بلاطة مفيدة.",
+   "verdict": "wrong",
+   "suggested": "الخيار الأفضل التالي، {tile}، لا يترك سوى {n} بلاطة مفيدة.",
+   "reason": "'Next best choice' should be translated as 'الخيار الأفضل التالي' to retain the meaning of 'best'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 875,
+   "file": "compete.ts",
+   "en": "Win a hand while you are East, the dealer.",
+   "current": "افز بيد وأنت الشرق، الموزّع.",
+   "verdict": "typo",
+   "suggested": "فُز بيد وأنت الشرق، الموزّع.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 877,
+   "file": "compete.ts",
+   "en": "Win holding a pung of your seat wind.",
+   "current": "افز وأنت تحمل بونغ من ريح مقعدك.",
+   "verdict": "typo",
+   "suggested": "فُز وأنت تحمل بونغ من ريح مقعدك.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 879,
+   "file": "compete.ts",
+   "en": "Win a hand while the round wind is South. Play East + South to get there.",
+   "current": "افز بيد حين تكون ريح الدورة الجنوب. العب الشرق + الجنوب لتصل إليها.",
+   "verdict": "typo",
+   "suggested": "فُز بيد حين تكون ريح الدورة الجنوب. العب الشرق + الجنوب لتصل إليها.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 883,
+   "file": "compete.ts",
+   "en": "Win holding a pung of the round wind.",
+   "current": "افز وأنت تحمل بونغ من ريح الدورة.",
+   "verdict": "typo",
+   "suggested": "فُز وأنت تحمل بونغ من ريح الدورة.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 885,
+   "file": "compete.ts",
+   "en": "Win holding a pung of any dragon.",
+   "current": "افز وأنت تحمل بونغ من أي تنين.",
+   "verdict": "typo",
+   "suggested": "فُز وأنت تحمل بونغ من أي تنين.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 887,
+   "file": "compete.ts",
+   "en": "Win a hand while your seat wind is North.",
+   "current": "افز بيد حين تكون ريح مقعدك الشمال.",
+   "verdict": "typo",
+   "suggested": "فُز بيد حين تكون ريح مقعدك الشمال.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 888,
+   "file": "compete.ts",
+   "en": "Win at least one hand in a single-hand game or longer.",
+   "current": "افز بيد واحدة على الأقل في لعبة من يد واحدة أو أطول.",
+   "verdict": "typo",
+   "suggested": "فُز بيد واحدة على الأقل في لعبة من يد واحدة أو أطول.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 890,
+   "file": "compete.ts",
+   "en": "Win two hands in an East round.",
+   "current": "افز بيدين في دورة الشرق.",
+   "verdict": "typo",
+   "suggested": "فُز بيدين في دورة الشرق.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 928,
+   "file": "compete.ts",
+   "en": "Speed Jong: win the hand to post a time.",
+   "current": "Speed Jong: افز باليد لتسجّل وقتًا.",
+   "verdict": "typo",
+   "suggested": "Speed Jong: فُز باليد لتسجّل وقتًا.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 942,
+   "file": "compete.ts",
+   "en": "Win one hand of {name} in as few turns as you can.",
+   "current": "افز بيد واحدة من {name} بأقل عدد ممكن من الأدوار.",
+   "verdict": "typo",
+   "suggested": "فُز بيد واحدة من {name} بأقل عدد ممكن من الأدوار.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 992,
+   "file": "compete.ts",
+   "en": "{name} costs {n} Jong Points to enter. You have {have}. Win games and daily challenges to earn more.",
+   "current": "تكلفة دخول {name} هي {n} من نقاط Jong. لديك {have}. افز بالألعاب والتحديات اليومية لتكسب المزيد.",
+   "verdict": "typo",
+   "suggested": "تكلفة دخول {name} هي {n} من نقاط Jong. لديك {have}. فُز بالألعاب والتحديات اليومية لتكسب المزيد.",
+   "reason": "The imperative form of 'فاز' in Arabic is 'فُز', not 'افز'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 1007,
+   "file": "compete.ts",
+   "en": "Waiting",
+   "current": "بانتظار",
+   "verdict": "unnatural",
+   "suggested": "قيد الانتظار",
+   "reason": "As a standalone table status label, 'قيد الانتظار' is standard in Arabic rather than 'بانتظار'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 1008,
+   "file": "compete.ts",
+   "en": "{n}s turns",
+   "current": "أدوار {n} ث",
+   "verdict": "unnatural",
+   "suggested": "أدوار مدتها {n} ث",
+   "reason": "'أدوار {n} ث' is a direct machine translation of '{n}s turns'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 1058,
+   "file": "compete.ts",
+   "en": "Goulash is played with Chinese Classical, Hong Kong, the UAE / Dubai rulesets and American.",
+   "current": "يُلعب الغولاش مع الصيني الكلاسيكي وهونغ كونغ ومجموعات قواعد الإمارات / دبي والأمريكي.",
+   "verdict": "unnatural",
+   "suggested": "يُلعب الغولاش مع مجموعات القواعد الصينية الكلاسيكية وهونغ كونغ والإمارات / دبي والأمريكية.",
+   "reason": "The Arabic list structure is broken by inserting 'مجموعات قواعد' awkwardly in the middle.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 1060,
+   "file": "compete.ts",
+   "en": "After a wall game East stays and a goulash is played. Its exchange, jokers, stakes and pot are under House rules.",
+   "current": "بعد تعادل الجدار يبقى الشرق ويُلعب الغولاش. التبادل والجوكر والقيمة والصندوق ضمن قواعد البيت.",
+   "verdict": "wrong",
+   "suggested": "بعد تعادل الجدار يبقى الشرق ويُلعب الغولاش. التبادل والجوكر والرهانات والصندوق ضمن قواعد البيت.",
+   "reason": "'Stakes' refers to game stakes/bets, which should be translated as 'الرهانات' rather than 'القيمة'.",
+   "model": "gemini-3.6-flash"
+  },
+  {
+   "id": 1501,
+   "file": "expansion.ts",
+   "en": "Add the points, then double for each double. On a self-draw everyone pays; on a discard the discarder alone pays double.",
+   "current": "اجمع النقاط، ثم ضاعف عن كل مضاعف. في السحب الذاتي يدفع الجميع؛ وعند الفوز بمرمية يدفع الرامي وحده الضعف.",
+   "verdict": "unnatural",
+   "suggested": "اجمع النقاط، ثم ضاعف عن كل مضاعف. في السحب الذاتي يدفع الجميع؛ وعند الفوز من رمية يدفع الرامي وحده الضعف.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1510,
+   "file": "expansion.ts",
+   "en": "A hand is worth 1 point, doubled by each double, up to the cap. On a self-draw everyone pays; on a discard the discarder pays for the whole table.",
+   "current": "قيمة اليد نقطة واحدة، تتضاعف مع كل مضاعف حتى الحدّ الأقصى. في السحب الذاتي يدفع الجميع؛ وعند الفوز بمرمية يدفع الرامي عن الطاولة كلها.",
+   "verdict": "unnatural",
+   "suggested": "قيمة اليد نقطة واحدة، تتضاعف مع كل مضاعف حتى الحدّ الأقصى. في السحب الذاتي يدفع الجميع؛ وعند الفوز من رمية يدفع الرامي عن الطاولة كلها.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1516,
+   "file": "expansion.ts",
+   "en": "There is no seven pairs.",
+   "current": "لا توجد أزواج سبعة.",
+   "verdict": "unnatural",
+   "suggested": "لا يُسمح بيد الأزواج السبعة.",
+   "reason": "Unnatural phrasing for a rule.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1575,
+   "file": "expansion.ts",
+   "en": "Four sets and a pair, seven pairs or thirteen orphans, worth at least two points. Self-draw: all three others pay. Discard: the discarder pays all three shares.",
+   "current": "أربع مجموعات وزوج، أو سبعة أزواج، أو الأيتام الثلاثة عشر، تساوي نقطتين على الأقل. السحب الذاتي: يدفع الثلاثة الآخرون. المرمية: يدفع الرامي الحصص الثلاث كلها.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج، أو سبعة أزواج، أو الأيتام الثلاثة عشر، تساوي نقطتين على الأقل. السحب الذاتي: يدفع الثلاثة الآخرون. الرمي: يدفع الرامي الحصص الثلاث كلها.",
+   "reason": "Unnatural phrasing for a heading.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1594,
+   "file": "expansion.ts",
+   "en": "Any complete hand wins: four sets and a pair, seven pairs or thirteen terminals. A Chicken Hand is worth 1. A self-draw is paid by each other player; on a discard, the discarder pays three times the points (our reading).",
+   "current": "أي يد مكتملة تفوز: أربع مجموعات وزوج، أو سبعة أزواج، أو الأطراف الثلاثة عشر. يد الدجاجة قيمتها 1. السحب الذاتي يدفعه كل لاعب آخر؛ وعند الفوز بمرمية يدفع الرامي ثلاثة أضعاف النقاط (قراءتنا).",
+   "verdict": "unnatural",
+   "suggested": "أي يد مكتملة تفوز: أربع مجموعات وزوج، أو سبعة أزواج، أو الأطراف الثلاثة عشر. يد الدجاجة قيمتها 1. السحب الذاتي يدفعه كل لاعب آخر؛ وعند الفوز من رمية يدفع الرامي ثلاثة أضعاف النقاط (قراءتنا).",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1618,
+   "file": "expansion.ts",
+   "en": "Points add up, ten to the point. On a self-draw everyone pays; on a discard the discarder alone pays.",
+   "current": "النقاط تُجمع، عشرة لكل نقطة. في السحب الذاتي يدفع الجميع؛ وعند الفوز بمرمية يدفع الرامي وحده.",
+   "verdict": "unnatural",
+   "suggested": "النقاط تُجمع، عشرة لكل نقطة. في السحب الذاتي يدفع الجميع؛ وعند الفوز من رمية يدفع الرامي وحده.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1624,
+   "file": "expansion.ts",
+   "en": "Indonesian family play: Hong Kong-style hands and faan with flowers, no minimum (any complete hand wins), and half gun on a discard. Families keep their own customs; these are JongClub’s table defaults.",
+   "current": "لعب العائلات الإندونيسية: أيادٍ وفان على طريقة هونغ كونغ مع الزهور، بلا حدّ أدنى (أي يد مكتملة تفوز)، ونصف الدفع (half gun) عند الفوز بمرمية. للعائلات عاداتها الخاصة؛ وهذه إعدادات JongClub الافتراضية.",
+   "verdict": "unnatural",
+   "suggested": "لعب العائلات الإندونيسية: أيادٍ وفان على طريقة هونغ كونغ مع الزهور، بلا حدّ أدنى (أي يد مكتملة تفوز)، ونصف الدفع (half gun) عند الفوز من رمية. للعائلات عاداتها الخاصة؛ وهذه إعدادات JongClub الافتراضية.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1628,
+   "file": "expansion.ts",
+   "en": "Indonesian family tables: Hong Kong-style faan with flowers, any complete hand wins, and half gun on a discard.",
+   "current": "طاولات العائلات الإندونيسية: فان على طريقة هونغ كونغ مع الزهور، وأي يد مكتملة تفوز، ونصف الدفع (half gun) عند الفوز بمرمية.",
+   "verdict": "unnatural",
+   "suggested": "طاولات العائلات الإندونيسية: فان على طريقة هونغ كونغ مع الزهور، وأي يد مكتملة تفوز، ونصف الدفع (half gun) عند الفوز من رمية.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1634,
+   "file": "expansion.ts",
+   "en": "Four sets and a pair, or seven pairs. Self-draw, a plain win with no hun’er, all pungs, flushes, seven pairs and dragon pungs each double. On a self-draw everyone pays; on a discard the discarder pays for the whole table.",
+   "current": "أربع مجموعات وزوج، أو سبعة أزواج. السحب الذاتي، والفوز العادي بلا هونر، وكل البونغات، والأنواع الكاملة، والأزواج السبعة، وبونغات التنانين يُضاعِف كلٌّ منها. في السحب الذاتي يدفع الجميع؛ وعند الفوز بمرمية يدفع الرامي عن الطاولة كلها.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج، أو سبعة أزواج. السحب الذاتي، والفوز العادي بلا هونر، وكل البونغات، والأنواع الكاملة، والأزواج السبعة، وبونغات التنانين يُضاعِف كلٌّ منها. في السحب الذاتي يدفع الجميع؛ وعند الفوز من رمية يدفع الرامي عن الطاولة كلها.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1646,
+   "file": "expansion.ts",
+   "en": "Five sets and a pair, or Siete Pares. Any complete hand wins. On a self-draw (bunot) everyone pays; on a discard the discarder alone pays.",
+   "current": "خمس مجموعات وزوج، أو سييتي باريس. أي يد مكتملة تفوز. في السحب الذاتي (بونوت) يدفع الجميع؛ وعند الفوز بمرمية يدفع الرامي وحده.",
+   "verdict": "unnatural",
+   "suggested": "خمس مجموعات وزوج، أو سييتي باريس. أي يد مكتملة تفوز. في السحب الذاتي (بونوت) يدفع الجميع؛ وعند الفوز من رمية يدفع الرامي وحده.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1658,
+   "file": "expansion.ts",
+   "en": "Five sets and a pair; no seven pairs. On a self-draw everyone pays; on a discard the discarder alone pays double. A discarded gold is dead: nobody can claim it.",
+   "current": "خمس مجموعات وزوج؛ بلا أزواج سبعة. في السحب الذاتي يدفع الجميع؛ وعند الفوز بمرمية يدفع الرامي وحده الضعف. الذهب المرمي ميت: لا يمكن لأحد المطالبة به.",
+   "verdict": "unnatural",
+   "suggested": "خمس مجموعات وزوج؛ بلا أزواج سبعة. في السحب الذاتي يدفع الجميع؛ وعند الفوز من رمية يدفع الرامي وحده الضعف. الذهب المرمي ميت: لا يمكن لأحد المطالبة به.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1664,
+   "file": "expansion.ts",
+   "en": "Hong Kong-style faan with flowers: any complete hand wins, and half gun on a discard.",
+   "current": "فان على طريقة هونغ كونغ مع الزهور: أي يد مكتملة تفوز، ونصف الدفع (half gun) عند الفوز بمرمية.",
+   "verdict": "unnatural",
+   "suggested": "فان على طريقة هونغ كونغ مع الزهور: أي يد مكتملة تفوز، ونصف الدفع (half gun) عند الفوز من رمية.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1669,
+   "file": "expansion.ts",
+   "en": "Four sets and a pair, seven pairs or thirteen orphans, with no minimum: a hand with no faan is worth eight. On a discard the discarder pays the points and the others half (half gun); a self-draw is paid by all three.",
+   "current": "أربع مجموعات وزوج، أو سبعة أزواج، أو الأيتام الثلاثة عشر، بلا حدّ أدنى: اليد بلا فان تساوي ثمانية. عند الفوز بمرمية يدفع الرامي النقاط والآخران النصف (half gun)؛ والسحب الذاتي يدفعه الثلاثة.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج، أو سبعة أزواج، أو الأيتام الثلاثة عشر، بلا حدّ أدنى: اليد بلا فان تساوي ثمانية. عند الفوز من رمية يدفع الرامي النقاط والآخران النصف (half gun)؛ والسحب الذاتي يدفعه الثلاثة.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1671,
+   "file": "expansion.ts",
+   "en": "Hong Kong faan with flowers, no minimum, and half gun on a discard.",
+   "current": "فان هونغ كونغ مع الزهور، بلا حدّ أدنى، ونصف الدفع (half gun) عند الفوز بمرمية.",
+   "verdict": "unnatural",
+   "suggested": "فان هونغ كونغ مع الزهور، بلا حدّ أدنى، ونصف الدفع (half gun) عند الفوز من رمية.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1673,
+   "file": "expansion.ts",
+   "en": "Our defaults: flowers in, no minimum, and half gun on a discard. The host can change the minimum, flowers, seven pairs and who pays.",
+   "current": "إعداداتنا الافتراضية: الزهور مُدرجة، وبلا حدّ أدنى، ونصف الدفع (half gun) عند الفوز بمرمية. يمكن للمضيف تغيير الحدّ الأدنى والزهور والأزواج السبعة ومن يدفع.",
+   "verdict": "unnatural",
+   "suggested": "إعداداتنا الافتراضية: الزهور مُدرجة، وبلا حدّ أدنى، ونصف الدفع (half gun) عند الفوز من رمية. يمكن للمضيف تغيير الحدّ الأدنى والزهور والأزواج السبعة ومن يدفع.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1696,
+   "file": "expansion.ts",
+   "en": "Four sets and a pair, seven pairs or thirteen orphans, worth at least one faan. On a discard the discarder pays for the whole table, double the points (full gun); a self-draw is paid by all three.",
+   "current": "أربع مجموعات وزوج، أو سبعة أزواج، أو الأيتام الثلاثة عشر، تساوي فانًا واحدًا على الأقل. عند الفوز بمرمية يدفع الرامي عن الطاولة كلها، ضعف النقاط (الدفع الكامل، full gun)؛ والسحب الذاتي يدفعه الثلاثة.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج، أو سبعة أزواج، أو الأيتام الثلاثة عشر، تساوي فانًا واحدًا على الأقل. عند الفوز من رمية يدفع الرامي عن الطاولة كلها، ضعف النقاط (الدفع الكامل، full gun)؛ والسحب الذاتي يدفعه الثلاثة.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1698,
+   "file": "expansion.ts",
+   "en": "Hong Kong faan with flowers, one faan to win, and full gun on a discard.",
+   "current": "فان هونغ كونغ مع الزهور، وفان واحد للفوز، والدفع الكامل (full gun) عند الفوز بمرمية.",
+   "verdict": "unnatural",
+   "suggested": "فان هونغ كونغ مع الزهور، وفان واحد للفوز، والدفع الكامل (full gun) عند الفوز من رمية.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1700,
+   "file": "expansion.ts",
+   "en": "Our defaults: flowers in, a one-faan minimum, and full gun on a discard. The host can change the minimum, flowers, seven pairs and who pays.",
+   "current": "إعداداتنا الافتراضية: الزهور مُدرجة، وحدّ أدنى فان واحد، والدفع الكامل (full gun) عند الفوز بمرمية. يمكن للمضيف تغيير الحدّ الأدنى والزهور والأزواج السبعة ومن يدفع.",
+   "verdict": "unnatural",
+   "suggested": "إعداداتنا الافتراضية: الزهور مُدرجة، وحدّ أدنى فان واحد، والدفع الكامل (full gun) عند الفوز من رمية. يمكن للمضيف تغيير الحدّ الأدنى والزهور والأزواج السبعة ومن يدفع.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1719,
+   "file": "expansion.ts",
+   "en": "Four sets and a pair, or seven pairs. Everyone pays the winner, and on a discard the discarder pays double. A discarded laizi is dead: nobody can claim it.",
+   "current": "أربع مجموعات وزوج، أو سبعة أزواج. يدفع الجميع للفائز، وعند الفوز بمرمية يدفع الرامي الضعف. اللايزي المرمية ميتة: لا يمكن لأحد المطالبة بها.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج، أو سبعة أزواج. يدفع الجميع للفائز، وعند الفوز من رمية يدفع الرامي الضعف. اللايزي المرمية ميتة: لا يمكن لأحد المطالبة بها.",
+   "reason": "Unnatural phrasing for 'on a discard'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1773,
+   "file": "guide.ts",
+   "en": "You claimed nothing all hand",
+   "current": "لم تطالب بأي بلاطة طوال الجولة",
+   "verdict": "wrong",
+   "suggested": "لم تطالب بأي بلاطة طوال اليد",
+   "reason": "Hand should be translated as 'يد' in Mahjong context, not 'جولة' (round).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1774,
+   "file": "guide.ts",
+   "en": "Won on the replacement tile after a kong",
+   "current": "فزت ببلاطة البديل بعد الكونغ",
+   "verdict": "wrong",
+   "suggested": "فزت ببلاطة التعويض بعد الكونغ",
+   "reason": "Standard Mahjong term for replacement tile is 'بلاطة التعويض'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1825,
+   "file": "guide.ts",
+   "en": "Won on the replacement tile after a kong or flower",
+   "current": "فزت ببلاطة البديل بعد كونغ أو زهرة",
+   "verdict": "wrong",
+   "suggested": "فزت ببلاطة التعويض بعد كونغ أو زهرة",
+   "reason": "Standard Mahjong term for replacement tile is 'بلاطة التعويض'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1887,
+   "file": "handScore.ts",
+   "en": "Ready: {n} tiles win",
+   "current": "{\"zero\":\"جاهز: {n} بلاطة تفوز\",\"one\":\"جاهز: بلاطة واحدة تفوز\",\"two\":\"جاهز: بلاطتان تفوزان\",\"few\":\"جاهز: {n} بلاطات تفوز\",\"many\":\"جاهز: {n} بلاطة تفوز\",\"other\":\"جاهز: {n} بلاطة تفوز\"}",
+   "verdict": "unnatural",
+   "suggested": "{\"zero\":\"جاهز: {n} بلاطات تفوز\",\"one\":\"جاهز: بلاطة واحدة تفوز\",\"two\":\"جاهز: بلاطتان تفوزان\",\"few\":\"جاهز: {n} بلاطات تفوز\",\"many\":\"جاهز: {n} بلاطة تفوز\",\"other\":\"جاهز: {n} بلاطة تفوز\"}",
+   "reason": "The zero case in Arabic should use the plural form 'بلاطات'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 1989,
+   "file": "learn.ts",
+   "en": "seat wind {seat}, round wind {round}",
+   "current": "ريح المقعد {seat}، وريح الدورة {round}",
+   "verdict": "inconsistent",
+   "suggested": "ريح المقعد {seat}، وريح الجولة {round}",
+   "reason": "Inconsistent term for 'round wind'; 'جولة' is used elsewhere.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2013,
+   "file": "learn.ts",
+   "en": "Terminals sit at the ends of each suit; winds and dragons are honours.",
+   "current": "الأطراف في طرفي كل نوع؛ والرياح والتنانين هي الشرف.",
+   "verdict": "inconsistent",
+   "suggested": "البلاطات الطرفية تقع في طرفي كل نوع؛ والرياح والتنانين هي بلاطات الشرف.",
+   "reason": "Uses inconsistent terms for 'terminals' and 'honours' compared to rows 2009 and 2015.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2072,
+   "file": "learn.ts",
+   "en": "{place} place",
+   "current": "{place}",
+   "verdict": "inconsistent",
+   "suggested": "المركز {place}",
+   "reason": "Missing the word for 'place/rank', making it inconsistent with row 2074.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2312,
+   "file": "match.ts",
+   "en": "Two winds: eight or more hands",
+   "current": "ريحان: ثماني أيادٍ أو أكثر",
+   "verdict": "unnatural",
+   "suggested": "دورتان: ثماني أيادٍ أو أكثر",
+   "reason": "The current translation is the dual of 'wind' but sounds like the herb 'basil'; 'rounds' is more natural here.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2331,
+   "file": "match.ts",
+   "en": "{n} Character",
+   "current": "حروف {n}",
+   "verdict": "unnatural",
+   "suggested": "رموز {n}",
+   "reason": "'رموز' (Symbols) is the standard term for the Character suit in Mahjong, whereas 'حروف' means letters.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2506,
+   "file": "match.ts",
+   "en": "I’m nearly there, so the {tile} goes.",
+   "current": "أنا قريبة جدًا، لذا تذهب {tile}.",
+   "verdict": "unnatural",
+   "suggested": "أنا قريبة جدًا، لذا سأتخلص من {tile}.",
+   "reason": "The literal translation of 'goes' as 'تذهب' is unnatural for discarding a tile in Mahjong.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2514,
+   "file": "match.ts",
+   "en": "A tile was discarded for you",
+   "current": "تُخلِّص من بلاطة عنك",
+   "verdict": "wrong",
+   "suggested": "تم التخلص من بلاطة عنك",
+   "reason": "The current verb phrasing is grammatically incorrect and does not convey the passive meaning of the source.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2617,
+   "file": "match.ts",
+   "en": "Show your hand up close below the table",
+   "current": "اعرض أحجارك عن قرب أسفل الطاولة",
+   "verdict": "inconsistent",
+   "suggested": "اعرض بلاطاتك عن قرب أسفل الطاولة",
+   "reason": "Uses 'أحجار' (stones) instead of the standard Mahjong term 'بلاطات' (tiles) used throughout the app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2765,
+   "file": "minigames.ts",
+   "en": "{n} sets of three",
+   "current": "{n} من مجموعات الثلاث",
+   "verdict": "unnatural",
+   "suggested": "{n} مجموعات ثلاثية",
+   "reason": "The current phrasing is a literal translation and sounds unnatural in Arabic.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2853,
+   "file": "minigames.ts",
+   "en": "Every tile cleared: +1,000",
+   "current": "أُزيلت كل البلاطات: ⁦+1,000⁩",
+   "verdict": "wrong",
+   "suggested": "عن كل بلاطة مُزالة: +1,000",
+   "reason": "The current translation implies a bonus for clearing all tiles, rather than a per-tile score.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2884,
+   "file": "minigames.ts",
+   "en": "Armour full: sold for 10 gold",
+   "current": "الدرع مكتمل: بيع بـ ⁦10⁩ ذهبات",
+   "verdict": "unnatural",
+   "suggested": "الدرع مكتمل: بيع مقابل 10 ذهبًا",
+   "reason": "The plural 'ذهبات' is unnatural for currency; 'ذهبًا' is consistent with other rows.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 2944,
+   "file": "minigames.ts",
+   "en": "Quests",
+   "current": "المغامرات",
+   "verdict": "inconsistent",
+   "suggested": "المهمات",
+   "reason": "To maintain consistency with the singular term 'المهمة' used in other parts of the app.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3002,
+   "file": "opening.ts",
+   "en": "{name} throws {total} too: {count} stacks from the right",
+   "current": "{name} يرمي {total} أيضًا: {count} كومة من اليمين",
+   "verdict": "unnatural",
+   "suggested": "{name} يرمي {total} أيضًا: {count} رصة من اليمين",
+   "reason": "In Mahjong, 'stacks' are called 'رصات', not 'أكوام' (piles).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3003,
+   "file": "opening.ts",
+   "en": "East breaks their own wall, {count} stacks from the right",
+   "current": "الشرق يكسر جداره، {count} كومة من اليمين",
+   "verdict": "unnatural",
+   "suggested": "الشرق يكسر جداره، {count} رصة من اليمين",
+   "reason": "In Mahjong, 'stacks' are called 'رصات', not 'أكوام' (piles).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3004,
+   "file": "opening.ts",
+   "en": "{count} stacks from the right: the wall breaks here",
+   "current": "{count} كومة من اليمين: هنا ينكسر الجدار",
+   "verdict": "unnatural",
+   "suggested": "{count} رصة من اليمين: هنا ينكسر الجدار",
+   "reason": "In Mahjong, 'stacks' are called 'رصات', not 'أكوام' (piles).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3005,
+   "file": "opening.ts",
+   "en": "The {tiles} tiles counted off become the flower wall",
+   "current": "الـ{tiles} بلاطة المعدودة تصبح جدار الزهور",
+   "verdict": "unnatural",
+   "suggested": "تصبح البلاطات الـ {tiles} المعدودة جدار الزهور",
+   "reason": "The phrasing 'الـ{tiles} بلاطة' is grammatically awkward in Arabic.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3008,
+   "file": "opening.ts",
+   "en": "The two stacks at the break are the loose tiles",
+   "current": "الكومتان عند الكسر هما البلاطات السائبة",
+   "verdict": "unnatural",
+   "suggested": "الرصتان عند الكسر هما البلاطات السائبة",
+   "reason": "In Mahjong, 'stacks' are called 'رصات', not 'أكوام' (piles).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3021,
+   "file": "opening.ts",
+   "en": "Counting {count} stacks from the right",
+   "current": "عدّ {count} كومة من اليمين",
+   "verdict": "unnatural",
+   "suggested": "عدّ {count} رصة من اليمين",
+   "reason": "In Mahjong, 'stacks' are called 'رصات', not 'أكوام' (piles).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3027,
+   "file": "racks.ts",
+   "en": "Racks cut from the table’s own wood, with a brass line along the lip.",
+   "current": "حوامل مقطوعة من خشب الطاولة نفسه، بخط نحاسي على امتداد الحافة.",
+   "verdict": "unnatural",
+   "suggested": "حوامل مصنوعة من خشب الطاولة نفسه، بخط نحاسي على امتداد الحافة.",
+   "reason": "The word 'مقطوعة' (cut) sounds unnatural for furniture; 'مصنوعة' (made) is better.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3104,
+   "file": "rounds.ts",
+   "en": "Four sets and a pair with chow, pung and kong, scored in faan. Our friendliest table and the root of the Asian family. Flowers and seasons are in play (your own flower and season score a faan each), mixed sets and knits are allowed, and special wind rounds (passports, goulash, small and big cards) are a house rule.",
+   "current": "أربع مجموعات وزوج مع تشاو وبونغ وكونغ، تُحتسب بالفان. أودّ طاولاتنا وأصل العائلة الآسيوية. الزهور والفصول في اللعب (زهرتك وفصلك بفان لكلٍّ منهما)، والمجموعات المختلطة والأزواج المحبوكة مسموحة، وجولات الرياح الخاصة (الجوازات والغولاش والبطاقتان الصغيرة والكبيرة) قاعدة منزلية.",
+   "verdict": "wrong",
+   "suggested": "أربع مجموعات وزوج مع تشاو وبونغ وكونغ، تُحتسب بالفان. أكثر طاولاتنا ودية وأصل العائلة الآسيوية. الزهور والفصول في اللعب (زهرتك وفصلك بفان لكلٍّ منهما)، والمجموعات المختلطة والأزواج المحبوكة مسموحة، وجولات الرياح الخاصة (الجوازات والغولاش والبطاقتان الصغيرة والكبيرة) قاعدة منزلية.",
+   "reason": "'أودّ' means 'I would like' and is not the superlative for 'friendly'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3173,
+   "file": "rules.ts",
+   "en": "Ù",
+   "current": "أو",
+   "verdict": "wrong",
+   "suggested": "Ù",
+   "reason": "The term 'Ù' should not be translated as 'أو' (which means 'or' in Arabic).",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3348,
+   "file": "rules.ts",
+   "en": "All from the wall, the last tile from a discard",
+   "current": "كلها من الجدار، والبلاطة الأخيرة من مرمى",
+   "verdict": "typo",
+   "suggested": "كلها من الجدار، والبلاطة الأخيرة من بلاطة مرمية",
+   "reason": "The word 'مرمى' means goal or range; 'مرمية' is the correct term for a discarded tile.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3424,
+   "file": "rules.ts",
+   "en": "Pairs, mixed chows, knits and crochets are never called from a discard: they come from the hand or the wall, except the tile that makes Mahjong.",
+   "current": "الأزواج والتشاو المختلط والنِّت والكروشيه لا تُنادى من المرمى أبداً: تأتي من اليد أو الجدار، إلا البلاطة التي تكمل الماجونغ.",
+   "verdict": "inconsistent",
+   "suggested": "الأزواج والتشاو المختلط والنِّت والكروشيه لا تُنادى من البلاطات المرمية أبداً: تأتي من اليد أو الجدار، إلا البلاطة التي تكمل الماهجونغ.",
+   "reason": "Corrected the term for discard and ensured consistent spelling of Mahjong.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3742,
+   "file": "variations.ts",
+   "en": "Four sets and a pair. The friendliest place to start.",
+   "current": "أربع مجموعات وزوج. أودّ مكان للبداية.",
+   "verdict": "unnatural",
+   "suggested": "أكثر الأماكن ودية للبدء.",
+   "reason": "The current elative form is grammatically correct but extremely rare and ambiguous in modern UI.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3750,
+   "file": "variations.ts",
+   "en": "Calls",
+   "current": "النداءات",
+   "verdict": "unnatural",
+   "suggested": "المطالبات",
+   "reason": "In Mahjong, 'Calls' refers to tile claims; 'المطالبات' is the standard term and consistent with other rows.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3763,
+   "file": "variations.ts",
+   "en": "144, with eight flowers",
+   "current": "144، منها ثمانية زهور",
+   "verdict": "typo",
+   "suggested": "144، منها ثماني زهور",
+   "reason": "Grammar: the number for a feminine noun like 'زهور' (flowers) must be masculine 'ثماني'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3787,
+   "file": "variations.ts",
+   "en": "Eight jokers and eight flowers",
+   "current": "ثمانية جوكر وثمانية زهور",
+   "verdict": "typo",
+   "suggested": "ثمانية جوكر وثماني زهور",
+   "reason": "Grammar: 'ثمانية' is correct for masculine 'جوكر', but 'ثماني' is required for feminine 'زهور'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3885,
+   "file": "variations.ts",
+   "en": "Four sets and a pair. Chow, pung and kong. The friendliest way to learn.",
+   "current": "أربع مجموعات وزوج. تشاو وبونغ وكونغ. أودّ طريقة للتعلّم.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج. تشاو وبونغ وكونغ. الطريقة الأكثر ودية للتعلّم.",
+   "reason": "The word 'أودّ' is ambiguous and sounds like 'I want'; 'الأكثر ودية' is the natural superlative for 'friendliest'.",
+   "model": "gemini-3-flash-preview"
+  },
+  {
+   "id": 3903,
+   "file": "variations.ts",
+   "en": "Four sets and a pair with chow, pung and kong, scored in faan. Our friendliest table and the root of the Asian family. Flowers and seasons are a house rule (off by default): your own flower and season score a faan each.",
+   "current": "أربع مجموعات وزوج مع التشاو والبونغ والكونغ، تُحتسب بالفان. طاولتنا الأودّ وجذر العائلة الآسيوية. الزهور والفصول قاعدة بيت (متوقفة افتراضيًا): زهرتك وفصلك يحتسب كلٌّ منهما فانًا.",
+   "verdict": "unnatural",
+   "suggested": "أربع مجموعات وزوج مع التشاو والبونغ والكونغ، تُحتسب بالفان. طاولتنا الأكثر ودية وجذر العائلة الآسيوية. الزهور والفصول قاعدة بيت (متوقفة افتراضيًا): زهرتك وفصلك يحتسب كلٌّ منهما فانًا.",
+   "reason": "The word 'الأودّ' is highly unnatural and ambiguous in a modern app UI; 'الأكثر ودية' is preferred.",
+   "model": "gemini-3-flash-preview"
+  }
+ ]
+}

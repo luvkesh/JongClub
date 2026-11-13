@@ -34,6 +34,7 @@ import { filipinoProfile } from './filipino';
 import { indonesianProfile, thaiProfile } from './thaiIndonesian';
 import { indiaProfile } from './india';
 import { applyGoulash } from './goulash';
+import { tableOptionsFrom } from './tableOptions';
 import type { RuleProfile } from './types';
 
 export interface VariationInfo {
@@ -124,7 +125,7 @@ export const uaeRulesets = () => VARIATIONS.filter((v) => v.id === 'uae' || v.pa
 
 /** Apply a host's house-rule choices to a base profile. */
 export function withHouseRules(p: RuleProfile, choices: Record<string, string>): RuleProfile {
-  const out: RuleProfile = { ...p, rounds: { ...p.rounds }, houseChoices: { ...choices } };
+  const out: RuleProfile = { ...p, rounds: { ...p.rounds }, houseChoices: { ...choices }, table: tableOptionsFrom(choices, p.players) };
   if (choices.minValue !== undefined) out.minValue = Number(choices.minValue);
   if (choices.dealerRetention) out.rounds.dealerRetention = choices.dealerRetention as RuleProfile['rounds']['dealerRetention'];
   const all = { ...Object.fromEntries(p.houseRules.map((r) => [r.id, r.default])), ...choices };

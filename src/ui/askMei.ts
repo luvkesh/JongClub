@@ -24,6 +24,7 @@ function errorLine(code: AskErrorCode): string {
   switch (code) {
     case 'needs-key': return tr('Ask Mei needs a key before she can answer.');
     case 'bad-key': return tr('That key was refused. Check it and save it again.');
+    case 'billing': return tr('Google accepted the key, but its project needs billing turned on in Google AI Studio before Gemini will answer.');
     case 'quota': return tr('Too many questions for now. Give Mei a minute and try again.');
     case 'network': return tr('Mei can’t reach the network right now.');
     case 'blocked': return tr('Mei can’t answer that one. Try asking another way.');
@@ -138,7 +139,7 @@ export function askMeiSection(app: App): HTMLElement {
     const save = h('button', { type: 'button', class: 'btn primary sm', onclick: () => {
       const k = field.value.trim();
       if (!looksLikeKey(k)) {
-        note.textContent = tr('That doesn’t look like a Gemini key (they start with AIza).');
+        note.textContent = tr('That doesn’t look like a Gemini key (they start with AIza or AQ.).');
         field.focus();
         return;
       }
