@@ -940,7 +940,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px va
 .quiz-option:active:not(:disabled) { transform: translateY(1px); }
 .quiz-option .meld { display: flex; gap: 2px; flex: none; }
 .quiz-option .tile2d.mini { width: 48px; border-radius: 5px; }
-@media (max-width: 600px) { .quiz-option .tile2d.mini { width: 40px; } .quiz-option:has(.meld) { flex-wrap: wrap; } }
+@media (max-width: 600px) { .quiz-option .tile2d.mini { width: 40px; } .quiz-option:has(.meld) { flex-wrap: wrap; } .quiz-option { min-width: 0; } .quiz-option .meld { flex-wrap: wrap; row-gap: 4px; max-width: 100%; } }
 .quiz-option.right { border-color: #5fbf8f; background: rgba(95, 191, 143, 0.14); box-shadow: inset 2px 0 0 #5fbf8f; }
 .quiz-option.wrong { border-color: #c96a5a; background: rgba(201, 106, 90, 0.12); opacity: 0.8; box-shadow: inset 2px 0 0 #c96a5a; }
 .quiz-option:disabled { cursor: default; }

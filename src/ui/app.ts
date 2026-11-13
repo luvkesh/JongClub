@@ -40,7 +40,7 @@ import { tr } from '../i18n';
 import { DEFAULT_TABLE, tableFor, type Lesson } from './screens/tables';
 import { homeScreen } from './screens/home';
 import { playScreen } from './screens/play';
-import { autostartLesson, learnScreen } from './screens/learn';
+import { autostartLesson, lastLesson, learnScreen } from './screens/learn';
 import { refreshResultsName, showResults } from './screens/results';
 import { labsHost, loadSettings, persistSettings, showSettings, type StoredSettings } from './screens/settings';
 import { devPanel, labsButton } from '../dev/panel';
@@ -308,7 +308,7 @@ export class App {
 
   // ------------------------------------------------------------ learn
 
-  learnLesson: Lesson = 'basics';
+  learnLesson: Lesson = lastLesson() ?? 'basics';
 
   guidedVariation = 'classic';
   /** The lesson a themed guided game follows ('words', 'tradition'), if any. */
