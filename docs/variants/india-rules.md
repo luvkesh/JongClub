@@ -84,8 +84,9 @@ player whose wall was broken). No further confirmation is needed; a later correc
   Mahjong (buying still allowed).
 - Payment per the card; East pays and receives double: Half limit 500/1000, Limit 1000/2000,
   Double limit 2000/4000, Super limit 4000/8000, Top limit 10000/20000. Flowers paid as in the East round.
-- Draw: the buy money waits for the next winner. The book has East keep the deal for an extra game; the user
-  ruled 2026-10-25 that East never keeps the deal, win or draw, in every round (the game follows the user).
+- Draw: the buy money waits for the next winner and the deal passes (the user ruled 2026-10-25 that East never
+  keeps the deal). Exception, per the book (user ruling 2026-11-13): when the LAST game of the match is drawn with
+  buy money in the bank, East keeps the deal and extra games are played until someone wins and collects it.
   (Book: another Small Card game or a Goulash game.)
 - The 55 Small Cards (value, then the hand):
   1 Lily of the Valley, double: pungs of Green and White dragons, 2 pungs of green bamboos, pair of green bamboos.
@@ -243,6 +244,8 @@ player whose wall was broken). No further confirmation is needed; a later correc
     a natural pair. Jokers may make a pung or the pair, never a pung from a discard (joker + natural).
   - **[user 2026-10-25]** Goulash with jokers: a set or pair may use two jokers but must keep at least one
     natural tile (no group of jokers alone; WildRules.natural). A joker-number tile standing as itself is natural.
+  - Goulash with jokers, a losing hand's count (QA 2026-11-13): a joker held never makes the hand dirty; it
+    counts as itself or is left out, whichever scores more (it does not complete a loser's pung).
   - **[user 2026-10-25]** A Mahjong on a discard still counts as concealed (nothing exposed) in every round.
   - "Clean" on a Big Card means no jokers in that set or pair (book p. 31). The Ulta Pulta cards' jokers: 1 and 9
     of Cracks, Red Dragon, 1 Bamboo, NEWS (cards 3, 19), plus flowers/seasons (card 29).

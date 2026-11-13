@@ -548,8 +548,6 @@ function koreanOpenPath(game: MahjongGame, seat: number, calledKind: number, usi
   return pts + 1 >= game.profile.minValue;
 }
 
-/** True when calling `o` on `kind` would leave `seat` with no winning hand left to build (a set that fits none of
- *  their cards, say) though the hand can still win now. The table warns before such a call; it never blocks it. */
 /**
  * India Rules Goulash: can the hand still be clean once `extra` (the kinds of a set about to be
  * called) is laid down? Laid-down sets never change, so only they decide it: a clean hand is one
@@ -568,12 +566,16 @@ export function westCleanPossible(game: MahjongGame, seat: number, extra: number
   return !fixed.some((k) => k >= 27) && fixed.filter((k) => k < 27).every(terminal);
 }
 
+/** True when calling `o` on `kind` would leave `seat` with no winning hand left to build (a set that fits none of
+ *  their cards, say) though the hand can still win now. The table warns before such a call; it never blocks it. */
 export function callLeavesNoWin(game: MahjongGame, seat: number, o: ClaimOption, kind: number): boolean {
   if (o.type === 'win' || o.type === 'buy') return false;
   if (currentShanten(game, seat) >= 99) return false;
   // India Rules Goulash: a win needs a clean hand (book p. 28-29), so a set that rules every clean
   // pattern out leaves no win, however the rest of the hand falls.
-  if (game.profile.specialRound === 'indiaWest' && !westCleanPossible(game, seat, o.type === 'chow' ? [...(o.using ?? []), kind] : [kind])) return true;
+  // Only the call that rules the last clean pattern out is flagged: sets already laid down in two suits
+  // left no win before this call, so it changes nothing (as with a hand that can't win now, above).
+  if (game.profile.specialRound === 'indiaWest' && westCleanPossible(game, seat, []) && !westCleanPossible(game, seat, o.type === 'chow' ? [...(o.using ?? []), kind] : [kind])) return true;
   const using = o.using ?? new Array(o.type === 'kong' ? 3 : 2).fill(kind);
   // Whether any winning hand is left depends on the sets, not on which tile goes next, so one look at the hand
   // straight after the call does (trying every discard, as shantenAfterCall does, takes seconds on card rounds).

@@ -85,7 +85,8 @@ function score(ctx: ScoringContext): HandScore {
   if (exposed === 5 && !ctx.selfDrawn) add('All melded', 2, 'Every set called, won on a discard');
   if (waitCount === 1 && !liGu) add('Single wait', 1);
   if (ctx.lastTileOfWall) add(ctx.selfDrawn ? 'Last tile self-draw' : 'Last discard', 1);
-  if (ctx.afterKong) add('Win on replacement', 1);
+  // A self-draw on the replacement for a kong or a flower.
+  if (ctx.afterKong || ctx.afterFlower) add('Win on replacement', 1);
   if (ctx.robbedKong) add('Robbing the kong', 1);
 
   // Shape

@@ -249,6 +249,9 @@ describe('Sanma (three-player Riichi)', () => {
     const g = table(S, ['123p 456p 789p 234s 5s', '', ''], 0, '5s');
     g.players[0].flowers = tiles('N N');
     g.players[0].riichi = true;
+    // A later turn, not the first draw (that would be tenhou, a yakuman).
+    g.state.turnCount = 3;
+    g.players[0].discards = tiles('9s');
     const s = g.evaluateWin(0, k('5s'), true, false)!.score;
     expect(s.items.find((i) => i.name === 'Kita')?.value).toBe(2);
     // Kita alone is no yaku: an open hand with nothing else can't win.

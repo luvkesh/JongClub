@@ -183,7 +183,15 @@ export function westPayments(info: SettleInfo): Payment[] {
   for (let l = 0; l < players; l++) {
     if (l === winner) continue;
     const h = info.hands[l];
-    const c = loserCount(h.concealed, h.melds, info.flowers[l] ?? [], info.seatWinds[l], info.prevailing);
+    let c = loserCount(h.concealed, h.melds, info.flowers[l] ?? [], info.seatWinds[l], info.prevailing);
+    // Goulash with jokers: a joker stands for any tile, so it never makes a hand dirty. It is
+    // counted either as itself (a natural tile of its number) or left out, whichever scores more.
+    if (h.jokers?.length) {
+      const rest = h.concealed.slice();
+      for (const j of h.jokers) rest.splice(rest.indexOf(j), 1);
+      const without = loserCount(rest, h.melds, info.flowers[l] ?? [], info.seatWinds[l], info.prevailing);
+      if (without.score > c.score) c = without;
+    }
     if (!c.score) continue;
     for (let p = 0; p < players; p++) if (p !== winner && p !== l) out.push({ from: p, to: l, amount: c.score * mult(p, l), reason: `Count: ${c.clean}` });
   }

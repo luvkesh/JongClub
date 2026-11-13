@@ -90,7 +90,7 @@ export function fastStandardShanten(counts: number[], meldCount: number, need = 
 export function fastShanten(counts: number[], meldCount: number, rules: ShapeRules): number {
   let s = rules.standard === false ? 99 : fastStandardShanten(counts, meldCount, rules.sets ?? 4, rules.chows !== false);
   if (meldCount === 0) {
-    if (rules.sevenPairs) s = Math.min(s, sevenPairsShanten(counts));
+    if (rules.sevenPairs) s = Math.min(s, sevenPairsShanten(counts, rules.sevenPairsQuads));
     if (rules.thirteenOrphans) s = Math.min(s, thirteenOrphansShanten(counts));
   }
   for (const sp of rules.special ?? []) if (sp.ai && (!sp.bound || sp.bound(counts, meldCount) < s)) s = Math.min(s, sp.shanten(counts, meldCount));
