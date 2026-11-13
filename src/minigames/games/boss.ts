@@ -98,12 +98,8 @@ class BossSession implements MiniSession {
     this.refresh();
   }
 
-  /** Portrait phones turn the board a quarter (columns become rows) so its tiles can be larger; the rules don't change. */
-  private turned = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
-
   private world(x: number, y: number, lift = 0) {
     const b = this.host.board;
-    if (this.turned) return new THREE.Vector3((y - (this.h - 1) / 2) * (b.w + 0.02), b.d / 2 + lift, (x - (this.w - 1) / 2) * (b.h + 0.02) + 0.35);
     return new THREE.Vector3((x - (this.w - 1) / 2) * (b.w + 0.02), b.d / 2 + lift, (y - (this.h - 1) / 2) * (b.h + 0.02) + 0.35);
   }
   private bossPos() {
