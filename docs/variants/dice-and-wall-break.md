@@ -3,7 +3,7 @@
 What JongClub plays before every deal, per variation. Code: `src/engine/opening.ts` (rules),
 `src/ui/opening.ts` (the ceremony and caption card), `src/render/wallMarkers.ts` (tokens),
 `TableRenderer.wallPose / breakWall` in `src/render/table3d.ts` (the wall ring).
-Readings marked **[reading]** are JongClub's where sources disagree or are silent.
+Readings marked **[reading]** are JongClub's where sources disagree or are silent. **Confirmed 2026-11-13:** the club owner answered "do what's recommended", so every [reading] below stands as played.
 
 ## What happens at the table
 
