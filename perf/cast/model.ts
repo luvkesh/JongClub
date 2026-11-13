@@ -18,7 +18,7 @@ import { CAST } from '../../src/cosmetics/cast';
   return btoa(s);
 };
 
-(window as any).renderModel = async (name: string, looks: number[], size = 512) => {
+(window as any).renderModel = async (name: string, looks: number[], size = 512, camZ = 5.6, lookY = 1.45, fov = 24) => {
   const m = await castModels();
   const entry = m[name];
   if (!entry) throw new Error('no model for ' + name);
@@ -40,9 +40,9 @@ import { CAST } from '../../src/cosmetics/cast';
   const fig = new CastFigure({ ...CAST[name] }, entry);
   scene.add(fig.group);
   for (let i = 0; i < 300 && !(fig as any).model; i++) await new Promise((res) => setTimeout(res, 100));
-  const cam = new THREE.PerspectiveCamera(24, 1, 0.1, 50);
-  cam.position.set(0, 1.75, 5.6);
-  cam.lookAt(0, 1.45, 0);
+  const cam = new THREE.PerspectiveCamera(fov, 1, 0.1, 50);
+  cam.position.set(0, lookY + 0.3, camZ);
+  cam.lookAt(0, lookY, 0);
   const out: string[] = [];
   for (const x of looks) {
     for (let t = 0; t < 60; t++) fig.update(t / 30, 1 / 30, new THREE.Vector3(x, 1.9, 5));
