@@ -101,6 +101,13 @@ export function openDrills(ctx: AppCtx, opts: DrillOpts = {}) {
     clear(o);
     opts.onClose?.();
   };
+  // Escape or a tap on the backdrop hides the dialog without close(): the Learn card still refreshes (streak, done today).
+  const dismissed = new MutationObserver(() => {
+    if (!o.hidden && card.isConnected) return;
+    dismissed.disconnect();
+    if (o.hidden && card.isConnected) opts.onClose?.();
+  });
+  dismissed.observe(o, { attributes: true, attributeFilter: ['hidden'], childList: true });
 
   /** Build drill i (a fallback tile-name drill if the engine can't make it). */
   const build = (i: number): Drill => {
