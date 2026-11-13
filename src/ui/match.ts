@@ -2301,9 +2301,9 @@ export class MatchController {
       this.game.state.riichiPot = resume.pot;
       if (resume.goulash) this.game.state.goulash = true;
     }
-    // A live player whose tab froze never runs out their own clock: past twice the turn time (and a margin
-    // for a slow device), the host hands the seat to an AI. Untimed tables wait as long as it takes.
-    if (this.opts.link && this.limits.turn > 0) this.opts.link.stallMs = Math.max(60, firstTurnLimit(this.limits.turn) + 30) * 1000;
+    // A live player whose tab froze never runs out their own clock: well past their longest clock (with a
+    // wide margin for a slow device still catching up), the host hands the seat to an AI. Untimed tables wait.
+    if (this.opts.link && this.limits.turn > 0) this.opts.link.stallMs = Math.max(120, firstTurnLimit(this.limits.turn) * 2 + 60) * 1000;
     while (!this.aborted) {
       const link = this.opts.link;
       if (link) {
