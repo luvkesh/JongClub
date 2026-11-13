@@ -40,7 +40,7 @@ def band(key, still, alt):
             f'<source src="video/{key}.mp4" type="video/mp4"></video>')
 
 
-ROOM_TOUR = [("al-fahidi-majlis", "Al Fahidi Majlis"), ("tokyo-janso", "Tokyo Jansō"), ("hk-teahouse", "Hong Kong Tea House"), ("imperial", "Forbidden City")]
+ROOM_TOUR = [("imperial", "Forbidden City"), ("al-fahidi-majlis", "Al Fahidi Majlis"), ("tokyo-janso", "Tokyo Jansō"), ("hk-teahouse", "Hong Kong Tea House")]
 
 
 def rooms_tour(alt):
@@ -52,7 +52,7 @@ def rooms_tour(alt):
     k0 = clips[0][0]
     names = "".join(f'<span class="rt-n" data-i="{i}">{html.escape(n)}</span>' for i, (k, n) in enumerate(clips))
     return (f'<div class="rtour" data-clips="{data}" aria-label="{html.escape(alt)}" role="img">'
-            f'<video muted playsinline preload="metadata" poster="video/room-{k0}-poster.jpg" src="video/room-{k0}.mp4"></video>'
+            f'<video muted playsinline preload="none"></video>'
             f'<img class="rt-still" src="scenes/interlude.jpg" srcset="scenes/interlude-1200.jpg 1200w, scenes/interlude.jpg 1877w" sizes="100vw" width="1877" height="838" alt="" loading="lazy">'
             f'<video muted playsinline preload="none"></video>'
             f'<p class="rt-title" aria-hidden="true">{names}</p></div>')

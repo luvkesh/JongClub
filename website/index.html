@@ -1306,7 +1306,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .scene-num::before, .scene-num::after { content: none; }
 .nrow { position: relative; z-index: 1; width: 50%; aspect-ratio: 1086 / 724; container-type: inline-size; background: url(scenes/stats.jpg) 0 0 / 200% 100% no-repeat; }
 .nrow + .nrow { background-position: 100% 0; }
-.sn { position: absolute; left: calc(var(--cx) * 1%); top: 59.2%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+.sn { position: absolute; left: calc(var(--cx) * 1%); top: 59.2%; width: 0; transform: none !important; opacity: 1 !important; display: flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
 .sn b { font: 600 11cqw/1 var(--display); padding-block: 0.12em; margin-block: -0.12em; background: linear-gradient(180deg, #fbe7b4, #e3c27c 52%, #b58a3e); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0.4cqw 1cqw rgba(0, 0, 0, 0.6)); }
 .sn span { margin-top: 0.2cqw; font: 400 max(10px, 2.05cqw)/1.2 var(--ui); letter-spacing: 0.3em; margin-inline-end: -0.3em; text-transform: uppercase; color: #f1ead8; }
 @media (max-width: 899px) { .nrow { width: 100%; } .nrow:first-child { -webkit-mask-image: linear-gradient(#000 88%, transparent); mask-image: linear-gradient(#000 88%, transparent); } }
@@ -1425,6 +1425,14 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 @media (min-width: 1280px) { [dir="rtl"] .scene-rounds > .wrap { direction: ltr; } [dir="rtl"] .scene-rounds .head { direction: rtl; } }
 @media (min-width: 701px) { [dir="rtl"] .var-top { transform: translateX(-34%); -webkit-mask-image: linear-gradient(270deg, transparent, #000 30%), linear-gradient(#000 70%, transparent); mask-image: linear-gradient(270deg, transparent, #000 30%), linear-gradient(#000 70%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; } }
 @media (max-width: 700px) { [dir="rtl"] .var-top { right: auto; left: -128px; transform: scaleX(1); } }
+/* Phone fixes (2026-11-13): the prologue painting drifts gently; Contact shows the reference's tile on its tray. */
+@keyframes pro-drift { from { transform: scale(1.03) translate3d(0, 0, 0); } to { transform: scale(1.12) translate3d(-1.6%, -1.2%, 0); } }
+.scene-pro > img { animation: pro-drift 28s ease-in-out infinite alternate; transform-origin: 60% 55%; will-change: transform; }
+@media (max-width: 999px) {
+  .scene-about div.house-tile { display: block; position: relative; right: auto; bottom: auto; order: 3; width: min(100%, 520px); margin: 18px 0 -8px auto; filter: none; }
+  .scene-about div.house-tile::before { content: none; }
+  .scene-about div.house-tile img { display: block; width: 100%; height: auto; margin: 0; filter: none; border-radius: 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 34%, #000 86%, transparent), linear-gradient(transparent, #000 22%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 34%, #000 86%, transparent), linear-gradient(transparent, #000 22%, #000 86%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; }
+}
 </style>
 
 <header class="top">
@@ -1820,7 +1828,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   </section>
 
   <section class="band scene-int" id="interlude" aria-label="Interlude">
-    <div class="rtour" data-clips="[[&quot;video/room-al-fahidi-majlis.mp4&quot;, &quot;Al Fahidi Majlis&quot;], [&quot;video/room-tokyo-janso.mp4&quot;, &quot;Tokyo Jansō&quot;], [&quot;video/room-hk-teahouse.mp4&quot;, &quot;Hong Kong Tea House&quot;], [&quot;video/room-imperial.mp4&quot;, &quot;Forbidden City&quot;]]" aria-label="A slow walk through the club&#x27;s rooms, from the Dubai Majlis to Tokyo and Hong Kong." role="img"><video muted playsinline preload="metadata" poster="video/room-al-fahidi-majlis-poster.jpg" src="video/room-al-fahidi-majlis.mp4"></video><img class="rt-still" src="scenes/interlude.jpg" srcset="scenes/interlude-1200.jpg 1200w, scenes/interlude.jpg 1877w" sizes="100vw" width="1877" height="838" alt="" loading="lazy"><video muted playsinline preload="none"></video><p class="rt-title" aria-hidden="true"><span class="rt-n" data-i="0">Al Fahidi Majlis</span><span class="rt-n" data-i="1">Tokyo Jansō</span><span class="rt-n" data-i="2">Hong Kong Tea House</span><span class="rt-n" data-i="3">Forbidden City</span></p></div>
+    <div class="rtour" data-clips="[[&quot;video/room-imperial.mp4&quot;, &quot;Forbidden City&quot;], [&quot;video/room-al-fahidi-majlis.mp4&quot;, &quot;Al Fahidi Majlis&quot;], [&quot;video/room-tokyo-janso.mp4&quot;, &quot;Tokyo Jansō&quot;], [&quot;video/room-hk-teahouse.mp4&quot;, &quot;Hong Kong Tea House&quot;]]" aria-label="A slow walk through the club&#x27;s rooms, from the Dubai Majlis to Tokyo and Hong Kong." role="img"><video muted playsinline preload="none"></video><img class="rt-still" src="scenes/interlude.jpg" srcset="scenes/interlude-1200.jpg 1200w, scenes/interlude.jpg 1877w" sizes="100vw" width="1877" height="838" alt="" loading="lazy"><video muted playsinline preload="none"></video><p class="rt-title" aria-hidden="true"><span class="rt-n" data-i="0">Forbidden City</span><span class="rt-n" data-i="1">Al Fahidi Majlis</span><span class="rt-n" data-i="2">Tokyo Jansō</span><span class="rt-n" data-i="3">Hong Kong Tea House</span></p></div>
     <div class="wrap">
       <p class="quote"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1A4.6 4.6 0 1 1 7 3.5z"/><path d="M17.3 3.5a4.6 4.6 0 0 1 4.6 4.6c0 4.3-2.5 8-6.5 9.9l-.8-1.5c2.3-1.2 3.8-3 4.3-5.1a4.6 4.6 0 1 1-1.6-7.9z"/></svg></span>One game, played differently in every city it reached.</p>
     </div>
@@ -1880,7 +1888,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
           <p>So we built a premium club. From Hong Kong and Tokyo to Dubai, we brought together authentic rules and scoring, created Mei, a host who guides you along the way, and made every tile and table beautiful—because a game you love should feel precious.</p>
           <img class="studio-logo" src="assets/chacklate-logo.svg" alt="Chacklate Experiences" width="640" height="160">
         </div>
-        <div class="house-tile" aria-hidden="true"><img src="winds/wind-east.webp" alt="" width="560" height="358" loading="lazy"></div>
+        <div class="house-tile" aria-hidden="true"><img src="scenes/about-tile.jpg" alt="" width="596" height="420" loading="lazy"></div>
         <aside class="house-contact" id="contact">
           <h3 class="script">Contact</h3>
           <ul class="contact-list">
@@ -2223,7 +2231,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   if (still || !('IntersectionObserver' in window)) return;
   root.classList.add('js');
   // Reveal: chapter heads, copy, pictures, cards, each group staggered.
-  const groups = ['.head', '.story', '.shot', '.media', '.notes li', '.cast article', '.timeline li', '.vcard', '.piece', '.earn article', '.extra', '.ritual-notes article', '.wind', '.stamp', '.num', '.sn', '.card', '.subhead', '.quote', '.promise'];
+  const groups = ['.head', '.story', '.shot', '.media', '.notes li', '.cast article', '.timeline li', '.vcard', '.piece', '.earn article', '.extra', '.ritual-notes article', '.wind', '.stamp', '.num', '.card', '.subhead', '.quote', '.promise'];
   const els = [];
   for (const sel of groups) document.querySelectorAll(sel).forEach((el, i) => {
     if (el.closest('.hero')) return;
@@ -2276,7 +2284,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     let i = 0, cur = 0, started = false, fading = false;
     const title = (k) => { ns.forEach((n) => n.classList.remove('show')); const n = ns[k]; if (n) { void n.offsetWidth; n.classList.add('show'); } };
-    const load = (v, k) => { if (!v.src.endsWith(clips[k][0])) { v.src = clips[k][0]; v.preload = 'auto'; v.load(); } };
+    // Phones and tablets get the 720p clips: two 1440p streams crossfading stutter there.
+    const small = Math.min(screen.width, screen.height) <= 900 || innerWidth <= 1100;
+    const file = (k) => (small ? clips[k][0].replace('.mp4', '-720.mp4') : clips[k][0]);
+    const load = (v, k) => { if (!v.src.endsWith(file(k))) { v.src = file(k); v.preload = 'auto'; v.load(); } };
     const next = () => {
       if (fading) return; fading = true;
       const a = vs[cur], b = vs[1 - cur]; i = (i + 1) % clips.length; load(b, i);
@@ -2286,14 +2297,15 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     };
     vs.forEach((v) => v.addEventListener('timeupdate', () => { if (v === vs[cur] && v.duration && v.currentTime > v.duration - 0.9) next(); }));
     vs[0].classList.add('on');
-    const pic = t.querySelector('.rt-still'), last = ns.length - 1;
-    if (still) { ns[pic ? last : 0] && ns[pic ? last : 0].classList.add('show'); return; }
+    const pic = t.querySelector('.rt-still');
+    if (still) { ns[0] && ns[0].classList.add('show'); return; }
+    // The painted room stays up until the first clip is truly running, then fades into it.
+    if (pic) vs[0].addEventListener('playing', () => setTimeout(() => pic.classList.add('off'), 900), { once: true });
     new IntersectionObserver((es) => es.forEach((e) => {
       const v = vs[cur];
       if (e.isIntersecting) {
-        if (!started && pic) { started = true; title(last); load(vs[1], 1); setTimeout(() => { pic.classList.add('off'); vs[cur].play().catch(() => {}); title(i); }, 6500); return; }
-        if (pic && !pic.classList.contains('off')) return;
-        v.play().catch(() => {}); if (!started) { started = true; title(0); load(vs[1], 1); } }
+        if (!started) { started = true; load(vs[0], 0); title(0); setTimeout(() => load(vs[1], 1), 2500); }
+        v.play().catch(() => {}); }
       else v.pause();
     }), { threshold: 0.35 }).observe(t);
   });
