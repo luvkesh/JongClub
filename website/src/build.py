@@ -254,7 +254,7 @@ page = (page
         .replace("{{GAME}}", GAME)
         .replace("{{CAROUSEL}}", carousel)
         .replace("{{BAND_OPENING}}", band("opening", "room-taipei", "The match opening in the Taipei Night Market room: the automatic table shuffles and builds the walls."))
-        .replace("{{BAND_ROOMS}}", rooms_tour("A slow walk through the club's rooms, from the Dubai Majlis to Tokyo and Hong Kong."))
+        .replace("{{BAND_ROOMS}}", rooms_tour("A slow walk through the club's rooms, from the Forbidden City to Dubai, Tokyo and Hong Kong."))
         .replace("{{EXTRAS}}", "\n".join(extras))
         .replace("{{N_TILESETS}}", str(len(cat["tiles"]))).replace("{{N_ROOMS}}", str(len(cat["envs"]))))
 # one-line chapter titles: the CSS sizes each by its character count

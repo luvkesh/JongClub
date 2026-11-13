@@ -30,7 +30,7 @@
   /* Cinzel has capitals only, so longer headings use a companion with real lowercase. */
   --serif: "Cormorant Garamond", Georgia, serif;
   --script: "Pinyon Script", "Cormorant Garamond", Georgia, serif;
-  --ui: "Jost", "Futura", "Avenir Next", system-ui, sans-serif;
+  --ui: "UI Macron", "Jost", "Futura", "Avenir Next", system-ui, sans-serif;
   --han: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --wrap: 1200px;
   color-scheme: dark;
@@ -430,7 +430,7 @@ html:not([lang="en"]) .thumbs .tn { letter-spacing: 0.04em; }
 .js .slide.on .case, .js .slide.on .car-info > * { animation: carin 0.7s cubic-bezier(.2, .7, .2, 1) both; }
 .js .slide.on .car-info > :nth-child(2) { animation-delay: 0.06s; } .js .slide.on .car-info > :nth-child(3) { animation-delay: 0.12s; } .js .slide.on .car-info > :nth-child(4) { animation-delay: 0.18s; }
 @keyframes carin { from { opacity: 0; transform: translateY(10px) scale(0.99); } }
-@media (max-width: 640px) { .car-tabs button { padding: 0 14px; letter-spacing: 0.1em; } .car-tabs button small { display: none; } .thumbs button { width: 120px; } .car-info { min-height: 0; } }
+@media (max-width: 640px) { .car-tabs { gap: 4px; max-width: 100%; } .car-tabs button { white-space: nowrap; gap: 6px; padding: 0 12px; letter-spacing: 0.08em; } .car-tabs button .icon { width: 16px; height: 16px; } .car-tabs button small { display: none; } .thumbs button { width: 120px; } .car-info { min-height: 0; } }
 
 /* ---------- other languages: matching faces for each script, and right-to-left for Arabic */
 html[lang="zh-Hans"] { --display: "Noto Serif SC", serif; --serif: "Noto Serif SC", serif; --ui: "Noto Sans SC", "Jost", sans-serif; }
@@ -1136,7 +1136,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .cast2 .plate { position: absolute; left: 7%; right: 7%; top: 62.6%; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .cast2 h4 { font: 500 11.4cqw/1 var(--serif); color: #fbf6e8; letter-spacing: 0.01em; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
 .cast2 em { margin-top: 3.1cqw; font: 600 max(8px, 4.3cqw)/1 var(--ui); font-style: normal; letter-spacing: 0.24em; text-transform: uppercase; color: #e6bd62; white-space: nowrap; }
-.cast2 p { margin-top: 3.6cqw; font: 400 max(10px, 5.5cqw)/1.28 var(--ui); color: #f1ecdd; text-wrap: balance; }
+.cast2 p { margin-top: 3.6cqw; font: 400 max(11.5px, 5.5cqw)/1.28 var(--ui); color: #f1ecdd; text-wrap: balance; }
 @media (min-width: 1000px) {
   .scene-reg { min-height: min(56.28vw, 1182px); }
   .scene-reg > .wrap { max-width: 2100px; padding: 4.4vw 5.6vw 4.6vw 8.6vw; }
@@ -1225,7 +1225,12 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   .rt-tray img { aspect-ratio: 900 / 290; width: 100%; height: auto; object-fit: cover; }
 }
 @media (max-width: 900px) { .rt-notes { grid-template-columns: minmax(0, 520px); justify-content: center; } }
-@media (max-width: 1023px) { .top nav { display: none; } }
+@media (max-width: 1023px) { .top nav { display: none; } .tools { margin-inline-start: auto; } }
+/* Retest 2: the language menu opens from the button's start edge on phones, so every name stays on screen */
+@media (max-width: 640px) { .lang-menu { inset-inline-end: auto; inset-inline-start: 0; } }
+/* English section names stay on one line on iPad landscape */
+.top nav a { white-space: nowrap; }
+@media (min-width: 1024px) and (max-width: 1199px) { .top .wrap { gap: 16px; } .top nav { gap: 14px; } .top nav a { letter-spacing: 0.1em; } }
 
 /* V60 (2026-11-13): And the Details uses the seven reference cards. */
 .det7 { display: flex; flex-wrap: wrap; justify-content: center; }
@@ -1425,6 +1430,9 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 @media (min-width: 1280px) { [dir="rtl"] .scene-rounds > .wrap { direction: ltr; } [dir="rtl"] .scene-rounds .head { direction: rtl; } }
 @media (min-width: 701px) { [dir="rtl"] .var-top { transform: translateX(-34%); -webkit-mask-image: linear-gradient(270deg, transparent, #000 30%), linear-gradient(#000 70%, transparent); mask-image: linear-gradient(270deg, transparent, #000 30%), linear-gradient(#000 70%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; } }
 @media (max-width: 700px) { [dir="rtl"] .var-top { right: auto; left: -128px; transform: scaleX(1); } }
+/* the tile dish keeps clear of the kicker on narrow phones */
+@media (max-width: 400px) { .var-top { width: 440px; right: -140px; } }
+@media (max-width: 420px) { [dir="rtl"] .var-top { left: -200px; } }
 /* Phone fixes (2026-11-13): the prologue painting drifts gently; Contact shows the reference's tile on its tray. */
 @keyframes pro-drift { from { transform: scale(1.03) translate3d(0, 0, 0); } to { transform: scale(1.12) translate3d(-1.6%, -1.2%, 0); } }
 .scene-pro > img { animation: pro-drift 28s ease-in-out infinite alternate; transform-origin: 60% 55%; will-change: transform; }
@@ -1468,6 +1476,11 @@ html:lang(hi) body * { letter-spacing: normal !important; }
 .askmei .wrap { padding-top: clamp(56px, 7vw, 96px); padding-bottom: clamp(56px, 7vw, 96px); }
 .am-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
 .am-cta { margin: 26px 0 0; }
+.chapter[tabindex="-1"]:focus { outline: none; }
+/* Jost draws the macron of ō beside the letter ("Jansō", "Shōwa"): those two letters come from a system sans */
+@font-face { font-family: "UI Macron"; src: local("Avenir Next"), local("Helvetica Neue"), local("Roboto"), local("Segoe UI"), local("Arial"), local("DejaVu Sans"); unicode-range: U+014C-014D, U+0304; }
+#learn { scroll-margin-top: 40px; }
+.am-note { margin: 12px 0 0; font-size: 14px; opacity: .78; }
 .am-chat { display: flex; flex-direction: column; gap: 14px; padding: clamp(18px, 2.4vw, 30px); border: 1px solid var(--line-strong); border-radius: 14px; background: linear-gradient(180deg, rgba(22, 44, 37, 0.78), rgba(9, 14, 12, 0.9)); box-shadow: 0 34px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 190, 0.08); }
 .am-q { align-self: flex-end; max-width: 82%; margin: 0; padding: 12px 18px; border: 1px solid rgba(227, 194, 124, 0.45); border-radius: 16px 16px 4px 16px; background: linear-gradient(180deg, rgba(227, 194, 124, 0.2), rgba(227, 194, 124, 0.08)); color: var(--ivory); font-size: 17px; line-height: 1.4; }
 .am-a { display: flex; align-items: flex-start; gap: 12px; max-width: 92%; }
@@ -1598,7 +1611,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
         <li style="--x: 318"><span class="dot"><span class="icon">{{ICON:hand-helping}}</span></span><h4 role="heading" aria-level="3">Guided Game</h4><p>A real hand, with Mei beside you.</p></li>
         <li style="--x: 601"><span class="dot"><span class="icon">{{ICON:mic}}</span></span><h4 role="heading" aria-level="3">Voiced Lessons</h4><p>Captioned lessons, each with a quick test.</p></li>
         <li style="--x: 893"><span class="dot"><span class="icon">{{ICON:target}}</span></span><h4 role="heading" aria-level="3">Placement</h4><p>Already play? A short test finds your level.</p></li>
-        <li style="--x: 1180"><span class="dot"><span class="icon">{{ICON:calendar-check}}</span></span><h4 role="heading" aria-level="3">Daily Drills</h4><p>Five fresh challenges a day.</p></li>
+        <li style="--x: 1180"><span class="dot"><span class="icon">{{ICON:calendar-check}}</span></span><h4 role="heading" aria-level="3">Daily Drills</h4><p>Eight quick questions a day.</p></li>
         <li style="--x: 1468"><span class="dot"><span class="icon">{{ICON:chart-line}}</span></span><h4 role="heading" aria-level="3">Game Analysis</h4><p>See what went right and wrong.</p></li>
       </ol>
     </div>
@@ -1617,6 +1630,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
             <p>Mei answers from the club's own rule sheets and lessons, across all 31 variations, and points you to the lesson that explains it.</p>
           </div>
           <p class="am-cta"><a class="btn gold" href="{{GAME}}" target="_blank" rel="noopener"><span class="icon">{{ICON:graduation-cap}}</span>Ask Mei in the Academy</a></p>
+          <p class="am-note">Mei opens to every member when the club goes live.</p>
         </div>
         <div class="am-chat" role="group" aria-label="A sample conversation with Mei">
           <p class="am-q">What is a passport in the East round?</p>
@@ -1896,8 +1910,8 @@ html:lang(hi) body * { letter-spacing: normal !important; }
       <div class="earn pcards earn4">
         <article style="--x: 204"><img src="cards/earn-coins.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></div></article>
         <article style="--x: 592"><img src="cards/earn-calendar.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>The Season Track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></div></article>
-        <article style="--x: 980"><img src="cards/earn-stamp.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>World Tour Stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></div></article>
-        <article style="--x: 1369"><img src="cards/earn-tag.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></div></article>
+        <article style="--x: 980"><img src="cards/earn-stamp.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>World Tour Stamps</h4><p>Seven destinations give you their table cloth when you play there, and a win in Hong Kong, Tokyo or a Dubai club opens that city's own room.</p></div></article>
+        <article style="--x: 1369"><img src="cards/earn-tag.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Buy Jong Points</h4><p>From launch, top up to reach a piece sooner. Season rewards stay earned only.</p></div></article>
       </div>
       <p class="promise"><span class="icon">{{ICON:shield-check}}</span>Nothing in the Atelier changes gameplay or your rating.</p>
       </div>
@@ -1996,7 +2010,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
 
   // ---- the header follows you down the page
   const links = new Map([...document.querySelectorAll('.top nav a[data-sec]')].map((a) => [a.dataset.sec, a]));
-  const owner = { rounds: 'play', ritual: 'play', variations: 'play' };
+  const owner = { askmei: 'learn', rounds: 'play', ritual: 'play', variations: 'play', interlude: 'collect', final: 'club' };
   const spy = new IntersectionObserver((es) => es.forEach((e) => {
     if (!e.isIntersecting) return;
     const id = owner[e.target.id] || e.target.id;
@@ -2050,7 +2064,9 @@ html:lang(hi) body * { letter-spacing: normal !important; }
         slides.forEach((s, n) => s.classList.toggle('on', n === at));
         thumbs.forEach((b, n) => (n === at ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
         count.textContent = at + 1;
-        const b = thumbs[at]; strip.scrollTo({ left: b.offsetLeft - strip.clientWidth / 2 + b.clientWidth / 2, behavior: still ? 'auto' : 'smooth' });
+        const b = thumbs[at]; const centre = () => strip.scrollTo({ left: b.offsetLeft - strip.clientWidth / 2 + b.clientWidth / 2, behavior: still ? 'auto' : 'smooth' }); centre();
+        // the strip's arrows appear or hide as it scrolls, which changes its width: centre again once they settle
+        setTimeout(centre, 450);
       };
       panel.querySelector('.prev').addEventListener('click', () => show(at - 1));
       panel.querySelector('.next').addEventListener('click', () => show(at + 1));
@@ -2096,22 +2112,28 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   // ---- the club's music (the game's own ensemble), off until you ask for it
   const MUSIC = 'jongclub.site.music.v1';
   const btn = document.getElementById('music-btn');
-  let ctx = null, gain = null, zen = null;
+  let ctx = null, gain = null, zen = null, playing = false;
   // iPhone and iPad (iOS 17+): Web Audio is silenced by the ring/silent switch unless the page asks for playback,
   // so music and Mei's tour stayed mute for anyone with the switch on. The visitor turned the sound on themselves.
   const playback = () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {} };
   window.__playback = playback;
+  // One ensemble for the whole visit: its drones and hall run until the page closes, so turning the music
+  // off and on again must restart the same one, never stack a new one beside it.
   const play = () => {
     playback();
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     ctx.resume();
     if (!zen) { gain = ctx.createGain(); gain.gain.value = 0; gain.connect(ctx.destination); zen = new JCZen.ZenMusic(ctx, gain); }
+    else if (zen.stopped) { zen.stopped = false; clearTimeout(zen.timer); zen.timer = setTimeout(() => zen.phrase(), 400); }
+    playing = true;
     gain.gain.cancelScheduledValues(ctx.currentTime); gain.gain.setTargetAtTime(ducked ? 0.16 : 0.55, ctx.currentTime, 0.8);
   };
-  const hush = () => { if (!zen) return; gain.gain.cancelScheduledValues(ctx.currentTime); gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3); const z = zen; zen = null; setTimeout(() => { z.stop(); if (!zen) ctx.suspend(); }, 1500); };
+  const hush = () => { if (!playing) return; playing = false; gain.gain.cancelScheduledValues(ctx.currentTime); gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3); setTimeout(() => { if (!playing) { zen.stop(); ctx.suspend(); } }, 1500); };
   // Mei's voice sits on top: the music dips while she speaks.
   let ducked = false;
-  window.__duck = (d) => { ducked = d; if (zen) gain.gain.setTargetAtTime(d ? 0.16 : 0.55, ctx.currentTime, d ? 0.25 : 0.9); };
+  window.__duck = (d) => { ducked = d; if (playing) gain.gain.setTargetAtTime(d ? 0.16 : 0.55, ctx.currentTime, d ? 0.25 : 0.9); };
+  // A hidden tab goes quiet, like Mei, and picks up again when you come back.
+  document.addEventListener('visibilitychange', () => { if (!ctx || !playing) return; document.hidden ? ctx.suspend().catch(() => {}) : ctx.resume().catch(() => {}); });
   const set = (on) => { btn.setAttribute('aria-pressed', on); store.set(MUSIC, on ? '1' : '0'); on ? play() : hush(); };
   btn.addEventListener('click', () => set(btn.getAttribute('aria-pressed') !== 'true'));
   if (store.get(MUSIC) === '1') {
@@ -2140,6 +2162,8 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   const menu = document.getElementById('lang-menu'), lbtn = document.getElementById('lang-btn');
   let cur = 'en';
   window.__t = (en) => (I18N[cur] || {})[en.trim()] || en;
+  // Labels the page changes later keep their English source here, so a language change translates the current label, not the first one.
+  window.__attr = (el, a, en) => { const r = attrs.find(([e, x]) => e === el && x === a); if (r) r[2] = en; else attrs.push([el, a, en]); el.setAttribute(a, window.__t(en)); };
   const apply = (l) => {
     cur = l;
     const d = I18N[l] || {};
@@ -2200,7 +2224,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     if (i < 0 || !nx || current() !== key) return;
     nextTo = nx; cueAt = scrollY; nextBtn.hidden = false; requestAnimationFrame(() => nextBtn.classList.add('show'));
   };
-  nextBtn.addEventListener('click', () => { const nx = nextTo; hideCue(); if (nx) { pin = nx.id; pinAt = performance.now(); } if (nx) nx.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+  nextBtn.addEventListener('click', () => { const nx = nextTo; hideCue(); if (nx) { pin = nx.id; pinAt = performance.now(); } if (nx) nx.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); if (nx) { if (!nx.hasAttribute('tabindex')) nx.setAttribute('tabindex', '-1'); nx.focus({ preventScroll: true }); } });
   let on = false, paused = false, audio = null, playingKey = null, doneKey = null, lastSection = null, settle = 0, capTimer = 0, peekT = 0, itemT = 0;
   // Captions stay hidden; tapping, holding, hovering or focusing the circle shows them for a moment.
   const peek = (ms = 3500) => { live.classList.add('show'); clearTimeout(peekT); if (ms) peekT = setTimeout(() => { if (!live.matches(':hover') && !live.contains(document.activeElement)) live.classList.remove('show'); }, ms); };
@@ -2220,7 +2244,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   };
   const setPaused = (v) => {
     paused = v; live.classList.toggle('paused', v);
-    orb.setAttribute('aria-label', t(v ? 'Mei is paused. Tap to carry on.' : 'Mei is guiding you. Tap to pause.'));
+    window.__attr(orb, 'aria-label', v ? 'Mei is paused. Tap to carry on.' : 'Mei is guiding you. Tap to pause.');
     if (v) { clearTimeout(settle); if (actx) actx.suspend().catch(() => {}); live.classList.remove('talking'); window.__duck && window.__duck(false); }
     else { unlock(); if (audio && audio.sec !== current()) { fadeOut(); lastSection = null; } if (audio) { live.classList.add('talking'); window.__duck && window.__duck(true); } else onScroll(); }
   };
@@ -2262,8 +2286,10 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     settle = setTimeout(() => { const k2 = current(); if (k2 && k2 !== lastSection && (!audio || audio.sec !== k2)) speak(k2); }, 500);
   };
   const setOn = (v) => {
+    // Focus inside Mei's bar would fall to the page when it hides, so it goes back to her header button.
+    const refocus = !v && live.contains(document.activeElement);
     on = v; store.set(KEY, v ? '1' : '0'); btn.setAttribute('aria-pressed', v); invite.hidden = true; live.hidden = !v; paused = false; live.classList.remove('paused', 'show');
-    if (v) { unlock(); doneKey = null; lastSection = null; onScroll(); peek(4000); } else { clearTimeout(settle); fadeOut(); hideCue(); }
+    if (v) { unlock(); doneKey = null; lastSection = null; onScroll(); peek(4000); } else { clearTimeout(settle); fadeOut(); hideCue(); if (refocus) btn.focus(); }
   };
   addEventListener('scroll', onScroll, { passive: true });
   // A piece in the Atelier gets its own line once it has been on show for half a second.
@@ -2278,7 +2304,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   document.getElementById('mei-no').addEventListener('click', () => { invite.hidden = true; store.set(KEY, '0'); });
   document.getElementById('mei-stop').addEventListener('click', () => setOn(false));
   const ccBtn = document.getElementById('mei-cc'), CC_KEY = 'jongclub.site.captions';
-  const setCaptions = (v) => { live.classList.toggle('nocap', !v); ccBtn.setAttribute('aria-pressed', String(v)); ccBtn.setAttribute('aria-label', t(v ? 'Hide captions' : 'Show captions')); ccBtn.title = ccBtn.getAttribute('aria-label'); };
+  const setCaptions = (v) => { live.classList.toggle('nocap', !v); ccBtn.setAttribute('aria-pressed', String(v)); window.__attr(ccBtn, 'aria-label', v ? 'Hide captions' : 'Show captions'); window.__attr(ccBtn, 'title', v ? 'Hide captions' : 'Show captions'); };
   setCaptions(store.get(CC_KEY) !== '0');
   ccBtn.addEventListener('click', () => { const v = live.classList.contains('nocap'); store.set(CC_KEY, v ? '1' : '0'); setCaptions(v); });
   // The circle floats on the right edge: drag it up or down (a drag never counts as a tap), hold to read the caption.
@@ -2387,7 +2413,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     let i = 0, cur = 0, started = false, fading = false;
     const title = (k) => { ns.forEach((n) => n.classList.remove('show')); const n = ns[k]; if (n) { void n.offsetWidth; n.classList.add('show'); } };
     // Phones and tablets get the 720p clips: two 1440p streams crossfading stutter there.
-    const small = Math.min(screen.width, screen.height) <= 900 || innerWidth <= 1100;
+    const small = Math.min(screen.width, screen.height) <= 900 || innerWidth <= 1100 || navigator.maxTouchPoints > 1;
     const file = (k) => (small ? clips[k][0].replace('.mp4', '-720.mp4') : clips[k][0]);
     const load = (v, k) => { if (!v.src.endsWith(file(k))) { v.src = file(k); v.preload = 'auto'; v.load(); } };
     const next = () => {
