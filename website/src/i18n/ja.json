@@ -426,7 +426,7 @@
 "There are thirty-four destinations, each with its own rules, lesson and challenges that earn stamps.": "目的地は三十四。どこにも独自のルールとレッスン、そしてスタンプがもらえるチャレンジがあります。",
 "Win in Hong Kong, Tokyo or a Dubai club, and that city's signature room opens for you.": "香港、東京、またはドバイのクラブで勝てば、その街を象徴するルームが開きます。",
 "When you want stronger company, the Club is here.": "より強い相手と打ちたくなったら、クラブがあります。",
-"Every variation keeps its own rating, from Bronze to Master.": "レーティングはルールごとに独立していて、ブロンズからマスターまで。",
+"Every variation keeps its own rating, from Beginner to Master.": "レーティングはルールごとに独立していて、初級からマスターまで。",
 "Seasons last six weeks, each themed on a city, with a league, a reward track and the Season Finals.": "シーズンは六週間。それぞれ街がテーマで、リーグ、報酬トラック、そしてシーズンファイナルがあります。",
 "You can also start a private club for your friends.": "友人たちとプライベート・クラブを作ることもできます。",
 "Your seat is set, and I'm waiting at the table.": "席の用意はできています。卓でお待ちしていますね。",
@@ -628,7 +628,7 @@
 "One game, played differently in every city it reached.": "ひとつのゲームが、たどり着いた街ごとに違う遊ばれ方をしてきました。",
 "Each destination brings its own rules, lesson, table and stamp challenges. Win in Hong Kong, Tokyo or a Dubai club to open that city's signature room.": "各目的地には独自のルール、レッスン、卓、スタンプチャレンジがあります。香港、東京、ドバイのクラブで勝てば、その都市を象徴する部屋が開きます。",
 "When you're ready for stronger company.": "より強い相手と打つ準備ができたら。",
-"Each variation has its own rating, Bronze to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "ルールごとに独自のレーティング、ブロンズからマスターまで。6週間のシーズンは各都市がテーマで、リーグ、報酬トラック、シーズンファイナルが待っています。",
+"Each variation has its own rating, Beginner to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "ルールごとに独自のレーティング、初級からマスターまで。6週間のシーズンは各都市がテーマで、リーグ、報酬トラック、シーズンファイナルが待っています。",
 "Or start a private club for your own circle.": "または、仲間内でプライベートクラブを。",
 "Your seat is set, and Mei is waiting.": "席は整い、Meiが待っています。",
 "Yours from the start": "最初からあなたのもの",
@@ -937,5 +937,8 @@
 "Ask me.": "私に聞いてくださいね。",
 "In the Academy you can ask me anything about Mahjong, from a single rule to the whole of India Rules.": "アカデミーでは、ルールひとつからインドルールの全体まで、麻雀のことなら何でも私に聞けます。",
 "I answer from the club's own rule sheets and lessons, and I'll point you to the lesson that explains it.": "クラブ自身のルール表とレッスンをもとに答え、解説しているレッスンもご案内します。",
-"Mei opens to every member when the club goes live.": "クラブの正式オープンとともに、Mei はすべてのメンバーの質問に答えます。"
+"Mei opens to every member when the club goes live.": "クラブの正式オープンとともに、Mei はすべてのメンバーの質問に答えます。",
+"Play Mahjong Solitaire": "麻雀ソリティアをプレイ",
+"Play 3D Mahjong Dimensions": "3D 麻雀ディメンションをプレイ",
+"Play Mahjong Triple Match": "麻雀トリプルマッチをプレイ"
 }

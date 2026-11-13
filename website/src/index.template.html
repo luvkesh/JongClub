@@ -1495,6 +1495,32 @@ html:lang(hi) body * { letter-spacing: normal !important; }
 [dir="rtl"] .am-bubble { border-radius: 16px 4px 16px 16px; }
 @media (max-width: 899px) { .am-grid { grid-template-columns: 1fr; } .am-q, .am-a { max-width: 100%; } .am-q { max-width: 90%; } }
 @media (max-width: 480px) { .am-a > img { width: 38px; height: 38px; } .am-q, .am-bubble p { font-size: 16px; } }
+
+/* ---------- retest round 2 leftovers: readable floors and tap sizes (no layout changes) */
+.vcard small, .thumbs .tn { font-size: 12px; }
+.pstamp b { font-size: 10.5px; max-width: 76px; }
+@media (min-width: 1000px) { .pstamp b { font-size: 11px; max-width: 84px; } }
+.mg-name em { font-size: 12px; }
+.sn span { font-size: max(12px, 2.05cqw); letter-spacing: 0.22em; margin-inline-end: -0.22em; }
+.cast2 em { font-size: max(11px, 4.3cqw); letter-spacing: 0.16em; }
+.cast2 p { font-size: max(11px, 5.5cqw); line-height: 1.2; }
+.rt-notes p { font-size: max(12px, 3.55cqw); }
+.sr-in b { font-size: max(11px, calc(15 * var(--u))); letter-spacing: 0.14em; padding-left: 0.14em; }
+.scene-hero .motto { font-size: max(12px, calc(17 * var(--u))); }
+.scene-hero .hero-cta .btn { font-size: max(12px, calc(17 * var(--u))); min-height: max(44px, calc(58 * var(--u))); }
+.tarrow { width: 44px; }
+@media (max-width: 640px) { .mg-play { width: 40px; height: 40px; } }
+.vgroup { scroll-margin-top: 90px; }
+.contact-list a { display: inline-block; padding-block: 8px; }
+@media (max-width: 640px) { .mi-start { min-height: 40px; } .mi-no { width: 40px; height: 40px; } }
+@media (pointer: coarse) { .top nav a { padding-block: 14px; } }
+/* five Learn steps in two columns: the last one sits centred on its own row */
+@media (min-width: 641px) and (max-width: 1080px) { .timeline li:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: 50%; } }
+/* the variation filters wrap two by two on narrow phones, never leaving one alone */
+@media (max-width: 430px) { html:not([lang="en"]) .vtabs { display: grid; grid-template-columns: 1fr 1fr; } html:not([lang="en"]) .vtabs button { justify-content: center; } }
+/* the three family rows open the matching view of all thirty-one */
+.families li[role="button"] { cursor: pointer; }
+.families li[role="button"]:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
 </style>
 
 <header class="top">
@@ -1812,9 +1838,9 @@ html:lang(hi) body * { letter-spacing: normal !important; }
         <p class="sub">Twenty solo games in 3D, on your own tiles, table and room.</p>
       </div>
       <div class="mg-mosaic">
-        <figure class="shot main"><img src="minigames/solitaire-1800.jpg" srcset="minigames/solitaire-1800.jpg 1800w, minigames/solitaire.jpg 2880w" sizes="(max-width: 960px) 100vw, 64vw" loading="lazy" alt="Mahjong Solitaire laid out in the Turtle layout on Gilded Porcelain tiles, on the club table."><figcaption><span class="mg-name"><b>Mahjong Solitaire</b><em>Featured</em></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
-        <figure class="shot"><img src="minigames/dimensions-1800.jpg" srcset="minigames/dimensions-1800.jpg 1800w, minigames/dimensions.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="3D Mahjong Dimensions: a block of obsidian tile cubes turned on the table to show free pairs."><figcaption><span class="mg-name"><b>3D Mahjong Dimensions</b></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
-        <figure class="shot"><img src="minigames/triple-1800.jpg" srcset="minigames/triple-1800.jpg 1800w, minigames/triple.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="Mahjong Triple Match with jade tiles gathering in a seven-place lacquered tray."><figcaption><span class="mg-name"><b>Mahjong Triple Match</b></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
+        <figure class="shot main"><img src="minigames/solitaire-1800.jpg" srcset="minigames/solitaire-1800.jpg 1800w, minigames/solitaire.jpg 2880w" sizes="(max-width: 960px) 100vw, 64vw" loading="lazy" alt="Mahjong Solitaire laid out in the Turtle layout on Gilded Porcelain tiles, on the club table."><figcaption><span class="mg-name"><b>Mahjong Solitaire</b><em>Featured</em></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play Mahjong Solitaire"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
+        <figure class="shot"><img src="minigames/dimensions-1800.jpg" srcset="minigames/dimensions-1800.jpg 1800w, minigames/dimensions.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="3D Mahjong Dimensions: a block of obsidian tile cubes turned on the table to show free pairs."><figcaption><span class="mg-name"><b>3D Mahjong Dimensions</b></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play 3D Mahjong Dimensions"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
+        <figure class="shot"><img src="minigames/triple-1800.jpg" srcset="minigames/triple-1800.jpg 1800w, minigames/triple.jpg 2880w" sizes="(max-width: 960px) 100vw, 34vw" loading="lazy" alt="Mahjong Triple Match with jade tiles gathering in a seven-place lacquered tray."><figcaption><span class="mg-name"><b>Mahjong Triple Match</b></span><a class="mg-play" href="{{GAME}}" target="_blank" rel="noopener" aria-label="Play Mahjong Triple Match"><span class="icon">{{ICON:play}}</span></a></figcaption></figure>
       </div>
       <div class="split">
         <div class="story">
@@ -1937,7 +1963,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
           <div class="rule"></div>
           <p class="sub">When you're ready for stronger company.</p>
           <div class="story">
-            <p>Each variation has its own rating, Bronze to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.</p>
+            <p>Each variation has its own rating, Beginner to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.</p>
             <p>Or start a private club for your own circle.</p>
           </div>
         </div>
@@ -2179,6 +2205,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     // Titles stay on one line: wide scripts count each character a little larger.
     titles.forEach((h) => { const t = h.textContent.trim(); let n = 0; for (const c of t) n += /[\u3000-\u9fff\uac00-\ud7af]/.test(c) ? 1.45 : 1; h.style.setProperty('--len', Math.max(n, 4)); });
     menu.querySelectorAll('button').forEach((b) => (b.dataset.lang === l ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
+    document.dispatchEvent(new Event('jc:lang'));
     document.querySelectorAll('.q-src').forEach((q) => { const out = q.nextElementSibling, hl = q.dataset.hl, txt = q.textContent; out.textContent = '';
       const k = l === 'en' ? txt.indexOf(hl) : -1; if (k < 0) out.textContent = txt; else { const em = document.createElement('em'); em.textContent = hl; out.append(txt.slice(0, k), em, txt.slice(k + hl.length)); }
       q.hidden = true; out.removeAttribute('aria-hidden'); });
@@ -2211,6 +2238,13 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
   const btn = document.getElementById('mei-btn'), invite = document.getElementById('mei-invite'), live = document.getElementById('mei-live'), cap = document.getElementById('mei-caption'), orb = document.getElementById('mei-orb');
   const t = (en) => (window.__t ? window.__t(en) : en);
+  // The caption keeps its English source, so a language change translates what is showing, even after she has finished.
+  let capEn = null;
+  const setCap = (en) => { capEn = en; cap.textContent = t(en); };
+  document.addEventListener('jc:lang', () => { if (capEn) cap.textContent = t(capEn); });
+  // Her captions repeat what she says aloud, so screen readers hear them only while she is silent.
+  const bubble = document.getElementById('mei-bubble');
+  const quietCaptions = (v) => bubble && (v ? bubble.setAttribute('aria-live', 'off') : bubble.removeAttribute('aria-live'));
   document.querySelectorAll('.mei-tool img, .mei-face img, .mei-orb img').forEach((img) => img.addEventListener('error', () => { img.parentElement.classList.add('noimg'); img.remove(); }));
   const sections = Object.keys(LINES).map((k) => document.getElementById(k)).filter(Boolean).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   // When Mei has finished a section, a cue invites the visitor on to the next; any scroll hides it.
@@ -2253,7 +2287,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   const current = () => { const mid = innerHeight / 2; if (pin) { const p = document.getElementById(pin), r = p && p.getBoundingClientRect(); if (r && r.top < innerHeight && r.bottom > 90) return pin; if (performance.now() - pinAt > 4000) pin = null; } let best = null; for (const s of sections) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) best = s; } return best && best.id; };
   const fadeOut = () => {
     if (!audio) return;
-    const a = audio; audio = null; playingKey = null; live.classList.remove('talking'); clearInterval(capTimer);
+    const a = audio; audio = null; playingKey = null; quietCaptions(false); live.classList.remove('talking'); clearInterval(capTimer);
     if (a.src) { const now = actx.currentTime; a.gain.gain.cancelScheduledValues(now); a.gain.gain.setValueAtTime(a.gain.gain.value, now); a.gain.gain.linearRampToValueAtTime(0, now + 0.35); try { a.src.stop(now + 0.4); } catch {} }
     window.__duck && window.__duck(false);
   };
@@ -2264,14 +2298,14 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     if (!key.startsWith('item-')) lastSection = key;
     a.gain.connect(voice);
     const cues = L.cues;
-    cap.textContent = t(cues[0].text);
+    setCap(cues[0].text);
     load(key).then((buf) => {
       if (audio !== a) return;
       const src = actx.createBufferSource(); src.buffer = buf; src.connect(a.gain); a.src = src; a.t0 = actx.currentTime;
-      src.onended = () => { if (audio !== a) return; audio = null; playingKey = null; doneKey = key; live.classList.remove('talking'); clearInterval(capTimer); window.__duck && window.__duck(false); if (!key.startsWith('item-')) showCue(key); };
-      src.start();
+      src.onended = () => { if (audio !== a) return; audio = null; playingKey = null; doneKey = key; quietCaptions(false); live.classList.remove('talking'); clearInterval(capTimer); window.__duck && window.__duck(false); if (!key.startsWith('item-')) showCue(key); };
+      src.start(); quietCaptions(true);
       if (!paused) { live.classList.add('talking'); window.__duck && window.__duck(true); }
-      const sync = () => { const el = actx.currentTime - a.t0; let c = cues[0]; for (const x of cues) if (el + 0.05 >= x.t) c = x; const txt = t(c.text); if (cap.textContent !== txt) cap.textContent = txt; };
+      const sync = () => { const el = actx.currentTime - a.t0; let c = cues[0]; for (const x of cues) if (el + 0.05 >= x.t) c = x; if (capEn !== c.text) setCap(c.text); };
       clearInterval(capTimer); capTimer = setInterval(sync, 150);
       // Fetch the neighbouring sections so the next one starts at once.
       const ks = Object.keys(LINES), i = ks.indexOf(key); [ks[i + 1], ks[i - 1]].forEach((k) => k && load(k).catch(() => {}));
@@ -2289,7 +2323,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     // Focus inside Mei's bar would fall to the page when it hides, so it goes back to her header button.
     const refocus = !v && live.contains(document.activeElement);
     on = v; store.set(KEY, v ? '1' : '0'); btn.setAttribute('aria-pressed', v); invite.hidden = true; live.hidden = !v; paused = false; live.classList.remove('paused', 'show');
-    if (v) { unlock(); doneKey = null; lastSection = null; onScroll(); peek(4000); } else { clearTimeout(settle); fadeOut(); hideCue(); if (refocus) btn.focus(); }
+    if (v) { window.__attr(orb, 'aria-label', 'Mei is guiding you. Tap to pause.'); unlock(); doneKey = null; lastSection = null; onScroll(); peek(4000); } else { clearTimeout(settle); fadeOut(); hideCue(); if (refocus) btn.focus(); }
   };
   addEventListener('scroll', onScroll, { passive: true });
   // A piece in the Atelier gets its own line once it has been on show for half a second.
@@ -2341,13 +2375,13 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   live.addEventListener('mouseenter', () => peek(0)); live.addEventListener('mouseleave', () => peek(1200));
   orb.addEventListener('focus', () => peek(0)); orb.addEventListener('blur', () => peek(1200));
   // Escape ends the tour, unless it was closing the language menu.
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && on && window.__langEsc !== e) setOn(false); });
+  addEventListener('keydown', (e) => { if (e.key !== 'Escape' || window.__langEsc === e) return; if (!invite.hidden) { invite.hidden = true; return; } if (on) setOn(false); });
   document.addEventListener('visibilitychange', () => { if (!actx || paused || !on) return; document.hidden ? actx.suspend().catch(() => {}) : actx.resume().catch(() => {}); });
   const saved = store.get(KEY);
   if (saved === '1') {
     // Sound needs a tap first, so a returning visitor's tour resumes on their first tap or key.
-    btn.setAttribute('aria-pressed', 'true'); live.hidden = false; cap.textContent = t('Tap anywhere and I will carry on the tour.'); peek(6000);
-    const first = (e) => { removeEventListener('click', first, true); removeEventListener('touchend', first, true); removeEventListener('keydown', first, true); if (on) return; if (e.target.closest && e.target.closest('#mei-stop, #mei-btn, #mei-orb')) return; on = true; unlock(); doneKey = null; lastSection = null; onScroll(); };
+    btn.setAttribute('aria-pressed', 'true'); live.hidden = false; setCap('Tap anywhere and I will carry on the tour.'); window.__attr(orb, 'aria-label', 'Mei is paused. Tap to carry on.'); peek(6000);
+    const first = (e) => { removeEventListener('click', first, true); removeEventListener('touchend', first, true); removeEventListener('keydown', first, true); if (on) return; if (e.target.closest && e.target.closest('#mei-stop, #mei-btn, #mei-orb')) return; on = true; window.__attr(orb, 'aria-label', 'Mei is guiding you. Tap to pause.'); unlock(); doneKey = null; lastSection = null; onScroll(); };
     addEventListener('click', first, true); addEventListener('touchend', first, true); addEventListener('keydown', first, true);
   } else if (saved !== '0') setTimeout(() => { if (!on) invite.hidden = false; }, 1800);
 })();
@@ -2413,7 +2447,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     let i = 0, cur = 0, started = false, fading = false;
     const title = (k) => { ns.forEach((n) => n.classList.remove('show')); const n = ns[k]; if (n) { void n.offsetWidth; n.classList.add('show'); } };
     // Phones and tablets get the 720p clips: two 1440p streams crossfading stutter there.
-    const small = Math.min(screen.width, screen.height) <= 900 || innerWidth <= 1100 || navigator.maxTouchPoints > 1;
+    const small = innerWidth <= 1100 || navigator.maxTouchPoints > 1;
     const file = (k) => (small ? clips[k][0].replace('.mp4', '-720.mp4') : clips[k][0]);
     const load = (v, k) => { if (!v.src.endsWith(file(k))) { v.src = file(k); v.preload = 'auto'; v.load(); } };
     const next = () => {
@@ -2499,7 +2533,31 @@ html:lang(hi) body * { letter-spacing: normal !important; }
       else { show('featured'); vtabs.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
     });
     show('featured');
+    // Each family row opens the by-type view at its own group.
+    const famT = ['formal', 'regional', 'house'];
+    document.querySelectorAll('.families li').forEach((li, i) => {
+      const go = () => { show('type'); const g = vg.querySelector(`[data-g="t-${famT[i]}"]`); (g || vg).scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+      li.setAttribute('role', 'button'); li.tabIndex = 0;
+      li.addEventListener('click', go);
+      li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
   }
+  // Filter tabs: one stop in the tab order, arrow keys move between them (as in the Atelier).
+  const tabKeys = (bar, panel) => {
+    if (!bar) return;
+    if (panel && !panel.id) panel.id = 'tp-' + Math.random().toString(36).slice(2, 8);
+    const bs = [...bar.querySelectorAll('[role="tab"]')];
+    const sync = () => bs.forEach((b) => { b.tabIndex = b.getAttribute('aria-selected') === 'true' ? 0 : -1; if (panel) b.setAttribute('aria-controls', panel.id); });
+    sync(); bar.addEventListener('click', () => setTimeout(sync));
+    bar.addEventListener('keydown', (e) => {
+      const i = bs.indexOf(document.activeElement); if (i < 0) return;
+      const rtl = document.documentElement.dir === 'rtl';
+      const j = { ArrowRight: rtl ? i - 1 : i + 1, ArrowLeft: rtl ? i + 1 : i - 1, Home: 0, End: bs.length - 1 }[e.key];
+      if (j == null) return; e.preventDefault();
+      const b = bs[(j + bs.length) % bs.length]; b.focus(); b.click();
+    });
+  };
+  tabKeys(vtabs, vg);
   // Mini-games: Explore takes you down to the full list; the tabs filter it by the kind of game.
   const list = document.querySelector('.games'), mtabs = document.querySelector('.mg-tabs'), ex = document.getElementById('mg-explore');
   if (list && mtabs) {
@@ -2509,6 +2567,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
       mtabs.querySelectorAll('button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
       list.querySelectorAll('li').forEach((li) => { li.hidden = b.dataset.c !== 'all' && li.dataset.c !== b.dataset.c; });
     });
+    tabKeys(mtabs, list);
   }
   ex && ex.addEventListener('click', () => document.querySelector('.games-head').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
 })();

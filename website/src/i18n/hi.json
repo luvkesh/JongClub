@@ -426,7 +426,7 @@
 "There are thirty-four destinations, each with its own rules, lesson and challenges that earn stamps.": "चौंतीस गंतव्य हैं, हर एक के अपने नियम, पाठ और मुहरें दिलाने वाली चुनौतियाँ।",
 "Win in Hong Kong, Tokyo or a Dubai club, and that city's signature room opens for you.": "हांगकांग, टोक्यो या किसी दुबई क्लब में जीतिए, और उस शहर का ख़ास कमरा आपके लिए खुल जाएगा।",
 "When you want stronger company, the Club is here.": "जब आपको ज़्यादा मज़बूत साथी चाहिए, क्लब यहीं है।",
-"Every variation keeps its own rating, from Bronze to Master.": "हर वेरिएशन की अपनी रेटिंग होती है, कांस्य से मास्टर तक।",
+"Every variation keeps its own rating, from Beginner to Master.": "हर वेरिएशन की अपनी रेटिंग होती है, शुरुआती से मास्टर तक।",
 "Seasons last six weeks, each themed on a city, with a league, a reward track and the Season Finals.": "सीज़न छह हफ़्ते चलते हैं, हर एक किसी शहर पर आधारित, एक लीग, इनाम ट्रैक और सीज़न फ़ाइनल्स के साथ।",
 "You can also start a private club for your friends.": "आप अपने दोस्तों के लिए एक निजी क्लब भी शुरू कर सकते हैं।",
 "Your seat is set, and I'm waiting at the table.": "आपकी सीट तैयार है, और मैं टेबल पर आपका इंतज़ार कर रही हूँ।",
@@ -628,7 +628,7 @@
 "One game, played differently in every city it reached.": "एक ही खेल, जिस भी शहर पहुँचा, वहाँ अलग ढंग से खेला गया।",
 "Each destination brings its own rules, lesson, table and stamp challenges. Win in Hong Kong, Tokyo or a Dubai club to open that city's signature room.": "हर गंतव्य के अपने नियम, पाठ, मेज़ और मुहर चुनौतियाँ हैं। हांगकांग, टोक्यो या दुबई के किसी क्लब में जीतें और उस शहर का ख़ास कमरा खोलें।",
 "When you're ready for stronger company.": "जब आप मज़बूत साथियों के लिए तैयार हों।",
-"Each variation has its own rating, Bronze to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "हर संस्करण की अपनी रेटिंग है, कांस्य से मास्टर तक। छह हफ़्ते के सीज़न, हर एक किसी शहर पर आधारित, लाते हैं एक लीग, इनाम ट्रैक और सीज़न फ़ाइनल।",
+"Each variation has its own rating, Beginner to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "हर संस्करण की अपनी रेटिंग है, शुरुआती से मास्टर तक। छह हफ़्ते के सीज़न, हर एक किसी शहर पर आधारित, लाते हैं एक लीग, इनाम ट्रैक और सीज़न फ़ाइनल।",
 "Or start a private club for your own circle.": "या अपने लोगों के लिए एक निजी क्लब शुरू करें।",
 "Your seat is set, and Mei is waiting.": "आपकी सीट तैयार है, और Mei इंतज़ार कर रही है।",
 "Yours from the start": "शुरू से आपका",
@@ -937,5 +937,8 @@
 "Ask me.": "मुझसे पूछिए।",
 "In the Academy you can ask me anything about Mahjong, from a single rule to the whole of India Rules.": "अकादमी में आप मुझसे माहजोंग के बारे में कुछ भी पूछ सकते हैं, एक नियम से लेकर पूरे इंडिया रूल्स तक।",
 "I answer from the club's own rule sheets and lessons, and I'll point you to the lesson that explains it.": "मैं क्लब की अपनी नियम-सूचियों और पाठों से जवाब देती हूँ, और वह पाठ भी बताऊँगी जो उसे समझाता है।",
-"Mei opens to every member when the club goes live.": "क्लब के लाइव होते ही Mei हर सदस्य के सवालों का जवाब देगी।"
+"Mei opens to every member when the club goes live.": "क्लब के लाइव होते ही Mei हर सदस्य के सवालों का जवाब देगी।",
+"Play Mahjong Solitaire": "माहजोंग सॉलिटेयर खेलें",
+"Play 3D Mahjong Dimensions": "3D माहजोंग डाइमेंशंस खेलें",
+"Play Mahjong Triple Match": "माहजोंग ट्रिपल मैच खेलें"
 }

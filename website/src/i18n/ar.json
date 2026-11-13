@@ -426,7 +426,7 @@
 "There are thirty-four destinations, each with its own rules, lesson and challenges that earn stamps.": "هناك أربع وثلاثون وجهة، لكلٍّ منها قواعدها ودرسها وتحدياتها التي تكسبك الأختام.",
 "Win in Hong Kong, Tokyo or a Dubai club, and that city's signature room opens for you.": "افز في هونغ كونغ أو طوكيو أو أحد نوادي دبي، فتُفتح لك الغرفة المميِّزة لتلك المدينة.",
 "When you want stronger company, the Club is here.": "وحين تريد منافسين أقوى، فالنادي هنا.",
-"Every variation keeps its own rating, from Bronze to Master.": "لكل نوع تصنيفه الخاص، من البرونز إلى الأستاذ.",
+"Every variation keeps its own rating, from Beginner to Master.": "لكل نوع تصنيفه الخاص، من المبتدئ إلى الأستاذ.",
 "Seasons last six weeks, each themed on a city, with a league, a reward track and the Season Finals.": "يمتد كل موسم ستة أسابيع، مستوحى من مدينة، مع دوري ومسار مكافآت ونهائيات الموسم.",
 "You can also start a private club for your friends.": "ويمكنك أيضًا إنشاء نادٍ خاص لأصدقائك.",
 "Your seat is set, and I'm waiting at the table.": "مقعدك جاهز، وأنا بانتظارك على الطاولة.",
@@ -628,7 +628,7 @@
 "One game, played differently in every city it reached.": "لعبة واحدة، تُلعب بطريقة مختلفة في كل مدينة وصلت إليها.",
 "Each destination brings its own rules, lesson, table and stamp challenges. Win in Hong Kong, Tokyo or a Dubai club to open that city's signature room.": "لكل وجهة قواعدها ودرسها وطاولتها وتحديات أختامها. افز في هونغ كونغ أو طوكيو أو نادٍ في دبي لتفتح غرفة تلك المدينة المميّزة.",
 "When you're ready for stronger company.": "حين تكون مستعدًا لرفقة أقوى.",
-"Each variation has its own rating, Bronze to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "لكل نسخة تصنيفها الخاص، من البرونزي إلى الأستاذ. مواسم من ستة أسابيع، لكلٍّ منها مدينة، تجلب دوريًا ومسار مكافآت ونهائيات الموسم.",
+"Each variation has its own rating, Beginner to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "لكل نسخة تصنيفها الخاص، من المبتدئ إلى الأستاذ. مواسم من ستة أسابيع، لكلٍّ منها مدينة، تجلب دوريًا ومسار مكافآت ونهائيات الموسم.",
 "Or start a private club for your own circle.": "أو أنشئ ناديًا خاصًا لدائرتك.",
 "Your seat is set, and Mei is waiting.": "مقعدك جاهز، وMei في انتظارك.",
 "Yours from the start": "لك منذ البداية",
@@ -937,5 +937,8 @@
 "Ask me.": "اسألني.",
 "In the Academy you can ask me anything about Mahjong, from a single rule to the whole of India Rules.": "في الأكاديمية يمكنك أن تسألني أي شيء عن الماهجونغ، من قاعدة واحدة إلى قواعد الهند كلها.",
 "I answer from the club's own rule sheets and lessons, and I'll point you to the lesson that explains it.": "أجيب من أوراق قواعد النادي ودروسه، وأدلّك على الدرس الذي يشرح الجواب.",
-"Mei opens to every member when the club goes live.": "تفتح Mei أبوابها لكل الأعضاء عند إطلاق النادي."
+"Mei opens to every member when the club goes live.": "تفتح Mei أبوابها لكل الأعضاء عند إطلاق النادي.",
+"Play Mahjong Solitaire": "العب سوليتير الماهجونغ",
+"Play 3D Mahjong Dimensions": "العب أبعاد الماهجونغ ثلاثية الأبعاد",
+"Play Mahjong Triple Match": "العب ماهجونغ المطابقة الثلاثية"
 }

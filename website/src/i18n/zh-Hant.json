@@ -426,7 +426,7 @@
 "There are thirty-four destinations, each with its own rules, lesson and challenges that earn stamps.": "一共有三十四個目的地，每一處都有自己的規則、課程，以及可以贏取印章的挑戰。",
 "Win in Hong Kong, Tokyo or a Dubai club, and that city's signature room opens for you.": "在香港、東京或杜拜俱樂部贏下一局，這座城市的招牌房間就會為你開啟。",
 "When you want stronger company, the Club is here.": "當你想要更強的對手時，俱樂部就在這裡。",
-"Every variation keeps its own rating, from Bronze to Master.": "每種玩法都有獨立的等級分，從青銅到大師。",
+"Every variation keeps its own rating, from Beginner to Master.": "每種玩法都有獨立的等級分，從入門到大師。",
 "Seasons last six weeks, each themed on a city, with a league, a reward track and the Season Finals.": "每個賽季為期六週，各以一座城市為主題，有聯賽、獎勵之路和賽季總決賽。",
 "You can also start a private club for your friends.": "你也可以為朋友們創建一家私人俱樂部。",
 "Your seat is set, and I'm waiting at the table.": "你的座位已備好，我在牌桌旁等你。",
@@ -628,7 +628,7 @@
 "One game, played differently in every city it reached.": "同一種遊戲，每到一座城市，便有不同的玩法。",
 "Each destination brings its own rules, lesson, table and stamp challenges. Win in Hong Kong, Tokyo or a Dubai club to open that city's signature room.": "每個目的地都有自己的規則、課程、牌桌和印章挑戰。在香港、東京或杜拜俱樂部獲勝，即可開啟該城市的標誌性房間。",
 "When you're ready for stronger company.": "當你準備好迎接更強的對手。",
-"Each variation has its own rating, Bronze to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "每種玩法都有獨立評級，從青銅到大師。為期六週的賽季各以一座城市為主題，帶來聯賽、獎勵之路和賽季總決賽。",
+"Each variation has its own rating, Beginner to Master. Six-week seasons, each themed on a city, bring a league, a reward track and the Season Finals.": "每種玩法都有獨立評級，從入門到大師。為期六週的賽季各以一座城市為主題，帶來聯賽、獎勵之路和賽季總決賽。",
 "Or start a private club for your own circle.": "或為你的小圈子開一家私人俱樂部。",
 "Your seat is set, and Mei is waiting.": "你的座位已備好，Mei 正在等你。",
 "Yours from the start": "一開始就歸你",
@@ -937,5 +937,8 @@
 "Ask me.": "問我吧。",
 "In the Academy you can ask me anything about Mahjong, from a single rule to the whole of India Rules.": "在學院裡，關於麻將的任何問題都可以問我，從一條規則到整套印度規則。",
 "I answer from the club's own rule sheets and lessons, and I'll point you to the lesson that explains it.": "我依據俱樂部自己的規則表和課程作答，還會為你指出講解它的那一課。",
-"Mei opens to every member when the club goes live.": "俱樂部正式上線後，Mei 將為每位會員解答。"
+"Mei opens to every member when the club goes live.": "俱樂部正式上線後，Mei 將為每位會員解答。",
+"Play Mahjong Solitaire": "玩麻將接龍",
+"Play 3D Mahjong Dimensions": "玩 3D 立體麻將",
+"Play Mahjong Triple Match": "玩麻將三消樂"
 }
