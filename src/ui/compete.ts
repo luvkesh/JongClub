@@ -575,7 +575,7 @@ export function tournamentsScreen(ctx: AppCtx): HTMLElement {
   };
   body.push(h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h3', {}, tr('Events')), h('p', { class: 'muted' }, tr('Tournaments are played against the club’s members. Prizes are Jong Points, trophies and frames.'))), h('label', { class: 'muted small t-scoring' }, tr('Scoring for your next event: '), scoringSel), ruleLine, list));
 
-  if (p.trophies.length) body.push(h('section', { class: 'section' }, h('h3', {}, tr('Your trophies')), h('div', { class: 'trophies' }, ...p.trophies.map((t) => h('div', { class: 'trophy' }, h('span', { class: 'tr-mark', 'aria-hidden': 'true' }, '🏆'), h('span', {}, t.name), h('span', { class: 'muted small' }, new Date(t.date).toLocaleDateString()))))));
+  if (p.trophies.length) body.push(h('section', { class: 'section' }, h('h3', {}, tr('Your trophies')), h('div', { class: 'trophies' }, ...p.trophies.map((t) => h('div', { class: 'trophy' }, h('span', { class: 'tr-mark', 'aria-hidden': 'true' }, '🏆'), h('span', {}, t.name), h('span', { class: 'muted small' }, new Date(t.date).toLocaleDateString(lang())))))));
   return page(tr('Tournaments'), tr('Compete for the cup'), h('button', { class: 'btn sm ghost clubs-back page-back', onclick: () => ctx.go('play') }, tr('‹ Play')), ...body);
 }
 
