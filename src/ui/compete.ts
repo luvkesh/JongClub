@@ -35,7 +35,7 @@ import { clear, fmt, h, tileImg } from './dom';
 import { icon } from './icons';
 import './daily.css';
 import type { SeatSpec, TableConfig } from './match';
-import { lang, tr, trn } from '../i18n';
+import { lang, listSep, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 
 const vinfo = (id: string) => VARIATIONS.find((v) => v.id === id) ?? VARIATIONS[0];
@@ -338,7 +338,7 @@ export function openRanked(ctx: AppCtx) {
       h('p', { class: 'muted small' }, games < 10 ? tr('Placement: {n} of 10 games played. Your rating moves faster until then.', { n: games }) : tr('{n} ranked {name} games.', { n: games, name: tr(vinfo(variation).short) })),
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': tr('Variation') }, ...playable.map((v) => h('button', { class: v.id === variation ? 'on' : '', role: 'radio', 'aria-checked': String(v.id === variation), onclick: () => ((variation = v.id), render()) }, `${v.flag} ${tr(v.short)}`))),
       h('ul', { class: 'rules-list' }, h('li', {}, tr('One East round against three club members near your rating.')), h('li', {}, tr('JongBot is off and turns are timed (20 seconds).')), h('li', {}, tr('Your rating changes by where you finish against each opponent. Nothing you buy ever changes it.'))),
-      h('p', { class: 'small' }, tr('Your table: '), field.map((m) => `${m.name} (${fmt(m.ratings[variation as keyof ClubMember['ratings']] ?? m.rating)})`).join(', ')),
+      h('p', { class: 'small' }, tr('Your table: '), field.map((m) => `${m.name} (${fmt(m.ratings[variation as keyof ClubMember['ratings']] ?? m.rating)})`).join(listSep())),
       h(
         'div',
         { class: 'btn-row' },

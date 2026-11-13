@@ -154,7 +154,7 @@ export function readingWith(counts: number[], kind: number): string {
   if (!d) return '';
   if (d.shape === 'sevenPairs') return tr('the {tile} makes seven pairs', { tile: tileLabel(kind) });
   if (d.shape === 'thirteenOrphans') return tr('the {tile} completes thirteen orphans', { tile: tileLabel(kind) });
-  return tr('the {tile} makes {sets}', { tile: tileLabel(kind), sets: [...d.sets.map(setLabel), setLabel({ type: 'pair', kind: d.pair })].join(', ') });
+  return tr('the {tile} makes {sets}', { tile: tileLabel(kind), sets: andList([...d.sets.map(setLabel), setLabel({ type: 'pair', kind: d.pair })]) });
 }
 
 /** A ready 13-tile concealed hand built from sets, mostly in one suit so the waits are interesting. */
@@ -403,7 +403,7 @@ function valueDrill(seed: number, variation: string): Drill {
       seed,
       variation: v,
       prompt: tr('How many {unit} is this winning hand worth?', { unit: tr(unit) }),
-      context: `${profile.name} · ${r.discarder === null ? tr('won by self-draw') : tr('won on a discard')}${game.players[winner].riichi ? ` ${tr('after declaring riichi')}` : ''}${winner === game.dealer ? ` · ${tr('dealer')}` : ''} · ${tr('seat wind {seat}, round wind {round}', { seat: wind(game.state.seatWinds[winner]), round: wind(game.prevailing) })}${hidden.length ? ` · ${tr('it also counts {items}', { items: hidden.join(', ') })}` : ''}`,
+      context: `${tr(profile.name)} · ${r.discarder === null ? tr('won by self-draw') : tr('won on a discard')}${game.players[winner].riichi ? ` ${tr('after declaring riichi')}` : ''}${winner === game.dealer ? ` · ${tr('dealer')}` : ''} · ${tr('seat wind {seat}, round wind {round}', { seat: wind(game.state.seatWinds[winner]), round: wind(game.prevailing) })}${hidden.length ? ` · ${tr('it also counts {items}', { items: andList(hidden) })}` : ''}`,
       hand: hand.sort((a, b) => a - b),
       melds,
       winTile,

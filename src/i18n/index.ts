@@ -147,6 +147,11 @@ export function trn(n: number, one: string, other: string, params: Record<string
   return fill(e[form] ?? e.other ?? other, p);
 }
 
+/** The separator between list items: "、" in Chinese and Japanese, "، " in Arabic, ", " otherwise. */
+export function listSep(): string {
+  return current === 'ar' ? '، ' : current === 'en' || current === 'hi' ? ', ' : '、';
+}
+
 /** Join a short list the way the language does ("A, B and C"). */
 export function andList(items: string[]): string {
   try {
