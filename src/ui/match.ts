@@ -63,7 +63,7 @@ import { showCheatSheet, usesDubaiCard } from './cheatSheet';
 import { ScoringGuide } from './scoringGuide';
 import { CALC_ICON, ScoreCalc } from './scoreCalc';
 import { handNow, onShow } from '../ai/handScore';
-import { handNowView, onShowView } from './handScoreView';
+import { handNowView, lineName, onShowView } from './handScoreView';
 import { fillEtiquetteBar, showSignal } from './etiquette';
 import { TeaService } from './tea';
 import { diceForVariation } from '../render/sideTables';
@@ -3469,7 +3469,7 @@ export class MatchController {
       const wm = r.revealedMelds ?? [];
       card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm), winFrom: this.winFrom(r) }));
       const items = h('ul', { class: 'score-items' });
-      for (const it of s.items) items.append(h('li', {}, h('span', {}, tr(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
+      for (const it of s.items) items.append(h('li', {}, h('span', {}, lineName(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
       const summary = `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;
       card.append(items, h('div', { class: 'score-total' }, h('span', {}, summary), h('strong', {}, tr('{n} pts', { n: fmt(s.points) }))));
       // Multiple winners: each other winner's hand and score, under the first.
@@ -3478,7 +3478,7 @@ export class MatchController {
         card.append(h('h3', { class: 'co-win-head' }, c.seat === this.me ? tr('You win the hand too') : tr('{name} wins the hand too', { name: g.players[c.seat].name })));
         card.append(winHandSection({ hand: c.revealedHand, melds: c.revealedMelds, flowers: g.players[c.seat].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(c.revealedHand, c.revealedMelds), winFrom: this.winFrom(r) }));
         const citems = h('ul', { class: 'score-items' });
-        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, tr(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
+        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, lineName(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
         const csum = `${fmt(cs.value)} ${tr(cs.unit)}${cs.fu ? ` ${cs.fu} ${tr('fu')}` : ''}${cs.tier ? ` · ${cs.tier}` : cs.limit ? ` · ${tr('Limit')}` : ''}`;
         card.append(citems, h('div', { class: 'score-total' }, h('span', {}, csum), h('strong', {}, tr('{n} pts', { n: fmt(cs.points) }))));
       }

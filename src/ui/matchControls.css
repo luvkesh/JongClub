@@ -173,7 +173,8 @@ body.with-console #hud { right: var(--console-w, 0px); }
   #hud.mode-phone .last-discard { top: calc(var(--head-b, 96px) + 6px); }
   @media (max-width: 600px) {
     #hud.mode-phone .seat-3 { top: calc(var(--head-b, 96px) + 8px); }
-    #hud.mode-phone .seat-1 { top: calc(var(--head-b, 96px) + 62px); }
+    /* Below the last-discard card (64 px tall from --head-b + 6 px), never under it. */
+    #hud.mode-phone .seat-1 { top: calc(var(--head-b, 96px) + 78px); }
   }
   /* The hand's status moves into the dock bar's first button; the passport chips into the Possibilities sheet. */
   .hud.mode-phone .bottom > .status-row .hand-status, .hud.mode-phone .bottom > .status-row .pp-pick { display: none; }
@@ -255,4 +256,19 @@ body.with-console #hud { right: var(--console-w, 0px); }
   .poss-sheet { max-height: calc(100dvh - 28px); gap: 6px; padding: 12px 16px; }
   .poss-sheet h2 { font-size: 17px; padding-bottom: 4px; }
   .poss-list { min-height: 0; }
+}
+
+/* Touch screens: every table control is at least 40 px to tap. Round buttons grow to 40 px; Mei's small
+   caption buttons grow to 32 px with an invisible ring that makes up the rest. */
+@media (pointer: coarse) {
+  .hud.mode-phone .hud-tools .icon-btn { width: 40px; height: 40px; }
+  .more-close { width: 40px; height: 40px; }
+  .sc-seg button { min-height: 40px; }
+  .hud .actions .draw-btn, .hud .status-row .sort-btn, .hud .quick-row .sort-btn { min-height: 40px; }
+  .hud > .coach .coach-btn { width: 32px; height: 32px; position: relative; }
+  .hud > .coach .coach-btn::after { content: ''; position: absolute; inset: -4px; }
+  .hud .card-grip { position: relative; }
+  .hud .card-grip::after { content: ''; position: absolute; inset: -5px -9px; }
+  .hud > .coach:not(.tucked) button.narrator { position: relative; }
+  .hud > .coach:not(.tucked) button.narrator::after { content: ''; position: absolute; inset: -7px; }
 }
