@@ -1437,6 +1437,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .sn b, .vhead .big, .families b { font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif; font-weight: 600; font-variant-numeric: lining-nums; letter-spacing: 0; }
 /* Retest 2026-11-13: Cormorant's old-style figures made "11 Portrait Frames" read as "ıı" and "3D" drop below the line; lining figures everywhere */
 body { font-variant-numeric: lining-nums; }
+/* Retest: a sideways swipe on the collection picture reaches the page script instead of being taken by the browser */
+.car-stage { touch-action: pan-y; }
 /* Retest 2026-11-13, languages: numbers and prices keep their order in Arabic; Devanagari letters never get pulled apart; Japanese breaks at phrase boundaries */
 [dir="rtl"] .car .count { direction: ltr; unicode-bidi: isolate; }
 [dir="rtl"] .price { unicode-bidi: plaintext; }
@@ -1915,7 +1917,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     <button type="button" class="mei-x mei-cc" id="mei-cc" aria-pressed="true" aria-label="Captions" title="Captions"><span class="icon cc-on">{{ICON:captions}}</span><span class="icon cc-off">{{ICON:captions-off}}</span></button>
     <button type="button" class="mei-x" id="mei-stop" aria-label="End the tour" title="End the tour"><span class="icon">{{ICON:volume-x}}</span></button>
   </div>
-  <button type="button" class="mei-next" id="mei-next" hidden><span>Continue</span><span class="icon">{{ICON:chevron-down}}</span></button>
+  <button type="button" class="mei-next" id="mei-next" aria-label="Continue" hidden><span>Continue</span><span class="icon">{{ICON:chevron-down}}</span></button>
 </div>
 <script>{{ZEN}}</script>
 <script>
@@ -2087,7 +2089,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   menu.addEventListener('keydown', (e) => { if (e.key === 'Escape') lbtn.focus(); });
   menu.closest('.lang').addEventListener('focusout', (e) => { if (!menu.hidden && e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   addEventListener('click', (e) => { if (!e.target.closest('.lang')) { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
-  addEventListener('keydown', (e) => { if (e.key === 'Escape') { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!menu.hidden) window.__langEsc = e; menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   const saved = store.get(LANG);
   const guess = (navigator.language || 'en').toLowerCase();
   const start = saved || (guess.startsWith('zh') ? (/hant|-tw|-hk|-mo/.test(guess) ? 'zh-Hant' : 'zh-Hans') : ['ja', 'ar', 'hi'].find((x) => guess.startsWith(x)) || 'en');
@@ -2112,7 +2114,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   const sections = Object.keys(LINES).map((k) => document.getElementById(k)).filter(Boolean).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   // When Mei has finished a section, a cue invites the visitor on to the next; any scroll hides it.
   const nextBtn = document.getElementById('mei-next');
-  let nextTo = null, cueAt = 0;
+  let nextTo = null, cueAt = 0, pin = null, pinAt = 0;
   // Mei's bar is given its exact height under the page, so it never lies over the last lines.
   if (window.ResizeObserver) new ResizeObserver(() => { const h = live.offsetHeight; if (h) document.body.style.setProperty('--mei-bar', h + 'px'); }).observe(live);
   const hideCue = () => { if (!nextTo) return; nextTo = null; nextBtn.classList.remove('show'); setTimeout(() => { if (!nextTo) nextBtn.hidden = true; }, 500); };
@@ -2121,7 +2123,7 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     if (i < 0 || !nx || current() !== key) return;
     nextTo = nx; cueAt = scrollY; nextBtn.hidden = false; requestAnimationFrame(() => nextBtn.classList.add('show'));
   };
-  nextBtn.addEventListener('click', () => { const nx = nextTo; hideCue(); if (nx) nx.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+  nextBtn.addEventListener('click', () => { const nx = nextTo; hideCue(); if (nx) { pin = nx.id; pinAt = performance.now(); } if (nx) nx.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
   let on = false, paused = false, audio = null, playingKey = null, doneKey = null, lastSection = null, settle = 0, capTimer = 0, peekT = 0, itemT = 0;
   // Captions stay hidden; tapping, holding, hovering or focusing the circle shows them for a moment.
   const peek = (ms = 3500) => { live.classList.add('show'); clearTimeout(peekT); if (ms) peekT = setTimeout(() => { if (!live.matches(':hover') && !live.contains(document.activeElement)) live.classList.remove('show'); }, ms); };
@@ -2143,9 +2145,11 @@ html:lang(hi) body * { letter-spacing: normal !important; }
     paused = v; live.classList.toggle('paused', v);
     orb.setAttribute('aria-label', t(v ? 'Mei is paused. Tap to carry on.' : 'Mei is guiding you. Tap to pause.'));
     if (v) { clearTimeout(settle); if (actx) actx.suspend().catch(() => {}); live.classList.remove('talking'); window.__duck && window.__duck(false); }
-    else { unlock(); if (audio) { live.classList.add('talking'); window.__duck && window.__duck(true); } else onScroll(); }
+    else { unlock(); if (audio && audio.sec !== current()) { fadeOut(); lastSection = null; } if (audio) { live.classList.add('talking'); window.__duck && window.__duck(true); } else onScroll(); }
   };
-  const current = () => { const mid = innerHeight / 2; let best = null; for (const s of sections) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) best = s; } return best && best.id; };
+  // After Continue, the section it scrolled to keeps the floor while it is on screen (also while the smooth scroll is still bringing it up), so short sections
+  // (the prologue, World Tour, the interlude) get their own line instead of the next section's.
+  const current = () => { const mid = innerHeight / 2; if (pin) { const p = document.getElementById(pin), r = p && p.getBoundingClientRect(); if (r && r.top < innerHeight && r.bottom > 90) return pin; if (performance.now() - pinAt > 4000) pin = null; } let best = null; for (const s of sections) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) best = s; } return best && best.id; };
   const fadeOut = () => {
     if (!audio) return;
     const a = audio; audio = null; playingKey = null; live.classList.remove('talking'); clearInterval(capTimer);
@@ -2233,7 +2237,8 @@ html:lang(hi) body * { letter-spacing: normal !important; }
   orb.addEventListener('click', () => { if (dragged || held) { dragged = false; held = false; return; } if (!on) { setOn(true); return; } setPaused(!paused); peek(); });
   live.addEventListener('mouseenter', () => peek(0)); live.addEventListener('mouseleave', () => peek(1200));
   orb.addEventListener('focus', () => peek(0)); orb.addEventListener('blur', () => peek(1200));
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && on) setOn(false); });
+  // Escape ends the tour, unless it was closing the language menu.
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && on && window.__langEsc !== e) setOn(false); });
   document.addEventListener('visibilitychange', () => { if (!actx || paused || !on) return; document.hidden ? actx.suspend().catch(() => {}) : actx.resume().catch(() => {}); });
   const saved = store.get(KEY);
   if (saved === '1') {
