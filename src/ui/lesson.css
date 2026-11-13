@@ -248,9 +248,10 @@
 .bd-mnemonic i { color: var(--muted); font-size: 14px; }
 /* A full suit, 1 to 9, stays on one row on phones (Basics "Three suits"). */
 @media (max-width: 560px) {
-  .ll-tiles:has(> :nth-child(9)) { flex-wrap: nowrap; gap: 2px; }
-  .ll-tiles:has(> :nth-child(9)) { width: 100%; }
-  .ll-tiles:has(> :nth-child(9)) .tile2d { flex: none; width: calc((100% - 16px) / 9); min-width: 0; }
+  /* Exactly nine tiles: a longer row (a 14-tile hand) wraps instead of running off the card. */
+  .ll-tiles:has(> :nth-child(9):last-child) { flex-wrap: nowrap; gap: 2px; }
+  .ll-tiles:has(> :nth-child(9):last-child) { width: 100%; }
+  .ll-tiles:has(> :nth-child(9):last-child) .tile2d { flex: none; width: calc((100% - 16px) / 9); min-width: 0; }
 }
 /* A hand beside the Small Card that names it (Hand shapes, "Card hands"). */
 .hp-with-card { display: flex; align-items: center; gap: 20px; }

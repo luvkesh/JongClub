@@ -188,6 +188,12 @@ describe('the Gemini provider', () => {
     expect(await proxyGenerate('http://club/api/ask-mei', 'brief', [{ role: 'user', text: 'q' }], { fetch: f })).toBe('From the club.');
     expect(sent).toEqual({ system: 'brief', turns: [{ role: 'user', text: 'q' }] });
     await expect(proxyGenerate('http://club/api/ask-mei', 'b', [{ role: 'user', text: 'q' }], { fetch: async () => json(501, { error: 'not_configured', message: 'no key' }) })).rejects.toMatchObject({ code: 'needs-key' });
+    // Gemini's refusals passed on by the server keep their meaning.
+    const via = (status: number, body: object) => proxyGenerate('http://club/api/ask-mei', 'b', [{ role: 'user', text: 'q' }], { fetch: async () => json(status, body) });
+    await expect(via(502, { error: 'upstream', message: 'The Gemini API free tier is not available for this project. Please set up billing.' })).rejects.toMatchObject({ code: 'billing' });
+    await expect(via(422, { error: 'blocked', message: 'That question was blocked.' })).rejects.toMatchObject({ code: 'blocked' });
+    await expect(via(502, { error: 'empty', message: 'Mei had nothing to say.' })).rejects.toMatchObject({ code: 'empty' });
+    await expect(via(502, { error: 'upstream', message: 'Gemini answered 500.' })).rejects.toMatchObject({ code: 'server' });
   });
 
   it('knows what a Google key looks like', () => {

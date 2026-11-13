@@ -45,5 +45,5 @@ export const PASSPORT: Row[] = [
   ['Passport Practice', '护照练习', '護照練習', 'パスポート練習', 'تدريب الجواز', 'पासपोर्ट अभ्यास'],
   ['Aiming for', '目标', '目標', '狙い', 'يسعى إلى', 'लक्ष्य'],
   ['{name} is {state}: {passport}', '{name}{state}：{passport}', '{name}{state}：{passport}', '{name}は{state}：{passport}', '{name} {state}: {passport}', '{name} {state} है: {passport}'],
-  ['Practice table: hands were open, so no Jong Points, Club Level or rating change.', '练习桌：牌都是亮出的，所以没有 Jong 点数、俱乐部等级或评分变化。', '練習桌：牌都是亮出的，所以沒有 Jong 點數、俱樂部等級或評分變化。', '練習卓：手が公開されていたため、Jongポイント、クラブレベル、レーティングは変わりません。', 'طاولة تدريب: كانت الأيدي مكشوفة، فلا نقاط Jong ولا مستوى النادي ولا تغيير في التصنيف.', 'अभ्यास मेज़: पत्ते खुले थे, इसलिए Jong अंक, क्लब स्तर या रेटिंग में बदलाव नहीं।'],
+  ['Practice table: hands were open, so no Jong Points, Club Level or rating change.', '练习桌：牌都是亮出的，所以没有 Jong 积分、俱乐部等级或评分变化。', '練習桌：牌都是亮出的，所以沒有 Jong 積分、俱樂部等級或評分變化。', '練習卓：手が公開されていたため、Jong ポイント、クラブレベル、レーティングは変わりません。', 'طاولة تدريب: كانت الأيدي مكشوفة، فلا نقاط Jong ولا مستوى النادي ولا تغيير في التصنيف.', 'अभ्यास टेबल: हाथ खुले थे, इसलिए Jong पॉइंट्स, क्लब स्तर या रेटिंग में बदलाव नहीं।'],
 ];

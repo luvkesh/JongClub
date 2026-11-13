@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadProfile, type Profile } from '../src/progression/profile';
 import {
   ACHIEVEMENT_JP, ADS_PER_DAY, BUNDLES, FIRST_WIN_BONUS, FREE_LESSONS, LOGIN_LADDER,
-  adsLeft, buyBundleJp, canOpen, claimAchievement, claimChallenge, claimLogin, econOf, grantPurchase, lessonPrice, loginStatus, payAd, takeFirstWin, unlockLessonJp, weekChallenges,
+  adsLeft, buyBundleJp, bundlePrice, canOpen, claimAchievement, claimChallenge, claimLogin, econOf, grantPurchase, lessonPrice, loginStatus, payAd, takeFirstWin, unlockLessonJp, weekChallenges,
 } from '../src/economy/economy';
 import { ACADEMY_ORDER } from '../src/ui/academy';
 
@@ -55,6 +55,29 @@ describe('Jong Points economy', () => {
     grantPurchase(p, 'bundle:world', true);
     expect(canOpen(p, 'riichi', all)).toBe(true);
     expect(econOf(p).purchases[econOf(p).purchases.length - 1]).toMatchObject({ sku: 'bundle:world', demo: true });
+  });
+
+  it('bundles credit lessons already open (complete the set), never above buying the rest', () => {
+    const p = fresh();
+    p.jongPoints = 10_000;
+    const mastery = BUNDLES.find((b) => b.id === 'mastery')!;
+    expect(bundlePrice(p, mastery, all)).toEqual(mastery.price);
+    unlockLessonJp(p, 'efficiency', all);
+    unlockLessonJp(p, 'waits', all);
+    // 2,500 - 2 x 800 = 900 JP; 149 - 2 x 49 = 51 rupees.
+    expect(bundlePrice(p, mastery, all)).toEqual({ jp: 900, inr: 51 });
+    unlockLessonJp(p, 'defence', all);
+    // 2,500 - 2,400 = 100, cheaper than the last lesson alone (800).
+    expect(bundlePrice(p, mastery, all).jp).toBe(100);
+    const before = p.jongPoints;
+    expect(buyBundleJp(p, 'mastery', all)).toBe(true);
+    expect(before - p.jongPoints).toBe(100);
+    for (const b of BUNDLES) {
+      const q = fresh();
+      for (const l of b.lessons(all).slice(0, 1)) econOf(q).lessons.push(l);
+      const rest = b.lessons(all).slice(1).reduce((n, l) => n + lessonPrice(l).jp, 0);
+      expect(bundlePrice(q, b, all).jp, b.id).toBeLessThanOrEqual(rest);
+    }
   });
 
   it('pays the daily login ladder and restarts after a missed day', () => {

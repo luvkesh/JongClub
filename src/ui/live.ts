@@ -55,7 +55,7 @@ export function liveSection(host: LiveHost, cfg: () => TableConfig, rerender: ()
         'div',
         { class: 'table-row', role: 'listitem' },
         h('div', { class: 'tr-flag', 'aria-hidden': 'true' }, v.flag),
-        h('div', { class: 'tr-main' }, h('div', { class: 'tr-name' }, t.title, t.ranked ? h('span', { class: 'chip sm' }, tr('Ranked')) : null), h('div', { class: 'tr-meta' }, `${v.name} · ${tr(GAME_LENGTHS[t.length as GameLength]?.label ?? '')} · ${tr('hosted by {name}', { name: t.host })}`)),
+        h('div', { class: 'tr-main' }, h('div', { class: 'tr-name' }, t.title, t.ranked ? h('span', { class: 'chip sm' }, tr('Ranked')) : null), h('div', { class: 'tr-meta' }, `${tr(v.name)} · ${tr(GAME_LENGTHS[t.length as GameLength]?.label ?? '')} · ${tr('hosted by {name}', { name: t.host })}`)),
         h('div', { class: 'tr-seats' }, h('span', { class: 'pips' }, ...Array.from({ length: t.seats }, (_, i) => h('i', { class: i < t.seated ? 'on' : '' }))), `${t.seated} / ${t.seats}`),
         h('div', { class: 'tr-level' }, t.started ? tr('Playing') : tr('Waiting')),
         h('div', { class: 'tr-time' }, t.timer ? tr('{n}s turns', { n: t.timer }) : ''),
@@ -240,7 +240,7 @@ export function waitingRoom(host: LiveHost, s: TableSession) {
     });
     const specs = s.spectators();
     card.append(
-      h('p', { class: 'eyebrow' }, `${v.flag} ${v.name} · ${tr(GAME_LENGTHS[t.cfg.length]?.label ?? '')}${t.ranked ? ` · ${tr('Ranked')}` : ''}`),
+      h('p', { class: 'eyebrow' }, `${v.flag} ${tr(v.name)} · ${tr(GAME_LENGTHS[t.cfg.length]?.label ?? '')}${t.ranked ? ` · ${tr('Ranked')}` : ''}`),
       h('h3', {}, t.title),
       h('div', { class: 'wr-code' }, h('span', { class: 'muted small' }, tr('Table code')), h('strong', {}, s.code.toUpperCase()), h('button', { class: 'btn sm copy-btn', onclick: (e: Event) => void copyWithNote(e.currentTarget as HTMLButtonElement, s.code.toUpperCase()) }, tr('Copy'))),
       s.spectating ? '' : h('div', { class: 'wr-invite' }, h('button', { class: 'btn sm', onclick: (e: Event) => void inviteFriend(e.currentTarget as HTMLButtonElement, s.code, t.title) }, tr('Invite a friend')), h('span', { class: 'muted small' }, tr('Sends a link that opens this table.'))),

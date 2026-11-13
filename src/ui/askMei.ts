@@ -18,6 +18,8 @@ import type { App } from './app';
 /** One conversation for the whole visit (kept in sessionStorage by the chat itself). */
 let chat: AskMeiChat | null = null;
 const theChat = () => (chat ??= new AskMeiChat());
+/** Redraws the Ask Mei section on screen now: an answer that lands after the player left Learn and came back updates the new section, not the old one. */
+let redrawShown: () => void = () => {};
 
 /** What Mei says when an answer fails, by cause. */
 function errorLine(code: AskErrorCode): string {
@@ -110,9 +112,11 @@ export function askMeiSection(app: App): HTMLElement {
     input.value = '';
     grow();
     status.textContent = '';
+    // The question and Mei's thinking dots show at once: ask() keeps the question and marks the chat busy before it waits.
+    const answer = c.ask(text, context()).catch(() => undefined);
     draw();
-    await c.ask(text, context());
-    draw();
+    await answer;
+    redrawShown();
     if (!input.disabled && matchMedia('(hover: hover)').matches) input.focus({ preventScroll: true });
   }
 
@@ -203,6 +207,7 @@ export function askMeiSection(app: App): HTMLElement {
     ),
     body,
   );
+  redrawShown = () => void (section.isConnected && draw());
   showKey();
   return section;
 }

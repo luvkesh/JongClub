@@ -125,7 +125,7 @@ function listPage(ctx: AppCtx, clubs: PrivateClub[]) {
       'button',
       { class: 'club-card', onclick: () => ((view = { kind: 'club', id: c.id }), void render(ctx)) },
       crestEl(c.crest, 52),
-      h('span', { class: 'cc-main' }, h('span', { class: 'cc-name' }, c.name), h('span', { class: 'cc-meta' }, `${vinfo(c.variation).flag} ${vinfo(c.variation).name} · ${trn(c.members.length, '{n} member', '{n} members')}`)),
+      h('span', { class: 'cc-main' }, h('span', { class: 'cc-name' }, c.name), h('span', { class: 'cc-meta' }, `${vinfo(c.variation).flag} ${tr(vinfo(c.variation).name)} · ${trn(c.members.length, '{n} member', '{n} members')}`)),
       h('span', { class: 'cc-go', 'aria-hidden': 'true' }, '›'),
     ),
   );
@@ -186,7 +186,7 @@ function foundForm(ctx: AppCtx) {
   const drawRules = () => {
     const prof = getProfile(spec.variation);
     spec.houseRules = Object.fromEntries((prof?.houseRules ?? []).map((r) => [r.id, spec.houseRules[r.id] ?? r.default]));
-    const varSel = h('select', { id: 'club-var' }, ...playable().map((v) => h('option', { value: v.id, selected: v.id === spec.variation }, `${v.flag} ${v.name}`))) as HTMLSelectElement;
+    const varSel = h('select', { id: 'club-var' }, ...playable().map((v) => h('option', { value: v.id, selected: v.id === spec.variation }, `${v.flag} ${tr(v.name)}`))) as HTMLSelectElement;
     varSel.onchange = () => {
       spec.variation = varSel.value;
       spec.length = ctx.tableFor(spec.variation).length;
@@ -287,7 +287,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
           'div',
           { class: 'table-row', role: 'listitem' },
           h('div', { class: 'tr-flag', 'aria-hidden': 'true' }, v.flag),
-          h('div', { class: 'tr-main' }, h('div', { class: 'tr-name' }, t.title), h('div', { class: 'tr-meta' }, `${t.host} · ${v.name}`)),
+          h('div', { class: 'tr-main' }, h('div', { class: 'tr-name' }, t.title), h('div', { class: 'tr-meta' }, `${t.host} · ${tr(v.name)}`)),
           h('button', { class: 'btn sm', onclick: () => playLocal(ctx, c, members) }, tr('Sit down')),
         ),
       );
@@ -324,7 +324,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
   const league = h(
     'ol',
     { class: 'board club-league' },
-    ...c.league.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'nm' }, r.name, h('em', {}, ` ${trn(r.games, '{n} game', '{n} games')} · ${trn(r.wins, '{n} win', '{n} wins')}`)), h('span', { class: 'num' }, tr('{n} pts', { n: r.points })))),
+    ...c.league.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'nm' }, r.me && c.local ? tr('{name} (you)', { name: ctx.profile.name }) : r.name, h('em', {}, ` ${trn(r.games, '{n} game', '{n} games')} · ${trn(r.wins, '{n} win', '{n} wins')}`)), h('span', { class: 'num' }, tr('{n} pts', { n: r.points })))),
   );
   const weekEnd = new Date(Date.parse(`${c.week}T00:00:00Z`) + 7 * 86_400_000);
   const days = Math.max(0, Math.ceil((weekEnd.getTime() - Date.now()) / 86_400_000));
@@ -334,7 +334,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
   void clubsBackend()
     .leaderboard(c, { id: c.members.find((m) => m.role === 'founder' && c.local)?.id ?? '', rating: ctx.profile.ratings[c.variation] ?? ctx.profile.rating })
     .then((rows) => {
-      clear(board).append(...rows.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), avatarEl(r.avatar, r.name, 28), h('span', { class: 'nm' }, r.me && c.local ? tr('{name} (you)', { name: ctx.profile.name }) : r.name), h('span', { class: 'num' }, fmt(r.rating)))));
+      clear(board).append(...rows.map((r, i) => h('li', { class: r.me ? 'me' : '' }, h('span', { class: 'rk' }, String(i + 1)), avatarEl(r.me ? ctx.profile.avatar : r.avatar, r.name, 28), h('span', { class: 'nm' }, r.me && c.local ? tr('{name} (you)', { name: ctx.profile.name }) : r.name), h('span', { class: 'num' }, fmt(r.rating)))));
     })
     .catch((e: Error) => clear(board).append(h('li', {}, h('span', { class: 'muted small' }, e.message))));
 
@@ -342,7 +342,7 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
   const people = h(
     'div',
     { class: 'people' },
-    ...c.members.map((m) => h('div', { class: 'person' }, avatarEl(m.avatar, m.name, 40), h('div', { class: 'pmain' }, h('div', { class: 'pn' }, m.name === 'You' ? tr('{name} (you)', { name: ctx.profile.name }) : m.name, m.role === 'founder' ? h('span', { class: 'chip sm' }, tr('Founder')) : ''), h('div', { class: 'muted small' }, m.ai ? tr('Club roster member') : tr('Member since {date}', { date: new Date(m.joined).toLocaleDateString(lang()) }))))),
+    ...c.members.map((m) => h('div', { class: 'person' }, avatarEl(m.name === 'You' && c.local ? ctx.profile.avatar : m.avatar, m.name, 40), h('div', { class: 'pmain' }, h('div', { class: 'pn' }, m.name === 'You' ? tr('{name} (you)', { name: ctx.profile.name }) : m.name, m.role === 'founder' ? h('span', { class: 'chip sm' }, tr('Founder')) : ''), h('div', { class: 'muted small' }, m.ai ? tr('Club roster member') : tr('Member since {date}', { date: new Date(m.joined).toLocaleDateString(lang()) }))))),
   );
 
   const leave = h(
@@ -376,14 +376,14 @@ function clubPage(ctx: AppCtx, c: PrivateClub) {
       h(
         'div',
         { class: 'club-facts' },
-        h('p', {}, `${v.flag} ${v.name} · ${tr(GAME_LENGTHS[c.length as GameLength]?.label ?? '')} · ${trn(c.members.length, '{n} member', '{n} members')}`),
+        h('p', {}, `${v.flag} ${tr(v.name)} · ${tr(GAME_LENGTHS[c.length as GameLength]?.label ?? '')} · ${trn(c.members.length, '{n} member', '{n} members')}`),
         h('p', { class: 'muted small' }, ruleText.length ? tr('House rules: {rules}', { rules: ruleText.join(' · ') }) : tr('House rules: as written')),
         invite,
       ),
     ),
     h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h3', {}, tr('Club tables')), h('p', { class: 'muted' }, tr('Every table here plays the club’s rules.'))), tables, h('div', { class: 'btn-row clubs-actions' }, open)),
     h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h3', {}, tr('This week’s league')), h('p', { class: 'muted' }, `${tr('4 points for 1st, 2 for 2nd, 1 for 3rd.')} ${days ? trn(days, 'A new week starts in {n} day.', 'A new week starts in {n} days.') : tr('A new week starts tomorrow.')}`)), c.league.length ? league : h('p', { class: 'muted' }, tr('No club games this week yet.'))),
-    h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h3', {}, tr('Leaderboard')), h('p', { class: 'muted' }, tr('Members by {name} rating. Ratings move only in ranked games.', { name: v.name }))), board),
+    h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h3', {}, tr('Leaderboard')), h('p', { class: 'muted' }, tr('Members by {name} rating. Ratings move only in ranked games.', { name: tr(v.name) }))), board),
     h('section', { class: 'section' }, h('h3', {}, tr('Members')), people),
     h('div', { class: 'btn-row' }, leave),
   );

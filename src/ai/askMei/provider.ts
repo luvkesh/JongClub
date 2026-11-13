@@ -168,6 +168,10 @@ export async function proxyGenerate(endpoint: string, system: string, turns: Cha
   const body = (await r.json().catch(() => ({}))) as { text?: string; error?: string; message?: string };
   if (r.status === 501) throw new AskMeiError('needs-key', body.message ?? 'The server has no key for Ask Mei.');
   if (r.status === 429) throw new AskMeiError('quota', body.message ?? 'Too many questions for now.');
+  // The server passes Gemini's own refusals on (server/app.js): say what they are, as with a key on this device.
+  if (r.status !== 200 && /billing|free tier/i.test(body.message ?? '')) throw new AskMeiError('billing', body.message!);
+  if (r.status !== 200 && body.error === 'blocked') throw new AskMeiError('blocked', body.message ?? 'That question was blocked.');
+  if (r.status !== 200 && body.error === 'empty') throw new AskMeiError('empty', body.message ?? 'Mei had nothing to say.');
   if (r.status !== 200) throw new AskMeiError('server', body.message ?? `The server answered ${r.status}.`);
   if (!body.text) throw new AskMeiError('empty', 'Mei had nothing to say.');
   return body.text;

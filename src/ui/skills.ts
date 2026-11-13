@@ -53,7 +53,7 @@ function variationCard(ctx: AppCtx, s: SkillSummary): HTMLElement {
   return h(
     'article',
     { class: 'sk-var' },
-    h('header', { class: 'sk-head' }, h('h4', {}, `${v?.flag ?? ''} ${v?.short ?? s.variation}`), h('span', { class: 'muted small' }, trn(s.games, '{n} game measured', '{n} games measured'))),
+    h('header', { class: 'sk-head' }, h('h4', {}, `${v?.flag ?? ''} ${tr(v?.short ?? s.variation)}`), h('span', { class: 'muted small' }, trn(s.games, '{n} game measured', '{n} games measured'))),
     h(
       'div',
       { class: 'sk-grid' },

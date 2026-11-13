@@ -51,7 +51,13 @@ const write = (key: string, v: unknown) => {
   }
 };
 
-let current: Account | null = read<Account>(SESSION_KEY);
+/** A saved session only counts if it names a known provider and an account id (anything else plays as a guest). */
+const validSession = (a: unknown): Account | null => {
+  const x = a as Partial<Account> | null;
+  return x && typeof x === 'object' && typeof x.id === 'string' && x.id && typeof x.name === 'string' && typeof x.provider === 'string' && Object.prototype.hasOwnProperty.call(PROVIDER_LABEL, x.provider) ? (x as Account) : null;
+};
+
+let current: Account | null = validSession(read<unknown>(SESSION_KEY));
 
 /** The signed-in account (a guest counts once chosen), or null if nobody has chosen yet. */
 export const currentAccount = () => current;
@@ -66,7 +72,9 @@ export function activate(a: Account) {
   }
   const slot = `${GUEST_PROFILE_KEY}:${a.id}`;
   try {
-    // First time on this device: carry the guest's progress over to the account.
+    // First time on this device: MOVE the guest's progress to the account (user
+    // 2026-11-13: progress must not be copied over and over). The guest slot is
+    // emptied, so signing out and making another account starts that one fresh.
     // Either way an account never plays under the placeholder name "Guest".
     const own = localStorage.getItem(slot);
     const guest = own ? null : localStorage.getItem(GUEST_PROFILE_KEY);
@@ -74,6 +82,7 @@ export function activate(a: Account) {
     if (!own || !p.name || p.name === 'Guest') {
       if (!p.name || p.name === 'Guest') p.name = a.name;
       localStorage.setItem(slot, JSON.stringify(p));
+      if (guest) localStorage.removeItem(GUEST_PROFILE_KEY);
     }
   } catch {
     /* ignore */

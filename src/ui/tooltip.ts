@@ -121,6 +121,9 @@ export function installTooltips() {
     timer = window.setTimeout(() => owner === n && n.isConnected && showFor(n), e.pointerType === 'touch' ? 450 : 260);
   });
   document.addEventListener('pointerout', (e) => {
+    // A finger lifting fires pointerout straight after pointerup: that must not take back a tapped tip
+    // (it hides on its own timer, the next touch or a scroll).
+    if (e.pointerType === 'touch') return;
     if (owner && !owner.contains(e.relatedTarget as Node)) hideTip();
   });
   document.addEventListener('focusin', (e) => {

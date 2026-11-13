@@ -6,7 +6,7 @@
 // narrow cards hide it (container query in meiAside.css).
 
 import { parseKinds } from '../engine/tiles';
-import { tr } from '../i18n';
+import { tr, trn } from '../i18n';
 import { lessonsTranslated, lt } from '../i18n/lessons';
 import type { Lesson } from './lessonKit';
 import { h, tileImg } from './dom';
@@ -126,7 +126,7 @@ function upNext(x: AsideNext): HTMLElement {
       { class: 'ma-next' },
       h('p', { class: 'ma-k' }, x.title ? tr('Up next') : tr('Next')),
       h('p', { class: 'ma-t', lang: lessonsTranslated() ? null : 'en' }, x.title ? lt(x.title) : tr('The test')),
-      h('p', { class: 'ma-more' }, left > 1 ? tr('{n} more scenes, then the test', { n: left - 1 }) : x.title ? tr('Then the test') : tr('A few quick questions')),
+      h('p', { class: 'ma-more' }, left > 1 ? trn(left - 1, '{n} more scene, then the test', '{n} more scenes, then the test') : x.title ? tr('Then the test') : tr('A few quick questions')),
     ),
   );
 }
@@ -141,6 +141,6 @@ export function lessonContents(lesson: Lesson): HTMLElement {
     { class: 'mei-aside contents' },
     h('p', { class: 'ma-k' }, tr('In this lesson')),
     h('ol', {}, ...titles.slice(0, SHOW).map((t, i) => h('li', { style: `--i:${i}` }, h('b', {}, String(i + 1)), h('span', { lang: lessonsTranslated() ? null : 'en' }, lt(t))))),
-    h('p', { class: 'ma-more' }, more > 0 ? tr('{n} more scenes, then the test', { n: more }) : tr('Then the test')),
+    h('p', { class: 'ma-more' }, more > 0 ? trn(more, '{n} more scene, then the test', '{n} more scenes, then the test') : tr('Then the test')),
   );
 }

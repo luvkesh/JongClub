@@ -136,7 +136,8 @@ function createForm(app: App): HTMLElement {
     const s = h('select', { id }) as HTMLSelectElement;
     for (const [v, l] of options) s.append(h('option', { value: v, selected: v === value }, l));
     s.onchange = () => onChange(s.value);
-    return h('label', { class: 'field', for: id }, h('span', { title: tip ?? null }, label), s);
+    // The tip sits on the whole field, so a tap on the picker shows it on touch screens too.
+    return h('label', { class: 'field', for: id, title: tip ?? null }, h('span', {}, label), s);
   };
   const listTip = (rows: { label: string; detail: string }[]) => rows.map((r) => `${r.label}: ${r.detail}`).join('\n');
   app.lastConfig = cfg;

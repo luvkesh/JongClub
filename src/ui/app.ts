@@ -40,7 +40,7 @@ import { tr } from '../i18n';
 import { DEFAULT_TABLE, tableFor, type Lesson } from './screens/tables';
 import { homeScreen } from './screens/home';
 import { playScreen } from './screens/play';
-import { autostartLesson, learnScreen } from './screens/learn';
+import { autostartLesson, lastLesson, learnScreen } from './screens/learn';
 import { refreshResultsName, showResults } from './screens/results';
 import { labsHost, loadSettings, persistSettings, showSettings, type StoredSettings } from './screens/settings';
 import { devPanel, labsButton } from '../dev/panel';
@@ -144,7 +144,13 @@ export class App {
     this.go(joinCode ? 'play' : takeClubInvite() ? 'club' : SCREENS.includes(hash) ? hash : 'home');
     window.addEventListener('hashchange', () => {
       const h = location.hash.slice(1) as Screen;
-      if (SCREENS.includes(h) && h !== this.screen && !this.match && !this.replay) this.go(h);
+      if (!SCREENS.includes(h) || h === this.screen || this.match || this.replay) return;
+      // Back or forward with a dialog open: close it (as Escape would) rather than leave it over the new screen.
+      if (!this.modal.hidden) {
+        if (this.modal.querySelector('.results, .waiting-room')) return;
+        this.modal.hidden = true;
+      }
+      this.go(h);
     });
     this.applyLoadout();
     // City and country for the leaderboards: from the IP address (or GPS once allowed), quietly, once per launch.
@@ -241,7 +247,14 @@ export class App {
     narrator.stop();
     this.screen = screen;
     try {
-      history.replaceState(null, '', `#${screen}`);
+      // Each new screen is its own history entry, so Back returns to the previous
+      // tab (user 2026-11-13); the first screen replaces the entry it opened on.
+      const target = `#${screen}`;
+      if (location.hash !== target) {
+        if (this.navigated) history.pushState(null, '', target);
+        else history.replaceState(null, '', target);
+      }
+      this.navigated = true;
     } catch {
       /* sandboxed */
     }
@@ -282,6 +295,8 @@ export class App {
   }
 
   private rendered: Screen | null = null;
+  /** Set after the first screen, so later screens push a history entry (Back goes to the previous tab). */
+  private navigated = false;
 
   /** Fade whichever edge of the tab strip has more tabs past it, so a cut-off tab reads as "scroll for more". */
   private navEdges = () => {
@@ -308,7 +323,7 @@ export class App {
 
   // ------------------------------------------------------------ learn
 
-  learnLesson: Lesson = 'basics';
+  learnLesson: Lesson = lastLesson() ?? 'basics';
 
   guidedVariation = 'classic';
   /** The lesson a themed guided game follows ('words', 'tradition'), if any. */

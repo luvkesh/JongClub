@@ -157,6 +157,8 @@ export function buy(ctx: AppCtx, c: Cosmetic, done: () => void = () => ctx.go('a
               {
                 class: 'btn primary',
                 onclick: () => {
+                  // A second tap (or a stale sheet) must never charge twice or take the balance below zero.
+                  if (owns(p, c) || p.jongPoints < c.price) return void (o.hidden = true);
                   p.jongPoints -= c.price;
                   p.owned.push(key(c));
                   if (CATALOG.filter((x) => x.category === 'tileSet' && owns(p, x)).length >= 10) unlock(p, 'collector');

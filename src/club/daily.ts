@@ -24,7 +24,7 @@ export const dailyKey = (date: Date | string = new Date()): string => isoDay(dat
 /** One positive 31-bit seed per UTC day. Accepts 'YYYY-MM-DD' or any ISO timestamp. */
 export const dailySeed = (dateISO: string): number => seedOf('jongclub-daily', isoDay(dateISO));
 
-const variationName = (id: string) => VARIATIONS.find((v) => v.id === id)?.name ?? id;
+const variationName = (id: string) => tr(VARIATIONS.find((v) => v.id === id)?.name ?? id);
 
 // ------------------------------------------------------------ shared table spec
 

@@ -54,10 +54,11 @@ export function econOf(p: Profile, now = new Date()): Econ {
     kept: isObj(raw) ? arr(s.kept) : [...p.lessonsDone],
     lessons: arr(s.lessons),
     bundles: arr(s.bundles),
-    login: { last: typeof login.last === 'string' ? login.last : '', day: typeof login.day === 'number' && login.day >= 0 && login.day <= 7 ? login.day : 0 },
+    // A run needs a real day on the ladder (1-7); without one the next claim starts again at Day 1.
+    login: Number.isInteger(login.day) && (login.day as number) >= 1 && (login.day as number) <= 7 && typeof login.last === 'string' ? { last: login.last, day: login.day as number } : { last: '', day: 0 },
     firstWin: typeof s.firstWin === 'string' ? s.firstWin : '',
     ads: { day: typeof ads.day === 'string' ? ads.day : '', n: typeof ads.n === 'number' && ads.n >= 0 ? ads.n : 0 },
-    week: { id: typeof week.id === 'string' ? week.id : '', base: isObj(week.base) ? (week.base as Record<string, number>) : {}, claimed: arr(week.claimed) },
+    week: { id: typeof week.id === 'string' ? week.id : '', base: isObj(week.base) ? Object.fromEntries(Object.entries(week.base).filter(([, v]) => typeof v === 'number' && Number.isFinite(v))) as Record<string, number> : {}, claimed: arr(week.claimed) },
     achievements: arr(s.achievements),
     purchases: Array.isArray(s.purchases) ? (s.purchases as Econ['purchases']).filter((x) => isObj(x) && typeof x.sku === 'string') : [],
   };
@@ -254,12 +255,27 @@ export function unlockLessonJp(p: Profile, id: string, all: string[]): boolean {
   return true;
 }
 
-export function buyBundleJp(p: Profile, id: string): boolean {
+/**
+ * What a bundle costs this player: "complete the set" pricing (user 2026-11-13).
+ * Lessons already open count at their single price against the bundle price,
+ * and it never costs more than buying the rest one at a time.
+ */
+export function bundlePrice(p: Profile, b: Bundle, all: string[]): Price {
+  const list = b.lessons(all);
+  const open = list.filter((l) => canOpen(p, l, all));
+  const sum = (ls: string[], k: keyof Price) => ls.reduce((n, l) => n + lessonPrice(l)[k], 0);
+  const rest = list.filter((l) => !open.includes(l));
+  const of = (k: keyof Price) => (open.length ? Math.min(sum(rest, k), Math.max(0, b.price[k] - sum(open, k))) : b.price[k]);
+  return { jp: of('jp'), inr: of('inr') };
+}
+
+export function buyBundleJp(p: Profile, id: string, all?: string[]): boolean {
   const b = BUNDLES.find((x) => x.id === id);
   const e = econOf(p);
   if (!b || e.bundles.includes(id)) return !!b;
-  if (p.jongPoints < b.price.jp) return false;
-  p.jongPoints -= b.price.jp;
+  const { jp } = all ? bundlePrice(p, b, all) : b.price;
+  if (p.jongPoints < jp) return false;
+  p.jongPoints -= jp;
   e.bundles.push(id);
   return true;
 }

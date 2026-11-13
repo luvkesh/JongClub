@@ -49,6 +49,23 @@ const markLessonOpened = (id: string) => {
     // No storage (private mode): the path keeps saying "Not started".
   }
 };
+/** The lesson open on Learn, kept so a reload comes back to it rather than to the Basics. */
+const LESSON_KEY = 'jongclub.learnLesson.v1';
+export const lastLesson = (): Lesson | null => {
+  try {
+    const v = localStorage.getItem(LESSON_KEY);
+    return v && v in LESSONS ? (v as Lesson) : null;
+  } catch {
+    return null;
+  }
+};
+const rememberLesson = (id: string) => {
+  try {
+    localStorage.setItem(LESSON_KEY, id);
+  } catch {
+    // No storage: a reload opens the Basics.
+  }
+};
 const takeAutostart = () => {
   const v = autostartNext;
   autostartNext = false;
@@ -84,7 +101,7 @@ export function learnScreen(app: App) {
     'india-west': [tr('Play a West round hand'), indiaRound('W', tr('West Round Practice'))],
     'india-west-doubles': [tr('Play a West round hand'), indiaRound('W', tr('West Round Practice'))],
     'india-west-big': [tr('Play a West round hand'), indiaRound('W', tr('West Round Practice'))],
-    'india-north': [tr('Play a West round hand'), indiaRound('W', tr('West Round Practice'))],
+    'india-north': [tr('Play a North round hand'), indiaRound('N', tr('North Round Practice'))],
     indian: [tr('Play a Kolkata Joker Club hand'), practice('indian', tr('Kolkata Joker Club Practice'))],
     singapore: [tr('Play a Singapore hand'), practice('singapore', tr('Singapore Practice'))],
     hongkong: [tr('Play a Hong Kong hand'), practice('hongkong', tr('Hong Kong Practice'))],
@@ -99,6 +116,7 @@ export function learnScreen(app: App) {
     'uae-custom': [tr('Play a custom UAE hand'), practice('uae-custom', tr('Custom UAE Practice'))],
   };
   const id = app.learnLesson;
+  rememberLesson(id);
   const [cta, table] = tables[id] ?? [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))];
   // The current lesson's line in the level list, marked complete as soon as its test is passed.
   const state = h('span', { class: 'lv-state' }, app.profile.lessonsDone.includes(id) ? tr('Completed') : openedLessons().includes(id) ? tr('In progress') : tr('Not started'));
@@ -326,7 +344,8 @@ function learningPath(app: App, levels: Level[], current: Lesson, open: (l: Less
   // Lettered levels (11a, 18b) fold under their parent level.
   const parentOf = (l: Level) => (l.lesson && SUB[l.lesson] ? (levels.find((p) => p.lesson === SUB[l.lesson!]![0]) ?? null) : null);
   const begun = openedLessons();
-  const status = (l: Level) => (isDone(l) ? 'done' : l.lesson === current && begun.includes(current) ? 'progress' : 'todo');
+  // Begun but not passed: "In progress", whichever lesson is open now (the list used to forget a lesson begun before the current one).
+  const status = (l: Level) => (isDone(l) ? 'done' : l.lesson && begun.includes(l.lesson) ? 'progress' : 'todo');
   const STATUS = { done: tr('Completed'), progress: tr('In progress'), todo: tr('Not started') };
 
   // Free lessons say so; locked ones show their price.

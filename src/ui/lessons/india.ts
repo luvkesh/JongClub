@@ -694,7 +694,7 @@ export const indiaNorthLesson: Lesson = {
       },
     }),
     S('The East round again', 'If East picks the East round, it’s played just as before, with passports. East may make a passport compulsory, so every winner needs one. There are no exchanges, and it’s scored like the East round.', { tiles: ['444m 777s 222p'] }),
-    S('Small cards with jokers', 'With small cards, every player gets a card again. But now the flowers and seasons are jokers. They aren’t replaced, and they aren’t paid. A joker stands for any tile you need. Buying is allowed. Tables usually play the double limit cards, but you can use them all.', { tiles: ['F1', 'F6', 'GdGdGd WdWdWd 222s 666s 88s'] }),
+    S('Small cards with jokers', 'With small cards, every player gets a card again. But now the flowers and seasons are jokers. They aren’t replaced, and they aren’t paid. A joker stands for any tile you need. Buying is allowed. Tables usually play the double limit cards, but you can use them all.', { tiles: ['F1', 'F6', 'GdGdGd', 'WdWdWd', '222s', '666s', '88s'] }),
     S('Jokers on a small card', 'On a small card, a joker can be used for anything. It stands for any tile your card needs: in a pung, a chow, a mixed set or the pair. It works in your hand, and in a set you call from a discard too.', {
       table: {
         head: ['Small card joker', ''],

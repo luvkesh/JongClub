@@ -117,7 +117,7 @@ export function seasonsScreen(ctx: AppCtx): HTMLElement {
         'div',
         { class: 'btn-row left' },
         ready.length ? h('button', { class: 'btn primary', onclick: () => collect(ctx, prog, 'all') }, ready.length === 1 ? tr('Collect your reward') : trn(ready.length, 'Collect {n} reward', 'Collect {n} rewards')) : null,
-        h('button', { class: `btn ${ready.length ? 'ghost' : 'primary'}`, onclick: () => ctx.startMatch(ctx.tableFor(season.theme.destination)) }, tr('Play {name}', { name: dest.short })),
+        h('button', { class: `btn ${ready.length ? 'ghost' : 'primary'}`, onclick: () => ctx.startMatch(ctx.tableFor(season.theme.destination)) }, tr('Play {name}', { name: tr(dest.short) })),
         h('button', { class: 'btn ghost', onclick: () => ctx.go('daily') }, tr('Daily challenges')),
       ),
     ),

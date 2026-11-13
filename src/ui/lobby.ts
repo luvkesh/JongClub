@@ -142,7 +142,7 @@ export function tableSetup(d: SetupDeps): HTMLElement {
     if (!searching) return;
     const hits = playable.filter((e) => {
       const v = VARIATIONS.find((x) => x.id === e.variationId);
-      const hay = [e.name, tr(e.name), v?.short, v?.short && tr(v.short), v?.region && tr(v.region), v?.name, ...(e.id === 'uae' ? UAE_PROFILE.rulesets.map((r) => r.name) : [])].join(' ').toLowerCase();
+      const hay = [e.name, tr(e.name), v?.short, v?.short && tr(v.short), v?.region && tr(v.region), v?.name, ...(e.id === 'uae' ? UAE_PROFILE.rulesets.flatMap((r) => [r.name, tr(r.name)]) : [])].join(' ').toLowerCase();
       return q.split(/\s+/).every((w) => hay.includes(w));
     });
     clear(results).append(hits.length ? grid(hits) : h('p', { class: 'ts-note' }, tr('No rule set matches “{q}”.', { q: query.trim() })));
@@ -155,7 +155,7 @@ export function tableSetup(d: SetupDeps): HTMLElement {
     ? h(
         'div',
         { class: 'ts-uae', role: 'group', 'aria-label': tr('UAE / Dubai ruleset') },
-        h('p', { class: 'ts-uae-note' }, h('strong', {}, `${UAE_PROFILE.name}. `), UAE_PROFILE.note),
+        h('p', { class: 'ts-uae-note' }, h('strong', {}, `${tr(UAE_PROFILE.name)}. `), UAE_PROFILE.note),
         h(
           'div',
           { class: 'ts-uae-list' },
@@ -163,7 +163,7 @@ export function tableSetup(d: SetupDeps): HTMLElement {
             h(
               'button',
               { type: 'button', class: `ts-uae-opt ${r.variationId === cfg.variation ? 'on' : ''}`, 'aria-pressed': String(r.variationId === cfg.variation), title: r.detail, onclick: () => pick(r.variationId) },
-              h('span', { class: 'ts-uae-name' }, r.name),
+              h('span', { class: 'ts-uae-name' }, tr(r.name)),
               h('span', { class: 'ts-uae-engine' }, r.engine),
             ),
           ),
@@ -243,7 +243,7 @@ export function tableSetup(d: SetupDeps): HTMLElement {
     group('clock', tr('Game format'), tr('How long the match runs. Point at a format to see what it plays.'), h('div', { class: 'seg ts-formats', role: 'group', 'aria-label': tr('Match format') }, ...fmtButtons, fmtMore)),
     group('sliders', tr('Play style'), modeNote, modeSeg),
     // The AI level's own label is hidden in the bar, so its tip moves to the bar's label.
-    group('robot', tr('AI level'), d.aiLevel.querySelector('span')?.getAttribute('title') ?? null, d.aiLevel),
+    group('robot', tr('AI level'), d.aiLevel.getAttribute('title') ?? d.aiLevel.getAttribute('data-tip'), d.aiLevel),
   );
 
   const seats = h('details', { class: 'ts-seats ts-fold', open: seatsOpen }) as HTMLDetailsElement;
@@ -261,7 +261,7 @@ export function tableSetup(d: SetupDeps): HTMLElement {
   const summary = h('p', { class: 'ts-summary-t' });
   const summarise = () => {
     const v = VARIATIONS.find((x) => x.id === cfg.variation);
-    const name = v?.parent && v.ruleset ? v.ruleset : (current?.name ?? v?.name ?? profile.name);
+    const name = tr(v?.parent && v.ruleset ? v.ruleset : (current?.name ?? v?.name ?? profile.name));
     const fmt = FORMAT_NAME[cfg.length] ?? tr(GAME_LENGTHS[cfg.length].label);
     clear(summary).append(h('span', { class: 'ts-sum-flag', 'aria-hidden': 'true' }, v?.flag ?? ''), h('strong', {}, name), ` · ${fmt} · ${goulashOn ? tr('Goulash') : tr('Standard')}`);
   };
@@ -327,7 +327,7 @@ function houseRules(profile: RuleProfile, cfg: TableConfig, goulashOn: boolean):
           const value = cfg.houseRules[r.id] ?? r.default;
           for (const o of r.options) s.append(h('option', { value: o.value, selected: o.value === value }, tr(o.label)));
           s.onchange = () => (cfg.houseRules[r.id] = s.value);
-          return h('label', { class: 'field', for: id }, h('span', { title: houseRuleTip(r.id) }, tr(r.label)), s);
+          return h('label', { class: 'field', for: id, title: houseRuleTip(r.id) }, h('span', {}, tr(r.label)), s);
         }),
       ),
     );
