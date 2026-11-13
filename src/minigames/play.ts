@@ -221,7 +221,8 @@ export class MiniPlay {
       this.statsEl.insertBefore(el, after ?? null);
     }
     (el.firstChild as HTMLElement).textContent = label ?? '';
-    (el.lastChild as HTMLElement).textContent = text;
+    // Big counts read with separators, as on the results sheet (12,450, not 12450).
+    (el.lastChild as HTMLElement).textContent = text.replace(/\b\d{4,}\b/g, (n) => fmt(Number(n)));
   }
 
   private toastTimer = 0;
@@ -261,6 +262,8 @@ export class MiniPlay {
     this.cam.insets = side
       ? { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: 12, left: 10, right: Math.max(10, window.innerWidth - bb!.left + 6) }
       : { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: bb ? Math.max(40, H - bb.top + 6) : 86, left: 10, right: 10 };
+    // Toasts sit just under the top bar (whose stats can wrap to two rows on phones), never over it.
+    this.toastEl.style.top = `${Math.max(this.cam.insets.top + 4, H * 0.22)}px`;
     if (refit) this.fit();
   }
 
@@ -474,7 +477,9 @@ export class MiniPlay {
   private showResult(r: MiniResult, bestScore: boolean, bestTime: boolean, pay: { paid: number; bonus: number; capped: boolean }) {
     const today = earnedToday(this.def.id);
     const row = (k: string, v: string) => h('div', { class: 'stat' }, h('span', { class: 'k' }, k), h('span', { class: 'v' }, v));
-    const mins = `${Math.floor(r.seconds / 60)}:${String(Math.round(r.seconds) % 60).padStart(2, '0')}`;
+    // Whole seconds first, so 59.6 s reads 1:00, not 0:00.
+    const secs = Math.round(r.seconds);
+    const mins = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
     const title = r.won ? (this.start.daily ? tr('Daily puzzle solved') : r.headline ?? tr('Board cleared')) : tr('Good try');
     const tally = r.tally === undefined ? { label: tr('Tiles cleared'), text: `${r.cleared} / ${r.total}` } : r.tally;
     this.sheet(
