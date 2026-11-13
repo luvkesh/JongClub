@@ -126,7 +126,7 @@ export class MiniPlay {
   private buildHud(): HTMLElement {
     const def = this.def;
     const tool = (id: keyof typeof TOOL_ICONS, label: string, on: () => void) => {
-      const b = h('button', { type: 'button', class: 'mini-tool', 'aria-label': label, title: label, onclick: () => (sound.play('button'), on()) }, h('span', { class: 'mt-icon', html: svg(TOOL_ICONS[id]) }), h('span', { class: 'mt-label' }, label), h('span', { class: 'mt-badge', hidden: true }));
+      const b = h('button', { type: 'button', class: `mini-tool mt-${id}`, 'aria-label': label, title: label, onclick: () => (sound.play('button'), on()) }, h('span', { class: 'mt-icon', html: svg(TOOL_ICONS[id]) }), h('span', { class: 'mt-label' }, label), h('span', { class: 'mt-badge', hidden: true }));
       this.tools.set(id, b);
       return b;
     };
@@ -227,6 +227,9 @@ export class MiniPlay {
   private toastTimer = 0;
   private toast(text: string, tone: 'good' | 'bad' | 'info' = 'info') {
     const el = this.toastEl;
+    // Stats come and go, so the top bar's foot is measured afresh for each toast.
+    const tb = this.root.querySelector('.mini-top')?.getBoundingClientRect();
+    if (tb) this.root.style.setProperty('--mini-top-end', `${Math.round(tb.bottom)}px`);
     el.textContent = text;
     el.className = `mini-toast on ${tone}`;
     window.clearTimeout(this.toastTimer);
@@ -258,6 +261,7 @@ export class MiniPlay {
     const bb = bar?.getBoundingClientRect();
     // Short landscape screens stand the tool bar up along the right edge (CSS), so the board gets the height.
     const side = !!bb && bb.height > bb.width;
+    if (tb) this.root.style.setProperty('--mini-top-end', `${Math.round(tb.bottom)}px`);
     this.cam.insets = side
       ? { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: 12, left: 10, right: Math.max(10, window.innerWidth - bb!.left + 6) }
       : { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: bb ? Math.max(40, H - bb.top + 6) : 86, left: 10, right: 10 };
