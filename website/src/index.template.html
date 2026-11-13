@@ -991,7 +991,7 @@ footer .wrap { padding-block: 28px; font-size: 14px; color: #e9e1cc; }
 .vmore [hidden] { display: none !important; }
 .motto span + span::before { content: none; }
 .hero .motto span + span::before, .final .motto span + span::before { content: none; }
-.hero .motto span + span, .final .motto span + span { margin-left: 0.9em; }
+.hero .motto span + span, .final .motto span + span { margin-inline-start: 0.9em; }
 #minigames .head > .kicker, .atelier .head .kicker, #earn .subhead .kicker, .subhead.orn .kicker, .games-head .kicker { white-space: nowrap; }
 .kicker::before, .kicker::after { min-width: 16px; }
 #minigames::before { background: radial-gradient(14% 12% at 4% 6%, rgba(230, 90, 60, 0.14), transparent 70%), radial-gradient(14% 12% at 96% 6%, rgba(230, 90, 60, 0.14), transparent 70%); }
@@ -1437,6 +1437,11 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 .sn b, .vhead .big, .families b { font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif; font-weight: 600; font-variant-numeric: lining-nums; letter-spacing: 0; }
 /* Retest 2026-11-13: Cormorant's old-style figures made "11 Portrait Frames" read as "ıı" and "3D" drop below the line; lining figures everywhere */
 body { font-variant-numeric: lining-nums; }
+/* Retest 2026-11-13, languages: numbers and prices keep their order in Arabic; Devanagari letters never get pulled apart; Japanese breaks at phrase boundaries */
+[dir="rtl"] .car .count { direction: ltr; unicode-bidi: isolate; }
+[dir="rtl"] .price { unicode-bidi: plaintext; }
+html:lang(hi) body * { letter-spacing: normal !important; }
+:lang(ja) { word-break: auto-phrase; }
 /* Retest 2026-11-13: between phone and full desktop (iPad portrait and landscape) the stacked sections sat 16px from the screen edge while their neighbours had wide margins */
 @media (min-width: 760px) and (max-width: 1279.98px) { main .wrap { --g: max(16px, min(40px, calc(40px - (100vw - 1200px) / 2))); padding-left: max(var(--g), env(safe-area-inset-left, 0px)); padding-right: max(var(--g), env(safe-area-inset-right, 0px)); } }
 .sn b { font-size: 11.6cqw; }
@@ -2050,7 +2055,8 @@ body { font-variant-numeric: lining-nums; }
   const texts = [], attrs = [];
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement.closest('script, style, .lang-menu') || !n.nodeValue.trim() ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
   for (let n; (n = walk.nextNode()); ) texts.push([n, n.nodeValue]);
-  document.querySelectorAll('[alt], [aria-label]').forEach((el) => ['alt', 'aria-label'].forEach((a) => el.hasAttribute(a) && el.getAttribute(a).trim() && attrs.push([el, a, el.getAttribute(a)])));
+  const grab = (root) => root.querySelectorAll('[alt], [aria-label], [title]').forEach((el) => ['alt', 'aria-label', 'title'].forEach((a) => el.hasAttribute(a) && el.getAttribute(a).trim() && attrs.push([el, a, el.getAttribute(a)])));
+  grab(document.body);
   const titles = [...document.querySelectorAll('.title')];
   const menu = document.getElementById('lang-menu'), lbtn = document.getElementById('lang-btn');
   let cur = 'en';
@@ -2060,7 +2066,8 @@ body { font-variant-numeric: lining-nums; }
     const d = I18N[l] || {};
     const tr = (en) => { const k = en.trim(); const t = d[k]; return t ? en.replace(k, t) : en; };
     // The last two words of a sentence travel together, so no line ends on one lonely word.
-    const glue = (t) => (t.trim().split(/\s+/).length > 3 ? t.replace(/ (\S{1,14}\s*)$/, '\u00a0$1') : t);
+    // A slash stays with the word before it, and never ends up leading a lonely last word ("UAE / Dubai" in Arabic).
+    const glue = (t) => { t = t.replace(/ \/ /g, '\u00a0/ '); return t.trim().split(/\s+/).length > 3 && !/\/\s+\S{1,14}\s*$/.test(t) ? t.replace(/ (\S{1,14}\s*)$/, '\u00a0$1') : t; };
     texts.forEach(([n, en]) => { if (n.isConnected) n.nodeValue = glue(tr(en)); });
     attrs.forEach(([el, a, en]) => el.setAttribute(a, tr(en)));
     document.documentElement.lang = l;
@@ -2068,20 +2075,26 @@ body { font-variant-numeric: lining-nums; }
     if (FONTS[l] && !document.getElementById('font-' + l)) { const k = document.createElement('link'); k.id = 'font-' + l; k.rel = 'stylesheet'; k.href = 'https://fonts.googleapis.com/css2?family=' + FONTS[l] + '&display=swap'; document.head.appendChild(k); }
     // Titles stay on one line: wide scripts count each character a little larger.
     titles.forEach((h) => { const t = h.textContent.trim(); let n = 0; for (const c of t) n += /[\u3000-\u9fff\uac00-\ud7af]/.test(c) ? 1.45 : 1; h.style.setProperty('--len', Math.max(n, 4)); });
-    menu.querySelectorAll('button').forEach((b) => b.toggleAttribute('aria-current', b.dataset.lang === l) || (b.dataset.lang === l && b.setAttribute('aria-current', 'true')));
+    menu.querySelectorAll('button').forEach((b) => (b.dataset.lang === l ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
     document.querySelectorAll('.q-src').forEach((q) => { const out = q.nextElementSibling, hl = q.dataset.hl, txt = q.textContent; out.textContent = '';
       const k = l === 'en' ? txt.indexOf(hl) : -1; if (k < 0) out.textContent = txt; else { const em = document.createElement('em'); em.textContent = hl; out.append(txt.slice(0, k), em, txt.slice(k + hl.length)); }
       q.hidden = true; out.removeAttribute('aria-hidden'); });
     store.set(LANG, l);
   };
   lbtn.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; lbtn.setAttribute('aria-expanded', open); });
-  menu.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (!b) return; apply(b.dataset.lang); menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); });
+  menu.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (!b) return; apply(b.dataset.lang); menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); lbtn.focus(); });
+  // Keyboard: Escape inside the menu returns to the language button; tabbing out of the menu closes it.
+  menu.addEventListener('keydown', (e) => { if (e.key === 'Escape') lbtn.focus(); });
+  menu.closest('.lang').addEventListener('focusout', (e) => { if (!menu.hidden && e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   addEventListener('click', (e) => { if (!e.target.closest('.lang')) { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   addEventListener('keydown', (e) => { if (e.key === 'Escape') { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   const saved = store.get(LANG);
   const guess = (navigator.language || 'en').toLowerCase();
   const start = saved || (guess.startsWith('zh') ? (/hant|-tw|-hk|-mo/.test(guess) ? 'zh-Hant' : 'zh-Hans') : ['ja', 'ar', 'hi'].find((x) => guess.startsWith(x)) || 'en');
   if (start !== 'en') apply(start); else apply('en');
+  // The footer comes after this script, so its words join once the page is parsed.
+  const late = () => { const f = document.querySelector('footer'); if (!f) return; const w = document.createTreeWalker(f, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) }); for (let n; (n = w.nextNode()); ) texts.push([n, n.nodeValue]); grab(f); apply(cur); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', late, { once: true }); else late();
 })();
 </script>
 
