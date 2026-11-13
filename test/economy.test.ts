@@ -83,6 +83,13 @@ describe('Jong Points economy', () => {
     expect(q.jongPoints).toBe(5_000 - 1_800);
     expect(econOf(q).bundles).toEqual(['foundations']);
     expect(canOpen(q, 'strategy', all)).toBe(true);
+    // A bundle counts at its own price inside a bigger one: World then Complete Academy is never free.
+    const w = fresh();
+    w.jongPoints = 40_000;
+    const academy = BUNDLES.find((b) => b.id === 'academy')!;
+    const world = BUNDLES.find((b) => b.id === 'world')!;
+    expect(buyBundleJp(w, 'world', all)).toBe(true);
+    expect(bundlePrice(w, academy, all)).toEqual({ jp: academy.price.jp - world.price.jp, inr: academy.price.inr - world.price.inr });
     for (const b of BUNDLES) {
       const q = fresh();
       for (const l of b.lessons(all).slice(0, 1)) econOf(q).lessons.push(l);

@@ -263,9 +263,20 @@ export function unlockLessonJp(p: Profile, id: string, all: string[]): boolean {
 export function bundlePrice(p: Profile, b: Bundle, all: string[]): Price {
   const list = b.lessons(all);
   const open = list.filter((l) => canOpen(p, l, all));
+  const e = econOf(p);
+  const owned = BUNDLES.filter((x) => e.bundles.includes(x.id));
+  // A lesson bought (or kept) on its own counts at its single price; one opened by
+  // another bundle counts at that bundle's price per lesson, so a big bundle can't
+  // make a bigger one free (World then Complete Academy cost 0 before).
+  const credit = (l: string, k: keyof Price) => {
+    if (e.lessons.includes(l) || e.kept.includes(l)) return lessonPrice(l)[k];
+    const shares = owned.filter((x) => x.lessons(all).includes(l)).map((x) => x.price[k] / x.lessons(all).length);
+    return shares.length ? Math.min(lessonPrice(l)[k], ...shares) : lessonPrice(l)[k];
+  };
   const sum = (ls: string[], k: keyof Price) => ls.reduce((n, l) => n + lessonPrice(l)[k], 0);
+  const paid = (k: keyof Price) => open.reduce((n, l) => n + credit(l, k), 0);
   const rest = list.filter((l) => !open.includes(l));
-  const of = (k: keyof Price) => (open.length ? Math.min(sum(rest, k), Math.max(0, b.price[k] - sum(open, k))) : b.price[k]);
+  const of = (k: keyof Price) => (open.length ? Math.min(sum(rest, k), Math.max(0, Math.round(b.price[k] - paid(k)))) : b.price[k]);
   return { jp: of('jp'), inr: of('inr') };
 }
 
