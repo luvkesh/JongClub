@@ -287,7 +287,7 @@ export const indiaSouthLesson: Lesson = {
         winner: 'You collect 4,200',
       },
     }),
-    S('When nobody wins', 'If the wall runs out and nobody wins, the deal still passes to the next player, and the buy money waits for the next winner. Only when the very last game of the match is drawn with buy money still waiting does East keep the deal, and extra games are played until someone wins it.', { tiles: ['E'] }),
+    S('When nobody wins', 'If the wall runs out and nobody wins, the deal still passes to the next player, and the buy money waits for the next winner. Only when the very last game of the match is drawn with buy money still waiting does East keep the deal for one extra game. If that is drawn too, the money goes to whoever is in first place.', { tiles: ['E'] }),
     S('Card families', 'With fifty-five cards, it helps to know the families. Dragon and bamboo hands, like Royal Ruby and Imperial Jade. Wind hands, like Four Blessings. Pair hands, from Heavenly Twins to Dirty Pairs, any seven pairs, worth half limit. And long runs, like Golden Staircase, one to nine in one suit.', {
       cards: [
         { tiles: 'RdRdRd 111s 555s 777s 99s', title: 'Royal Ruby', alt: 'Double limit', text: 'Red dragon pung, three red bamboo pungs, a red bamboo pair' },

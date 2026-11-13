@@ -581,6 +581,16 @@ export class MahjongGame {
     return waits(this.concealedCounts(seat), pl.melds.length, this.shapesFor(seat), this.meldShapes(seat));
   }
 
+  /**
+   * Calling in the Mahjong Calling book's sense: one tile from a Mahjong this seat could really declare
+   * (p. 26). A hand of the right shape that its rules would refuse (a dirty West Goulash hand, one short
+   * of the minimum doubles) is not calling (the user, 2026-11-13: "as per book rules").
+   */
+  callingForMahjong(seat: number): boolean {
+    if (!this.isTenpai(seat)) return false;
+    return this.waitsOf(seat).some((k) => !!this.evaluateWin(seat, k, true, false));
+  }
+
   /** Best scoring reading of a winning hand, or null if not a legal win. */
   evaluateWin(seat: number, winKind: number, selfDrawn: boolean, extraInHand: boolean, afterKong = false, win: WinContext = {}): WinEvaluation | null {
     const pl = this.players[seat];
@@ -814,6 +824,12 @@ export class MahjongGame {
     return !this.table?.selfDrawOnly;
   }
 
+  /** May `seat` win on a tile `from` throws (a discard, a robbed kong, a set-aside North)? Not at a
+   *  self-draw-only table, and never on a partner's tile in team play (the user, 2026-11-13). */
+  winFrom(seat: number, from: number): boolean {
+    return seat !== from && this.discardWins() && !this.sameTeam(seat, from);
+  }
+
   /** Team play: which team a seat is on (0: East and West, 1: South and North), or null. */
   teamOf(seat: number): number | null {
     return this.table?.teams && this.profile.players === 4 ? teamOf(seat) : null;
@@ -838,7 +854,7 @@ export class MahjongGame {
     const p = this.profile;
     const kongDraws = !p.card && (p.big ? p.big.extras.kong : 1) > 0;
     const out = this.claimOptionsRaw(seat, discarder, tile).filter((o) => o.type === 'win' || o.type === 'buy' || (o.type === 'kong' ? kongDraws || held > 3 : held > 2));
-    return this.discardWins() ? out : out.filter((o) => o.type !== 'win');
+    return this.winFrom(seat, discarder) ? out : out.filter((o) => o.type !== 'win');
   }
 
   private claimOptionsRaw(seat: number, discarder: number, tile: Tile): ClaimOption[] {
@@ -1435,7 +1451,7 @@ export class MahjongGame {
         const options: Record<number, ClaimOption[]> = {};
         let any = false;
         for (let s = 0; s < this.profile.players; s++) {
-          if (s === seat) continue;
+          if (!this.winFrom(s, seat)) continue;
           if (this.evaluateWin(s, tile.kind, false, true, false, { robbedKong: true, winTileId: tile.id, discarder: seat }) && !this.isFuriten(s)) {
             options[s] = [{ type: 'win' }];
             any = true;
@@ -1456,7 +1472,7 @@ export class MahjongGame {
       const options: Record<number, ClaimOption[]> = {};
       let any = false;
       for (let s = 0; s < this.profile.players; s++) {
-        if (s === seat || !this.discardWins()) continue;
+        if (!this.winFrom(s, seat)) continue;
         const ev = this.evaluateWin(s, kind, false, true, false, { robbedKong: true, winTileId: tile.id, discarder: seat });
         if (ev?.decomposition.shape === 'thirteenOrphans' && !this.isFuriten(s)) {
           options[s] = [{ type: 'win' }];
@@ -1512,7 +1528,7 @@ export class MahjongGame {
     const options: Record<number, ClaimOption[]> = {};
     let any = false;
     for (let s = 0; s < this.profile.players; s++) {
-      if (s === seat || !this.discardWins()) continue;
+      if (!this.winFrom(s, seat)) continue;
       if (this.evaluateWin(s, k, false, true, false, { winTileId: tile.id, discarder: seat }) && !this.isFuriten(s)) {
         options[s] = [{ type: 'win' }];
         any = true;
@@ -1626,7 +1642,7 @@ export class MahjongGame {
       prevailing: this.prevailing,
       score,
       hands: this.players.map((p, s) => ({ concealed: p.hand.map((t) => t.kind), melds: this.scoringMelds(s), jokers: this.profile.wilds ? this.splitWilds(p.hand).wilds.map((t) => t.kind) : undefined })),
-      calling: (s) => this.isTenpai(s),
+      calling: (s) => this.callingForMahjong(s),
     });
   }
 
@@ -1758,11 +1774,15 @@ export class MahjongGame {
     });
     // India Rules: when the last game is a draw with buy money in the bank, the book's rule applies
     // (p. 16): the deal stays with East and an extra game is played for the next winner to collect it.
-    if (round.finished && r.type === 'draw' && this.baseProfile.id === 'india' && (this.state.riichiPot ?? 0) > 0) {
+    // Only one (the user, 2026-11-13): if the extra game is drawn too, the match ends and the money
+    // left in the bank goes to first place (payLeftoverPot).
+    let extra = false;
+    if (round.finished && r.type === 'draw' && this.baseProfile.id === 'india' && (this.state.riichiPot ?? 0) > 0 && !this.state.extraGame) {
       const cur = this.state.round;
       round = { ...cur, handsPlayed: cur.handsPlayed + 1, repeat: cur.repeat + 1, finished: false };
+      extra = true;
     }
-    return { round, goulash, over: round.finished || (this.profile.endOnBust && this.players.some((p) => p.score < 0)) };
+    return { round, goulash, extra, over: round.finished || (this.profile.endOnBust && this.players.some((p) => p.score < 0)) };
   }
 
   /** The round state after this finished hand (timed matches compare it with the current one). */
@@ -1775,22 +1795,33 @@ export class MahjongGame {
     return this.nextRound().over;
   }
 
+  /**
+   * The match is over: money still waiting for a winner (riichi sticks, a goulash pot, a club-card or
+   * India bank) goes to first place (the user, 2026-11-13), the earlier seat on a tie. Returns what was
+   * paid and to whom. Safe to call twice; a match ended by the clock or a hand limit calls it directly.
+   */
+  payLeftoverPot(): { seat: number; amount: number } | null {
+    const pot = this.state.riichiPot ?? 0;
+    if (pot <= 0) return null;
+    const top = this.players.reduce((b, p) => (p.score > b.score ? p : b), this.players[0]);
+    top.score += pot;
+    this.state.riichiPot = 0;
+    this.emit({ type: 'potToLeader', seat: top.seat, amount: pot });
+    return { seat: top.seat, amount: pot };
+  }
+
   advance(): boolean {
-    const { round, over, goulash } = this.nextRound();
+    const { round, over, goulash, extra } = this.nextRound();
     this.state.round = round;
+    if (extra) this.state.extraGame = true;
     if (goulash) this.state.goulash = true;
     else delete this.state.goulash;
     this.matchOver = over;
-    const end = over && !!this.profile.matchEnd;
-    if (end) {
-      // Riichi sticks still on the table go to the leader before placements are paid.
-      const pot = this.state.riichiPot ?? 0;
-      if (pot > 0) {
-        const top = this.players.reduce((b, p) => (p.score > b.score ? p : b), this.players[0]);
-        top.score += pot;
-        this.state.riichiPot = 0;
-      }
-      const uma = this.profile.matchEnd!(this.players.map((p) => p.score));
+    // Money still waiting at the end (riichi sticks, a goulash pot, a club-card bank, India buy money)
+    // goes to the leader, before any placement bonus is paid.
+    if (over) this.payLeftoverPot();
+    if (over && this.profile.matchEnd) {
+      const uma = this.profile.matchEnd(this.players.map((p) => p.score));
       this.players.forEach((p, i) => (p.score += uma[i] ?? 0));
     }
     return over;

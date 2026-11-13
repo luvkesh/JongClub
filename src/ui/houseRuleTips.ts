@@ -47,7 +47,7 @@ const TIPS: Record<string, () => string> = {
   selfDrawOnly: () => tr('Only a tile you draw from the wall can complete your hand. Nobody can win on a discard, a robbed kong or a set-aside North, so nobody needs to defend.'),
   winnerTakesAll: () => tr('Every win is paid by all the other players, whoever threw the tile: a win on a discard pays the way the rule set pays a self-draw.'),
   cumulativeLeaderboard: () => tr('Adds this match to the running table in the Club: points over the start and wins add up across every match played with this on.'),
-  teamPlay: () => tr('Two teams of two. You and the player across the table pool your scores, the team with more points at the end wins, and partners never defend against each other.'),
+  teamPlay: () => tr('Two teams of two. You and the player across the table pool your scores, the team with more points at the end wins, and you can never win on your partner’s tile.'),
 };
 
 /** The tooltip for a house rule's label, or null when its options explain themselves. */

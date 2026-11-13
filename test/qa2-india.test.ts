@@ -331,21 +331,25 @@ describe("extra game after a drawn last game with buy money in the bank (ruling 
     return g;
   };
 
-  it("repeats while the extra games are drawn, then ends on the win that collects the bank; East keeps the deal throughout", () => {
+  it("one extra game only (user 2026-11-13): if it is drawn too, the match ends and first place takes the bank", () => {
     const g = lastGame("ESWN");
-    for (let i = 1; i <= 3; i++) {
-      end(g, "draw", 200);
-      expect(g.willEnd()).toBe(false);
-      expect(g.advance()).toBe(false);
-      expect(g.state.round).toMatchObject({
-        windIndex: 3,
-        dealerHand: 3,
-        dealerSeat: 3,
-        handsPlayed: 15 + i,
-        finished: false,
-      });
-    }
-    // The extra game is won: the bank is paid out with the win, and the match ends.
+    end(g, "draw", 200);
+    expect(g.willEnd()).toBe(false);
+    expect(g.advance()).toBe(false);
+    expect(g.state.round).toMatchObject({ windIndex: 3, dealerHand: 3, dealerSeat: 3, handsPlayed: 16, finished: false });
+    g.players[2].score += 5000; // seat 2 leads
+    const before = g.players.map((p) => p.score);
+    end(g, "draw", 300);
+    expect(g.willEnd()).toBe(true);
+    expect(g.advance()).toBe(true);
+    expect(g.state.riichiPot).toBe(0);
+    expect(g.players.map((p) => p.score)).toEqual(before.map((v, s) => v + (s === 2 ? 300 : 0)));
+  });
+
+  it("the extra game won: the win collects the bank and the match ends", () => {
+    const g = lastGame("ESWN");
+    end(g, "draw", 200);
+    expect(g.advance()).toBe(false);
     end(g, "win", 0);
     expect(g.willEnd()).toBe(true);
     expect(g.advance()).toBe(true);

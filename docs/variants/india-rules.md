@@ -86,7 +86,8 @@ player whose wall was broken). No further confirmation is needed; a later correc
   Double limit 2000/4000, Super limit 4000/8000, Top limit 10000/20000. Flowers paid as in the East round.
 - Draw: the buy money waits for the next winner and the deal passes (the user ruled 2026-10-25 that East never
   keeps the deal). Exception, per the book (user ruling 2026-11-13): when the LAST game of the match is drawn with
-  buy money in the bank, East keeps the deal and extra games are played until someone wins and collects it.
+  buy money in the bank, East keeps the deal for ONE extra game (user 2026-11-13, "stop after one"); if that is
+  drawn too, the match ends and the bank goes to first place (as in every rule set, user 2026-11-13).
   (Book: another Small Card game or a Goulash game.)
 - The 55 Small Cards (value, then the hand):
   1 Lily of the Valley, double: pungs of Green and White dragons, 2 pungs of green bamboos, pair of green bamboos.
@@ -113,6 +114,7 @@ player whose wall was broken). No further confirmation is needed; a later correc
   19 Apple Blossom, limit: pung of White, pair of Green, 3 mixed chows.
   20 Windy Chows: a chow in each suit, NEWS + one more wind; limit if the extra wind is your own, half limit otherwise.
   21 All Pair Ruby Jade Hand, limit: seven pairs from red and green bamboos, with a pair of Red and a pair of Green dragons.
+     Built 2026-11-13 ("as per book"): at least one red-bamboo pair and one green-bamboo pair.
   22 Ringlet, limit, all from wall: a pung (honours allowed), a chow, a mixed chow, a crochet and a knit.
   23 All Winds and Dragons, limit: 4 pungs/kongs and a pair of winds and dragons.
   24 Golden Staircase, limit: 1-9 in one suit, a concealed pung of a dragon or wind (never from a discard,
@@ -148,7 +150,8 @@ player whose wall was broken). No further confirmation is needed; a later correc
   52 Little Bastard, half limit: a chow in each suit, a mixed chow, a pair of 1s or 9s.
   53 Bomb Shell, half limit: chows of the same numbers in the 3 suits, GRW, a pair of winds.
   54 Little Robert, half limit: 3 chows, a pung and a pair in one suit; may use a pair of own wind (then a
-     discard may be punged); otherwise all from wall.
+     discard may be punged); otherwise all from wall. Built 2026-11-13 ("as per book"): a PAIR of own wind is
+     needed, and then only a pung (or the Mahjong tile) may be taken from a discard.
   55 Dirty Pairs, half limit: any 7 pairs.
 - Built (2026-10-23): src/engine/rules/indiaCards.ts (all 55 cards), southRound in india.ts,
   test/india-south.test.ts. JongClub's readings:
@@ -177,6 +180,9 @@ player whose wall was broken). No further confirmation is needed; a later correc
 - Penalty: when a player has 3 exposed pungs/kongs and another player throws their Mahjong tile, the
   thrower pays for all players (unless the thrower is also calling, i.e. one tile from Mahjong); no other
   player gets a count.
+  Calling means one tile from a Mahjong the thrower could really declare: a ready but dirty hand, or one
+  short of 3 doubles, is not calling and pays (user 2026-11-13, "as per book rules"). No warning before a
+  concealed kong (the book has none; the warning before a call is the user's own addition).
 - Minimum 3 doubles to Mahjong. Points only count for a clean hand: one suit with honours (with an honour
   pung/kong; no double for that), or an honour hand with terminal pungs in one suit (major hand), or a
   terminal hand (pungs/kongs of 1s and 9s in any suits). A hand with more than one suit is dirty: no points.

@@ -2406,6 +2406,8 @@ export class MatchController {
       await this.showHandResult(ph.result, over, label);
       if (this.aborted) return;
       this.game.advance();
+      // A match ended by the clock or a hand limit: money still in the bank goes to first place too.
+      if (over && !this.game.matchOver) this.game.payLeftoverPot();
       if (over) break;
     }
     if (!this.aborted) this.finish();

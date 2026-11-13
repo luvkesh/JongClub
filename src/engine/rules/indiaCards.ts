@@ -174,7 +174,9 @@ export const SMALL_CARDS: SmallCard[] = [
     suits: 3,
     alts: (e) => [[Ch([e.A]), Ch([e.B]), Ch([e.C]), F(...NEWS), One(WINDS_K)]],
   },
-  { n: 21, name: 'All Pair Ruby Jade Hand', how: 'Seven pairs: red and green bamboos, with a pair of Red and a pair of Green Dragons', picture: 'RdRd GdGd 11s 22s 55s 66s 99s', value: 'limit', suits: 0, distinct: true, alts: () => [[Pr([RD]), Pr([GD]), ...rep(5, Pr([...RED_B, ...GREEN_B]))]] },
+  { n: 21, name: 'All Pair Ruby Jade Hand', how: 'Seven pairs: red and green bamboos (at least one pair of each), with a pair of Red and a pair of Green Dragons', picture: 'RdRd GdGd 11s 22s 55s 66s 99s', value: 'limit', suits: 0, distinct: true,
+    // Book p. 19: "red and green bamboos": both colours must be there (the user, 2026-11-13: "as per book").
+    check: (all) => RED_B.some((k) => all[k] >= 2) && GREEN_B.some((k) => all[k] >= 2), alts: () => [[Pr([RD]), Pr([GD]), ...rep(5, Pr([...RED_B, ...GREEN_B]))]] },
   { n: 22, name: 'Ringlet', how: 'A pung (winds and dragons allowed), a chow, a mixed chow, a crochet and a knit. All from the wall', picture: 'EEE 123m 4m 5p 6s 7m 7p 7s 2s 2p', value: 'limit', wall: true, suits: 0, alts: () => [[P(ALL), Ch([0, 1, 2]), Mx(), Cr(), Kn()]] },
   { n: 23, name: 'All Winds and Dragons', how: 'Four pungs or kongs and a pair, all winds and dragons', picture: 'EEE SSS RdRdRd GdGdGd WdWd', value: 'limit', suits: 0, alts: () => [[...rep(4, P(HONOURS)), Pr(HONOURS)]] },
   {
@@ -264,7 +266,9 @@ export const SMALL_CARDS: SmallCard[] = [
     picture: '123s 456s 789s 555s 11s',
     value: 'half',
     suits: 1,
-    claim: (_type, _kind, hand, seat) => hand.filter((k) => k === seat).length >= 2,
+    // Book p. 25: holding a PAIR of your own wind, a discard may be punged (and the last tile taken for
+    // Mahjong); no chows or kongs from a discard (the user, 2026-11-13: "as per book").
+    claim: (type, _kind, hand, seat) => (type === 'pung' || type === 'win') && hand.filter((k) => k === seat).length >= 2,
     alts: (e) => [[...rep(3, Ch([e.A])), P(suitTiles(e.A)), Pr([...suitTiles(e.A), e.seat])]],
   },
   { n: 55, name: 'Dirty Pairs', how: 'Any seven pairs: suits, winds and dragons', picture: '11m 55p 77s 99s EE NN RdRd', value: 'half', suits: 0, distinct: true, alts: () => [rep(7, Pr(ALL))] },
