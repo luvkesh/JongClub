@@ -13,9 +13,16 @@ export interface MusicSettings {
 
 const EVENT = 'jongclub:music';
 
+/** The table's Mute: tile sounds, music and the room stay silent, whatever the music switch does, until unmuted. */
+let tableMuted = false;
+export function setTableMuted(on: boolean) {
+  tableMuted = on;
+}
+
 /** Send the volumes to the mixer, with the music and the room's ambient sound silenced while they are switched off. */
 export function applyVolumes(s: MusicSettings) {
-  sound.setVolumes({ ...s.volumes, voices: s.volumes.voices ?? 1, music: s.musicOff ? 0 : s.volumes.music, ambient: s.musicOff ? 0 : s.volumes.ambient });
+  const quiet = tableMuted;
+  sound.setVolumes({ ...s.volumes, effects: quiet ? 0 : s.volumes.effects, voices: s.volumes.voices ?? 1, music: s.musicOff || quiet ? 0 : s.volumes.music, ambient: s.musicOff || quiet ? 0 : s.volumes.ambient });
 }
 
 /** Switch the background music and the room's ambient sound on or off (tile sounds, callers and Mei stay as set), remembered across visits. */

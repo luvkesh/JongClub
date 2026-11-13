@@ -70,7 +70,7 @@ import { diceForVariation } from '../render/sideTables';
 import { andList, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { cardGrip, consoleWidth, dockButton, hudMode, moreSheet, restoreCard, type GridItem, type HudMode } from './matchControls';
-import { applyVolumes, type MusicSettings } from './musicToggle';
+import { applyVolumes, setTableMuted, type MusicSettings } from './musicToggle';
 import './matchControls.css';
 
 /** A seat plate's portrait: the 3D figure's head and shoulders, or the flat bust where WebGL is unavailable. */
@@ -624,6 +624,8 @@ export class MatchController {
   /** Give the whole screen back to the table (the match is over or left). */
   private releaseStage() {
     for (const o of this.observers.splice(0)) o.disconnect();
+    // The club gets its sound back when the table is left muted.
+    if (this.muted) this.setMuted(false);
     const body = document.body;
     if (!body.classList.contains('with-console')) return;
     body.classList.remove('with-console');
@@ -715,6 +717,7 @@ export class MatchController {
   private muted = false;
   private setMuted(on: boolean) {
     this.muted = on;
+    setTableMuted(on);
     // Player calls play outside the effects bus, so they need their own switch.
     callers.setMuted(on);
     if (on) sound.setVolumes({ effects: 0, music: 0, ambient: 0 });
@@ -2532,13 +2535,15 @@ export class MatchController {
    * pause the clock while a sheet, Settings or another tab has your attention;
    * live tables never pause (everyone else is waiting too).
    */
-  private waitHuman<T>(setup: (done: (v: T) => void) => void, onTimeout: () => T, limit = 0, kind: 'claim' | 'turn' = 'turn'): Promise<T> {
+  private waitHuman<T>(setup: (done: (v: T) => void) => void, onTimeout: () => T, limit = 0, kind: 'claim' | 'turn' = 'turn', timeoutNote?: string): Promise<T> {
     return new Promise<T>((resolve) => {
       let finished = false;
+      let cd: Countdown | null = null;
       const ring = this.els.timer;
       const done = (v: T) => {
         if (finished) return;
         finished = true;
+        this.waitSpentMs = cd?.spentMs ?? 0;
         window.clearInterval(this.timerHandle);
         window.cancelAnimationFrame(this.timerFrame);
         ring.hidden = true;
@@ -2550,16 +2555,17 @@ export class MatchController {
       setup(done);
       if (!this.catchingUp()) haptic(kind);
       if (limit > 0 && !this.catchingUp()) {
-        const cd = new Countdown(limit * 1000, performance.now());
+        cd = new Countdown(limit * 1000, performance.now());
         ring.hidden = false;
         ring.dataset.kind = kind;
-        ring.setAttribute('aria-label', kind === 'claim' ? tr('Time to claim: {n} seconds', { n: limit }) : tr('Time for your turn: {n} seconds', { n: limit }));
+        const n = Math.ceil(limit);
+        ring.setAttribute('aria-label', kind === 'claim' ? tr('Time to claim: {n} seconds', { n }) : tr('Time for your turn: {n} seconds', { n }));
         const num = ring.querySelector('.t-num')!;
         const arc = ring.querySelector<SVGCircleElement>('.t-arc')!;
         let shown = -1;
         const step = (fromInterval = false) => {
           if (finished) return;
-          const st = cd.step(performance.now(), this.clockPaused());
+          const st = cd!.step(performance.now(), this.clockPaused());
           arc.style.strokeDashoffset = String(RING_C * (1 - st.frac));
           if (st.left !== shown) {
             shown = st.left;
@@ -2569,7 +2575,7 @@ export class MatchController {
           if (st.tick) sound.play('click');
           if (st.done) {
             const v = onTimeout();
-            this.toast(tr('TIME'), kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you'));
+            this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
             if (kind === 'claim') this.speak({ parts: [{ line: LINES.timeClaim }], text: LINES.timeClaim });
             else this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
             return done(v);
@@ -2584,6 +2590,10 @@ export class MatchController {
   }
 
   private timerFrame = 0;
+  /** How long the last timed wait ran (pauses excluded); the draw's share comes off the discard's clock. */
+  private waitSpentMs = 0;
+  /** Your turn's time already used on drawing, in seconds. */
+  private drawSpent = 0;
   /** Everyone's score as the current hand was dealt, to reconcile the summary rows with the bank. */
   private handStartScores?: number[];
   private handStart?: { hand: number; round: RoundState; scores: number[]; pot: number; goulash?: boolean | 1 };
@@ -2592,7 +2602,7 @@ export class MatchController {
   private clockPaused() {
     if (this.opts.link) return false;
     const modal = document.getElementById('modal');
-    return document.hidden || !this.els.overlay.hidden || !this.els.sheet.hidden || !!this.callWarn || (!!modal && !modal.hidden);
+    return document.hidden || !this.els.overlay.hidden || !this.els.sheet.hidden || !!this.callWarn || (!!modal && !modal.hidden) || !!this.root.querySelector('.more-wrap');
   }
 
   /** This table's claim and turn limits in seconds (0 = untimed). */
@@ -2688,7 +2698,10 @@ export class MatchController {
       () => undefined,
       limit,
       'turn',
+      tr('A tile was drawn for you'),
     );
+    // Drawing and discarding share one turn clock.
+    this.drawSpent = limit > 0 ? this.waitSpentMs / 1000 : 0;
     this.releaseDraw = null;
     this.heldDraw = -1;
     clear(this.els.actions);
@@ -2797,9 +2810,10 @@ export class MatchController {
         const pick = byHint ?? (drawn && allowed.has(drawn.id) ? drawn : undefined) ?? hand[hand.length - 1] ?? opts.discards[0];
         return { kind: 'discard', id: pick.id, riichi: riichiMode };
       },
-      this.turnLimit,
+      this.turnLimit > 0 ? Math.max(1, this.turnLimit - this.drawSpent) : 0,
       'turn',
     );
+    this.drawSpent = 0;
     t.onTileClick = undefined;
     t.interactive.clear();
     t.selectedId = null;
