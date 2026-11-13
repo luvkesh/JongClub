@@ -24,11 +24,14 @@ function houseDefaults(variation: string): Record<string, string> {
   return Object.fromEntries(p.houseRules.map((r) => [r.id, r.default]));
 }
 
+/** Rule sets whose match is an East and a South round (a hanchan): Riichi, Sanma and tournament Riichi. */
+const HANCHAN = ['riichi', 'sanma', 'riichi-tournament'];
+
 /** A sensible starting table for any playable variation. */
 export function tableFor(variation: string): TableConfig {
   if (variation === 'classic') return DEFAULT_TABLE;
   const p = getProfile(variation)!;
-  return { ...DEFAULT_TABLE, name: tr('{name} Table', { name: p.tableName }), variation, length: variation === 'riichi' || variation === 'sanma' ? 'eastSouth' : 'eastRound', houseRules: houseDefaults(variation) };
+  return { ...DEFAULT_TABLE, name: tr('{name} Table', { name: p.tableName }), variation, length: HANCHAN.includes(variation) ? 'eastSouth' : 'eastRound', houseRules: houseDefaults(variation) };
 }
 
 export type Lesson = 'basics' | 'words' | 'scoring' | 'classic' | 'shapes' | 'tradition' | 'rounds' | 'riichi' | 'taiwanese' | 'american' | 'uae' | 'vietnamese' | 'india' | 'india-east' | 'india-south' | 'india-west' | 'india-west-doubles' | 'india-west-big' | 'india-north' | 'indian' | 'singapore' | 'hongkong' | 'mcr' | 'sichuan' | 'malaysian' | 'korean3' | 'sanma' | 'malaysian3' | 'uae-taiwanese' | 'uae-american' | 'uae-custom' | 'strategy' | 'efficiency' | 'waits' | 'defence' | 'value';
