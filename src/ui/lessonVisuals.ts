@@ -147,8 +147,10 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
 /** One looping timeline: each element gets keyframes at times in seconds within a loop of `L` seconds. */
 function timeline(stage: HTMLElement, L: number) {
   const jobs: [Element, At[]][] = [];
+  // Wait a few frames for the stage to reach the page; a scene left at once never does, so stop asking.
+  let tries = 0;
   const run = () => {
-    if (!stage.isConnected) return void requestAnimationFrame(run);
+    if (!stage.isConnected) return void (++tries < 120 && requestAnimationFrame(run));
     if (reduced()) return;
     for (const [el, at] of jobs) {
       const kf = at.map(([t, k]) => ({ easing: 'ease-in-out', ...k, offset: Math.min(1, Math.max(0, t / L)) }));

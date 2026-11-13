@@ -133,6 +133,9 @@ export class AskMeiChat {
     try {
       const v: unknown = JSON.parse(this.store.get() ?? '[]');
       if (Array.isArray(v)) this.messages = v.filter((m): m is Message => !!m && typeof m === 'object' && typeof (m as Message).text === 'string' && ((m as Message).role === 'user' || (m as Message).role === 'mei'));
+      // The page was closed or reloaded while Mei was answering: that question ends as stopped, not waiting for ever.
+      const last = this.messages[this.messages.length - 1];
+      if (last?.role === 'user') this.messages.push({ role: 'mei', text: 'Stopped.', at: last.at, error: 'aborted' });
     } catch {
       this.messages = [];
     }
