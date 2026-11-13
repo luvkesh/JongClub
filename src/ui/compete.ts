@@ -203,7 +203,7 @@ export function dailyScreen(ctx: AppCtx) {
       hand.append(b);
     });
     pz.append(
-      h('p', { class: 'muted small' }, `${vinfo(puzzle.variation).name} · ${tr('seat wind {seat}, round wind {round}. Which tile would you discard?', { seat: puzzle.seatWind, round: puzzle.roundWind })}`),
+      h('p', { class: 'muted small' }, `${tr(vinfo(puzzle.variation).name)} · ${tr('seat wind {seat}, round wind {round}. Which tile would you discard?', { seat: puzzle.seatWind, round: puzzle.roundWind })}`),
       puzzle.doraKinds?.length ? h('p', { class: 'muted small pz-dora' }, tr('Dora: '), ...puzzle.doraKinds.map((k) => tileImg(k, 'mini', ctx.labels))) : '',
       hand,
     );
@@ -227,7 +227,7 @@ export function dailyScreen(ctx: AppCtx) {
       tr('Today’s Hand'),
       rec.hand !== undefined,
       dailyRewards.todaysHand,
-      h('p', { class: 'dx-lead' }, h('span', { class: 'dx-flag', 'aria-hidden': 'true' }, vinfo(th.variation).flag), `${vinfo(th.variation).name}. ${tr('Everyone gets the same deal and the same three opponents today.')}`),
+      h('p', { class: 'dx-lead' }, h('span', { class: 'dx-flag', 'aria-hidden': 'true' }, vinfo(th.variation).flag), `${tr(vinfo(th.variation).name)}. ${tr('Everyone gets the same deal and the same three opponents today.')}`),
       h('p', { class: 'dx-note' }, th.metric),
       rec.hand !== undefined ? h('p', { class: 'dc-best' }, tr('Your best: {n}', { n: fmt(rec.hand) })) : '',
       go(rec.hand !== undefined ? tr('Play again') : tr('Play today’s hand'), playSpec(th, 'daily:todaysHand', 1)),
@@ -239,7 +239,7 @@ export function dailyScreen(ctx: AppCtx) {
       tr('Speed Jong'),
       !!rec.speed,
       dailyRewards.speedJong,
-      h('div', { class: 'dx-row' }, medal(h('span', { html: icon('clock') })), h('p', { class: 'dx-lead' }, h('span', { class: 'dx-flag', 'aria-hidden': 'true' }, vinfo(sj.variation).flag), tr('Win one hand of {name} in as few turns as you can.', { name: vinfo(sj.variation).name }))),
+      h('div', { class: 'dx-row' }, medal(h('span', { html: icon('clock') })), h('p', { class: 'dx-lead' }, h('span', { class: 'dx-flag', 'aria-hidden': 'true' }, vinfo(sj.variation).flag), tr('Win one hand of {name} in as few turns as you can.', { name: tr(vinfo(sj.variation).name) }))),
       rec.speed ? h('p', { class: 'dc-best' }, tr('Your best: {n} points', { n: fmt(rec.speed) })) : '',
       go(tr('Start the clock'), playSpec(sj, 'daily:speedJong', 1)),
       h('details', { class: 'dc-board' }, h('summary', {}, tr('Club today')), clubToday(`${d.key}s`, rec.speed || undefined, (n) => fmt(n))),
@@ -257,7 +257,7 @@ export function dailyScreen(ctx: AppCtx) {
           'div',
           { class: 'dx-col' },
           h('p', { class: 'dx-lead' }, fw.detail),
-          h('p', { class: 'dx-note' }, `${vinfo(fw.variation).name} · ${tr(GAME_LENGTHS[fw.length].label)}`),
+          h('p', { class: 'dx-note' }, `${tr(vinfo(fw.variation).name)} · ${tr(GAME_LENGTHS[fw.length].label)}`),
           go(tr('Take on the winds'), () => ctx.startMatch({ ...ctx.tableFor(fw.variation), length: fw.length }, { mode: 'daily', tag: 'daily:fourWinds' })),
         ),
       ),
@@ -275,7 +275,7 @@ export function dailyScreen(ctx: AppCtx) {
           'div',
           { class: 'dx-col' },
           h('p', { class: 'dx-lead' }, vc.target),
-          go(tr('Play {name}', { name: vinfo(vc.variation).short }), () => ctx.startMatch({ ...ctx.tableFor(vc.variation), length: vc.length }, { mode: 'daily', tag: 'daily:variation' })),
+          go(tr('Play {name}', { name: tr(vinfo(vc.variation).short) }), () => ctx.startMatch({ ...ctx.tableFor(vc.variation), length: vc.length }, { mode: 'daily', tag: 'daily:variation' })),
         ),
       ),
     ),
@@ -335,7 +335,7 @@ export function openRanked(ctx: AppCtx) {
     clear(body).append(
       h('p', { class: 'eyebrow' }, tr('Ranked')),
       h('h3', {}, `${league.icon} ${league.name} · ${fmt(rating)}`),
-      h('p', { class: 'muted small' }, games < 10 ? tr('Placement: {n} of 10 games played. Your rating moves faster until then.', { n: games }) : tr('{n} ranked {name} games.', { n: games, name: vinfo(variation).short })),
+      h('p', { class: 'muted small' }, games < 10 ? tr('Placement: {n} of 10 games played. Your rating moves faster until then.', { n: games }) : tr('{n} ranked {name} games.', { n: games, name: tr(vinfo(variation).short) })),
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': tr('Variation') }, ...playable.map((v) => h('button', { class: v.id === variation ? 'on' : '', role: 'radio', 'aria-checked': String(v.id === variation), onclick: () => ((variation = v.id), render()) }, `${v.flag} ${tr(v.short)}`))),
       h('ul', { class: 'rules-list' }, h('li', {}, tr('One East round against three club members near your rating.')), h('li', {}, tr('JongBot is off and turns are timed (20 seconds).')), h('li', {}, tr('Your rating changes by where you finish against each opponent. Nothing you buy ever changes it.'))),
       h('p', { class: 'small' }, tr('Your table: '), field.map((m) => `${m.name} (${fmt(m.ratings[variation as keyof ClubMember['ratings']] ?? m.rating)})`).join(', ')),

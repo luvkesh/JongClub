@@ -51,7 +51,7 @@ function matches(t: AiTable, f: Filters): boolean {
   const q = f.q.trim().toLowerCase();
   if (q) {
     const v = info(t.variation);
-    const hay = [t.name, variationTitle(v), v.short, tr(v.region), tr(t.level), tr(GAME_LENGTHS[t.length].label)].join(' ').toLowerCase();
+    const hay = [t.name, tr(t.name), variationTitle(v), v.short, tr(v.short), tr(v.region), tr(t.level), tr(GAME_LENGTHS[t.length].label)].join(' ').toLowerCase();
     if (!q.split(/\s+/).every((w) => hay.includes(w))) return false;
   }
   return true;
@@ -82,7 +82,7 @@ export function tableFinder(tables: AiTable[], join: (t: AiTable) => void): HTML
 
   const labelFor: Record<keyof Filters, (v: string) => string> = {
     q: (v) => `“${v}”`,
-    game: (v) => info(v).short,
+    game: (v) => tr(info(v).short),
     region: (v) => REGIONS.find((r) => r.id === v)?.name ?? v,
     level: (v) => tr(v),
     pace: (v) => PACES[v as TablePace].label,
@@ -115,7 +115,7 @@ export function tableFinder(tables: AiTable[], join: (t: AiTable) => void): HTML
       h(
         'div',
         { class: 'tr-main' },
-        h('div', { class: 'tr-name' }, t.name),
+        h('div', { class: 'tr-name' }, tr(t.name)),
         h('div', { class: 'tr-meta' }, `${variationTitle(v)} · ${tr(GAME_LENGTHS[t.length].label)}`),
         h('div', { class: 'tr-sub' }, `${t.seated} / ${seats} · ${tr(t.level)} · ${pace} · ${tr('{n} min', { n: t.minutes })}`),
       ),
@@ -190,7 +190,7 @@ export function tableFinder(tables: AiTable[], join: (t: AiTable) => void): HTML
       'game',
       tr('Game'),
       tr('All games'),
-      games.map((g) => [g, info(g).short]),
+      games.map((g) => [g, tr(info(g).short)]),
     ),
     select('region', tr('Region'), tr('All regions'), regions.map((r) => [r.id, r.name])),
     select('level', tr('Skill'), tr('Any skill'), LEVELS.filter((l) => tables.some((t) => t.level === l)).map((l) => [l, tr(l)])),

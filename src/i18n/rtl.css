@@ -38,6 +38,10 @@
 /* English text kept inside an Arabic page (lessons, Mei's narration) reads left to right. */
 [dir='rtl'] [lang='en'] { direction: ltr; unicode-bidi: isolate; text-align: left; }
 
+/* Arrows and chevrons that point forward (icons.ts marks them) point left. */
+[dir='rtl'] .ico-fwd { transform: scaleX(-1); }
+[dir='rtl'] .vx-link:hover .ico-fwd { transform: scaleX(-1) translateX(3px); }
+
 /* Tiles and score readouts in a hand read in table order. */
 [dir='rtl'] .tray,
 [dir='rtl'] .rp-marks { direction: ltr; }

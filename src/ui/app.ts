@@ -144,7 +144,13 @@ export class App {
     this.go(joinCode ? 'play' : takeClubInvite() ? 'club' : SCREENS.includes(hash) ? hash : 'home');
     window.addEventListener('hashchange', () => {
       const h = location.hash.slice(1) as Screen;
-      if (SCREENS.includes(h) && h !== this.screen && !this.match && !this.replay) this.go(h);
+      if (!SCREENS.includes(h) || h === this.screen || this.match || this.replay) return;
+      // Back or forward with a dialog open: close it (as Escape would) rather than leave it over the new screen.
+      if (!this.modal.hidden) {
+        if (this.modal.querySelector('.results, .waiting-room')) return;
+        this.modal.hidden = true;
+      }
+      this.go(h);
     });
     this.applyLoadout();
     // City and country for the leaderboards: from the IP address (or GPS once allowed), quietly, once per launch.

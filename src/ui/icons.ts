@@ -57,6 +57,10 @@ const P: Record<string, string> = {
 };
 
 /** An inline SVG icon by name, sized by CSS (.ico). */
+/** Icons that point the way forward: mirrored in right-to-left languages (i18n/rtl.css). */
+const FORWARD = new Set(['arrowRight', 'chevronRight']);
+
 export function icon(name: keyof typeof P | string, cls = ''): string {
+  if (FORWARD.has(name)) cls = `${cls} ico-fwd`.trim();
   return `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${P[name] ?? ''}</svg>`;
 }

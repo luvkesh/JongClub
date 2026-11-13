@@ -37,7 +37,7 @@ let tapTimer = 0;
 
 /** The flask button beside Settings. Hidden while Labs is off; follows the switch. */
 export function labsButton(open: () => void, cls = 'icon-btn labs-btn'): HTMLButtonElement {
-  const b = h('button', { type: 'button', class: cls, 'aria-label': 'Labs', title: 'Labs: testing tools', onclick: open, html: icon('labs') }) as HTMLButtonElement;
+  const b = h('button', { type: 'button', class: cls, 'aria-label': tr('Labs'), title: tr('Labs: testing tools'), onclick: open, html: icon('labs') }) as HTMLButtonElement;
   const sync = () => {
     if (!b.isConnected && b.dataset.drawn) return off();
     b.hidden = !dev.enabled;

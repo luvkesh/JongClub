@@ -41,6 +41,8 @@ const TIPS: Record<string, () => string> = {
   limit: () => tr('The most a single hand can score.'),
   minFlowers: () => tr('How many flowers you must have set aside before you may win.'),
   closed: () => tr('Whether you need a called set to win, or may also win concealed by drawing the winning tile yourself.'),
+  northCards: () => tr('Which Small Cards can be dealt in the North round: only the double-limit cards, or all 55.'),
+  passportNine: () => tr('Which nine tiles make a 9-tile passport: 1 to 9 of one suit, knitted 1-4-7, 2-5-8, 3-6-9 in three suits, or nine different ones, nines, winds and dragons.'),
   // Table options (every rule set): src/engine/rules/tableOptions.ts.
   selfDrawOnly: () => tr('Only a tile you draw from the wall can complete your hand. Nobody can win on a discard, a robbed kong or a set-aside North, so nobody needs to defend.'),
   multipleWinners: () => tr('When two or three players can all win on the same discard, every one of them wins and the discarder pays each hand. Otherwise only the first in turn order wins.'),

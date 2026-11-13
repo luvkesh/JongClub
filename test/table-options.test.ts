@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { MahjongGame } from '../src/engine/game';
-import { getProfile, withHouseRules } from '../src/engine/rules';
+import { getProfile, VARIATIONS, withHouseRules } from '../src/engine/rules';
 import { classicProfile } from '../src/engine/rules/classic';
 import { riichiProfile } from '../src/engine/rules/riichi';
 import { sanmaProfile } from '../src/engine/rules/sanma';
@@ -78,6 +78,11 @@ describe('table options in the lobby and catalogue', () => {
 
   it('each option has a tooltip and a catalogue group, and the catalogue now lists them as playable', () => {
     for (const id of TABLE_OPTION_IDS) expect(houseRuleTip(id), id).toBeTruthy();
+    // Every house rule the table setup shows, for every rule set, has a tooltip too (the goulash switch is the Play style toggle, not a house rule row).
+    for (const v of VARIATIONS) {
+      const p = getProfile(v.id);
+      if (p) for (const r of allHouseRules(p)) if (r.id !== 'goulash') expect(houseRuleTip(r.id), `${v.id}.${r.id}`).toBeTruthy();
+    }
     expect(houseRuleGroup('selfDrawOnly')).toBe('winning');
     expect(houseRuleGroup('multipleWinners')).toBe('winning');
     expect(houseRuleGroup('winnerTakesAll')).toBe('scoring');

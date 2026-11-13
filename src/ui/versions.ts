@@ -590,7 +590,7 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
       'header',
       { class: 'vp-head' },
       h('span', { class: 'vp-flag', 'aria-hidden': 'true' }, vi.flag),
-      h('div', { class: 'vp-title' }, h('p', { class: 'eyebrow' }, `${tr(vi.region)} · ${entry ? STANDARDISATION[entry.standardisation].label : v.id === 'american' ? tr('Western family') : tr('Asian family')}`), h('h3', { id: 'vp-title' }, vi.name), known ? levelPips(vi.level) : null),
+      h('div', { class: 'vp-title' }, h('p', { class: 'eyebrow' }, `${tr(vi.region)} · ${entry ? STANDARDISATION[entry.standardisation].label : v.id === 'american' ? tr('Western family') : tr('Asian family')}`), h('h3', { id: 'vp-title' }, tr(vi.name)), known ? levelPips(vi.level) : null),
       h('button', { class: 'icon-btn vp-close', 'aria-label': tr('Close'), onclick: close, html: icon('close') }),
     ),
     v.mei ? mei : null,
@@ -604,7 +604,7 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
             h(
               'button',
               { class: 'vp-ruleset', onclick: leave(() => ctx.startMatch(ctx.tableFor(r.variationId))) },
-              h('span', { class: 'vp-ruleset-t' }, r.name),
+              h('span', { class: 'vp-ruleset-t' }, tr(r.name)),
               h('span', { class: 'vp-ruleset-d' }, `${r.engine}. ${r.detail}`),
               h('span', { class: 'vp-ruleset-go', 'aria-hidden': 'true' }, tr('Play ›')),
             ),
@@ -623,7 +623,7 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
       'div',
       { class: 'vp-actions' },
       v.sharedLesson
-        ? action('learn', v.lesson === 'basics' ? tr('Learn the basics') : tr('Learn {name}', { name: info(v.lesson).short }), v.lesson === 'basics' ? tr('No lesson of its own yet. The beginners’ lesson covers most of it') : tr('No lesson of its own yet. The {name} lesson covers most of it', { name: info(v.lesson).short }), () => ctx.openLesson(v.lesson))
+        ? action('learn', v.lesson === 'basics' ? tr('Learn the basics') : tr('Learn {name}', { name: tr(info(v.lesson).short) }), v.lesson === 'basics' ? tr('No lesson of its own yet. The beginners’ lesson covers most of it') : tr('No lesson of its own yet. The {name} lesson covers most of it', { name: tr(info(v.lesson).short) }), () => ctx.openLesson(v.lesson))
         : action('learn', learned ? tr('✓ Review the lesson') : tr('Learn it'), learned ? tr('Lesson and test passed') : tr('A short story lesson with Mei, then a quick test'), () => ctx.openLesson(v.lesson)),
       playable && action('guided', tr('Play with Mei'), tr('One gentle hand. Mei talks you through every move'), () => ctx.startGuided(v.id)),
       playable && action('play primary', tr('Play'), tr('Sit down at the {table} with three AI players', { table: ctx.tableFor(v.id).name }), () => ctx.startMatch(ctx.tableFor(v.id))),
