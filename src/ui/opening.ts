@@ -25,6 +25,8 @@ export interface OpeningCtx {
   eastRounds?: EastRound[];
   /** Counting round the table: show `n` on this seat's plate for a moment. */
   pulseSeat?: (seat: number, n: number) => void;
+  /** Receives a stop function: leaving the table mid-ceremony ends it at once, without touching the table. */
+  onCancel?: (stop: () => void) => void;
 }
 
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
@@ -94,6 +96,10 @@ export async function runOpening(ctx: OpeningCtx, state: GameState): Promise<voi
     if (e.key === 'Escape') finish();
   };
   window.addEventListener('keydown', onKey);
+  ctx.onCancel?.(() => {
+    skipped = true;
+    wake?.();
+  });
 
   function finish() {
     if (skipped) return;

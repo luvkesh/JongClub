@@ -9,13 +9,13 @@ import type { GameState } from '../engine/state';
 import { TILE_ID_COUNT, kindOfTileId, WINDS, compareTiles, type HandSort, type Tile, type Wind } from '../engine/tiles';
 import { feltMotif, feltWeave } from './feltPattern';
 import { finishRim, paintFelt } from './tableLook';
-import { TILE_SET, drawFace, faceDetail, faceUrl, mix, setFaceDetail, setTileSet as setFaceSet, warmFaceUrls } from './tileFaces';
+import { TILE_SET, drawFace, dropFace, faceDetail, faceUrl, mix, setFaceDetail, setTileSet as setFaceSet, warmFaceUrls } from './tileFaces';
 import { handTileScale, reduceMotionSetting } from './tileAccess';
 import { environmentStyle, tableStyle, type AvatarSpec, type EnvironmentStyle } from '../cosmetics/catalog';
 import { SeatFigure } from './avatar3d';
 import { castModels, seatFigure, type CastFigure, type CastModelEntry } from './castModel';
 import { Backdrop } from './backdrop';
-import { applyTileFinish, clearFaceSurfaces, dressFace, setTileLight } from './tileMaterials';
+import { applyTileFinish, clearFaceSurfaces, dressFace, dropFaceSurface, setTileLight } from './tileMaterials';
 import { Effects } from './fx';
 import { Room, clubEnvironment } from './room';
 import { SignatureShot, signatureDuration } from './cinematic';
@@ -950,17 +950,15 @@ export class TableRenderer {
     for (const [key, old] of big) {
       if (extra <= 0) break;
       if (hand.has(key)) continue;
-      const src = old.image as HTMLCanvasElement;
-      const c = document.createElement('canvas');
-      c.width = Math.round((src.width * full) / old.userData.scale);
-      c.height = Math.round((src.height * full) / old.userData.scale);
-      const g = c.getContext('2d')!;
-      g.imageSmoothingQuality = 'high';
-      g.drawImage(src, 0, 0, c.width, c.height);
       const [k, r] = key.split(':');
       const kind = Number(k),
         red = r === 'r';
-      const tex = this.makeFaceTexture(kind, red, full, c);
+      // The tier's face is already drawn (and kept): reuse it rather than drawing a scaled copy, and let the
+      // hand-detail canvases and surface map go, or every kind that passed through the hand stays in memory.
+      const tex = this.makeFaceTexture(kind, red, full);
+      const bigScale = old.userData.scale as number;
+      const oldSurface = dropFaceSurface(kind, this.labels, red, bigScale);
+      dropFace(kind, this.labels, red, bigScale);
       this.renderer.initTexture(tex);
       this.faceTex.set(key, tex);
       for (const t of this.tiles.values()) {
@@ -969,6 +967,7 @@ export class TableRenderer {
         dressFace(t.faceMat, kind, this.labels, red, this.faceAniso(full), full);
       }
       old.dispose();
+      oldSurface?.dispose();
       extra--;
     }
   }

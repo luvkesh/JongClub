@@ -6,7 +6,7 @@
 // lessons. Anything that is not printed on the card (JongBot's advice, a Play button) sits below it.
 
 import { h, tileImg } from './dom';
-import { tr } from '../i18n';
+import { tr, trn } from '../i18n';
 import { LIMIT_PAY, type SmallCard } from '../engine/rules/indiaCards';
 import { BIG_PAY, type BigCard } from '../engine/rules/indiaBig';
 import { parseKinds } from '../engine/tiles';
@@ -85,7 +85,7 @@ const withCaption = (card: HTMLElement, below: (HTMLElement | null)[]) => {
 export function smallCardView(card: SmallCard, opts: { distance?: number; recommended?: boolean; faan?: boolean } = {}): HTMLElement {
   const face = printedCard('small', card.n, card.name, card.picture, !!opts.recommended, [cardValueLine(card, opts.faan), card.wall ? h('span', { class: 'sc-wall' }, tr('All from the wall')) : null], [h('p', { class: 'sc-how' }, sentence(card.how))]);
   return withCaption(face, [
-    opts.distance !== undefined ? h('div', { class: 'sc-distance' }, opts.distance >= 99 ? tr('no win possible with these sets') : opts.distance <= 0 ? tr('Ready or nearly ready') : tr('{n} tiles from ready', { n: opts.distance })) : null,
+    opts.distance !== undefined ? h('div', { class: 'sc-distance' }, opts.distance >= 99 ? tr('no win possible with these sets') : opts.distance <= 0 ? tr('Ready or nearly ready') : trn(opts.distance, '{n} tile from ready', '{n} tiles from ready')) : null,
     opts.recommended ? h('div', { class: 'sc-pick' }, tr('JongBot suggests this card')) : null,
   ]);
 }

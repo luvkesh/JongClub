@@ -296,6 +296,15 @@ const surfaceCache = new Map<string, HTMLCanvasElement>();
 /** Each face's relief at half resolution (white = the face's surface, dark = engraved ink), for the 3D bump map. */
 const reliefCache = new Map<string, HTMLCanvasElement>();
 
+/** Forget a face drawn at `scale` (a hand-detail face that left the hand), with its metal mask and relief. */
+export function dropFace(kind: number, labels: boolean, red = false, scale = detail) {
+  if (scale === detail) return;
+  const key = `${TILE_SET.id}:${kind}:${labels}:${red && kind < 27 ? 'r' : ''}:${scale}`;
+  cache.delete(key);
+  surfaceCache.delete(key);
+  reliefCache.delete(key);
+}
+
 /**
  * The face's surface map for the 3D material (three.js reads roughness from
  * green and metalness from blue): the ground keeps `groundRough`, the foil

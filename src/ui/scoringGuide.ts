@@ -11,7 +11,7 @@ import { sevenPairsShanten, standardShanten, thirteenOrphansShanten } from '../e
 import { DUBAI_CARD } from '../engine/rules/taiwaneseDubai';
 import type { RuleProfile } from '../engine/rules/types';
 import { parseKinds, toCounts } from '../engine/tiles';
-import { tr } from '../i18n';
+import { tr, trn } from '../i18n';
 import { clear, h, tileImg } from './dom';
 import { anatomy, guideFor, pictureFor, specialShapes, type GuideLine } from './scoringGuideData';
 import './scoringGuide.css';
@@ -33,7 +33,7 @@ export interface GuideState {
   labels?: boolean;
 }
 
-const away = (s: number) => (s < 0 ? tr('complete') : s === 0 ? tr('ready: one tile from a win') : tr('{n} tiles from ready', { n: s }));
+const away = (s: number) => (s < 0 ? tr('complete') : s === 0 ? tr('ready: one tile from a win') : trn(s, '{n} tile from ready', '{n} tiles from ready'));
 
 export class ScoringGuide {
   readonly button: HTMLButtonElement;

@@ -63,14 +63,14 @@ import { showCheatSheet, usesDubaiCard } from './cheatSheet';
 import { ScoringGuide } from './scoringGuide';
 import { CALC_ICON, ScoreCalc } from './scoreCalc';
 import { handNow, onShow } from '../ai/handScore';
-import { handNowView, onShowView } from './handScoreView';
+import { handNowView, lineName, onShowView } from './handScoreView';
 import { fillEtiquetteBar, showSignal } from './etiquette';
 import { TeaService } from './tea';
 import { diceForVariation } from '../render/sideTables';
-import { andList, tr, trn } from '../i18n';
+import { andList, shownName, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { cardGrip, consoleWidth, dockButton, hudMode, moreSheet, restoreCard, type GridItem, type HudMode } from './matchControls';
-import { applyVolumes, type MusicSettings } from './musicToggle';
+import { applyVolumes, setTableMuted, type MusicSettings } from './musicToggle';
 import './matchControls.css';
 
 /** A seat plate's portrait: the 3D figure's head and shoulders, or the flat bust where WebGL is unavailable. */
@@ -465,8 +465,8 @@ export class MatchController {
     const views = viewControls(this.table);
     views.classList.add('hud-views');
     // The rule book and the calculator share the middle of the table: one at a time.
-    this.guide.onOpen = () => this.calc.toggle(false);
-    this.calc.onOpen = () => this.guide.toggle(false);
+    this.guide.onOpen = () => (this.calc.toggle(false), requestAnimationFrame(() => this.fitPanels()));
+    this.calc.onOpen = () => (this.guide.toggle(false), requestAnimationFrame(() => this.fitPanels()));
     // Escape closes the card and the leave question (never a hand result, which moves the game on).
     els.sheet.addEventListener('keydown', (e) => e.key === 'Escape' && (els.sheet.hidden = true));
     const reactBar = h('div', { class: 'reactions', hidden: true });
@@ -551,12 +551,12 @@ export class MatchController {
     });
     // Hovering a tile on the table names it; add how many are still unseen and whose discard it is.
     this.table.tipNote = (id, kind) => this.tileNote(id, kind);
-    if (this.opts.coach && typeof ResizeObserver !== 'undefined') new ResizeObserver(() => !this.els.last.hidden && this.placeLastDiscard()).observe(this.opts.coach.el);
+    if (this.opts.coach && typeof ResizeObserver !== 'undefined') this.watch(new ResizeObserver(() => !this.els.last.hidden && this.placeLastDiscard())).observe(this.opts.coach.el);
     // Mei's caption and JongBot share one dock at the bottom right, clear of the table; it follows the hand and the plates.
     if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(() => this.placeDock());
+      const ro = this.watch(new ResizeObserver(() => this.placeDock()));
       for (const el of [r, this.els.bot, this.opts.coach?.el, r.querySelector('.bottom'), r.querySelector('.status-row'), r.querySelector('.action-row'), r.querySelector('.seat-1'), r.querySelector('.seat-3'), this.els.last]) if (el) ro.observe(el);
-      new MutationObserver(() => this.placeDock()).observe(r, { attributes: true, attributeFilter: ['style', 'data-hand-clear'] });
+      this.watch(new MutationObserver(() => this.placeDock())).observe(r, { attributes: true, attributeFilter: ['style', 'data-hand-clear'] });
     }
     requestAnimationFrame(() => this.placeDock());
     this.gatherTalk(r);
@@ -614,8 +614,37 @@ export class MatchController {
     this.refreshDock();
   }
 
+  /**
+   * The rule book and the calculator end above your hand, the action row, the dock and Mei's caption
+   * (on phones and upright tablets they would otherwise run under them); their bodies scroll.
+   */
+  private fitPanels() {
+    for (const p of [this.guide.panel, this.calc.panel]) {
+      if (p.hidden) continue;
+      p.style.removeProperty('max-height');
+      const pr = p.getBoundingClientRect();
+      const top = pr.top;
+      const below = [...this.root.querySelectorAll<HTMLElement>('.bottom > *, .dock-bar, .hud > .coach:not(.tucked):not([hidden])')]
+        .filter((e) => e.offsetParent !== null || getComputedStyle(e).position === 'fixed')
+        .map((e) => e.getBoundingClientRect())
+        .filter((r) => r.height > 0 && r.width > 0 && r.top > top + 120 && r.left < pr.right && r.right > pr.left);
+      const floor = Math.min(window.innerHeight, ...below.map((r) => r.top));
+      p.style.maxHeight = `${Math.max(160, Math.floor(floor - top - 8))}px`;
+    }
+  }
+
+  /** Observers on the HUD root, which every match reuses: disconnected when this match ends, or old matches keep reacting. */
+  private observers: { disconnect(): void }[] = [];
+  private watch<T extends { disconnect(): void }>(o: T): T {
+    this.observers.push(o);
+    return o;
+  }
+
   /** Give the whole screen back to the table (the match is over or left). */
   private releaseStage() {
+    for (const o of this.observers.splice(0)) o.disconnect();
+    // The club gets its sound back when the table is left muted.
+    if (this.muted) this.setMuted(false);
     const body = document.body;
     if (!body.classList.contains('with-console')) return;
     body.classList.remove('with-console');
@@ -707,6 +736,7 @@ export class MatchController {
   private muted = false;
   private setMuted(on: boolean) {
     this.muted = on;
+    setTableMuted(on);
     // Player calls play outside the effects bus, so they need their own switch.
     callers.setMuted(on);
     if (on) sound.setVolumes({ effects: 0, music: 0, ambient: 0 });
@@ -1139,7 +1169,8 @@ export class MatchController {
       const plate = [...this.root.querySelectorAll<HTMLElement>('.seat:not([hidden])')].map((x) => x.getBoundingClientRect()).filter((r) => r.left < 120 && r.top > end).sort((a, b) => a.top - b.top)[0];
       this.root.classList.toggle('views-tucked', !!views && !!plate && end + views.offsetHeight + 8 > plate.top);
     };
-    if (!coach || coach.hidden || !coach.isConnected || coach.getBoundingClientRect().top > window.innerHeight / 2) {
+    const cr = coach?.getBoundingClientRect();
+    if (!coach || !cr || coach.hidden || !coach.isConnected || coach.classList.contains('tucked') || cr.height < 8 || cr.top > window.innerHeight / 2) {
       if (wide) corner();
       else el.style.top = '';
       return;
@@ -1154,7 +1185,18 @@ export class MatchController {
       el.style.left = `${Math.round(c.right + 12)}px`;
       el.style.right = 'auto';
       el.style.transform = 'none';
-    } else el.style.top = `${Math.round(c.bottom + 8)}px`;
+    } else {
+      // Just below Mei, unless that would put it on your hand (the action row, tray or rack labels): then its usual place.
+      const top = Math.round(c.bottom + 8);
+      const floor = Math.min(
+        ...['.action-row', '.tray', '.bottom']
+          .map((s) => this.root.querySelector<HTMLElement>(s)?.getBoundingClientRect())
+          .filter((r): r is DOMRect => !!r && r.height > 0)
+          .map((r) => r.top),
+        window.innerHeight,
+      );
+      el.style.top = top + (el.offsetHeight || 72) + 6 <= floor ? `${top}px` : '';
+    }
   }
 
   /** The JongClub card of American hands, with your closest hands marked. */
@@ -1269,8 +1311,13 @@ export class MatchController {
     o.querySelector<HTMLElement>('.btn.ghost')?.focus({ preventScroll: true });
   }
 
+  /** Ends a running opening ceremony (set by runOpening while it runs). */
+  private cancelOpening: (() => void) | null = null;
+
   abort() {
     this.aborted = true;
+    this.cancelOpening?.();
+    this.cancelOpening = null;
     this.closeCallWarning(false);
     window.removeEventListener('resize', this.onResize);
     this.releaseStage();
@@ -1378,7 +1425,7 @@ export class MatchController {
         h(
           'div',
           { class: 'seat-info' },
-          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, p.name), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
+          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, shownName(p.name)), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
           h('div', { class: 'seat-sub' }, h('span', { class: 'wind', title: { E: tr('East seat'), S: tr('South seat'), W: tr('West seat'), N: tr('North seat') }[wind] }, wind), this.seats[s].kind === 'ai' ? PERSONALITIES[ai.personality].label : s === this.you ? tr('You') : tr('Club member')),
           reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
         ),
@@ -1498,6 +1545,7 @@ export class MatchController {
     this.placeDock();
     this.guide.place();
     this.calc.place();
+    this.fitPanels();
   };
 
   /**
@@ -1624,7 +1672,7 @@ export class MatchController {
   private gatherTalk(r: HTMLElement) {
     const talk = h('div', { class: 'table-talk' });
     r.append(talk);
-    new MutationObserver((muts) => {
+    this.watch(new MutationObserver((muts) => {
       if (window.innerWidth / window.innerHeight >= 0.85) return;
       for (const m of muts)
         for (const n of m.addedNodes) {
@@ -1636,7 +1684,7 @@ export class MatchController {
           talk.append(b);
           while (talk.children.length > 2) talk.firstElementChild!.remove();
         }
-    }).observe(r, { childList: true, subtree: true });
+    })).observe(r, { childList: true, subtree: true });
   }
 
   private dockKey = '';
@@ -2273,14 +2321,16 @@ export class MatchController {
         this.trayHold = Infinity;
         this.refreshHud();
         await sleep(ms);
+        if (this.aborted) return;
       }
       // The opening (src/ui/opening.ts): the throw for East at the first hand, then East's throw breaks the wall.
       const eastRounds = this.handNo === 0 ? this.eastRounds : undefined;
       this.eastRounds = undefined;
       if (ceremony)
         await runOpening(
-          { root: this.root, table: this.table, names: this.game.players.map((p) => p.name), me: this.you, pace: this.settings.speed === 'cinematic' ? 0.85 : 1,
+          { root: this.root, table: this.table, names: this.game.players.map((p) => shownName(p.name)), me: this.you, pace: this.settings.speed === 'cinematic' ? 0.85 : 1,
             eastRounds,
+            onCancel: (stop) => (this.cancelOpening = stop),
             pulseSeat: (seat, n) => {
               const plate = this.els.seats[this.rel(seat)];
               if (!plate) return;
@@ -2292,6 +2342,8 @@ export class MatchController {
           this.game.state,
         );
       else this.table.breakWall();
+      this.cancelOpening = null;
+      if (this.aborted) return;
       // Dealt flowers reach the tray's "Set aside" once the deal is done, as they leave the rack on the table.
       this.holdTrayBonus(this.settings.speed === 'minimal' ? 0 : 2900);
       if (this.aborted) return;
@@ -2515,13 +2567,15 @@ export class MatchController {
    * pause the clock while a sheet, Settings or another tab has your attention;
    * live tables never pause (everyone else is waiting too).
    */
-  private waitHuman<T>(setup: (done: (v: T) => void) => void, onTimeout: () => T, limit = 0, kind: 'claim' | 'turn' = 'turn'): Promise<T> {
+  private waitHuman<T>(setup: (done: (v: T) => void) => void, onTimeout: () => T, limit = 0, kind: 'claim' | 'turn' = 'turn', timeoutNote?: string): Promise<T> {
     return new Promise<T>((resolve) => {
       let finished = false;
+      let cd: Countdown | null = null;
       const ring = this.els.timer;
       const done = (v: T) => {
         if (finished) return;
         finished = true;
+        this.waitSpentMs = cd?.spentMs ?? 0;
         window.clearInterval(this.timerHandle);
         window.cancelAnimationFrame(this.timerFrame);
         ring.hidden = true;
@@ -2533,16 +2587,17 @@ export class MatchController {
       setup(done);
       if (!this.catchingUp()) haptic(kind);
       if (limit > 0 && !this.catchingUp()) {
-        const cd = new Countdown(limit * 1000, performance.now());
+        cd = new Countdown(limit * 1000, performance.now());
         ring.hidden = false;
         ring.dataset.kind = kind;
-        ring.setAttribute('aria-label', kind === 'claim' ? tr('Time to claim: {n} seconds', { n: limit }) : tr('Time for your turn: {n} seconds', { n: limit }));
+        const n = Math.ceil(limit);
+        ring.setAttribute('aria-label', kind === 'claim' ? tr('Time to claim: {n} seconds', { n }) : tr('Time for your turn: {n} seconds', { n }));
         const num = ring.querySelector('.t-num')!;
         const arc = ring.querySelector<SVGCircleElement>('.t-arc')!;
         let shown = -1;
         const step = (fromInterval = false) => {
           if (finished) return;
-          const st = cd.step(performance.now(), this.clockPaused());
+          const st = cd!.step(performance.now(), this.clockPaused());
           arc.style.strokeDashoffset = String(RING_C * (1 - st.frac));
           if (st.left !== shown) {
             shown = st.left;
@@ -2552,7 +2607,7 @@ export class MatchController {
           if (st.tick) sound.play('click');
           if (st.done) {
             const v = onTimeout();
-            this.toast(tr('TIME'), kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you'));
+            this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
             if (kind === 'claim') this.speak({ parts: [{ line: LINES.timeClaim }], text: LINES.timeClaim });
             else this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
             return done(v);
@@ -2567,6 +2622,10 @@ export class MatchController {
   }
 
   private timerFrame = 0;
+  /** How long the last timed wait ran (pauses excluded); the draw's share comes off the discard's clock. */
+  private waitSpentMs = 0;
+  /** Your turn's time already used on drawing, in seconds. */
+  private drawSpent = 0;
   /** Everyone's score as the current hand was dealt, to reconcile the summary rows with the bank. */
   private handStartScores?: number[];
   private handStart?: { hand: number; round: RoundState; scores: number[]; pot: number; goulash?: boolean | 1 };
@@ -2575,7 +2634,7 @@ export class MatchController {
   private clockPaused() {
     if (this.opts.link) return false;
     const modal = document.getElementById('modal');
-    return document.hidden || !this.els.overlay.hidden || !this.els.sheet.hidden || !!this.callWarn || (!!modal && !modal.hidden);
+    return document.hidden || !this.els.overlay.hidden || !this.els.sheet.hidden || !!this.callWarn || (!!modal && !modal.hidden) || !!this.root.querySelector('.more-wrap');
   }
 
   /** This table's claim and turn limits in seconds (0 = untimed). */
@@ -2671,7 +2730,10 @@ export class MatchController {
       () => undefined,
       limit,
       'turn',
+      tr('A tile was drawn for you'),
     );
+    // Drawing and discarding share one turn clock.
+    this.drawSpent = limit > 0 ? this.waitSpentMs / 1000 : 0;
     this.releaseDraw = null;
     this.heldDraw = -1;
     clear(this.els.actions);
@@ -2780,9 +2842,10 @@ export class MatchController {
         const pick = byHint ?? (drawn && allowed.has(drawn.id) ? drawn : undefined) ?? hand[hand.length - 1] ?? opts.discards[0];
         return { kind: 'discard', id: pick.id, riichi: riichiMode };
       },
-      this.turnLimit,
+      this.turnLimit > 0 ? Math.max(1, this.turnLimit - this.drawSpent) : 0,
       'turn',
     );
+    this.drawSpent = 0;
     t.onTileClick = undefined;
     t.interactive.clear();
     t.selectedId = null;
@@ -3406,7 +3469,7 @@ export class MatchController {
       const wm = r.revealedMelds ?? [];
       card.append(winHandSection({ hand: wh, melds: wm, flowers: g.players[winner].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(wh, wm), winFrom: this.winFrom(r) }));
       const items = h('ul', { class: 'score-items' });
-      for (const it of s.items) items.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
+      for (const it of s.items) items.append(h('li', {}, h('span', {}, lineName(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : '')));
       const summary = `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;
       card.append(items, h('div', { class: 'score-total' }, h('span', {}, summary), h('strong', {}, tr('{n} pts', { n: fmt(s.points) }))));
       // Multiple winners: each other winner's hand and score, under the first.
@@ -3415,7 +3478,7 @@ export class MatchController {
         card.append(h('h3', { class: 'co-win-head' }, c.seat === this.me ? tr('You win the hand too') : tr('{name} wins the hand too', { name: g.players[c.seat].name })));
         card.append(winHandSection({ hand: c.revealedHand, melds: c.revealedMelds, flowers: g.players[c.seat].flowers, winTileId: r.winTile?.id, labels: this.settings.labels, red: (id) => isRed(g.state, id), passports: g.profile.passportView?.(c.revealedHand, c.revealedMelds), winFrom: this.winFrom(r) }));
         const citems = h('ul', { class: 'score-items' });
-        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
+        for (const it of cs.items) citems.append(h('li', {}, h('span', {}, lineName(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(cs.unit)}` : '')));
         const csum = `${fmt(cs.value)} ${tr(cs.unit)}${cs.fu ? ` ${cs.fu} ${tr('fu')}` : ''}${cs.tier ? ` · ${cs.tier}` : cs.limit ? ` · ${tr('Limit')}` : ''}`;
         card.append(citems, h('div', { class: 'score-total' }, h('span', {}, csum), h('strong', {}, tr('{n} pts', { n: fmt(cs.points) }))));
       }
@@ -3429,7 +3492,7 @@ export class MatchController {
       const note = drawnHandNote(r, (s) => (s === this.me ? tr('you') : g.players[s].name), g.state.log.find((e) => e.type === 'abortive')?.seat);
       if (note) card.append(h('p', { class: 'muted' }, note));
       else if (r.tenpai) {
-        const ready = g.players.filter((_, i) => r.tenpai![i]).map((p, _i) => (p.seat === this.me ? tr('you') : p.name));
+        const ready = g.players.filter((_, i) => r.tenpai![i]).map((p, _i) => (p.seat === this.me ? tr('you') : shownName(p.name)));
         card.append(h('p', { class: 'muted' }, ready.length ? tr('The wall ran out. Ready (tenpai): {names}. Players who weren’t ready pay {n} points in total to those who were.', { names: andList(ready), n: g.profile.players === 3 ? '2,000' : '3,000' }) : tr('The wall ran out and nobody was ready. No points change hands.')));
       } else if (g.profile.drawPot) card.append(h('p', { class: 'muted' }, tr('The live wall ran out before anyone completed a hand. Everyone puts {n} in the bank for the next winner.', { n: fmt(g.profile.drawPot) })));
       else card.append(h('p', { class: 'muted' }, tr('The live wall ran out before anyone completed a hand. No points change hands.')));
@@ -3485,13 +3548,13 @@ export class MatchController {
           : dealerExtra(i)
             ? h('span', { class: 'delta-split' }, tr('hand {a} · as dealer {b}', { a: signed(hd + dealerExtra(i)), b: signed(-dealerExtra(i)) }))
             : '';
-      deltas.append(h('div', { class: 'delta-row' }, h('span', {}, i === this.me ? tr('{name} (you)', { name: p.name }) : p.name, split), h('span', { class: `num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}` }, signed(d)), h('span', { class: 'num muted' }, fmt(p.score))));
+      deltas.append(h('div', { class: 'delta-row' }, h('span', {}, i === this.me ? tr('{name} (you)', { name: p.name }) : shownName(p.name), split), h('span', { class: `num ${d > 0 ? 'up' : d < 0 ? 'down' : ''}` }, signed(d)), h('span', { class: 'num muted' }, fmt(p.score))));
     });
     card.append(deltas);
     if (g.teamOf(0) !== null) {
       // Team play: the two teams' totals, yours first.
       const totals = teamTotals(g.players.map((p) => p.score));
-      const team = (t: number) => andList(g.players.filter((p) => g.teamOf(p.seat) === t).map((p) => (p.seat === this.me ? tr('You') : p.name)));
+      const team = (t: number) => andList(g.players.filter((p) => g.teamOf(p.seat) === t).map((p) => (p.seat === this.me ? tr('You') : shownName(p.name))));
       const mineT = this.spectator ? 0 : g.teamOf(this.me)!;
       const row = (t: number) => h('div', { class: `delta-row team-row ${t === mineT && !this.spectator ? 'mine' : ''}` }, h('span', {}, team(t)), h('span', { class: `num ${totals[t] > totals[1 - t] ? 'up' : totals[t] < totals[1 - t] ? 'down' : ''}` }, fmt(totals[t])));
       card.append(h('h4', { class: 'instant-head' }, tr('Teams')), h('div', { class: 'deltas team-totals' }, row(mineT), row(1 - mineT)));
@@ -3564,6 +3627,8 @@ export class MatchController {
     this.root.querySelector<HTMLElement>('.seat-2')?.style.removeProperty('translate');
     endFreeCam();
     t.splitPaused = false;
+    // Left from the summary: the table already went back to the club view.
+    if (this.aborted) return;
     if (!over) t.setView('seat', 0.8);
   }
 
@@ -3629,7 +3694,7 @@ export class MatchController {
     const g = this.game;
     // Ties never favour you: you are listed after anyone on the same score, and
     // a shared place counts as the lower one (a drawn game is no win).
-    const standings = g.players.map((p) => ({ name: p.name, score: p.score, seat: p.seat })).sort((a, b) => b.score - a.score || (a.seat === this.me ? 1 : b.seat === this.me ? -1 : a.seat - b.seat));
+    const standings = g.players.map((p) => ({ name: shownName(p.name), score: p.score, seat: p.seat })).sort((a, b) => b.score - a.score || (a.seat === this.me ? 1 : b.seat === this.me ? -1 : a.seat - b.seat));
     // Team play: the team with more points takes first place for both partners; a tie is second (no win).
     const teams = !this.spectator && g.teamOf(this.me) !== null ? teamTotals(g.players.map((p) => p.score)) : null;
     const myTeam = teams ? g.teamOf(this.me)! : 0;

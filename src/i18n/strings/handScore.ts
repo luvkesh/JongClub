@@ -1,6 +1,6 @@
 // The hand-score card, the score calculator and the rule book button (src/ui/handScoreView.ts,
 // scoreCalc.ts, scoringGuide.ts). English key, then 简体中文, 繁體中文, 日本語, العربية, हिन्दी.
-// Score line names stay English, as on the hand result.
+// Score line names and their explanations are in scoreLines.ts.
 import type { Row } from './types';
 
 export const HAND_SCORE: Row[] = [

@@ -155,7 +155,7 @@ export function summaryToggle(overlay: HTMLElement, cont: HTMLButtonElement, o: 
   peekBar.append(h('div', { class: 'peek-btns' }, showBtn, nextBtn));
   overlay.append(peekBar);
   const onKey = (e: KeyboardEvent) => {
-    if (!overlay.isConnected || overlay.hidden) return document.removeEventListener('keydown', onKey);
+    if (!peekBar.isConnected || !overlay.isConnected || overlay.hidden) return document.removeEventListener('keydown', onKey);
     if (e.key === 'h' || e.key === 'H') set(!overlay.classList.contains('peek'));
   };
   document.addEventListener('keydown', onKey);

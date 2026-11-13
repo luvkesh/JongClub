@@ -81,15 +81,10 @@ export function cardGrip(card: HTMLElement, key: () => string, onMove?: () => vo
   const g = h('button', { type: 'button', class: 'card-grip', title: tr('Drag to move this card. Double-tap to put it back.'), 'aria-label': tr('Move this card'), html: GRIP });
   let start: { px: number; py: number; x: number; y: number; id: number } | null = null;
   let moved = false;
-  g.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const r = card.getBoundingClientRect();
-    start = { px: e.clientX, py: e.clientY, x: r.left, y: r.top, id: e.pointerId };
-    moved = false;
-    g.setPointerCapture(e.pointerId);
-  });
-  g.addEventListener('pointermove', (e) => {
+  let lastTap = 0;
+  // Move and release are heard on the window: the card's content (and this grip) can be rebuilt mid-drag
+  // (JongBot's advice re-renders on every move), and a detached grip would never hear the release.
+  const move = (e: PointerEvent) => {
     if (!start || e.pointerId !== start.id) return;
     const dx = e.clientX - start.px;
     const dy = e.clientY - start.py;
@@ -101,24 +96,44 @@ export function cardGrip(card: HTMLElement, key: () => string, onMove?: () => vo
       moved = true;
     }
     placeAt(card, start.x + dx, start.y + dy);
-  });
+  };
   const end = (e: PointerEvent) => {
     if (!start || e.pointerId !== start.id) return;
     start = null;
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', end);
+    window.removeEventListener('pointercancel', end);
     card.classList.remove('dragging');
-    if (!moved) return;
+    if (!moved) {
+      // Touch screens send no dblclick here (touch-action: none): two quick taps put the card back.
+      if (e.type === 'pointerup' && e.timeStamp - lastTap < 350) {
+        lastTap = 0;
+        reset();
+      } else lastTap = e.timeStamp;
+      return;
+    }
+    lastTap = 0;
     const r = card.getBoundingClientRect();
     writeSpot(key(), { x: r.left / window.innerWidth, y: r.top / window.innerHeight });
     onMove?.();
   };
-  g.addEventListener('pointerup', end);
-  g.addEventListener('pointercancel', end);
+  g.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const r = card.getBoundingClientRect();
+    start = { px: e.clientX, py: e.clientY, x: r.left, y: r.top, id: e.pointerId };
+    moved = false;
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  });
   const reset = () => {
     writeSpot(key(), null);
     restoreCard(card, key());
     onMove?.();
   };
-  g.addEventListener('dblclick', (e) => (e.stopPropagation(), reset()));
+  // Mouse double-clicks reset through the two quick taps above.
+  g.addEventListener('dblclick', (e) => e.stopPropagation());
   g.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), reset()));
   g.addEventListener('click', (e) => e.stopPropagation());
   return g;

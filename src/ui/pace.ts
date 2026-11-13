@@ -104,6 +104,11 @@ export class Countdown {
     this.prevLeft = Math.ceil(totalMs / 1000);
   }
 
+  /** Time counted so far (pauses excluded). */
+  get spentMs() {
+    return this.elapsed;
+  }
+
   /** Advance to `now`; returns the state and whether a tick is due. */
   step(now: number, paused = false): CountdownState & { tick: boolean } {
     const dt = Math.max(0, now - this.last);

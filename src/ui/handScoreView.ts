@@ -10,6 +10,12 @@ import { fmt, h, tileImg } from './dom';
 import './handScore.css';
 
 /** "5 faan · Mangan", as the hand result writes it. */
+/** A score line's name in the player's language; India's passport lines read "Passport: <hand>". */
+export function lineName(name: string): string {
+  const m = /^Passport: (.+)$/.exec(name);
+  return m ? `${tr('Passport')}: ${tr(m[1])}` : tr(name);
+}
+
 export function scoreSummary(s: HandScore): string {
   return `${fmt(s.value)} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}${s.tier ? ` · ${s.tier}` : s.limit ? ` · ${tr('Limit')}` : ''}`;
 }
@@ -30,7 +36,7 @@ export function scoreRow(v: WinValue, label?: string): HTMLElement {
 /** The score lines, as the hand result lists them. */
 export function scoreLines(s: HandScore, max = 99): HTMLElement {
   const items = s.items.slice(0, max);
-  const ul = h('ul', { class: 'hs-lines' }, ...items.map((it) => h('li', {}, h('span', {}, it.name, it.note ? h('em', {}, ` ${it.note}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : ''))));
+  const ul = h('ul', { class: 'hs-lines' }, ...items.map((it) => h('li', {}, h('span', {}, lineName(it.name), it.note ? h('em', {}, ` ${tr(it.note)}`) : ''), h('span', { class: 'num' }, it.value ? `${fmt(it.value)} ${tr(s.unit)}` : ''))));
   if (s.items.length > max) ul.append(h('li', { class: 'hs-more' }, tr('+{n} more lines', { n: s.items.length - max })));
   return ul;
 }
