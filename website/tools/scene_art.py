@@ -354,3 +354,20 @@ def tops():
 
 
 tops()
+
+
+def family_art():
+    """Variations rows (variations.png): the gold landscape and arrow at the right of each reference row, as gold on clear
+    (alpha from how gold or how bright a pixel is, so no rectangle of the row's ground comes along)."""
+    v = load("variations").astype(np.float32)
+    for n, (y0, y1), x0 in zip(["formal", "regional", "house"], [(337, 445), (466, 575), (596, 705)], [412, 472, 494]):
+        c = v[y0 + 8:y1 - 8, x0:684]
+        c = cv2.resize(c, (c.shape[1] * 2, c.shape[0] * 2), interpolation=cv2.INTER_LANCZOS4)
+        b, g, r = c[..., 0], c[..., 1], c[..., 2]
+        a = np.clip(np.maximum((r - b - 14) / 60, (np.minimum(np.minimum(r, g), b) - 95) / 70), 0, 1)
+        a[:, :40] *= np.linspace(0, 1, 40)[None, :]
+        rgba = np.dstack([np.clip(r * 1.08, 0, 255), np.clip(g * 1.04, 0, 255), b, a * 255]).astype(np.uint8)
+        Image.fromarray(rgba, "RGBA").save(os.path.join(SITE, "cards", "fam-" + n + ".webp"), quality=92, method=6)
+
+
+family_art()

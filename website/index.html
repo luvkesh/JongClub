@@ -1415,6 +1415,12 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   .scene-final .motto { font-size: max(12px, calc(20 * var(--u))); margin: 0; }
   .scene-final .btn { margin-top: calc(6 * var(--u)); min-height: max(50px, calc(72 * var(--u))); min-width: calc(400 * var(--u)); font-size: max(13px, calc(19 * var(--u))); }
 }
+.families li { position: relative; overflow: hidden; }
+.fam-art { position: absolute; right: 0; top: 50%; height: min(100%, 92px); width: auto; transform: translateY(-50%); pointer-events: none; }
+[dir="rtl"] .fam-art { right: auto; left: 0; transform: translateY(-50%) scaleX(-1); }
+.families li > div { position: relative; z-index: 1; }
+@media (min-width: 1000px) { .vsplit .fam-art { height: min(100%, 118px); } .vsplit .families li > div { padding-inline-end: 42%; } }
+@media (max-width: 700px) { .fam-art { height: 56px; top: auto; bottom: 0; transform: none; opacity: 0.55; } [dir="rtl"] .fam-art { transform: scaleX(-1); } }
 </style>
 
 <header class="top">
@@ -1614,9 +1620,9 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         </div>
       <div class="vsplit">
           <ul class="families">
-            <li><b>7</b><div><h4>Formal Rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div></li>
-            <li><b>19</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div></li>
-            <li><b>4</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div></li>
+            <li><b>7</b><div><h4>Formal Rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div><img class="fam-art" src="cards/fam-formal.webp" alt="" aria-hidden="true" loading="lazy"></li>
+            <li><b>19</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div><img class="fam-art" src="cards/fam-regional.webp" alt="" aria-hidden="true" loading="lazy"></li>
+            <li><b>4</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div><img class="fam-art" src="cards/fam-house.webp" alt="" aria-hidden="true" loading="lazy"></li>
           </ul>
         <figure class="vkit" aria-label="Every variation comes with its own rules, a voiced lesson, a scoring guide, AI players who know it and a one-page cheat sheet.">
           <div class="vk-head"><img src="winds/wind-east.webp" alt="" width="200" height="200"><span>Each one comes with</span></div>
