@@ -40,7 +40,7 @@ def band(key, still, alt):
             f'<source src="video/{key}.mp4" type="video/mp4"></video>')
 
 
-ROOM_TOUR = [("al-fahidi-majlis", "Al Fahidi Majlis"), ("tokyo-janso", "Tokyo Jansō"), ("hk-teahouse", "Hong Kong Tea House"), ("imperial", "Forbidden City")]
+ROOM_TOUR = [("imperial", "Forbidden City"), ("al-fahidi-majlis", "Al Fahidi Majlis"), ("tokyo-janso", "Tokyo Jansō"), ("hk-teahouse", "Hong Kong Tea House")]
 
 
 def rooms_tour(alt):
@@ -52,7 +52,8 @@ def rooms_tour(alt):
     k0 = clips[0][0]
     names = "".join(f'<span class="rt-n" data-i="{i}">{html.escape(n)}</span>' for i, (k, n) in enumerate(clips))
     return (f'<div class="rtour" data-clips="{data}" aria-label="{html.escape(alt)}" role="img">'
-            f'<video muted playsinline preload="auto" poster="video/room-{k0}-poster.jpg" src="video/room-{k0}.mp4"></video>'
+            f'<video muted playsinline preload="none"></video>'
+            f'<img class="rt-still" src="scenes/interlude.jpg" srcset="scenes/interlude-1200.jpg 1200w, scenes/interlude.jpg 1877w" sizes="100vw" width="1877" height="838" alt="" loading="lazy">'
             f'<video muted playsinline preload="none"></video>'
             f'<p class="rt-title" aria-hidden="true">{names}</p></div>')
 
@@ -227,16 +228,20 @@ cats = [
 tabs = "".join(f'<button type="button" role="tab" aria-controls="car-{k}" aria-selected="{"true" if n == 0 else "false"}"><span class="icon">{icon(ic)}</span>{label}<small>{len(items)}</small></button>' for n, (k, label, ic, items) in enumerate(cats))
 carousel = f'<div class="car"><div class="car-tabs" role="tablist" aria-label="The collection">{tabs}</div>' + "".join(panel(k, label, ic, items, n == 0) for n, (k, label, ic, items) in enumerate(cats)) + "</div>"
 groups = [("table", "Table Cloths"), ("frame", "Portrait Frames"), ("avatar", "Outfits"), ("accessory", "Accessories"), ("winAnimation", "Win Animations"), ("tableEffect", "Table Effects"), ("sound", "Sounds")]
+# where each card sits in the reference scene (website/refs/details.png), for the wide layout
+DETAIL_BOX = dict(table=(95, 319, 481, 528), frame=(507, 319, 876, 528), avatar=(902, 319, 1269, 528), accessory=(1295, 319, 1679, 528),
+                  winAnimation=(214, 558, 645, 774), tableEffect=(677, 558, 1096, 774), sound=(1125, 558, 1559, 774))
 extras = []
 for key, label in groups:
     items = [r for r in cat["rest"] if r["cat"] == key and r["id"] not in ("none", "fx-none")]
     sw = items[min(3, len(items) - 1)]["swatch"]
     names = ", ".join(r["name"] for r in items[:2])
-    medal = os.path.join(SITE, "assets", "details", key + ".webp")
-    art = (f'<img class="medal" src="assets/details/{key}.webp" alt="" width="360" height="360">' if os.path.exists(medal)
+    card = os.path.join(SITE, "cards", "detail-" + key + ".webp")
+    art = (f'<img src="cards/detail-{key}.webp" alt="" width="840" height="440" loading="lazy" aria-hidden="true">' if os.path.exists(card)
            else f'<span class="swatch" style="background:conic-gradient({sw[0]} 0 45%, {sw[1]} 0 80%, {sw[2]} 0)"></span>')
     n, word = len(items), label
-    extras.append(f'<div class="extra">{art}<div><b>{n} {word}</b><span>{html.escape(names)} and more</span></div></div>')
+    bx = DETAIL_BOX[key]
+    extras.append(f'<div class="extra" style="--x: {bx[0] - 5}; --y: {bx[1] - 5}; --w: {bx[2] - bx[0] + 11}; --h: {bx[3] - bx[1] + 11}">{art}<div class="pc-text"><b>{n} {word}</b><span>{html.escape(names)} and more</span></div></div>')
 
 page = open(os.path.join(HERE, "index.template.html")).read()
 page = re.sub(r"\{\{ICON:([a-z0-9-]+)\}\}", lambda m: icon(m.group(1)), page)
