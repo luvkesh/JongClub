@@ -33,11 +33,11 @@ const ACCOUNTS_KEY = 'jongclub.auth.accounts.v1';
 const GUEST_PROFILE_KEY = 'jongclub.profile.v1';
 /**
  * The guest's other progress, kept per account next to the profile (season XP,
- * skills, drills, streak shield, private clubs, placement): it moves with the
+ * skills, drills, streak shield, private clubs, placement, a tournament in progress): it moves with the
  * profile, or a new account would start them from nothing while the emptied
  * guest slot kept them.
  */
-const GUEST_PROGRESS_KEYS = ['jongclub.season.v1', 'jongclub.skills.v1', 'jongclub.drills.v1', 'jongclub.streak-shield.v1', 'jongclub.clubs.v1', 'jongclub.placement.v1'];
+const GUEST_PROGRESS_KEYS = ['jongclub.season.v1', 'jongclub.skills.v1', 'jongclub.drills.v1', 'jongclub.streak-shield.v1', 'jongclub.clubs.v1', 'jongclub.placement.v1', 'jongclub.tournament.v1', 'jongclub.tournament.pending.v1'];
 
 export const PROVIDER_LABEL: Record<Provider, string> = { guest: 'Guest', email: 'Email', google: 'Google', apple: 'Apple' };
 
