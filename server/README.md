@@ -38,6 +38,7 @@ lockstep decisions over the WebSocket relay.
 | `APPLE_SERVICES_ID` | unset | Sign in with Apple. The Services ID (the game's `VITE_APPLE_SERVICES_ID`); add an app bundle ID after a comma if a native app signs in too. Unset: refused (501). |
 | `GOOGLE_JWKS_URL`, `APPLE_JWKS_URL` | provider's | Only for tests. |
 | `EMAIL_PROVIDER` | unset | Reminder emails. Unset: opt-ins are recorded but nothing is sent. See below. |
+| `GEMINI_API_KEY` | unset | Ask Mei (Learn). The server answers `POST /api/ask-mei` with Gemini, so the key never reaches the browser. Unset: the route answers 501 and the game shows its "needs a key" card. `GEMINI_MODEL` (comma list) overrides the models tried. |
 
 `node:sqlite` is built into Node 22 and prints an "experimental" warning once at start;
 that is expected. Postgres can replace it later: `store.js` documents the five-method

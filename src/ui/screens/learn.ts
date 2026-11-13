@@ -24,6 +24,7 @@ import { DEFAULT_TABLE, tableFor, type Lesson } from './tables';
 import { canOpen, isFree, lessonPrice } from '../../economy/economy';
 import { allLessons, lockedLesson, unlockLesson } from '../economySheets';
 import { fmt } from '../dom';
+import { askMeiSection } from '../askMei';
 
 /** Set when the player picks a lesson from the list, so it begins at once; opening Learn shows a start card instead. */
 let autostartNext = false;
@@ -208,6 +209,7 @@ export function learnScreen(app: App) {
     ),
     placementOffer(app.ctx()),
     learnChoices(app, levels, open, isDone),
+    askMeiSection(app),
     h(
       'section',
       { class: 'lx-current', 'aria-label': tr('Your lesson') },
