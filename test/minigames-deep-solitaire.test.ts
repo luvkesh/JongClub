@@ -419,7 +419,8 @@ describe('Timed Mahjong played through the session', () => {
         it(`${layout}, ${clock}s, ${level}`, () => {
           for (let seed = 1; seed <= 3; seed++) {
             const r = start('timed', level, { layout, clock }, seed * 17 + Number(clock));
-            expect(r.s.variant()).toBe(layout);
+            // Records are kept per layout and clock (round 3).
+            expect(r.s.variant()).toBe(`${layout}:${clock}`);
             expect(r.s.clock.limit).toBe(Number(clock));
             // Slow play runs out of time; quick play clears.
             const slow = seed === 3;

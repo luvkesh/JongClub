@@ -545,7 +545,8 @@ describe('match-3, played through', () => {
         expect(v).toBeGreaterThanOrEqual(0);
         s.dispose();
       }
-  });
+    // About 2 s alone; give it room on a loaded machine (it timed out once at the 5 s default).
+  }, 30_000);
 
   it('a cascade still running when the game restarts does not touch the next board', async () => {
     const board = new StubBoard();

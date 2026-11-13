@@ -5,6 +5,7 @@
 // A cleared wall is dealt again until the boss falls.
 
 import * as THREE from 'three';
+import { Rng } from '../../engine/rng';
 import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT, UPRIGHT } from '../board';
@@ -64,6 +65,8 @@ class BossSession implements MiniSession {
   private hintPair: number[] = [];
   private lines = new THREE.Group();
   private lineMat = goldMaterial(1);
+  /** Pause suggestions draw from their own stream, so idle time never changes later walls, attacks or shuffles. */
+  private hintRng: Rng;
   private fade = 0;
 
   constructor(private host: MiniHost) {
@@ -74,6 +77,7 @@ class BossSession implements MiniSession {
     this.nextAttack = this.boss.every;
     this.hints = HINTS[host.level];
     this.shuffles = SHUFFLES[host.level];
+    this.hintRng = new Rng((host.seed ^ 0x6a09e667) >>> 0);
     host.board.root.add(this.lines);
     host.camera.home = { yaw: 0, pitch: 58 };
     host.camera.reset();
@@ -249,7 +253,7 @@ class BossSession implements MiniSession {
     // A cleared wall is about to be dealt again: no "no more moves" meanwhile.
     if (this.ended || !this.g.left) return [];
     const p = this.open();
-    if (p.length) return p[this.host.rng.int(p.length)];
+    if (p.length) return p[this.hintRng.int(p.length)];
     return this.locked.size ? [] : null;
   }
   hint() {

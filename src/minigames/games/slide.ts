@@ -421,8 +421,10 @@ class SlideSession implements MiniSession {
     this.hintIds = [];
     // Points the move scored go back, and an undo costs a little more.
     this.score = Math.max(0, this.score - gain - 10);
-    this.stuck = !this.g.pairs().length && !this.g.slideMove();
     this.host.sound('slide');
+    // Undoing the shuffle that got you out of a dead end puts you back in it: ask for a shuffle,
+    // or with none left end the game, as after a move.
+    this.checkStuck();
     this.refresh();
     return true;
   }

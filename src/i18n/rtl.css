@@ -41,6 +41,9 @@
 /* Arrows and chevrons that point forward (icons.ts marks them) point left. */
 [dir='rtl'] .ico-fwd { transform: scaleX(-1); }
 [dir='rtl'] .vx-link:hover .ico-fwd { transform: scaleX(-1) translateX(3px); }
+/* Direction-bearing tool icons (the mini-games' Undo arrow, minigames/toolIcons.ts) turn round too.
+   Dimensions' Turn left / Turn right are real directions on screen and are not marked. */
+[dir='rtl'] .ico-dir { transform: scaleX(-1); }
 
 /* Tiles and score readouts in a hand read in table order. */
 [dir='rtl'] .tray,

@@ -71,8 +71,12 @@ export class SolitaireSession implements MiniSession {
     this.newBoard(true);
   }
 
+  /**
+   * The layout, and for Timed Mahjong the clock too: a longer clock banks more seconds into the
+   * score, so 1:30, 2:00 and 3:00 keep their own bests (progress.ts moved older Timed records to 2:00).
+   */
   variant() {
-    return this.layout.id;
+    return this.mode.clock === 'timed' ? `${this.layout.id}:${this.mode.seconds ?? 300}` : this.layout.id;
   }
 
   // ------------------------------------------------------------ board

@@ -17,6 +17,8 @@ import { holdMiniIcons } from './icons';
 import { BoardCamera, CUBE_LIMITS, FLAT_LIMITS } from './camera';
 import { MiniStage } from './stage';
 import { Sparkle } from './sparkle';
+import { setLiveMini } from './historyGuard';
+import { TOOL_ICONS, toolSvg } from './toolIcons';
 import { MINI_DAILY_CAP, bestKey, earnedToday, payout, recordResult, suggestAfter } from './progress';
 import { howToLine } from './narration';
 import type { MiniGameDef, MiniHost, MiniLevel, MiniResult, MiniSession } from './types';
@@ -45,18 +47,6 @@ export interface MiniStart {
 }
 
 export const levelName = (l: MiniLevel) => ({ easy: tr('Easy'), medium: tr('Medium'), hard: tr('Hard') })[l];
-
-const TOOL_ICONS = {
-  hint: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.9V16h5v-.2c0-.8.4-1.5 1-1.9A6 6 0 0 0 12 3z"/>',
-  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
-  shuffle: '<path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
-  view: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
-  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9M12 17.3h.01"/>',
-  restart: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',
-  turnL: '<path d="M8 8 4 12l4 4"/><path d="M4 12h11a5 5 0 0 1 5 5"/>',
-  turnR: '<path d="m16 8 4 4-4 4"/><path d="M20 12H9a5 5 0 0 0-5 5"/>',
-};
-const svg = (d: string) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
 export class MiniPlay {
   private board: TileBoard;
@@ -153,7 +143,7 @@ export class MiniPlay {
   private buildHud(): HTMLElement {
     const def = this.def;
     const tool = (id: keyof typeof TOOL_ICONS, label: string, on: () => void) => {
-      const b = h('button', { type: 'button', class: 'mini-tool', 'aria-label': label, title: label, onclick: () => (sound.play('button'), on()) }, h('span', { class: 'mt-icon', html: svg(TOOL_ICONS[id]) }), h('span', { class: 'mt-label' }, label), h('span', { class: 'mt-badge', hidden: true }));
+      const b = h('button', { type: 'button', class: 'mini-tool', 'aria-label': label, title: label, onclick: () => (sound.play('button'), on()) }, h('span', { class: 'mt-icon', html: toolSvg(id) }), h('span', { class: 'mt-label' }, label), h('span', { class: 'mt-badge', hidden: true }));
       this.tools.set(id, b);
       return b;
     };
@@ -181,8 +171,8 @@ export class MiniPlay {
       h(
         'div',
         { class: 'mini-actions' },
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('How to play'), title: tr('How to play'), onclick: () => this.showHelp(), html: svg(TOOL_ICONS.help) }),
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('New board'), title: tr('New board'), onclick: () => this.askRestart(), html: svg(TOOL_ICONS.restart) }),
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('How to play'), title: tr('How to play'), onclick: () => this.showHelp(), html: toolSvg('help') }),
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('New board'), title: tr('New board'), onclick: () => this.askRestart(), html: toolSvg('restart') }),
       ),
     );
     const layer = h('div', { class: 'mini-layer' });
@@ -316,6 +306,8 @@ export class MiniPlay {
     window.addEventListener('resize', this.onResize);
     document.addEventListener('visibilitychange', this.onVis);
     this.hash = location.hash;
+    // Before this game's own listener: once the game has gone, its entry is skipped (historyGuard.ts).
+    setLiveMini(this, true);
     this.pushEntry();
     window.addEventListener('popstate', this.onPop);
     let last = performance.now();
@@ -558,6 +550,7 @@ export class MiniPlay {
     if (this.disposed) return;
     this.disposed = true;
     window.removeEventListener('popstate', this.onPop);
+    setLiveMini(this, false);
     window.clearInterval(this.timer);
     window.removeEventListener('resize', this.onResize);
     document.removeEventListener('visibilitychange', this.onVis);

@@ -229,7 +229,12 @@ class ConnectSession implements MiniSession {
   shuffle(): boolean {
     if (this.ended || this.shuffles <= 0) return false;
     // Tiles keep their ids; the shuffle hands kinds round, so rebuild the board in place with a toss.
-    if (!this.g.shuffle(this.host.rng)) return false;
+    // The shuffle always leaves a move (it deals along a removal order when random mixes find none);
+    // should it ever fail on a stuck board, the game ends rather than sitting stuck with shuffles left.
+    if (!this.g.shuffle(this.host.rng)) {
+      if (this.stuck) this.lose(tr('No more moves'));
+      return false;
+    }
     this.shuffles--;
     this.hintPair = null;
     this.sel = null;
@@ -258,6 +263,14 @@ class ConnectSession implements MiniSession {
     this.host.sound('slide');
     this.refresh();
     return true;
+  }
+
+  /**
+   * Cascade's records are kept per way the tiles fall ('down', 'left'; progress.ts moved older ones
+   * to 'down'). Connect has no set-up choice, so its records keep the plain game and level key.
+   */
+  variant() {
+    return this.g.gravity === 'none' ? '' : this.g.gravity;
   }
 
   /** Lay the board out again from the cells (after a shuffle or undo). */

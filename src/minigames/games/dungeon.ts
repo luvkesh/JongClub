@@ -281,7 +281,9 @@ class DungeonSession implements MiniSession {
         const gain = Math.min(5, this.maxHp - this.hp);
         this.hp += gain;
         this.host.sound('pung');
-        this.host.toast(tr('A flower restores {n} health', { n: gain }), 'good');
+        // At full health the flower has nothing to give back: say so rather than "restores 0".
+        if (gain > 0) this.host.toast(tr('A flower restores {n} health', { n: gain }), 'good');
+        else this.host.toast(tr('A flower, but you are already at full health'), 'info');
         break;
       }
       case 'armour':
