@@ -1435,6 +1435,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 }
 /* Big numerals (user 2026-11-13: "use a different font for the numbers"): the reference's high-contrast serif. */
 .sn b, .vhead .big, .families b { font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif; font-weight: 600; font-variant-numeric: lining-nums; letter-spacing: 0; }
+/* Retest 2026-11-13: Cormorant's old-style figures made "11 Portrait Frames" read as "ıı" and "3D" drop below the line; lining figures everywhere */
+body { font-variant-numeric: lining-nums; }
+/* Retest 2026-11-13: between phone and full desktop (iPad portrait and landscape) the stacked sections sat 16px from the screen edge while their neighbours had wide margins */
+@media (min-width: 760px) and (max-width: 1279.98px) { main .wrap { --g: max(16px, min(40px, calc(40px - (100vw - 1200px) / 2))); padding-left: max(var(--g), env(safe-area-inset-left, 0px)); padding-right: max(var(--g), env(safe-area-inset-right, 0px)); } }
 .sn b { font-size: 11.6cqw; }
 </style>
 
@@ -1636,8 +1640,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
       <div class="vsplit">
           <ul class="families">
             <li><b>7</b><div><h4>Formal Rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div><img class="fam-art" src="cards/fam-formal.webp" alt="" aria-hidden="true" loading="lazy"></li>
-            <li><b>19</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div><img class="fam-art" src="cards/fam-regional.webp" alt="" aria-hidden="true" loading="lazy"></li>
-            <li><b>4</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div><img class="fam-art" src="cards/fam-house.webp" alt="" aria-hidden="true" loading="lazy"></li>
+            <li><b>18</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div><img class="fam-art" src="cards/fam-regional.webp" alt="" aria-hidden="true" loading="lazy"></li>
+            <li><b>6</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div><img class="fam-art" src="cards/fam-house.webp" alt="" aria-hidden="true" loading="lazy"></li>
           </ul>
         <figure class="vkit" aria-label="Every variation comes with its own rules, a voiced lesson, a scoring guide, AI players who know it and a one-page cheat sheet.">
           <div class="vk-head"><img src="winds/wind-east.webp" alt="" width="200" height="200"><span>Each one comes with</span></div>
@@ -1678,7 +1682,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇸🇬</span><div><b>Singaporean</b><small>Regional · animals</small></div></div>
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional</small></div></div>
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional · 3 players</small></div></div>
-        <div class="vcard" data-r="in" data-t="house"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>Indian Club</b><small>House rules</small></div></div>
+        <div class="vcard" data-r="in" data-t="house"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>Kolkata Joker Club</b><small>House rules</small></div></div>
         <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Riichi tournament</b><small>Formal · league rules</small></div></div>
         <div class="vcard" data-r="west" data-t="formal"><span class="flag" aria-hidden="true">🇪🇺</span><div><b>EMA</b><small>Formal · European MCR</small></div></div>
         <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Zung Jung</b><small>Formal · Alan Kwan</small></div></div>
@@ -1689,10 +1693,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Wuhan</b><small>Regional · laizi wild</small></div></div>
         <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Fujian</b><small>Regional · 16 tiles, golds</small></div></div>
         <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Dongbei</b><small>Regional · Northeast China</small></div></div>
-        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇹🇭</span><div><b>Thai</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="sea" data-t="house"><span class="flag" aria-hidden="true">🇹🇭</span><div><b>Thai</b><small>House rules</small></div></div>
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇵🇭</span><div><b>Filipino</b><small>Regional · 16 tiles</small></div></div>
-        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇮🇩</span><div><b>Indonesian</b><small>Regional</small></div></div>
-        <div class="vcard" data-r="west" data-t="house"><span class="flag" aria-hidden="true">🇬🇧</span><div><b>European Classical</b><small>House rules · Britain</small></div></div>
+        <div class="vcard" data-r="sea" data-t="house"><span class="flag" aria-hidden="true">🇮🇩</span><div><b>Indonesian</b><small>House rules</small></div></div>
+        <div class="vcard" data-r="west" data-t="regional"><span class="flag" aria-hidden="true">🇬🇧</span><div><b>European Classical</b><small>Regional · Britain</small></div></div>
         <div class="vcard" data-r="west" data-t="house"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>Wright-Patterson</b><small>House rules · US club game</small></div></div>
         <div class="vcard" data-r="in" data-t="house" data-f="5"><span class="flag" aria-hidden="true">🇦🇪</span><div><b>UAE / Dubai Rules</b><small>House rules</small></div></div>
       </div>
