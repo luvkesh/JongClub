@@ -1179,6 +1179,25 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   .sr-art { -webkit-mask-image: linear-gradient(transparent, #000 22%); mask-image: linear-gradient(transparent, #000 22%); }
   .sr-in b { letter-spacing: 0.14em; padding-left: 0.14em; }
 }
+
+/* V58 (2026-11-13): Play for It and The Club notes are the reference cards, one whole picture each, words in HTML. */
+.pcards { display: grid; gap: clamp(10px, 1.2vw, 18px); padding: 0; margin: 0; list-style: none; }
+.pcards > * { position: relative; container-type: inline-size; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0; display: block; min-width: 0; }
+.pcards > *::before, .pcards > *::after { content: none !important; }
+.pcards > * > img { display: block; width: 100%; height: auto; }
+.pcards .pc-text { position: absolute; }
+.earn4 { grid-template-columns: repeat(4, 1fr); }
+.earn4 .pc-text { left: 8%; right: 8%; top: 52.5%; text-align: center; display: flex; flex-direction: column; gap: 3.4cqw; }
+.earn4 h4 { font: 600 8cqw/1.1 var(--serif); color: #fbf6e8; letter-spacing: 0.01em; }
+.earn4 p { font: 400 max(12px, 5cqw)/1.42 var(--ui); color: #ece6d6; text-wrap: balance; }
+.club4 { grid-template-columns: repeat(4, 1fr); }
+.club4 > li { border-radius: 4.6cqw; overflow: hidden; }
+.club4 > li > img { transform: scale(1.028, 1.085); }
+.club4 .pc-text { border: 0 !important; padding: 0 !important; margin: 0 !important; left: 42.5%; right: 3%; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.6cqw; text-align: start; }
+.club4 b { font: 600 6.2cqw/1.1 var(--serif); color: #fbf6e8; letter-spacing: 0.01em; }
+.club4 span { font: 400 max(11px, 4.3cqw)/1.25 var(--ui); color: #e6dfcd; }
+@media (max-width: 1100px) { .earn4, .club4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .earn4, .club4 { grid-template-columns: minmax(0, 420px); justify-content: center; } }
 </style>
 
 <header class="top">
@@ -1559,11 +1578,11 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <p class="kicker"><span class="ring"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18" /><path d="M7 6h1v4" /><path d="m16.71 13.88.7.71-2.82 2.82" /></svg></span></span>How pieces are earned</p>
         <h3>Play for It</h3>
       </div>
-      <div class="earn">
-        <article><img class="feat-ic" src="assets/feat/coins.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></article>
-        <article><img class="feat-ic" src="assets/feat/calendar.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>The Season Track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></article>
-        <article><img class="feat-ic" src="assets/feat/stamp.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>World Tour Stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></article>
-        <article><img class="feat-ic" src="assets/feat/tag.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></article>
+      <div class="earn pcards earn4">
+        <article><img src="cards/earn-coins.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Jong Points</h4><p>Earned at the table, in lessons, challenges and Mini-games. Spent in the Atelier.</p></div></article>
+        <article><img src="cards/earn-calendar.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>The Season Track</h4><p>Twenty reward steps each season. Nothing on it is for sale.</p></div></article>
+        <article><img src="cards/earn-stamp.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>World Tour Stamps</h4><p>Each destination's game unlocks its table cloth, and three open a city's own room.</p></div></article>
+        <article><img src="cards/earn-tag.webp" alt="" width="744" height="740" loading="lazy" aria-hidden="true"><div class="pc-text"><h4>Buy Jong Points</h4><p>Top up to reach a piece sooner. Season rewards stay earned only.</p></div></article>
       </div>
       <p class="promise"><span class="icon"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg></span>Nothing in the Atelier changes gameplay or your rating.</p>
       </div>
@@ -1594,11 +1613,11 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         </div>
         <figure class="shot device tablet"><img src="shots/club-1800.jpg" srcset="shots/club-1800.jpg 1800w, shots/club.jpg 3600w" sizes="(max-width: 960px) 100vw, 55vw" width="3600" height="2250" alt="The Club: seasons, ranked play, tournaments and members to follow."></figure>
       </div>
-      <ul class="notes">
-        <li><img class="feat-ic" src="assets/feat/chart.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Ratings</b><span>One per variation</span></div></li>
-        <li><img class="feat-ic" src="assets/feat/lantern.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Seasons</b><span>Six weeks, one city</span></div></li>
-        <li><img class="feat-ic" src="assets/feat/trophy.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
-        <li><img class="feat-ic" src="assets/feat/people.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div><b>Private Clubs</b><span>Your own weekly league</span></div></li>
+      <ul class="notes pcards club4">
+        <li><img src="cards/club-ratings.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Ratings</b><span>One per variation</span></div></li>
+        <li><img src="cards/club-seasons.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Seasons</b><span>Six weeks, one city</span></div></li>
+        <li><img src="cards/club-tournaments.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Tournaments</b><span>Daily to Season Finals</span></div></li>
+        <li><img src="cards/club-clubs.webp" alt="" width="824" height="264" loading="lazy" aria-hidden="true"><div class="pc-text"><b>Private Clubs</b><span>Your own weekly league</span></div></li>
       </ul>
     </div>
   </section>

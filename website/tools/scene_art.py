@@ -297,3 +297,24 @@ def cards():
         pil.save(os.path.join(SITE, "cast", n + ".png"))
 
 hero(); cards()
+
+
+def feature_cards():
+    """Play for It (earn.png) and The Club notes (club.png): each reference card as one whole picture, words erased."""
+    out = os.path.join(SITE, "cards"); os.makedirs(out, exist_ok=True)
+    from PIL import ImageFilter
+    def put(c, name, size):
+        Image.fromarray(cv2.cvtColor(c, cv2.COLOR_BGR2RGB)).resize(size, Image.LANCZOS).filter(ImageFilter.UnsharpMask(1.2, 60, 2)).save(os.path.join(out, name + ".webp"), quality=90, method=6)
+    im = load("earn")
+    for n, (x0, x1) in zip(["coins", "calendar", "stamp", "tag"], [(204, 576), (592, 964), (980, 1352), (1369, 1741)]):
+        c = erase_glyphs(im[260:630, x0:x1].copy(), (14, 188, 358, 345), v=105, grow=3, radius=4, blur=1.5)
+        put(c, "earn-" + n, (744, 740))
+    im = load("club")
+    for n, (x0, x1), dv in zip(["ratings", "seasons", "tournaments", "clubs"], [(115, 516), (542, 916), (942, 1338), (1364, 1764)], [263, 684, 1088, 1511]):
+        c = im[616:748, x0 - 5:x1 + 6].copy(); w = c.shape[1]; div = dv - (x0 - 5)
+        c = erase_glyphs(c, (div + 12, 20, w - 16, 116), v=105, grow=3, radius=4, blur=1.5)
+        mid = cv2.resize(c[:, div + 14:w - 20], (412 - (div + 14) - 20, 132), interpolation=cv2.INTER_LINEAR)
+        put(np.concatenate([c[:, :div + 14], mid, c[:, w - 20:]], axis=1), "club-" + n, (824, 264))
+
+
+feature_cards()
