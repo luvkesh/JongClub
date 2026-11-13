@@ -145,7 +145,7 @@ function passportHand(p: WinHandParts, pl: PassportLayout, row: (label: string, 
  * bottom (Show summary, and the card's own continue button; on phones the hand
  * in its sets too) and the scrim lifts, so the hand on the table shows clearly.
  */
-export function summaryToggle(overlay: HTMLElement, cont: HTMLButtonElement, o: { onHide?: () => void; onShow?: () => void; strip?: HTMLElement }) {
+export function summaryToggle(overlay: HTMLElement, cont: HTMLButtonElement, o: { onHide?: () => void; onShow?: () => void; strip?: HTMLElement; signal?: AbortSignal }) {
   const peekBar = h('div', { class: 'peek-bar', role: 'group', 'aria-label': tr('Hand summary') });
   // On phones the table is too small to read a whole hand from, so the hidden summary keeps the hand itself, in its sets.
   if (o.strip) peekBar.append(h('div', { class: 'peek-strip' }, o.strip));
@@ -158,7 +158,8 @@ export function summaryToggle(overlay: HTMLElement, cont: HTMLButtonElement, o: 
     if (!peekBar.isConnected || !overlay.isConnected || overlay.hidden) return document.removeEventListener('keydown', onKey);
     if (e.key === 'h' || e.key === 'H') set(!overlay.classList.contains('peek'));
   };
-  document.addEventListener('keydown', onKey);
+  // The summary's owner ends the listener when the summary closes (`signal`); a stale one also drops itself on the next key.
+  document.addEventListener('keydown', onKey, o.signal ? { signal: o.signal } : undefined);
   function set(hide: boolean) {
     overlay.classList.toggle('peek', hide);
     hideBtn.setAttribute('aria-expanded', String(!hide));
