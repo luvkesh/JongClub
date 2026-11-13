@@ -18,10 +18,14 @@ import { lt } from '../i18n/lessons';
 
 const lessonTitle = (id: string) => (id === 'guided' ? tr('Your first guided game') : LESSONS[id] ? lt(LESSONS[id].title) : id);
 
-/** The table the result suggests, or null when the guided game with Mei is the place to start. */
+/**
+ * The table the result suggests, or null when the guided game with Mei is the place to start.
+ * Always an India Rules table: the questions and the Academy teach India Rules, and mixing in
+ * Chinese Classical here confuses a new player (user 2026-11-13).
+ */
 export function placementTable(ctx: AppCtx, r: PlacementResult | null = loadPlacement()): TableConfig | null {
   if (!r?.suggestion.length) return null;
-  return { ...ctx.tableFor('classic'), name: 'Jade Room', difficulty: r.suggestion.difficulty, length: r.suggestion.length };
+  return { ...ctx.tableFor('india'), difficulty: r.suggestion.difficulty, length: r.suggestion.length };
 }
 
 /** Start where the result suggests: a table at that level, or the guided game. */

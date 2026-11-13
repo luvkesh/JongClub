@@ -42,7 +42,8 @@ export const DRILL_LABEL: Record<DrillType, string> = {
 };
 
 /** Variations whose winning hands the value drill can show. */
-export const VALUE_VARIATIONS = ['classic', 'riichi', 'hongkong', 'taiwanese', 'uae'];
+/** India Rules first: the Academy teaches it, so a new player counts India hands (user 2026-11-13). */
+export const VALUE_VARIATIONS = ['india', 'classic', 'riichi', 'hongkong', 'taiwanese', 'uae'];
 
 export interface DrillOption {
   label: string;
@@ -367,7 +368,7 @@ function safeDrill(seed: number): Drill {
 const HIDDEN_ITEM = /ura|ippatsu|haitei|houtei|rinshan|chankan|rob|last tile|replacement|moon|plum|heaven|earth|red five|aka|bonus counter|honba/i;
 
 function valueDrill(seed: number, variation: string): Drill {
-  const v = VALUE_VARIATIONS.includes(variation) && getProfile(variation) ? variation : 'classic';
+  const v = VALUE_VARIATIONS.includes(variation) && getProfile(variation) ? variation : 'india';
   for (let attempt = 0; attempt < 12; attempt++) {
     const s = seedOf(seed, 'value', v, attempt);
     const profile = buildProfile(v, 'oneHand');
@@ -388,7 +389,10 @@ function valueDrill(seed: number, variation: string): Drill {
     const rng = new Rng(s);
     const val = sc.value;
     const least = Math.max(profile.minValue, profile.riichi ? 1 : 0);
-    const pool = [val - 2, val - 1, val + 1, val + 2, val + 3].filter((x) => x >= least && x !== val);
+    // Point scores that only come in steps (India Rules: 500, 1,000, 2,000, doubled) get halves and doubles,
+    // not neighbours like 1,999 that no hand can score.
+    const stepped = val >= 250 && val % 250 === 0;
+    const pool = (stepped ? [val / 4, val / 2, val * 2, val * 4] : [val - 2, val - 1, val + 1, val + 2, val + 3]).filter((x) => x >= least && x !== val && Number.isInteger(x));
     const opts = [val, ...shuffle(rng, pool).slice(0, 3)].sort((a, b) => a - b);
     const sum = sc.items.reduce((a, i) => a + i.value, 0);
     const parts = sc.items.map((i) => `${scoreLine(i.name)} (${i.value})`).join(' + ');
@@ -420,7 +424,7 @@ function valueDrill(seed: number, variation: string): Drill {
 // ------------------------------------------------------------ entry point
 
 /** Build the drill of a type from its seed. Deterministic: the same seed gives the same drill. */
-export function makeDrill(type: DrillType, seed: number, variation = 'classic'): Drill {
+export function makeDrill(type: DrillType, seed: number, variation = 'india'): Drill {
   switch (type) {
     case 'name':
       return nameDrill(seed);

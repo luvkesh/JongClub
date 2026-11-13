@@ -18,7 +18,7 @@ import { luxCard } from './luxCard';
 /** The variation your value and discard drills use: the one you play most that they cover. */
 function drillVariation(ctx: AppCtx): string {
   const played = Object.entries(ctx.profile.variationGames).sort((a, b) => b[1] - a[1]);
-  return played.find(([v]) => VALUE_VARIATIONS.includes(v))?.[0] ?? 'classic';
+  return played.find(([v]) => VALUE_VARIATIONS.includes(v))?.[0] ?? 'india';
 }
 
 /** The Daily drills card on the Learn screen. */
