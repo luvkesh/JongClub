@@ -384,6 +384,298 @@ def hero_set(stage):
     bpy.context.scene.world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.02, 0.014, 0.01, 1)
 
 
+
+def box(name, size, loc, mat, bevel=0.004):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+    o = bpy.context.object
+    o.name = name
+    o.scale = size
+    bpy.ops.object.transform_apply(scale=True)
+    if bevel:
+        mod = o.modifiers.new('bev', 'BEVEL')
+        mod.width = bevel
+        mod.segments = 3
+        bpy.ops.object.shade_smooth()
+    o.data.materials.append(mat)
+    return o
+
+
+def mat_simple(name, color, rough=0.3, metal=0.0, coat=0.0, coat_rough=0.05, sheen=0.0, sheen_tint=None):
+    m, nt, b = node_mat(name)
+    b.inputs['Base Color'].default_value = hex_rgb(color)
+    b.inputs['Roughness'].default_value = rough
+    b.inputs['Metallic'].default_value = metal
+    b.inputs['Coat Weight'].default_value = coat
+    b.inputs['Coat Roughness'].default_value = coat_rough
+    if sheen:
+        b.inputs['Sheen Weight'].default_value = sheen
+        b.inputs['Sheen Tint'].default_value = hex_rgb(sheen_tint or color)
+    return m, nt, b
+
+
+def grain(nt, b, c0, c1, stretch=(0.6, 14, 1), scale=3.0, veins=False):
+    """Long wood grain (or marble veins) from stretched noise, fed into the base colour."""
+    tc = nt.nodes.new('ShaderNodeTexCoord')
+    mp = nt.nodes.new('ShaderNodeMapping')
+    mp.inputs['Scale'].default_value = stretch
+    nt.links.new(tc.outputs['Object'], mp.inputs['Vector'])
+    n = nt.nodes.new('ShaderNodeTexNoise')
+    n.inputs['Scale'].default_value = scale
+    n.inputs['Detail'].default_value = 8 if not veins else 12
+    n.inputs['Distortion'].default_value = 1.2 if not veins else 4.0
+    nt.links.new(mp.outputs['Vector'], n.inputs['Vector'])
+    ramp = nt.nodes.new('ShaderNodeValToRGB')
+    ramp.color_ramp.elements[0].color = hex_rgb(c0)
+    ramp.color_ramp.elements[1].color = hex_rgb(c1)
+    if veins:
+        # mostly the light stone, thin dark veins where the noise crosses its middle
+        ramp.color_ramp.elements[0].position = 0.47
+        ramp.color_ramp.elements[1].position = 0.5
+        e = ramp.color_ramp.elements.new(0.53)
+        e.color = hex_rgb(c0)
+        ramp.color_ramp.elements[0].color = hex_rgb(c0)
+        ramp.color_ramp.elements[1].color = hex_rgb(c1)
+    nt.links.new(n.outputs['Fac'], ramp.inputs['Fac'])
+    nt.links.new(ramp.outputs['Color'], b.inputs['Base Color'])
+
+
+# Each style: the stand the tiles are shown on, the counter under it, the room behind and its lamps.
+#   stand   steps | dais | slab | tray | glass | cushion | block
+#   floor   (c0, c1, roughness, coat, grain stretch or None for plain)
+#   wall    colour, glow (emission at the bottom of the wall, fading upward), stripes (a screen)
+#   lamps   colours of the out-of-focus lamps, their strength
+SHOWCASE = {
+    'lacquer': dict(stand='steps', standc=('#1c110b', '#e7b766'), floor=('#120904', '#3a2010', 0.35, 1.0, True),
+                    wall=('#5a2a0e', 1.3, 0), lamps=[(1, 0.62, 0.3), (1, 0.75, 0.45), (1, 0.55, 0.35)], lampk=0.22, bokeh=(34, 0.04, 0.09)),
+    'dais': dict(stand='dais', standc=('#0b2a1d', '#e2b35e'), floor=('#06180f', '#0c2a1c', 0.9, 0.0, False),
+                 wall=('#0f4a30', 1.2, 0), lamps=[(0.55, 1, 0.65), (0.9, 0.85, 0.45), (0.45, 0.9, 0.7)], lampk=0.2, velvet=True, bokeh=(18, 0.08, 0.16)),
+    'marble': dict(stand='slab', standc=('#f2f1ee', '#8d8f94'), floor=('#bfc2c7', '#d2d4d8', 0.25, 0.6, False),
+                   wall=('#9aa3ad', 0.9, 0), lamps=[(0.85, 0.92, 1), (1, 1, 1)], lampk=0.06, lie=True, bokeh=(0, 0, 0)),
+    'tray': dict(stand='tray', standc=('#8a130c', '#e7b766'), floor=('#1a0605', '#2a0b08', 0.3, 1.0, False),
+                 wall=('#8a2410', 1.3, 0), lamps=[(1, 0.7, 0.25), (1, 0.5, 0.2), (1, 0.85, 0.4)], lampk=0.24, bokeh=(10, 0.14, 0.24)),
+    'glass': dict(stand='glass', standc=('#030308', '#5d7bff'), floor=('#020205', '#05050c', 0.04, 1.0, False),
+                  wall=('#141a55', 0.9, 0), lamps=[(0.35, 0.45, 1), (0.6, 0.35, 1), (0.3, 0.75, 1)], lampk=0.4, bokeh=(140, 0.012, 0.035), facekey=3.0),
+    'cushion': dict(stand='cushion', standc=('#d9a3a0', '#f3d6c4'), floor=('#2a1416', '#3a1c1f', 0.85, 0.0, False),
+                    wall=('#7a3a40', 1.1, 0), lamps=[(1, 0.6, 0.6), (1, 0.8, 0.55), (1, 0.7, 0.75)], lampk=0.22, lie=True, bokeh=(14, 0.05, 0.1)),
+    'bamboo': dict(stand='block', standc=('#b88a58', '#6e4a28'), floor=('#2a1a0e', '#3b2615', 0.6, 0.2, True),
+                   wall=('#5a4220', 1.1, 1), lamps=[(1, 0.78, 0.45), (1, 0.85, 0.6)], lampk=0.14, bokeh=(4, 0.1, 0.16)),
+}
+# the season sets each take a style in their city's colours
+SHOWCASE['neon'] = dict(SHOWCASE['glass'], wall=('#2a0a3a', 1.0, 0), lamps=[(1, 0.2, 0.7), (0.2, 0.9, 1), (1, 0.4, 0.9), (0.3, 1, 0.8)], lampk=0.55, bokeh=(90, 0.02, 0.06))
+SHOWCASE['maple'] = dict(SHOWCASE['tray'], standc=('#2a0c06', '#e2a24a'), wall=('#a3300e', 1.3, 0), lamps=[(1, 0.45, 0.12), (1, 0.6, 0.2), (0.95, 0.3, 0.1)])
+SHOWCASE['desert'] = dict(SHOWCASE['bamboo'], standc=('#c9a27a', '#8a6a4a'), floor=('#a87a4c', '#c49464', 0.85, 0.0, False),
+                          wall=('#c4521c', 1.6, 0), lamps=[(1, 0.85, 0.5)], lampk=0.8, bokeh=(1, 0.5, 0.5))
+SHOWCASE['lantern'] = dict(SHOWCASE['lacquer'], wall=('#6a140a', 1.3, 0), lamps=[(1, 0.18, 0.08), (1, 0.45, 0.12), (1, 0.3, 0.1)], lampk=0.5, bokeh=(12, 0.16, 0.26))
+SHOWCASE['garden'] = dict(SHOWCASE['dais'], standc=('#123a22', '#e7c27a'), wall=('#2a6a2a', 1.2, 0), lamps=[(0.7, 1, 0.4), (1, 0.9, 0.5), (0.5, 1, 0.55)])
+SHOWCASE['lotus'] = dict(SHOWCASE['tray'], standc=('#5a1028', '#e7b766'), wall=('#5a1430', 1.2, 0), lamps=[(1, 0.5, 0.7), (1, 0.75, 0.5), (1, 0.6, 0.8)])
+
+
+def showcase(style, mats, d, ks, stage, W):
+    st = SHOWCASE[style]
+    sc = bpy.context.scene
+    h = tm.TH / 2
+    hero_set(stage)
+    for o in list(bpy.data.objects):
+        if o.name.startswith(('Plane', 'top', 'cyc')):
+            bpy.data.objects.remove(o)
+    # the counter
+    c0, c1, fr, fcoat, fgrain = st['floor']
+    bpy.ops.mesh.primitive_plane_add(size=24, location=(0, 0, 0))
+    fl = bpy.context.object
+    m, nt, b = mat_simple('floor', c0, fr, coat=fcoat, sheen=0.6 if st.get('velvet') else 0, sheen_tint=c1)
+    if fgrain:
+        grain(nt, b, c0, c1)
+    fl.data.materials.append(m)
+    # the room: a wall lit low and warm, falling dark above, optionally a slatted screen
+    wc, glow, stripes = st['wall']
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 10, 4))
+    wall = bpy.context.object
+    wall.scale = (40, 16, 1)
+    wall.rotation_euler = (math.pi / 2, 0, 0)
+    wm, wnt, wb = node_mat('wall')
+    wb.inputs['Base Color'].default_value = hex_rgb(wc)
+    wb.inputs['Emission Color'].default_value = hex_rgb(wc)
+    wb.inputs['Roughness'].default_value = 1
+    gtc = wnt.nodes.new('ShaderNodeTexCoord')
+    gsep = wnt.nodes.new('ShaderNodeSeparateXYZ')
+    wnt.links.new(gtc.outputs['Generated'], gsep.inputs['Vector'])
+    gmr = wnt.nodes.new('ShaderNodeMapRange')
+    gmr.inputs['From Min'].default_value = 0.24
+    gmr.inputs['From Max'].default_value = 0.42
+    gmr.inputs['To Min'].default_value = glow
+    gmr.inputs['To Max'].default_value = glow * 0.1
+    wnt.links.new(gsep.outputs['Y'], gmr.inputs['Value'])
+    if stripes:
+        # a bamboo screen: bright slats with dark gaps
+        wv = wnt.nodes.new('ShaderNodeTexWave')
+        wv.wave_type = 'BANDS'
+        wv.bands_direction = 'X'
+        wv.inputs['Scale'].default_value = 34
+        wv.inputs['Distortion'].default_value = 0.3
+        mul = wnt.nodes.new('ShaderNodeMath')
+        mul.operation = 'MULTIPLY'
+        ramp = wnt.nodes.new('ShaderNodeMapRange')
+        ramp.inputs['From Min'].default_value = 0.2
+        ramp.inputs['From Max'].default_value = 0.5
+        ramp.inputs['To Min'].default_value = 0.03
+        ramp.inputs['To Max'].default_value = 1.0
+        wnt.links.new(wv.outputs['Fac'], ramp.inputs['Value'])
+        wnt.links.new(ramp.outputs['Result'], mul.inputs[0])
+        wnt.links.new(gmr.outputs['Result'], mul.inputs[1])
+        wnt.links.new(mul.outputs['Value'], wb.inputs['Emission Strength'])
+    else:
+        wnt.links.new(gmr.outputs['Result'], wb.inputs['Emission Strength'])
+    wall.data.materials.append(wm)
+    # the lamps behind, recoloured for the room
+    import random
+    rnd = random.Random(sum(map(ord, style)))
+    for o in list(bpy.data.objects):
+        if o.name.startswith('Sphere'):
+            bpy.data.objects.remove(o)
+    n_, r0, r1 = st['bokeh']
+    for i in range(n_):
+        loc = (0.6, 9.5, 0.9) if n_ == 1 else (rnd.uniform(-5, 5), rnd.uniform(3.5, 9), rnd.uniform(0.3, 2.8))
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=rnd.uniform(r0, r1), location=loc, segments=16, ring_count=10)
+        o = bpy.context.object
+        em, _, eb = node_mat('lamp')
+        eb.inputs['Base Color'].default_value = (0, 0, 0, 1)
+        eb.inputs['Emission Color'].default_value = (*rnd.choice(st['lamps']), 1)
+        eb.inputs['Emission Strength'].default_value = rnd.uniform(3, 9) * st['lampk'] * (0.25 if r1 > 0.2 else 1)
+        o.data.materials.append(em)
+        o.visible_shadow = o.visible_glossy = o.visible_diffuse = False
+    # the stand
+    sc0, sc1 = st['standc']
+    base, _, bb = mat_simple('stand', sc0, 0.22, coat=1.0, coat_rough=0.03)
+    trim, _, tb = mat_simple('trim', sc1, 0.18, metal=1.0)
+    pc = bpy.data.collections.get('plinths') or bpy.data.collections.new('plinths')
+    if pc.name not in sc.collection.children:
+        sc.collection.children.link(pc)
+    kind = st['stand']
+    xs = [(i - 1.5) * 0.41 for i in range(4)]
+    places = []  # (kind or None for the back, x, y, z, yaw, lying)
+    order = [None, *ks]
+    if kind == 'steps':
+        tops = [0.10, 0.15, 0.13, 0.085]
+        for x, top in zip(xs, tops):
+            w0, d0, w1, d1, band = 0.39, 0.40, 0.34, 0.34, 0.006
+            h0 = top * 0.45
+            box('plinth', (w0, d0, h0), (x, 0, h0 / 2), base)
+            box('plinthgold', (w0 + 0.008, d0 + 0.008, band), (x, 0, band / 2), trim, 0.002)
+            box('plinthgold', (w0 + 0.004, d0 + 0.004, band), (x, 0, h0 - band / 2), trim, 0.002)
+            box('plinth', (w1, d1, top - h0), (x, 0, h0 + (top - h0) / 2), base)
+            box('plinthgold', (w1 + 0.004, d1 + 0.004, band), (x, 0, top - band / 2), trim, 0.002)
+        for i, (x, top) in enumerate(zip(xs, tops)):
+            places.append((order[i], x, 0, top, 0.08 if i == 0 else -0.04 * (i - 2), False))
+    elif kind == 'dais':
+        # one round dais in velvet with a polished gold rim; the tiles stand in a gentle arc on it
+        top = 0.12
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.98, depth=top, location=(0, 0.36, top / 2), vertices=128)
+        o = bpy.context.object; o.name = 'plinthdais'; bpy.ops.object.shade_smooth()
+        vel, _, vb = mat_simple('velvet', sc0, 0.95, sheen=1.0, sheen_tint='#3f8a62')
+        o.data.materials.append(vel)
+        for z, r in ((top, 0.98), (0.004, 0.99)):
+            bpy.ops.mesh.primitive_torus_add(major_radius=r, minor_radius=0.012, location=(0, 0.36, z), major_segments=160, minor_segments=16)
+            t = bpy.context.object; t.name = 'plinthrim'; bpy.ops.object.shade_smooth(); t.data.materials.append(trim)
+        for i, x in enumerate(xs):
+            u = (i - 1.5) / 1.5
+            places.append((order[i], x * 0.98, -0.12 + 0.12 * u * u, top, -u * 0.22, False))
+    elif kind == 'slab':
+        # a slab of white marble; three tiles stand on it and the fourth lies face down in front
+        top = 0.09
+        o = box('plinthslab', (1.8, 0.72, top), (0, 0.06, top / 2), base, 0.01)
+        mm, mnt, mb = mat_simple('marble', sc0, 0.12, coat=0.6)
+        grain(mnt, mb, sc0, sc1, stretch=(1.2, 1.2, 1.2), scale=2.2, veins=True)
+        o.data.materials.clear(); o.data.materials.append(mm)
+        for i, x in enumerate((-0.58, -0.18, 0.22)):
+            places.append((ks[i], x, 0.14, top, 0.0, False))
+        places.append((None, 0.62, -0.14, top, -0.3, True))
+    elif kind == 'tray':
+        # a lacquer tray with a raised rim and a fine gold lip; the tiles fan out across it
+        top = 0.045
+        box('plinthtray', (1.95, 0.82, top), (0, 0.05, top / 2), base, 0.008)
+        for (sx, sy, x, y) in ((1.95, 0.05, 0, 0.05 - 0.385), (1.95, 0.05, 0, 0.05 + 0.385), (0.05, 0.82, -0.95, 0.05), (0.05, 0.82, 0.95, 0.05)):
+            box('plinthrim', (sx, sy, 0.09), (x, y, 0.045), base, 0.012)
+            box('plinthlip', (sx + 0.004, sy + 0.004, 0.006), (x, y, 0.09), trim, 0.002)
+        for i, x in enumerate(xs):
+            u = (i - 1.5) / 1.5
+            places.append((order[i], x * 1.02, 0.02 + 0.16 * u * u, top, -u * 0.5, False))
+    elif kind == 'glass':
+        # a stage of black glass with a thin line of light along its front edge
+        top = 0.07
+        o = box('plinthglass', (2.1, 0.8, top), (0, 0.05, top / 2), base, 0.004)
+        em, _, eb = node_mat('edge')
+        eb.inputs['Base Color'].default_value = (0, 0, 0, 1)
+        eb.inputs['Emission Color'].default_value = hex_rgb(sc1)
+        eb.inputs['Emission Strength'].default_value = 6
+        box('plinthedge', (2.1, 0.004, 0.004), (0, 0.05 - 0.401, top - 0.006), em, 0)
+        tops = [top] * 4
+        for i, x in enumerate(xs):
+            u = (i - 1.5) / 1.5
+            # a V: the middle pair forward, the outer pair set back and turned in
+            places.append((order[i], x * 1.05, 0.18 * abs(u) - 0.05, top, -u * 0.35, False))
+    elif kind == 'cushion':
+        # an open jeweller's box: gold case, tufted satin cushion, the lid standing open behind lined in satin;
+        # three tiles lean back into the cushion and one lies face down in front
+        top = 0.13
+        sat, _, sb = mat_simple('satin', sc0, 0.35, sheen=1.0, sheen_tint=sc1)
+        box('plinthbox', (1.9, 0.86, 0.11), (0, 0.06, 0.055), trim, 0.01)
+        box('plinthcushion', (1.82, 0.78, top - 0.03), (0, 0.06, 0.03 + (top - 0.03) / 2), sat, 0.045)
+        for ix in range(7):
+            for iy in range(3):
+                bpy.ops.mesh.primitive_uv_sphere_add(radius=0.012, location=(-0.78 + ix * 0.26, -0.22 + iy * 0.28, top + 0.002), segments=12, ring_count=8)
+                t = bpy.context.object; t.name = 'plinthbutton'; bpy.ops.object.shade_smooth(); t.data.materials.append(trim)
+        lid = box('caselid', (1.9, 0.05, 0.78), (0, 0.52, 0.44), trim, 0.01)
+        lid.rotation_euler = (-0.22, 0, 0)
+        lin = box('caselining', (1.8, 0.01, 0.7), (0, 0.49, 0.44), sat, 0.004)
+        lin.rotation_euler = (-0.22, 0, 0)
+        for i, x in enumerate((-0.56, -0.16, 0.24)):
+            places.append((ks[i], x, 0.12, top - 0.01, 0.04 * (1 - i), 'lean'))
+        places.append((None, 0.64, -0.14, top, -0.45, True))
+    elif kind == 'block':
+        # a single block of raw wood, end grain showing, the tiles in a row on top
+        top = 0.16
+        o = box('plinthblock', (1.9, 0.62, top), (0, 0.05, top / 2), base, 0.006)
+        wm2, wnt2, wb2 = mat_simple('rawwood', sc0, 0.6)
+        grain(wnt2, wb2, sc0, sc1, stretch=(0.5, 9, 1), scale=4)
+        o.data.materials.clear(); o.data.materials.append(wm2)
+        for i, x in enumerate(xs):
+            places.append((order[i], x, 0.12 if i % 2 else -0.02, top, 0.1 if i % 2 else -0.08, False))
+    for o in bpy.data.objects:
+        if o.name.startswith('plinth') and o.type == 'MESH':
+            pc.objects.link(o)
+    for k, x, y, z, yaw, lying in places:
+        if lying is True:
+            tile(mats, d, None, (x, y, z + tm.TD / 2), Euler((math.pi, 0, yaw)))
+        elif lying == 'lean':
+            r_ = tile(mats, d, k, (x, y, z + h * math.cos(0.18)), STAND(yaw))
+            r_.rotation_euler = Euler((math.pi / 2 - 0.18, 0, yaw))
+        else:
+            tile(mats, d, k, (x, y, z + h), STAND((math.pi if k is None else 0.0) + yaw))
+    # light: a raking key from the left, and a low strip that lights only the stand
+    kl = bpy.data.lights.new('rake', 'AREA'); kl.energy = 70; kl.size = 0.6; kl.color = (1, 0.88, 0.74)
+    ko = bpy.data.objects.new('rake', kl); ko.location = (-2.4, -1.2, 1.0)
+    ko.rotation_euler = (Vector((0, 0, 0.3)) - Vector(ko.location)).to_track_quat('-Z', 'Y').to_euler()
+    sc.collection.objects.link(ko)
+    fl_ = bpy.data.lights.new('plinthfill', 'AREA'); fl_.energy = 14; fl_.shape = 'RECTANGLE'; fl_.size = 3.0; fl_.size_y = 0.25; fl_.color = (1, 0.85, 0.7)
+    fo = bpy.data.objects.new('plinthfill', fl_); fo.location = (0, -2.0, 0.12)
+    fo.rotation_euler = (Vector((0, 0, 0.08)) - Vector(fo.location)).to_track_quat('-Z', 'Y').to_euler()
+    sc.collection.objects.link(fo)
+    fo.light_linking.receiver_collection = pc
+    if st.get('facekey'):
+        # dark tiles: a broad soft light high over the lens, lighting only the tiles, so dark faces still read
+        kf = bpy.data.lights.new('facekey', 'AREA'); kf.energy = 60 * st['facekey']; kf.size = 1.6; kf.color = (1, 0.95, 0.88)
+        ok = bpy.data.objects.new('facekey', kf); ok.location = (0.3, -2.2, 2.0)
+        ok.rotation_euler = (Vector((0, 0, 0.25)) - Vector(ok.location)).to_track_quat('-Z', 'Y').to_euler()
+        sc.collection.objects.link(ok)
+        ok.light_linking.receiver_collection = bpy.data.collections['tiles']
+    look = (0, 0.05, 0.3)
+    cam = (0, -2.45, 0.5)
+    c = camera(cam, look, 50)
+    c.data.dof.aperture_fstop = 0.55
+    c.data.dof.focus_distance = (Vector(look) - Vector(cam)).length
+    sc.render.resolution_x, sc.render.resolution_y = W, int(W * 11 / 20)
+
+
 def camera(loc, look, lens):
     c = bpy.data.cameras.new('cam')
     c.lens = lens
@@ -446,6 +738,10 @@ def main():
         c.data.dof.aperture_fstop = 0.8
         c.data.dof.focus_distance = (Vector((0.0, 0.0, 0.2)) - Vector((0.95, -1.7, 0.33))).length
         sc.render.resolution_x, sc.render.resolution_y = W, int(W * 9 / 16)
+    elif scene.startswith('show:'):
+        # show:STYLE:K1,K2,K3 - the set on its own stand in its own room (SHOWCASE)
+        _, style, kk = scene.split(':')
+        showcase(style, mats, d, [int(k) for k in kk.split(',')], stage, W)
     elif scene == 'deck':
         # Every tile of the set lying face up, row by row: three suits, honours, flowers and seasons,
         # then the jokers and the animals.
