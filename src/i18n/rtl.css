@@ -54,7 +54,12 @@
 :lang(ja) .tagline,
 :lang(zh) .tagline { word-break: auto-phrase; overflow-wrap: anywhere; text-wrap: balance; }
 
-/* Devanagari and CJK have no capitals, so the wide tracking of the small-caps labels only pulls their letters apart. */
-:lang(hi) :is(.subline, .hx-t, .eyebrow, .field, .btn, .chip, .nav-item, .tagline, [class*='eyebrow']),
-:lang(ja) :is(.subline, .hx-t, .eyebrow, .field, .btn, .chip, .nav-item, .tagline, [class*='eyebrow']),
-:lang(zh) :is(.subline, .hx-t, .eyebrow, .field, .btn, .chip, .nav-item, .tagline, [class*='eyebrow']) { letter-spacing: 0 !important; }
+/*
+ * Devanagari and CJK have no capitals, so the wide tracking of the small-caps labels only
+ * pulls their letters apart (in Devanagari it breaks the headline bar between letters).
+ * Every label sets its own tracking, so the reset covers the whole page; Latin text marked
+ * lang="en" (lessons) and the image wordmark are untouched.
+ */
+:lang(hi) body *,
+:lang(ja) body *,
+:lang(zh) body * { letter-spacing: normal !important; }
