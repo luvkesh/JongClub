@@ -18,7 +18,6 @@ import { BoardCamera, CUBE_LIMITS, FLAT_LIMITS } from './camera';
 import { MiniStage } from './stage';
 import { Sparkle } from './sparkle';
 import { MINI_DAILY_CAP, bestKey, earnedToday, payout, recordResult, suggestAfter } from './progress';
-import { howToLine } from './narration';
 import type { MiniGameDef, MiniHost, MiniLevel, MiniResult, MiniSession } from './types';
 
 /** What the play shell needs from the app. */
@@ -403,8 +402,7 @@ export class MiniPlay {
       h('ol', { class: 'mini-howto' }, ...lines.map((l) => h('li', {}, l))),
       h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', onclick: () => ((this.app.modal.hidden = true), narrator.stop()) }, tr('Play'))),
     );
-    // Mei's clip is keyed by the English text; a device voice reads the sheet as shown.
-    narrator.auto(narrator.recorded ? howToLine(this.def) : lines.join(' '));
+    narrator.auto(lines.join(' '));
   }
 
   private askLeave() {

@@ -30,25 +30,6 @@ import { askMeiSection } from '../askMei';
 let autostartNext = false;
 /** The next Learn screen begins its lesson at once (the player asked for that lesson). */
 export const autostartLesson = () => void (autostartNext = true);
-
-/** Lessons the player has begun at least once on this device: only these show as "In progress" (a new player's first lesson is "Not started"). */
-const OPENED_KEY = 'jongclub.lessonsOpened.v1';
-const openedLessons = (): string[] => {
-  try {
-    const v: unknown = JSON.parse(localStorage.getItem(OPENED_KEY) ?? '[]');
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
-  } catch {
-    return [];
-  }
-};
-const markLessonOpened = (id: string) => {
-  try {
-    const all = openedLessons();
-    if (!all.includes(id)) localStorage.setItem(OPENED_KEY, JSON.stringify([...all, id]));
-  } catch {
-    // No storage (private mode): the path keeps saying "Not started".
-  }
-};
 const takeAutostart = () => {
   const v = autostartNext;
   autostartNext = false;
@@ -101,7 +82,7 @@ export function learnScreen(app: App) {
   const id = app.learnLesson;
   const [cta, table] = tables[id] ?? [tr('Play a guided game with Mei'), practice('basics', tr('Guided Game'))];
   // The current lesson's line in the level list, marked complete as soon as its test is passed.
-  const state = h('span', { class: 'lv-state' }, app.profile.lessonsDone.includes(id) ? tr('Completed') : openedLessons().includes(id) ? tr('In progress') : tr('Not started'));
+  const state = h('span', { class: 'lv-state' }, app.profile.lessonsDone.includes(id) ? tr('Completed') : tr('In progress'));
   // Lessons after Level 3 (except every India Rules lesson) are unlocked with Jong Points, money or a bundle (src/economy).
   const all = allLessons();
   const opens = (l: Lesson) => canOpen(app.profile, l, all);
@@ -126,10 +107,6 @@ export function learnScreen(app: App) {
       if (n) open(n)();
     },
     onOpenLesson: (l) => open(l as Lesson)(),
-    onStart: () => {
-      markLessonOpened(id);
-      state.textContent = tr('In progress');
-    },
     autostart: takeAutostart(),
   });
   function open(lesson: Lesson) {
@@ -314,8 +291,7 @@ function learningPath(app: App, levels: Level[], current: Lesson, open: (l: Less
   const key = (l: Level) => l.lesson ?? (l.guided ? 'guided' : l.t);
   // Lettered levels (11a, 18b) fold under their parent level.
   const parentOf = (l: Level) => (l.lesson && SUB[l.lesson] ? (levels.find((p) => p.lesson === SUB[l.lesson!]![0]) ?? null) : null);
-  const begun = openedLessons();
-  const status = (l: Level) => (isDone(l) ? 'done' : l.lesson === current && begun.includes(current) ? 'progress' : 'todo');
+  const status = (l: Level) => (isDone(l) ? 'done' : l.lesson === current ? 'progress' : 'todo');
   const STATUS = { done: tr('Completed'), progress: tr('In progress'), todo: tr('Not started') };
 
   // Free lessons say so; locked ones show their price.
