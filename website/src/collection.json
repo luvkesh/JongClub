@@ -560,6 +560,30 @@
    ]
   },
   {
+   "id": "aviators",
+   "cat": "accessory",
+   "name": "Gold Aviators",
+   "blurb": "Gold-framed sunglasses for a poker face.",
+   "price": 1200,
+   "swatch": [
+    "#d9b45c",
+    "#2a2420",
+    "#fff1c9"
+   ]
+  },
+  {
+   "id": "pixel",
+   "cat": "accessory",
+   "name": "Pixel Shades",
+   "blurb": "Deal with it.",
+   "price": 1500,
+   "swatch": [
+    "#0b0b0b",
+    "#3a3a3a",
+    "#ffffff"
+   ]
+  },
+  {
    "id": "win-classic",
    "cat": "winAnimation",
    "name": "Classic Reveal",

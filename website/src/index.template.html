@@ -991,7 +991,7 @@ footer .wrap { padding-block: 28px; font-size: 14px; color: #e9e1cc; }
 .vmore [hidden] { display: none !important; }
 .motto span + span::before { content: none; }
 .hero .motto span + span::before, .final .motto span + span::before { content: none; }
-.hero .motto span + span, .final .motto span + span { margin-left: 0.9em; }
+.hero .motto span + span, .final .motto span + span { margin-inline-start: 0.9em; }
 #minigames .head > .kicker, .atelier .head .kicker, #earn .subhead .kicker, .subhead.orn .kicker, .games-head .kicker { white-space: nowrap; }
 .kicker::before, .kicker::after { min-width: 16px; }
 #minigames::before { background: radial-gradient(14% 12% at 4% 6%, rgba(230, 90, 60, 0.14), transparent 70%), radial-gradient(14% 12% at 96% 6%, rgba(230, 90, 60, 0.14), transparent 70%); }
@@ -1435,6 +1435,17 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
 }
 /* Big numerals (user 2026-11-13: "use a different font for the numbers"): the reference's high-contrast serif. */
 .sn b, .vhead .big, .families b { font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif; font-weight: 600; font-variant-numeric: lining-nums; letter-spacing: 0; }
+/* Retest 2026-11-13: Cormorant's old-style figures made "11 Portrait Frames" read as "ıı" and "3D" drop below the line; lining figures everywhere */
+body { font-variant-numeric: lining-nums; }
+/* Retest: a sideways swipe on the collection picture reaches the page script instead of being taken by the browser */
+.car-stage { touch-action: pan-y; }
+/* Retest 2026-11-13, languages: numbers and prices keep their order in Arabic; Devanagari letters never get pulled apart; Japanese breaks at phrase boundaries */
+[dir="rtl"] .car .count { direction: ltr; unicode-bidi: isolate; }
+[dir="rtl"] .price { unicode-bidi: plaintext; }
+html:lang(hi) body * { letter-spacing: normal !important; }
+:lang(ja) { word-break: auto-phrase; }
+/* Retest 2026-11-13: between phone and full desktop (iPad portrait and landscape) the stacked sections sat 16px from the screen edge while their neighbours had wide margins */
+@media (min-width: 760px) and (max-width: 1279.98px) { main .wrap { --g: max(16px, min(40px, calc(40px - (100vw - 1200px) / 2))); padding-left: max(var(--g), env(safe-area-inset-left, 0px)); padding-right: max(var(--g), env(safe-area-inset-right, 0px)); } }
 .sn b { font-size: 11.6cqw; }
 </style>
 
@@ -1636,8 +1647,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
       <div class="vsplit">
           <ul class="families">
             <li><b>7</b><div><h4>Formal Rulesets</h4><p>Kept by governing bodies, from Riichi to EMA.</p></div><img class="fam-art" src="cards/fam-formal.webp" alt="" aria-hidden="true" loading="lazy"></li>
-            <li><b>19</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div><img class="fam-art" src="cards/fam-regional.webp" alt="" aria-hidden="true" loading="lazy"></li>
-            <li><b>4</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div><img class="fam-art" src="cards/fam-house.webp" alt="" aria-hidden="true" loading="lazy"></li>
+            <li><b>18</b><div><h4>Regional Families</h4><p>How each place plays at home, from Hong Kong to Korea.</p></div><img class="fam-art" src="cards/fam-regional.webp" alt="" aria-hidden="true" loading="lazy"></li>
+            <li><b>6</b><div><h4>House-Rule Traditions</h4><p>Kept by clubs and families, from Dubai to India.</p></div><img class="fam-art" src="cards/fam-house.webp" alt="" aria-hidden="true" loading="lazy"></li>
           </ul>
         <figure class="vkit" aria-label="Every variation comes with its own rules, a voiced lesson, a scoring guide, AI players who know it and a one-page cheat sheet.">
           <div class="vk-head"><img src="winds/wind-east.webp" alt="" width="200" height="200"><span>Each one comes with</span></div>
@@ -1678,7 +1689,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇸🇬</span><div><b>Singaporean</b><small>Regional · animals</small></div></div>
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional</small></div></div>
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇲🇾</span><div><b>Malaysian</b><small>Regional · 3 players</small></div></div>
-        <div class="vcard" data-r="in" data-t="house"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>Indian Club</b><small>House rules</small></div></div>
+        <div class="vcard" data-r="in" data-t="house"><span class="flag" aria-hidden="true">🇮🇳</span><div><b>Kolkata Joker Club</b><small>House rules</small></div></div>
         <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇯🇵</span><div><b>Riichi tournament</b><small>Formal · league rules</small></div></div>
         <div class="vcard" data-r="west" data-t="formal"><span class="flag" aria-hidden="true">🇪🇺</span><div><b>EMA</b><small>Formal · European MCR</small></div></div>
         <div class="vcard" data-r="ea" data-t="formal"><span class="flag" aria-hidden="true">🇭🇰</span><div><b>Zung Jung</b><small>Formal · Alan Kwan</small></div></div>
@@ -1689,10 +1700,10 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
         <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Wuhan</b><small>Regional · laizi wild</small></div></div>
         <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Fujian</b><small>Regional · 16 tiles, golds</small></div></div>
         <div class="vcard" data-r="ea" data-t="regional"><span class="flag" aria-hidden="true">🇨🇳</span><div><b>Dongbei</b><small>Regional · Northeast China</small></div></div>
-        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇹🇭</span><div><b>Thai</b><small>Regional</small></div></div>
+        <div class="vcard" data-r="sea" data-t="house"><span class="flag" aria-hidden="true">🇹🇭</span><div><b>Thai</b><small>House rules</small></div></div>
         <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇵🇭</span><div><b>Filipino</b><small>Regional · 16 tiles</small></div></div>
-        <div class="vcard" data-r="sea" data-t="regional"><span class="flag" aria-hidden="true">🇮🇩</span><div><b>Indonesian</b><small>Regional</small></div></div>
-        <div class="vcard" data-r="west" data-t="house"><span class="flag" aria-hidden="true">🇬🇧</span><div><b>European Classical</b><small>House rules · Britain</small></div></div>
+        <div class="vcard" data-r="sea" data-t="house"><span class="flag" aria-hidden="true">🇮🇩</span><div><b>Indonesian</b><small>House rules</small></div></div>
+        <div class="vcard" data-r="west" data-t="regional"><span class="flag" aria-hidden="true">🇬🇧</span><div><b>European Classical</b><small>Regional · Britain</small></div></div>
         <div class="vcard" data-r="west" data-t="house"><span class="flag" aria-hidden="true">🇺🇸</span><div><b>Wright-Patterson</b><small>House rules · US club game</small></div></div>
         <div class="vcard" data-r="in" data-t="house" data-f="5"><span class="flag" aria-hidden="true">🇦🇪</span><div><b>UAE / Dubai Rules</b><small>House rules</small></div></div>
       </div>
@@ -1906,7 +1917,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     <button type="button" class="mei-x mei-cc" id="mei-cc" aria-pressed="true" aria-label="Captions" title="Captions"><span class="icon cc-on">{{ICON:captions}}</span><span class="icon cc-off">{{ICON:captions-off}}</span></button>
     <button type="button" class="mei-x" id="mei-stop" aria-label="End the tour" title="End the tour"><span class="icon">{{ICON:volume-x}}</span></button>
   </div>
-  <button type="button" class="mei-next" id="mei-next" hidden><span>Continue</span><span class="icon">{{ICON:chevron-down}}</span></button>
+  <button type="button" class="mei-next" id="mei-next" aria-label="Continue" hidden><span>Continue</span><span class="icon">{{ICON:chevron-down}}</span></button>
 </div>
 <script>{{ZEN}}</script>
 <script>
@@ -2046,7 +2057,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   const texts = [], attrs = [];
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement.closest('script, style, .lang-menu') || !n.nodeValue.trim() ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
   for (let n; (n = walk.nextNode()); ) texts.push([n, n.nodeValue]);
-  document.querySelectorAll('[alt], [aria-label]').forEach((el) => ['alt', 'aria-label'].forEach((a) => el.hasAttribute(a) && el.getAttribute(a).trim() && attrs.push([el, a, el.getAttribute(a)])));
+  const grab = (root) => root.querySelectorAll('[alt], [aria-label], [title]').forEach((el) => ['alt', 'aria-label', 'title'].forEach((a) => el.hasAttribute(a) && el.getAttribute(a).trim() && attrs.push([el, a, el.getAttribute(a)])));
+  grab(document.body);
   const titles = [...document.querySelectorAll('.title')];
   const menu = document.getElementById('lang-menu'), lbtn = document.getElementById('lang-btn');
   let cur = 'en';
@@ -2056,7 +2068,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     const d = I18N[l] || {};
     const tr = (en) => { const k = en.trim(); const t = d[k]; return t ? en.replace(k, t) : en; };
     // The last two words of a sentence travel together, so no line ends on one lonely word.
-    const glue = (t) => (t.trim().split(/\s+/).length > 3 ? t.replace(/ (\S{1,14}\s*)$/, '\u00a0$1') : t);
+    // A slash stays with the word before it, and never ends up leading a lonely last word ("UAE / Dubai" in Arabic).
+    const glue = (t) => { t = t.replace(/ \/ /g, '\u00a0/ '); return t.trim().split(/\s+/).length > 3 && !/\/\s+\S{1,14}\s*$/.test(t) ? t.replace(/ (\S{1,14}\s*)$/, '\u00a0$1') : t; };
     texts.forEach(([n, en]) => { if (n.isConnected) n.nodeValue = glue(tr(en)); });
     attrs.forEach(([el, a, en]) => el.setAttribute(a, tr(en)));
     document.documentElement.lang = l;
@@ -2064,20 +2077,26 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     if (FONTS[l] && !document.getElementById('font-' + l)) { const k = document.createElement('link'); k.id = 'font-' + l; k.rel = 'stylesheet'; k.href = 'https://fonts.googleapis.com/css2?family=' + FONTS[l] + '&display=swap'; document.head.appendChild(k); }
     // Titles stay on one line: wide scripts count each character a little larger.
     titles.forEach((h) => { const t = h.textContent.trim(); let n = 0; for (const c of t) n += /[\u3000-\u9fff\uac00-\ud7af]/.test(c) ? 1.45 : 1; h.style.setProperty('--len', Math.max(n, 4)); });
-    menu.querySelectorAll('button').forEach((b) => b.toggleAttribute('aria-current', b.dataset.lang === l) || (b.dataset.lang === l && b.setAttribute('aria-current', 'true')));
+    menu.querySelectorAll('button').forEach((b) => (b.dataset.lang === l ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
     document.querySelectorAll('.q-src').forEach((q) => { const out = q.nextElementSibling, hl = q.dataset.hl, txt = q.textContent; out.textContent = '';
       const k = l === 'en' ? txt.indexOf(hl) : -1; if (k < 0) out.textContent = txt; else { const em = document.createElement('em'); em.textContent = hl; out.append(txt.slice(0, k), em, txt.slice(k + hl.length)); }
       q.hidden = true; out.removeAttribute('aria-hidden'); });
     store.set(LANG, l);
   };
   lbtn.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; lbtn.setAttribute('aria-expanded', open); });
-  menu.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (!b) return; apply(b.dataset.lang); menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); });
+  menu.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (!b) return; apply(b.dataset.lang); menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); lbtn.focus(); });
+  // Keyboard: Escape inside the menu returns to the language button; tabbing out of the menu closes it.
+  menu.addEventListener('keydown', (e) => { if (e.key === 'Escape') lbtn.focus(); });
+  menu.closest('.lang').addEventListener('focusout', (e) => { if (!menu.hidden && e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   addEventListener('click', (e) => { if (!e.target.closest('.lang')) { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
-  addEventListener('keydown', (e) => { if (e.key === 'Escape') { menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!menu.hidden) window.__langEsc = e; menu.hidden = true; lbtn.setAttribute('aria-expanded', 'false'); } });
   const saved = store.get(LANG);
   const guess = (navigator.language || 'en').toLowerCase();
   const start = saved || (guess.startsWith('zh') ? (/hant|-tw|-hk|-mo/.test(guess) ? 'zh-Hant' : 'zh-Hans') : ['ja', 'ar', 'hi'].find((x) => guess.startsWith(x)) || 'en');
   if (start !== 'en') apply(start); else apply('en');
+  // The footer comes after this script, so its words join once the page is parsed.
+  const late = () => { const f = document.querySelector('footer'); if (!f) return; const w = document.createTreeWalker(f, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) }); for (let n; (n = w.nextNode()); ) texts.push([n, n.nodeValue]); grab(f); apply(cur); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', late, { once: true }); else late();
 })();
 </script>
 
@@ -2095,7 +2114,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   const sections = Object.keys(LINES).map((k) => document.getElementById(k)).filter(Boolean).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
   // When Mei has finished a section, a cue invites the visitor on to the next; any scroll hides it.
   const nextBtn = document.getElementById('mei-next');
-  let nextTo = null, cueAt = 0;
+  let nextTo = null, cueAt = 0, pin = null, pinAt = 0;
   // Mei's bar is given its exact height under the page, so it never lies over the last lines.
   if (window.ResizeObserver) new ResizeObserver(() => { const h = live.offsetHeight; if (h) document.body.style.setProperty('--mei-bar', h + 'px'); }).observe(live);
   const hideCue = () => { if (!nextTo) return; nextTo = null; nextBtn.classList.remove('show'); setTimeout(() => { if (!nextTo) nextBtn.hidden = true; }, 500); };
@@ -2104,7 +2123,7 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     if (i < 0 || !nx || current() !== key) return;
     nextTo = nx; cueAt = scrollY; nextBtn.hidden = false; requestAnimationFrame(() => nextBtn.classList.add('show'));
   };
-  nextBtn.addEventListener('click', () => { const nx = nextTo; hideCue(); if (nx) nx.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+  nextBtn.addEventListener('click', () => { const nx = nextTo; hideCue(); if (nx) { pin = nx.id; pinAt = performance.now(); } if (nx) nx.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
   let on = false, paused = false, audio = null, playingKey = null, doneKey = null, lastSection = null, settle = 0, capTimer = 0, peekT = 0, itemT = 0;
   // Captions stay hidden; tapping, holding, hovering or focusing the circle shows them for a moment.
   const peek = (ms = 3500) => { live.classList.add('show'); clearTimeout(peekT); if (ms) peekT = setTimeout(() => { if (!live.matches(':hover') && !live.contains(document.activeElement)) live.classList.remove('show'); }, ms); };
@@ -2126,9 +2145,11 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
     paused = v; live.classList.toggle('paused', v);
     orb.setAttribute('aria-label', t(v ? 'Mei is paused. Tap to carry on.' : 'Mei is guiding you. Tap to pause.'));
     if (v) { clearTimeout(settle); if (actx) actx.suspend().catch(() => {}); live.classList.remove('talking'); window.__duck && window.__duck(false); }
-    else { unlock(); if (audio) { live.classList.add('talking'); window.__duck && window.__duck(true); } else onScroll(); }
+    else { unlock(); if (audio && audio.sec !== current()) { fadeOut(); lastSection = null; } if (audio) { live.classList.add('talking'); window.__duck && window.__duck(true); } else onScroll(); }
   };
-  const current = () => { const mid = innerHeight / 2; let best = null; for (const s of sections) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) best = s; } return best && best.id; };
+  // After Continue, the section it scrolled to keeps the floor while it is on screen (also while the smooth scroll is still bringing it up), so short sections
+  // (the prologue, World Tour, the interlude) get their own line instead of the next section's.
+  const current = () => { const mid = innerHeight / 2; if (pin) { const p = document.getElementById(pin), r = p && p.getBoundingClientRect(); if (r && r.top < innerHeight && r.bottom > 90) return pin; if (performance.now() - pinAt > 4000) pin = null; } let best = null; for (const s of sections) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) best = s; } return best && best.id; };
   const fadeOut = () => {
     if (!audio) return;
     const a = audio; audio = null; playingKey = null; live.classList.remove('talking'); clearInterval(capTimer);
@@ -2216,7 +2237,8 @@ body:has(#mei-live:not([hidden])) { padding-bottom: var(--mei-bar, calc(62px + e
   orb.addEventListener('click', () => { if (dragged || held) { dragged = false; held = false; return; } if (!on) { setOn(true); return; } setPaused(!paused); peek(); });
   live.addEventListener('mouseenter', () => peek(0)); live.addEventListener('mouseleave', () => peek(1200));
   orb.addEventListener('focus', () => peek(0)); orb.addEventListener('blur', () => peek(1200));
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && on) setOn(false); });
+  // Escape ends the tour, unless it was closing the language menu.
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && on && window.__langEsc !== e) setOn(false); });
   document.addEventListener('visibilitychange', () => { if (!actx || paused || !on) return; document.hidden ? actx.suspend().catch(() => {}) : actx.resume().catch(() => {}); });
   const saved = store.get(KEY);
   if (saved === '1') {
