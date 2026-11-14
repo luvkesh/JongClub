@@ -66,7 +66,7 @@
 /* Phones: each card becomes a row (picture, words, arrow), so nothing crowds or overlaps. */
 @media (max-width: 600px) {
   .lux-row { flex-direction: column; gap: 10px; }
-  .lux-card { flex: none; max-width: none; width: 100%; flex-direction: row; text-align: left; gap: 12px; padding: 10px 14px 10px 8px; border-radius: 14px; }
+  .lux-card { flex: none; max-width: none; width: 100%; flex-direction: row; text-align: start; gap: 12px; padding-block: 10px; padding-inline: 8px 14px; border-radius: 14px; }
   .lux-card:hover:not(.off) { transform: none; }
   .lux-art { width: 84px; flex: none; }
   .lux-body { align-items: flex-start; flex: 1 1 auto; min-width: 0; gap: 5px; }
@@ -74,6 +74,7 @@
   .lux-d { max-width: none; font-size: 13px; }
   .lux-go { margin-top: 0; flex: none; }
   .lux-card:has(.lux-foot) { flex-wrap: wrap; }
-  .lux-card:has(.lux-foot) .lux-foot { flex: 1 1 100%; padding-left: 96px; }
+  .lux-card:has(.lux-foot) .lux-foot { flex: 1 1 100%; padding-inline-start: 96px; }
+  [dir='rtl'] .lux-rule { background: linear-gradient(270deg, var(--brass-hi), transparent); }
   .lux-corner { top: 8px; right: 8px; }
 }

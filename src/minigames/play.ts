@@ -17,6 +17,8 @@ import { holdMiniIcons } from './icons';
 import { BoardCamera, CUBE_LIMITS, FLAT_LIMITS } from './camera';
 import { MiniStage } from './stage';
 import { Sparkle } from './sparkle';
+import { setLiveMini } from './historyGuard';
+import { TOOL_ICONS, toolSvg } from './toolIcons';
 import { MINI_DAILY_CAP, bestKey, earnedToday, payout, recordResult, suggestAfter } from './progress';
 import { howToLine } from './narration';
 import type { MiniGameDef, MiniHost, MiniLevel, MiniResult, MiniSession } from './types';
@@ -45,18 +47,6 @@ export interface MiniStart {
 }
 
 export const levelName = (l: MiniLevel) => ({ easy: tr('Easy'), medium: tr('Medium'), hard: tr('Hard') })[l];
-
-const TOOL_ICONS = {
-  hint: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.9V16h5v-.2c0-.8.4-1.5 1-1.9A6 6 0 0 0 12 3z"/>',
-  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
-  shuffle: '<path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
-  view: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
-  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9M12 17.3h.01"/>',
-  restart: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',
-  turnL: '<path d="M8 8 4 12l4 4"/><path d="M4 12h11a5 5 0 0 1 5 5"/>',
-  turnR: '<path d="m16 8 4 4-4 4"/><path d="M20 12H9a5 5 0 0 0-5 5"/>',
-};
-const svg = (d: string) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
 export class MiniPlay {
   private board: TileBoard;
@@ -87,7 +77,34 @@ export class MiniPlay {
     this.tools.get('shuffle')?.classList.remove('nudge');
   };
   private onResize = () => this.layoutInsets(true);
-  private onVis = () => this.setPaused(document.hidden);
+  // Coming back to the tab resumes only when no sheet is open (a sheet keeps the game paused).
+  private onVis = () => this.setPaused(document.hidden || !this.app.modal.hidden || this.finished);
+  /** Left or replaced: late timers, finishes and sheets of this game do nothing from then on. */
+  private disposed = false;
+  /** The hash of the hub the game was started from; the game adds one history entry on top of it. */
+  private hash = '';
+  /**
+   * The browser's Back mid-game asks before leaving (the board would be lost), and Back on a
+   * finished game goes to the hub. The entry is put back so the game keeps its place in history.
+   */
+  private onPop = () => {
+    if (this.disposed) return;
+    narrator.stop();
+    if (this.finished) {
+      this.app.modal.hidden = true;
+      this.leave(false);
+      return;
+    }
+    this.pushEntry();
+    this.askLeave();
+  };
+  private pushEntry() {
+    try {
+      history.pushState({ mini: this.def.id }, '', this.hash || location.hash);
+    } catch {
+      /* sandboxed */
+    }
+  }
 
   constructor(private app: MiniApp, private def: MiniGameDef, private start: MiniStart) {
     const t = app.table;
@@ -126,7 +143,7 @@ export class MiniPlay {
   private buildHud(): HTMLElement {
     const def = this.def;
     const tool = (id: keyof typeof TOOL_ICONS, label: string, on: () => void) => {
-      const b = h('button', { type: 'button', class: 'mini-tool', 'aria-label': label, title: label, onclick: () => (sound.play('button'), on()) }, h('span', { class: 'mt-icon', html: svg(TOOL_ICONS[id]) }), h('span', { class: 'mt-label' }, label), h('span', { class: 'mt-badge', hidden: true }));
+      const b = h('button', { type: 'button', class: `mini-tool mt-${id}`, 'aria-label': label, title: label, onclick: () => (sound.play('button'), on()) }, h('span', { class: 'mt-icon', html: toolSvg(id) }), h('span', { class: 'mt-label' }, label), h('span', { class: 'mt-badge', hidden: true }));
       this.tools.set(id, b);
       return b;
     };
@@ -154,8 +171,8 @@ export class MiniPlay {
       h(
         'div',
         { class: 'mini-actions' },
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('How to play'), title: tr('How to play'), onclick: () => this.showHelp(), html: svg(TOOL_ICONS.help) }),
-        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('New board'), title: tr('New board'), onclick: () => this.askRestart(), html: svg(TOOL_ICONS.restart) }),
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('How to play'), title: tr('How to play'), onclick: () => this.showHelp(), html: toolSvg('help') }),
+        h('button', { type: 'button', class: 'icon-btn', 'aria-label': tr('New board'), title: tr('New board'), onclick: () => this.askRestart(), html: toolSvg('restart') }),
       ),
     );
     const layer = h('div', { class: 'mini-layer' });
@@ -221,12 +238,19 @@ export class MiniPlay {
       this.statsEl.insertBefore(el, after ?? null);
     }
     (el.firstChild as HTMLElement).textContent = label ?? '';
-    (el.lastChild as HTMLElement).textContent = text;
+    // Big counts read with separators, as on the results sheet (12,450, not 12450).
+    (el.lastChild as HTMLElement).textContent = text.replace(/\b\d{4,}\b/g, (n) => fmt(Number(n)));
   }
 
   private toastTimer = 0;
   private toast(text: string, tone: 'good' | 'bad' | 'info' = 'info') {
     const el = this.toastEl;
+    // Stats come and go, so the top bar's foot is measured afresh for each toast.
+    const tb = this.root.querySelector('.mini-top')?.getBoundingClientRect();
+    if (tb) {
+      this.root.style.setProperty('--mini-top-end', `${Math.round(tb.bottom)}px`);
+      el.style.top = `${Math.max(tb.bottom + 10, window.innerHeight * 0.22)}px`;
+    }
     el.textContent = text;
     el.className = `mini-toast on ${tone}`;
     window.clearTimeout(this.toastTimer);
@@ -249,23 +273,62 @@ export class MiniPlay {
     }
   }
 
-  /** The board fits between the top bar and the tool bar. */
+  /**
+   * The board fits between the top bar and the tool bar. On short landscape screens (phones held
+   * sideways) the top bar can instead stand as a column down the left edge, giving the board the
+   * screen's full height: both layouts are measured and the one that shows this board's tiles
+   * larger is kept (wide, shallow boards keep the bar along the top).
+   */
   private layoutInsets(refit = false) {
-    const top = this.root.querySelector<HTMLElement>('.mini-top');
-    const bar = this.root.querySelector<HTMLElement>('.mini-tools');
-    const H = window.innerHeight;
-    const tb = top?.getBoundingClientRect();
-    const bb = bar?.getBoundingClientRect();
-    // Short landscape screens stand the tool bar up along the right edge (CSS), so the board gets the height.
-    const side = !!bb && bb.height > bb.width;
-    this.cam.insets = side
-      ? { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: 12, left: 10, right: Math.max(10, window.innerWidth - bb!.left + 6) }
-      : { top: tb ? Math.max(40, tb.bottom + 6) : 70, bottom: bb ? Math.max(40, H - bb.top + 6) : 86, left: 10, right: 10 };
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    const hud = this.root;
+    if (H <= 500 && W > H) {
+      hud.classList.remove('hud-side');
+      const along = this.measureInsets();
+      hud.classList.add('hud-side');
+      const side = this.measureInsets();
+      const box = this.board.bounds(true),
+        pts = this.board.fitPoints(true);
+      const cam = this.app.table.camera;
+      const useSide = this.cam.distanceFor(cam, box, side, W, H, pts) < this.cam.distanceFor(cam, box, along, W, H, pts) * 0.99;
+      hud.classList.toggle('hud-side', useSide);
+      this.cam.insets = useSide ? side : along;
+    } else {
+      hud.classList.remove('hud-side');
+      this.cam.insets = this.measureInsets();
+    }
+    const tb = this.root.querySelector('.mini-top')?.getBoundingClientRect();
+    if (tb) this.root.style.setProperty('--mini-top-end', `${Math.round(tb.bottom)}px`);
+    // Toasts sit just under the top bar (whose stats can wrap to two rows on phones), never over it.
+    this.toastEl.style.top = `${Math.max(this.cam.insets.top + 4, H * 0.22)}px`;
     if (refit) this.fit();
   }
 
+  /** The space the HUD covers as it stands now. */
+  private measureInsets() {
+    const top = this.root.querySelector<HTMLElement>('.mini-top');
+    const bar = this.root.querySelector<HTMLElement>('.mini-tools');
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    const tb = top?.getBoundingClientRect();
+    const bb = bar?.getBoundingClientRect();
+    // Portrait phones are width-bound: a slim margin at the sides.
+    const edge = W < H ? 6 : 10;
+    // Short landscape screens stand the tool bar up along the right edge (CSS), so the board gets the height;
+    // the top bar may stand down the left edge as well (hud-side).
+    const toolsSide = !!bb && bb.height > bb.width;
+    const topSide = !!tb && this.root.classList.contains('hud-side');
+    return {
+      top: topSide ? 8 : tb ? Math.max(40, tb.bottom + 6) : 70,
+      bottom: toolsSide ? 8 : bb ? Math.max(40, H - bb.top + 6) : 86,
+      left: topSide ? tb!.right + 6 : edge,
+      right: toolsSide ? Math.max(10, W - bb!.left + 6) : edge,
+    };
+  }
+
   private fit(snap = false) {
-    this.cam.frame(this.board.bounds(true), snap);
+    this.cam.frame(this.board.bounds(true), snap, this.board.fitPoints(true));
     this.stage.wake(800);
   }
 
@@ -285,6 +348,11 @@ export class MiniPlay {
     this.begin();
     window.addEventListener('resize', this.onResize);
     document.addEventListener('visibilitychange', this.onVis);
+    this.hash = location.hash;
+    // Before this game's own listener: once the game has gone, its entry is skipped (historyGuard.ts).
+    setLiveMini(this, true);
+    this.pushEntry();
+    window.addEventListener('popstate', this.onPop);
     let last = performance.now();
     this.timer = window.setInterval(() => {
       const now = performance.now();
@@ -319,16 +387,19 @@ export class MiniPlay {
         this.stage.wake(1200);
       },
       setStat: (id, text, label) => this.setStat(id, text, label),
-      toast: (text, tone) => host === this.host && this.toast(text, tone),
-      sound: (name) => sound.play(name),
-      finish: (r) => host === this.host && this.finish(r),
-      used: (what) => host === this.host && this.counts[what]++,
+      toast: (text, tone) => host === this.host && !this.disposed && this.toast(text, tone),
+      sound: (name) => !this.disposed && sound.play(name),
+      finish: (r) => host === this.host && !this.disposed && this.finish(r),
+      used: (what) => host === this.host && !this.disposed && this.counts[what]++,
       refreshButtons: () => this.refreshButtons(),
     });
     this.session = this.def.start(this.host);
-    // Portrait phones: look down on flat boards from higher up, so their width fills the screen.
-    if (this.def.shape !== 'cube' && !this.def.ownPortraitCamera && window.innerWidth / window.innerHeight < 0.85 && this.cam.home.pitch < 76) {
-      this.cam.home = { ...this.cam.home, pitch: 78 };
+    // Portrait phones and phones held sideways: look down on flat boards from higher up, so the board
+    // fills the screen (a slanted view wastes height and shrinks the far rows).
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    if (this.def.shape !== 'cube' && !this.def.ownPortraitCamera && (W / H < 0.85 || (H <= 500 && W > H)) && this.cam.home.pitch < 76) {
+      this.cam.home = { ...this.cam.home, pitch: W > H ? 84 : 78 };
       this.cam.reset();
     }
     this.layoutInsets();
@@ -394,7 +465,9 @@ export class MiniPlay {
     const obs = new MutationObserver(() => {
       if (o.hidden) {
         obs.disconnect();
-        if (!this.finished) this.setPaused(false);
+        // Mei stops reading when the how-to closes any way (Escape, the backdrop, Back).
+        narrator.stop();
+        if (!this.finished && !this.disposed && !document.hidden) this.setPaused(false);
       }
     });
     obs.observe(o, { attributes: true, attributeFilter: ['hidden'] });
@@ -443,6 +516,7 @@ export class MiniPlay {
 
   /** Same game again: a new deal, or the same deal (`same`, used by the daily puzzle). */
   restart(fresh = true) {
+    if (this.disposed) return;
     this.session?.dispose();
     if (fresh && !this.start.daily) this.seed = randomSeed();
     this.begin();
@@ -451,12 +525,12 @@ export class MiniPlay {
   // ------------------------------------------------------------ finish
 
   private finish(r: Omit<MiniResult, 'hints' | 'undos' | 'shuffles'> & Partial<Pick<MiniResult, 'hints' | 'undos' | 'shuffles'>>) {
-    if (this.finished) return;
+    if (this.finished || this.disposed) return;
     this.finished = true;
     this.refreshButtons();
     const result: MiniResult = { hints: this.counts.hints, undos: this.counts.undos, shuffles: this.counts.shuffles, ...r };
     const variant = this.session.variant?.() ?? '';
-    const rec = recordResult(bestKey(this.def.id, this.start.level, this.start.daily ? 'daily' : variant), result);
+    const rec = recordResult(bestKey(this.def.id, this.start.level, this.start.daily ? 'daily' : variant), result, this.def.timeRecord !== false);
     const pay = payout(this.def, result, this.start.level, !!this.start.daily);
     const p = this.app.profile;
     p.jongPoints += pay.paid;
@@ -468,13 +542,17 @@ export class MiniPlay {
       sound.play('mahjong');
       this.stage.wake(3000);
     } else sound.play('score');
-    window.setTimeout(() => this.showResult(result, rec.newBestScore, rec.newBestTime, pay), result.won ? 1300 : 700);
+    // Not over the hub (or another game) when the player left in the moment before the sheet.
+    const host = this.host;
+    window.setTimeout(() => !this.disposed && host === this.host && this.showResult(result, rec.newBestScore, rec.newBestTime, pay), result.won ? 1300 : 700);
   }
 
   private showResult(r: MiniResult, bestScore: boolean, bestTime: boolean, pay: { paid: number; bonus: number; capped: boolean }) {
     const today = earnedToday(this.def.id);
     const row = (k: string, v: string) => h('div', { class: 'stat' }, h('span', { class: 'k' }, k), h('span', { class: 'v' }, v));
-    const mins = `${Math.floor(r.seconds / 60)}:${String(Math.round(r.seconds) % 60).padStart(2, '0')}`;
+    // Whole seconds first, so 59.6 s reads 1:00, not 0:00.
+    const secs = Math.round(r.seconds);
+    const mins = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
     const title = r.won ? (this.start.daily ? tr('Daily puzzle solved') : r.headline ?? tr('Board cleared')) : tr('Good try');
     const tally = r.tally === undefined ? { label: tr('Tiles cleared'), text: `${r.cleared} / ${r.total}` } : r.tally;
     this.sheet(
@@ -506,12 +584,19 @@ export class MiniPlay {
     return { session: this.session, board: this.board, screenOf: (id: number) => this.board.toScreen(this.board.pose(id)!.pos, t.camera, t.renderer.domElement) };
   }
 
-  leave() {
+  /** Back to the hub; `popEntry` also takes the game's history entry off (false when Back already did). */
+  leave(popEntry = true) {
+    const ours = popEntry && !this.disposed && (history.state as { mini?: string } | null)?.mini === this.def.id;
     this.dispose();
+    if (ours) history.back();
     this.app.backToHub();
   }
 
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    window.removeEventListener('popstate', this.onPop);
+    setLiveMini(this, false);
     window.clearInterval(this.timer);
     window.removeEventListener('resize', this.onResize);
     document.removeEventListener('visibilitychange', this.onVis);

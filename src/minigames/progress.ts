@@ -34,6 +34,8 @@ export interface MiniStore {
   highlightFree?: boolean;
   /** Seconds without a move before a move is suggested (0 is off; default 5). */
   suggestAfter?: number;
+  /** Record-key version: 2 once older records have been moved to the keys of migrateBest. */
+  recordsV?: number;
 }
 
 const empty = (): MiniStore => ({ best: {}, earned: {}, daily: {}, seen: [], totalEarned: 0 });
@@ -48,10 +50,38 @@ export function loadMini(): MiniStore {
   } catch {
     mem = empty();
   }
+  if ((mem!.recordsV ?? 1) < 2) {
+    migrateBest(mem!.best);
+    mem!.recordsV = 2;
+    saveMini();
+  }
   // Keep a week of daily ledgers.
   const keep = new Set(Array.from({ length: 8 }, (_, i) => isoDay(new Date(Date.now() - i * 86400e3))));
   for (const d of Object.keys(mem!.earned)) if (!keep.has(d)) delete mem!.earned[d];
   return mem!;
+}
+
+/** Two records for one mode as one: the higher score, the faster win, every play and win. */
+function mergeBest(a: MiniBest, b: MiniBest): MiniBest {
+  return { score: Math.max(a.score, b.score), seconds: a.seconds && b.seconds ? Math.min(a.seconds, b.seconds) : a.seconds || b.seconds, wins: a.wins + b.wins, plays: a.plays + b.plays };
+}
+
+/**
+ * Records keyed before the set-up choices that change a score were part of the key (round 3):
+ * Timed Mahjong kept one record per layout for all three clocks, and Cascade one for both ways
+ * the tiles fall. Nothing is lost: those records stay under the default choice (Timed's 2:00
+ * clock, Cascade's "Down"), the one most of them were played with.
+ */
+export function migrateBest(best: Record<string, MiniBest>) {
+  for (const key of Object.keys(best)) {
+    const p = key.split(':');
+    let to: string | null = null;
+    if (p[0] === 'timed' && p.length === 3 && p[2] !== 'daily') to = `${key}:120`;
+    else if (p[0] === 'cascade' && p.length === 2) to = `${key}:down`;
+    if (!to) continue;
+    best[to] = best[to] ? mergeBest(best[to], best[key]) : best[key];
+    delete best[key];
+  }
 }
 
 /** Whether layered games mark free tiles (gold edge) and blocked ones (cool shade). */
@@ -96,7 +126,7 @@ export function bestOf(key: string): MiniBest | null {
 export function bestForGame(game: string): MiniBest | null {
   const all = Object.entries(loadMini().best).filter(([k]) => k.startsWith(`${game}:`));
   if (!all.length) return null;
-  return all.reduce<MiniBest>((a, [, b]) => ({ score: Math.max(a.score, b.score), seconds: a.seconds && b.seconds ? Math.min(a.seconds, b.seconds) : a.seconds || b.seconds, wins: a.wins + b.wins, plays: a.plays + b.plays }), { score: 0, seconds: 0, wins: 0, plays: 0 });
+  return all.reduce<MiniBest>((a, [, b]) => mergeBest(a, b), { score: 0, seconds: 0, wins: 0, plays: 0 });
 }
 
 export interface RecordOutcome {
@@ -105,7 +135,8 @@ export interface RecordOutcome {
   best: MiniBest;
 }
 
-export function recordResult(key: string, r: MiniResult): RecordOutcome {
+/** `timed` false: the game's length is fixed by its clock, so no fastest time is kept (MiniGameDef.timeRecord). */
+export function recordResult(key: string, r: MiniResult, timed = true): RecordOutcome {
   const s = loadMini();
   const prev = s.best[key] ?? { score: 0, seconds: 0, wins: 0, plays: 0 };
   const next: MiniBest = { ...prev, plays: prev.plays + 1 };
@@ -114,7 +145,7 @@ export function recordResult(key: string, r: MiniResult): RecordOutcome {
   let newBestTime = false;
   if (r.won) {
     next.wins++;
-    if (!prev.seconds || r.seconds < prev.seconds) {
+    if (timed && (!prev.seconds || r.seconds < prev.seconds)) {
       newBestTime = prev.seconds > 0 || prev.wins > 0;
       next.seconds = Math.max(1, Math.round(r.seconds));
     }
@@ -144,7 +175,9 @@ export interface Payout {
  */
 export function payout(def: MiniGameDef, r: MiniResult, level: MiniLevel, daily: boolean, day = isoDay(new Date())): Payout {
   const s = loadMini();
-  const base = Math.max(0, Math.round(def.reward(r, level)));
+  // A broken reward (NaN, Infinity) pays nothing rather than spoiling the wallet.
+  const raw = Math.round(def.reward(r, level));
+  const base = Number.isFinite(raw) ? Math.max(0, raw) : 0;
   const before = s.earned[day]?.[def.id] ?? 0;
   const room = Math.max(0, MINI_DAILY_CAP - before);
   const paid = Math.min(base, room);

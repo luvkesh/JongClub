@@ -121,21 +121,47 @@ export class Connect {
     return moves;
   }
 
-  /** Mix the remaining tiles among the cells they fill until a move exists. */
+  /**
+   * Mix the remaining tiles among the cells they fill until a move exists. When random mixes
+   * find none, the faces are dealt along a removal order of the cells (as dealConnect does), so
+   * the board can be cleared from there: a shuffle with two or more tiles always leaves a move.
+   */
   shuffle(rng: Rng): boolean {
     const filled = this.cells.map((k, i) => (k >= 0 ? i : -1)).filter((i) => i >= 0);
     if (filled.length < 2) return false;
     const before = [...this.cells];
+    const done = () => (this.history.push({ a: -1, b: -1, ka: -1, kb: -1, before }), true);
     for (let tries = 0; tries < 60; tries++) {
       const kinds = rng.shuffle(filled.map((i) => before[i]));
       filled.forEach((i, n) => (this.cells[i] = kinds[n]));
-      if (this.pairs(1).length) {
-        this.history.push({ a: -1, b: -1, ka: -1, kb: -1, before });
-        return true;
-      }
+      if (this.pairs(1).length) return done();
+    }
+    const dealt = this.dealSolvable(before, rng);
+    if (dealt) {
+      this.cells = dealt;
+      if (this.pairs(1).length) return done();
     }
     this.cells = before;
     return false;
+  }
+
+  /** The faces in `cells` dealt again over the same cells along a removal order; null if they cannot all pair up. */
+  private dealSolvable(cells: number[], rng: Rng): number[] | null {
+    const by = new Map<number, number[]>();
+    for (const k of cells) if (k >= 0) by.set(matchGroup(k), [...(by.get(matchGroup(k)) ?? []), k]);
+    const pairs: [number, number][] = [];
+    for (const ks of by.values()) {
+      if (ks.length % 2) return null;
+      for (let i = 0; i < ks.length; i += 2) pairs.push([ks[i], ks[i + 1]]);
+    }
+    const order = removalOrder(this.w, this.h, cells.map((k) => k >= 0), rng, this.gravity);
+    if (order.length !== pairs.length) return null;
+    const out = cells.map(() => -1);
+    rng.shuffle(pairs).forEach(([ka, kb], i) => {
+      out[order[i][0]] = ka;
+      out[order[i][1]] = kb;
+    });
+    return out;
   }
 }
 
@@ -237,8 +263,30 @@ export function findPath(w: number, h: number, empty: (x: number, y: number) => 
 export function dealConnect(w: number, h: number, rng: Rng, gravity: Gravity = 'none'): number[] {
   const n = w * h;
   const pairs = pairsFromSet(n / 2, rng);
+  const order = removalOrder(w, h, Array.from({ length: n }, () => true), rng, gravity);
+  const cells: number[] = Array(n).fill(-1);
+  if (order.length * 2 === n) {
+    order.forEach(([a, b], i) => {
+      cells[a] = pairs[i][0];
+      cells[b] = pairs[i][1];
+    });
+    return cells;
+  }
+  // Not expected: a random deal; the game shuffles when stuck.
+  const flat: number[] = [];
+  for (const [a, b] of pairs) flat.push(a, b);
+  return rng.shuffle(flat);
+}
+
+/**
+ * An order to take every tile off a board where `filled` cells hold tiles, as pairs of the
+ * cells the tiles started in, played out on blank tiles with the board's gravity. While two
+ * tiles are left, two of them see the same side of the outer ring and so always join (the
+ * topmost tiles of two columns, or any two tiles of the only column), so the order is complete.
+ */
+export function removalOrder(w: number, h: number, filled: boolean[], rng: Rng, gravity: Gravity = 'none'): [number, number][] {
   // Each cell holds the id of the tile dealt there (its starting cell); gravity carries ids along.
-  const sim = new Connect(w, h, Array.from({ length: n }, (_, i) => i), gravity);
+  const sim = new Connect(w, h, filled.map((f, i) => (f ? i : -1)), gravity);
   const order: [number, number][] = [];
   // A tile with no open side can only join a neighbour: skip the searches that cannot succeed.
   const open = (i: number) => {
@@ -263,16 +311,5 @@ export function dealConnect(w: number, h: number, rng: Rng, gravity: Gravity = '
     order.push([sim.cells[found[0]], sim.cells[found[1]]]);
     sim.remove(found[0], found[1]);
   }
-  const cells: number[] = Array(n).fill(-1);
-  if (order.length * 2 === n) {
-    order.forEach(([a, b], i) => {
-      cells[a] = pairs[i][0];
-      cells[b] = pairs[i][1];
-    });
-    return cells;
-  }
-  // Not expected: a random deal; the game shuffles when stuck.
-  const flat: number[] = [];
-  for (const [a, b] of pairs) flat.push(a, b);
-  return rng.shuffle(flat);
+  return order;
 }

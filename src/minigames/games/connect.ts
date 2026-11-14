@@ -3,6 +3,7 @@
 // the felt as the pair goes.
 
 import * as THREE from 'three';
+import { Rng } from '../../engine/rng';
 import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT } from '../board';
@@ -38,6 +39,10 @@ class ConnectSession implements MiniSession {
   private fade = 0;
   private total: number;
   private stuck = false;
+  /** Points each pair on the undo history scored (with its combo bonus), so an undo takes back exactly those. */
+  private gains: number[] = [];
+  /** Hints and pause suggestions draw from their own stream, so they never change later shuffles (daily puzzles). */
+  private hintRng: Rng;
   /** Portrait phones turn the board a quarter (columns become rows) so its tiles can be larger; the rules don't change. */
   private turned = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
 
@@ -51,6 +56,7 @@ class ConnectSession implements MiniSession {
     this.clock = new GameClock(CLOCK[host.level]);
     this.hints = HINTS[host.level];
     this.shuffles = SHUFFLES[host.level];
+    this.hintRng = new Rng((host.seed ^ 0x5bd1e995) >>> 0);
     this.idAt = this.g.cells.map((_, i) => i);
     this.lines = new THREE.Group();
     host.board.root.add(this.lines);
@@ -132,7 +138,9 @@ class ConnectSession implements MiniSession {
     this.combo = t - this.lastPair <= 3.5 ? this.combo + 1 : 1;
     this.bestCombo = Math.max(this.bestCombo, this.combo);
     this.lastPair = t;
-    this.score += 10 + 5 * (this.combo - 1);
+    const gain = 10 + 5 * (this.combo - 1);
+    this.score += gain;
+    this.gains.push(gain);
     this.host.sound(this.combo > 2 ? 'kong' : 'pung');
     if (this.combo > 2) this.host.toast(tr('Combo ×{n}', { n: this.combo }), 'good');
     if (this.g.left === 0) {
@@ -185,14 +193,14 @@ class ConnectSession implements MiniSession {
     if (this.ended) return [];
     const p = this.g.pairs(8);
     if (!p.length) return null;
-    return p[this.host.rng.int(p.length)].map((c) => this.idAt[c]).filter((id) => id >= 0);
+    return p[this.hintRng.int(p.length)].map((c) => this.idAt[c]).filter((id) => id >= 0);
   }
 
   hint(): boolean {
     if (this.ended || this.hints <= 0) return false;
     const pairs = this.g.pairs(8);
     if (!pairs.length) return false;
-    this.hintPair = pairs[this.host.rng.int(pairs.length)];
+    this.hintPair = pairs[this.hintRng.int(pairs.length)];
     this.hints--;
     this.score = Math.max(0, this.score - 5);
     this.refresh();
@@ -221,7 +229,12 @@ class ConnectSession implements MiniSession {
   shuffle(): boolean {
     if (this.ended || this.shuffles <= 0) return false;
     // Tiles keep their ids; the shuffle hands kinds round, so rebuild the board in place with a toss.
-    if (!this.g.shuffle(this.host.rng)) return false;
+    // The shuffle always leaves a move (it deals along a removal order when random mixes find none);
+    // should it ever fail on a stuck board, the game ends rather than sitting stuck with shuffles left.
+    if (!this.g.shuffle(this.host.rng)) {
+      if (this.stuck) this.lose(tr('No more moves'));
+      return false;
+    }
     this.shuffles--;
     this.hintPair = null;
     this.sel = null;
@@ -237,9 +250,11 @@ class ConnectSession implements MiniSession {
   }
   undo(): boolean {
     if (!this.canUndo()) return false;
+    // A shuffle scored nothing; a pair gives back what it scored.
+    const pair = this.g.history[this.g.history.length - 1].a >= 0;
     this.g.undo();
     this.rebuild(false);
-    this.score = Math.max(0, this.score - 10);
+    if (pair) this.score = Math.max(0, this.score - (this.gains.pop() ?? 10));
     this.combo = 0;
     this.sel = null;
     this.hintPair = null;
@@ -248,6 +263,14 @@ class ConnectSession implements MiniSession {
     this.host.sound('slide');
     this.refresh();
     return true;
+  }
+
+  /**
+   * Cascade's records are kept per way the tiles fall ('down', 'left'; progress.ts moved older ones
+   * to 'down'). Connect has no set-up choice, so its records keep the plain game and level key.
+   */
+  variant() {
+    return this.g.gravity === 'none' ? '' : this.g.gravity;
   }
 
   /** Lay the board out again from the cells (after a shuffle or undo). */

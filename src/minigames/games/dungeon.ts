@@ -281,7 +281,9 @@ class DungeonSession implements MiniSession {
         const gain = Math.min(5, this.maxHp - this.hp);
         this.hp += gain;
         this.host.sound('pung');
-        this.host.toast(tr('A flower restores {n} health', { n: gain }), 'good');
+        // At full health the flower has nothing to give back: say so rather than "restores 0".
+        if (gain > 0) this.host.toast(tr('A flower restores {n} health', { n: gain }), 'good');
+        else this.host.toast(tr('A flower, but you are already at full health'), 'info');
         break;
       }
       case 'armour':
@@ -342,23 +344,25 @@ class DungeonSession implements MiniSession {
     return next !== undefined && this.g.rooms[next].t !== 'empty' ? [next] : [];
   }
   hint() {
-    if (this.ended || this.hints <= 0) return false;
+    // A second press while the route shows would spend another hint on the same route.
+    if (this.ended || this.hints <= 0 || this.hintPath.length) return false;
     const p = this.plan();
     if (!p) {
       this.host.toast(tr('Explore further: the goal is still in the dark.'), 'info');
       return false;
     }
     this.hints--;
-    this.hintPath = p.filter((c) => this.g.rooms[c].t !== 'empty');
+    const path = (this.hintPath = p.filter((c) => this.g.rooms[c].t !== 'empty'));
     this.refresh();
     window.setTimeout(() => {
+      if (this.hintPath !== path) return;
       this.hintPath = [];
       if (!this.ended) this.refresh();
     }, 2800);
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
-    return !this.ended && tool === 'hint' && this.hints > 0;
+    return !this.ended && tool === 'hint' && this.hints > 0 && !this.hintPath.length;
   }
   badges() {
     return { hint: Number.isFinite(this.hints) ? String(this.hints) : undefined };

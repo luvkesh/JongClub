@@ -15,6 +15,8 @@ const SETUP: Record<MiniLevel, { layers: number; w: number; h: number; kinds: nu
   medium: { layers: 3, w: 8, h: 6, kinds: 14, spread: 2, undo: 3, shuffle: 2, hint: 4 },
   hard: { layers: 4, w: 9, h: 6, kinds: 20, spread: 3, undo: 1, shuffle: 1, hint: 2 },
 };
+/** Upright phones: fewer columns and more rows (about the same tile count), so the tiles are larger; the seven-place tray sets the width. */
+const TALL: Record<MiniLevel, { w: number; h: number }> = { easy: { w: 6, h: 6 }, medium: { w: 7, h: 7 }, hard: { w: 7, h: 8 } };
 const PAY: Record<MiniLevel, number> = { easy: 1, medium: 1.5, hard: 2.2 };
 
 class TripleSession implements MiniSession {
@@ -37,7 +39,8 @@ class TripleSession implements MiniSession {
   private chain = 0;
 
   constructor(private host: MiniHost) {
-    this.cfg = SETUP[host.level];
+    const tall = typeof window !== 'undefined' && window.innerWidth / Math.max(1, window.innerHeight) < 0.85;
+    this.cfg = tall ? { ...SETUP[host.level], ...TALL[host.level] } : SETUP[host.level];
     const spots = tripleLayout(this.cfg.layers, this.cfg.w, this.cfg.h, host.rng);
     this.g = new Triple(spots, dealTriple(spots, host.rng, this.cfg.kinds, this.cfg.spread));
     this.undos = this.cfg.undo;
@@ -169,7 +172,8 @@ class TripleSession implements MiniSession {
   }
   canUse(tool: 'hint' | 'shuffle') {
     if (this.ended) return false;
-    return tool === 'hint' ? this.hints > 0 : this.shuffles > 0;
+    // A shuffle mixes the tiles on the board: with fewer than two there it would only use one up.
+    return tool === 'hint' ? this.hints > 0 && this.g.free().length > 0 : this.shuffles > 0 && this.g.boardLeft >= 2;
   }
   canUndo() {
     return !this.ended && this.undos > 0 && this.g.history.length > 0 && this.g.history[this.g.history.length - 1].clearedBefore === this.g.cleared.length;
@@ -187,7 +191,7 @@ class TripleSession implements MiniSession {
     return true;
   }
   shuffle() {
-    if (this.ended || this.shuffles <= 0) return false;
+    if (!this.canUse('shuffle')) return false;
     // Tiles change places rather than faces: shuffle by moving each board tile to another's spot.
     const ids = this.g.spots.map((_, i) => i).filter((i) => this.g.onBoard[i]);
     this.g.shuffle(this.host.rng);
@@ -243,7 +247,11 @@ class TripleSession implements MiniSession {
     this.disposed = true;
     this.host.board.fitExtra = null;
     this.tray.removeFromParent();
-    this.tray.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+    this.tray.traverse((o) => {
+      const m = o as THREE.Mesh;
+      m.geometry?.dispose();
+      (m.material as THREE.Material | undefined)?.dispose?.();
+    });
   }
 }
 

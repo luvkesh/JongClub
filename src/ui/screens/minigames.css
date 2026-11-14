@@ -20,7 +20,7 @@
 .mini-stat-txt .v { font: 500 21px/1.2 var(--ui); font-variant-numeric: tabular-nums lining-nums; color: var(--ivory); }
 
 /* The daily puzzle: a lit green card with a few sparkles, its game on a dais. */
-.mini-daily { position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px 22px; padding: 10px 20px 10px 14px; border: 1px solid rgba(234, 208, 154, 0.5); border-radius: var(--r);
+.mini-daily { position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px 22px; padding-block: 10px; padding-inline: 14px 20px; border: 1px solid rgba(234, 208, 154, 0.5); border-radius: var(--r);
   background:
     radial-gradient(1.5px 1.5px at 4% 18%, #fff3c8 60%, transparent), radial-gradient(1px 1px at 9% 84%, #fff3c8 60%, transparent),
     radial-gradient(1.5px 1.5px at 64% 7%, rgba(255, 243, 200, 0.8) 60%, transparent), radial-gradient(1px 1px at 71% 80%, rgba(255, 243, 200, 0.7) 60%, transparent),
@@ -52,7 +52,10 @@
 .mini-search-input:focus, .mini-sort-select:focus { outline: none; border-color: var(--line-strong); box-shadow: 0 0 0 3px rgba(234, 208, 154, 0.12); }
 .mini-sort-select { padding-inline-end: 14px; cursor: pointer; border-color: var(--line-strong); font-weight: 500; }
 .mini-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-.mini-chip { height: 38px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ivory); font: 500 13.5px var(--ui); cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.mini-chip { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0; padding-inline: 13px 17px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ivory); font: 500 13.5px var(--ui); white-space: nowrap; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.mini-chip-ico { display: grid; flex: none; color: var(--brass-hi); }
+.mini-chip-ico .ico { width: 16px; height: 16px; }
+.mini-chip.on .mini-chip-ico { color: inherit; }
 .mini-chip:hover { border-color: var(--brass-hi); }
 .mini-chip.on { background: linear-gradient(180deg, #f1d79c, #c99a4b); border-color: transparent; color: #1b140a; box-shadow: 0 4px 14px rgba(201, 154, 75, 0.3); }
 .mini-empty { margin: 0; }
@@ -77,7 +80,7 @@
 .mini-medal .mode-icon { --sz: inherit; position: relative; z-index: 1; margin: calc(var(--sz) * -0.07) 0 0; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
 .mini-medal .mode-icon::before { display: none; }
 .lux-card:hover:not(.off) .mini-medal .mode-icon, .lux-card:focus-within .mini-medal .mode-icon { animation: mode-sway 2.4s steps(24) infinite; transform: translateY(-2px) scale(1.04); }
-.mini-lux-foot { margin-top: auto; align-self: stretch; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding-top: 4px; pointer-events: none; text-align: left; }
+.mini-lux-foot { margin-top: auto; align-self: stretch; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding-top: 4px; pointer-events: none; text-align: start; }
 .mini-lux-foot .lux-go { margin-top: 0; flex: none; }
 .mini-card:hover:not(.off) .mini-lux-foot .lux-go { background: var(--brass-hi); color: #1a1408; }
 .mini-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; font: 500 12px/1.3 var(--ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
@@ -113,17 +116,17 @@
   .mini-sort { order: 2; }
   .mini-chips { order: 3; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; flex: 1 1 100%; margin: 0 -2px; padding: 2px; }
   .mini-chips::-webkit-scrollbar { display: none; }
-  .mini-chip { flex: none; height: 34px; padding: 0 14px; }
+  .mini-chip { flex: none; height: 34px; padding-inline: 11px 14px; gap: 6px; }
   .mini-sort { flex: 0 0 auto; }
   .mini-sort-select { max-width: 170px; }
   /* Phones: one card per row as on Home and Play (picture, words, arrow), the time and points under the words. */
   .mini-cards { grid-template-columns: 1fr; gap: 10px; }
-  .mini-card.lux-card { flex-wrap: wrap; align-items: center; padding: 8px 14px 10px 6px; row-gap: 2px; }
+  .mini-card.lux-card { flex-wrap: wrap; align-items: center; padding-block: 8px 10px; padding-inline: 6px 14px; row-gap: 2px; text-align: start; }
   .mini-card .lux-art { width: 96px; }
   .mini-card .mini-medal { --sz: 92px; }
   .mini-card .lux-body { flex: 1 1 calc(100% - 120px); }
-  .mini-card .lux-d { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .mini-lux-foot { flex: 1 1 100%; padding: 0 0 0 108px; align-items: center; }
+  .mini-card .lux-d { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .mini-lux-foot { flex: 1 1 100%; padding: 0; padding-inline-start: 108px; align-items: center; }
   .mini-meta { flex-direction: row; gap: 14px; font-size: 10.5px; letter-spacing: 0.08em; }
   .mini-meta > span { gap: 6px; }
   .mini-best-n { display: none; }
@@ -136,6 +139,20 @@
 .mini-sheet .field { display: flex; flex-direction: column; gap: 6px; }
 .mini-sheet .field > span { font: 500 var(--fs-2xs)/1.2 var(--ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .mini-sheet .btn-row { margin-top: 6px; }
+/* Set-up choices: a drawn icon before each name (above it on phones); many choices make a grid. */
+.mini-seg { flex-wrap: nowrap; }
+.mini-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; white-space: nowrap; }
+.mini-seg-ico { display: grid; flex: none; color: var(--faint); transition: color 0.15s; }
+.mini-seg-ico .ico { width: 18px; height: 18px; }
+.mini-seg button:hover .mini-seg-ico { color: var(--muted); }
+.mini-seg button.on .mini-seg-ico { color: var(--brass-hi); }
+.mini-seg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.mini-seg-grid button { flex-direction: column; gap: 4px; padding: 8px 6px 7px; }
+.mini-seg-grid .mini-seg-ico .ico { width: 22px; height: 22px; }
+@media (max-width: 560px) {
+  .mini-seg button { flex: 1 1 0; flex-direction: column; gap: 3px; padding: 7px 4px 6px; }
+  .mini-seg-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .mini-howto { margin: 0; padding: 0; padding-inline-start: 1.3em; display: flex; flex-direction: column; gap: 6px; color: var(--ivory); font-size: 14.5px; line-height: 1.5; }
 .mini-listen { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .mini-listen svg { width: 18px; height: 18px; flex: none; }
@@ -144,7 +161,9 @@
 .mini-best { color: var(--brass-hi); font: 500 12px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; }
 .mini-notes { margin: 0; padding: 0; padding-inline-start: 1.1em; color: var(--muted); font-size: 14px; }
 .mini-pay { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line-strong); background: radial-gradient(120% 120% at 0% 0%, rgba(234, 208, 154, 0.12), transparent 60%); }
-.mini-pay-n { font: 400 34px/1 var(--display); color: var(--brass-hi); }
+.mini-pay-n { font: 400 34px/1 var(--display); color: var(--brass-hi); direction: ltr; unicode-bidi: isolate; }
+/* Scores, times and counts stay on one line (and "+40" keeps its sign in front in Arabic). */
+.mini-result-stats .stat .v { white-space: nowrap; }
 .mini-pay small { flex: 1 1 100%; }
 
 /* ---------------------------------------------------------------- the HUD over the board */
@@ -155,10 +174,16 @@
   display: flex; align-items: center; justify-content: space-between; gap: 10px; pointer-events: none;
 }
 .mini-top > * { pointer-events: auto; }
-.mini-title { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px; padding-inline-end: 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
-.mini-name { font: 400 18px/1.1 var(--display); color: var(--ivory); white-space: nowrap; }
+.mini-title { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px; padding-inline-end: 14px; border-radius: 26px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
+.mini-title .icon-btn, .mini-actions .icon-btn { flex: none; }
+.mini-title > div { min-width: 0; }
+/* The name stays on one line where it fits and wraps inside its pill when the stats crowd it. */
+.mini-name { font: 400 18px/1.1 var(--display); color: var(--ivory); text-wrap: balance; }
 .mini-sub { font: 500 var(--fs-2xs)/1.2 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-.mini-stats { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+/* The title and buttons keep their size; long stats (Puzzle Rush's question, the boss's name) wrap instead. */
+.mini-title { flex: none; }
+.mini-top .icon-btn { flex: none; }
+.mini-stats { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; flex: 1 1 0; min-width: 0; }
 .mini-stat { display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 6px 12px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
 .mini-stat .k { font: 500 9.5px/1.2 var(--ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .mini-stat .v { font: 500 18px/1.2 var(--ui); font-variant-numeric: tabular-nums; color: var(--ivory); }
@@ -177,12 +202,15 @@
 }
 .mini-tool:hover:not(:disabled) { background: rgba(234, 208, 154, 0.08); border-color: var(--line); color: #fff6e0; }
 .mini-tool:disabled { opacity: 0.4; cursor: default; }
+/* Undo points back: the other way in right-to-left languages (turns keep the board's own left and right). */
+[dir='rtl'] .mini-tool.mt-undo svg { transform: scaleX(-1); }
 .mini-tool .mt-icon { display: grid; place-items: center; }
 .mini-tool .mt-badge { position: absolute; top: 3px; inset-inline-end: 6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--brass); color: var(--brass-ink); font: 600 10.5px/17px var(--ui); text-align: center; }
 .mini-tool.attn, .mini-tool.nudge { border-color: var(--brass-hi); background: rgba(234, 208, 154, 0.12); animation: mini-attn 1.3s ease-in-out infinite; }
 @keyframes mini-attn { 50% { box-shadow: 0 0 0 4px rgba(234, 208, 154, 0.18); } }
 .mini-toast {
-  position: absolute; z-index: var(--z-toast); left: 50%; top: 22%; transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
+  /* Below the top bar and its stats (play.ts sets --mini-top-end), never over them. */
+  position: absolute; z-index: var(--z-toast); left: 50%; top: max(22%, calc(var(--mini-top-end, 0px) + 12px)); transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
   padding: 10px 18px; border-radius: 999px; background: var(--surface-solid); border: 1px solid var(--line-strong); box-shadow: var(--shadow-2);
   font: 500 14px var(--ui); color: var(--ivory); text-align: center; max-width: min(90vw, 460px);
   transition: opacity 0.2s, transform 0.25s var(--ease);
@@ -193,8 +221,13 @@
 
 @media (max-width: 720px) {
   .mini-top { flex-wrap: wrap; }
+  /* A long name wraps inside its pill, so the round buttons keep the first row. */
+  .mini-title { flex: 1 1 0; max-width: max-content; border-radius: 26px; }
+  .mini-name { font-size: 17px; overflow-wrap: anywhere; }
   .mini-stats { order: 3; flex: 1 1 100%; justify-content: flex-start; }
-  .mini-stat { min-width: 0; padding: 4px 10px; flex-direction: row; gap: 6px; align-items: baseline; }
+  .mini-stats { gap: 5px; }
+  .mini-stat { min-width: 0; padding: 4px 8px; flex-direction: row; gap: 5px; align-items: baseline; }
+  .mini-stat .k { letter-spacing: 0.1em; }
   .mini-stat .v { font-size: 15px; }
   .mini-tool .mt-label { display: none; }
   .mini-tool { padding: 0 13px; }
@@ -210,9 +243,61 @@
 /* Landscape phones: the tools stand up along the right edge, so the board keeps the screen's height. */
 @media (max-height: 500px) and (orientation: landscape) {
   .mini-tools {
-    left: auto; right: calc(env(safe-area-inset-right, 0px) + var(--gutter)); top: 50%; bottom: auto; transform: translateY(-50%);
+    /* Centred in the height below the top bar, so a column of six never reaches the title or buttons. */
+    left: auto; right: calc(env(safe-area-inset-right, 0px) + var(--gutter)); top: calc(50% + 28px); bottom: auto; transform: translateY(-50%);
     flex-direction: column; border-radius: 26px; max-width: none; max-height: calc(100vh - 80px);
   }
-  .mini-tool { min-height: 0; height: 42px; width: 46px; padding: 0; justify-content: center; }
+  /* 44px to tap; a column of six (the cube games) shrinks a little to stay on a 360px-high screen. */
+  .mini-tool { min-height: 34px; height: auto; flex: 0 1 44px; width: 46px; padding: 0; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { .mini-tool.attn, .mini-tool.nudge { animation: none; } }
+
+/* Devanagari, Arabic and CJK have no capitals: the small-caps tracking of the labels only pulls their letters apart
+   (and breaks up joined Arabic letters). */
+:is(:lang(hi), :lang(ja), :lang(zh), :lang(ar)) :is(.mini-stat-txt .k, .mini-meta, .mini-daily-bonus, .mini-sheet .field > span, .mini-sub, .mini-stat .k, .mini-tool, .mini-best, .mini-chip, .mini-card .lux-t) { letter-spacing: 0; }
+
+/* Touch screens: every control in the hub, the sheets and the top bar is at least 44px to tap. */
+@media (pointer: coarse) {
+  .mini-chip, .mini-search-input, .mini-sort-select { height: 44px; }
+  .mini-sheet .seg button, .mini-sheet .btn { min-height: 44px; }
+  .mini-top .icon-btn { width: 44px; height: 44px; }
+  .mini-tool { min-height: 44px; }
+}
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .mini-tool { min-height: 0; height: 44px; }
+}
+
+/* Sideways phones: the sheets tighten up so the results and their buttons need little or no scrolling. */
+@media (max-height: 500px) {
+  #modal > .mini-sheet { padding: 16px 22px; gap: 10px; }
+  .mini-sheet .results-title { font-size: 26px; margin: 0; }
+  .mini-sheet .mini-pay { padding: 10px 14px; }
+  .mini-sheet .mini-pay-n { font-size: 28px; }
+  .mini-sheet .btn-row { margin-top: 0; }
+}
+
+/* Short landscape screens: a slimmer top bar (touch targets keep their size). */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* The stats stay beside the title on narrow ones too (wrapping among themselves), not on a second row. */
+  .mini-top { flex-wrap: nowrap; align-items: flex-start; }
+  .mini-stats { order: 0; flex: 1 1 0; min-width: 0; justify-content: center; }
+  .mini-title { padding: 3px; padding-inline-end: 12px; }
+  .mini-stat { padding: 4px 10px; }
+  .mini-stat .v { font-size: 16px; }
+}
+/* Short landscape screens, when it shows the board larger (play.ts measures both ways): the top bar
+   stands as a column down the left edge (title, stats, then help and restart), so the board gets the
+   screen's full height. */
+.mini-hud.hud-side .mini-top {
+  top: calc(env(safe-area-inset-top, 0px) + 6px); bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); right: auto; width: 150px;
+  flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; gap: 6px;
+}
+.mini-hud.hud-side .mini-title { gap: 8px; padding: 3px; padding-inline-end: 10px; border-radius: 24px; }
+.mini-hud.hud-side .mini-title > div { min-width: 0; }
+.mini-hud.hud-side .mini-title .icon-btn { flex: none; }
+.mini-hud.hud-side .mini-name { white-space: normal; font-size: 15px; line-height: 1.1; }
+.mini-hud.hud-side .mini-stats { order: 0; flex: none; flex-direction: column; flex-wrap: nowrap; gap: 4px; justify-content: flex-start; }
+.mini-hud.hud-side .mini-stat { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; padding: 4px 10px; }
+.mini-hud.hud-side .mini-stat .v { font-size: 15px; }
+.mini-hud.hud-side .mini-actions { margin-top: auto; }
+.mini-hud.hud-side .mini-tools { top: 50%; }

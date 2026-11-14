@@ -8,8 +8,8 @@ import * as THREE from 'three';
 import { tr } from '../../i18n';
 import { registerMiniGame } from '../registry';
 import { FLAT } from '../board';
-import { GameClock, freeLook, goldMaterial, pairsFromSet, tilesMatch } from '../helpers';
-import type { Rng } from '../../engine/rng';
+import { GameClock, freeLook, goldMaterial, matchGroup, pairsFromSet, tilesMatch } from '../helpers';
+import { Rng } from '../../engine/rng';
 import type { MiniHost, MiniLevel, MiniSession } from '../types';
 
 /** Row width, seconds between rows, game length and how many rows fit before the line. */
@@ -19,6 +19,8 @@ const SETUP: Record<MiniLevel, { w: number; every: number; secs: number; max: nu
   hard: { w: 8, every: 8, secs: 180, max: 8, start: 4 },
 };
 const SHUFFLES: Record<MiniLevel, number> = { easy: 3, medium: 2, hard: 1 };
+/** Seconds until the next row once there is nothing to do: no free pair, and no shuffle that could make one. */
+const CALL_IN = 1.5;
 const PAY: Record<MiniLevel, number> = { easy: 1, medium: 1.5, hard: 2.2 };
 
 export interface SRow {
@@ -68,6 +70,17 @@ export class Rows {
   get count() {
     return this.rows.reduce((n, r) => n + this.live(r).length, 0);
   }
+  /** Whether any two tiles on the board match at all (else no shuffle can make a pair: wait for the next row). */
+  canPair() {
+    const seen = new Set<number>();
+    for (const r of this.rows)
+      for (const id of this.live(r)) {
+        const g = matchGroup(this.kinds[id]);
+        if (seen.has(g)) return true;
+        seen.add(g);
+      }
+    return false;
+  }
   /** Deal the live tiles' kinds round again so that at least one pair is free. */
   shuffle(rng: Rng): boolean {
     const ids = this.rows.flatMap((r) => this.live(r));
@@ -111,6 +124,10 @@ class SurvivalSession implements MiniSession {
   private lineMat = goldMaterial();
   private total = 0;
   private warned = false;
+  /** No move to make: the next row is on its way early (the HUD says so). */
+  private waiting = false;
+  /** Pause suggestions draw from their own stream, so idle time never changes later shuffles. */
+  private hintRng: Rng;
 
   constructor(private host: MiniHost) {
     this.st = SETUP[host.level];
@@ -124,6 +141,7 @@ class SurvivalSession implements MiniSession {
     this.clock = new GameClock(st.secs);
     this.nextIn = st.every;
     this.shuffles = SHUFFLES[host.level];
+    this.hintRng = new Rng((host.seed ^ 0x3c6ef372) >>> 0);
     const b = host.board;
     // The line at your edge: rows that would cross it end the game.
     this.line = new THREE.Mesh(new THREE.BoxGeometry(st.w * (b.w + 0.02) + 0.4, 0.016, 0.06), this.lineMat);
@@ -131,9 +149,10 @@ class SurvivalSession implements MiniSession {
     b.root.add(this.line);
     host.camera.home = { yaw: 0, pitch: 66 };
     host.camera.reset();
-    b.build(kinds.map((kind, id) => ({ id, kind, pos: this.pos(id, -2), quat: FLAT })));
+    // Tiles still to come wait hidden on the first row, inside the frame (the camera frames every tile, hidden or not).
+    b.build(kinds.map((kind, id) => ({ id, kind, pos: this.pos(id, 0), quat: FLAT })));
     for (let id = 0; id < kinds.length; id++) b.hide(id);
-    b.fitExtra = new THREE.Box3(new THREE.Vector3(-(st.w / 2) * b.w - 0.1, 0, this.rowZ(0) - b.h * 0.6), new THREE.Vector3((st.w / 2) * b.w + 0.1, 0.2, this.rowZ(st.max - 1) + b.h * 0.8));
+    b.fitExtra = new THREE.Box3(new THREE.Vector3(-(st.w / 2) * b.w - 0.1, 0, this.rowZ(0) - b.h * 0.5 - 0.04), new THREE.Vector3((st.w / 2) * b.w + 0.1, 0.2, this.rowZ(st.max - 1) + b.h / 2 + 0.2));
     for (let i = 0; i < st.start; i++) this.pushRow(true);
     host.fit(true);
     this.refresh();
@@ -237,16 +256,18 @@ class SurvivalSession implements MiniSession {
   suggest(): number[] | null {
     if (this.ended) return [];
     const p = this.g.pairs();
-    if (!p.length) return this.g.count ? null : [];
-    return p[this.host.rng.int(p.length)];
+    // No pair and none a shuffle could make: the next row brings partners, so there is nothing to nudge.
+    if (!p.length) return this.g.canPair() ? null : [];
+    return p[this.hintRng.int(p.length)];
   }
   hint() {
-    if (this.ended) return false;
+    if (this.ended || this.hintPair.length) return false;
     const p = this.g.pairs();
     if (!p.length) return false;
-    this.hintPair = p[0];
+    const pair = (this.hintPair = p[0]);
     this.refresh();
     window.setTimeout(() => {
+      if (this.hintPair !== pair) return;
       this.hintPair = [];
       if (!this.ended) this.refresh();
     }, 2200);
@@ -265,25 +286,38 @@ class SurvivalSession implements MiniSession {
       }),
     );
     this.sel = null;
+    this.hintPair = [];
     this.host.sound('shuffle');
     this.refresh();
     return true;
   }
   canUse(tool: 'hint' | 'shuffle') {
     if (this.ended) return false;
-    return tool === 'hint' ? this.g.pairs().length > 0 : this.shuffles > 0 && this.g.count > 1;
+    return tool === 'hint' ? !this.hintPair.length && this.g.pairs().length > 0 : this.shuffles > 0 && this.g.canPair();
   }
   badges() {
     return { shuffle: String(this.shuffles) };
   }
   attention() {
-    return !this.ended && this.g.count > 1 && !this.g.pairs().length && this.shuffles > 0 ? ('shuffle' as const) : null;
+    return !this.ended && this.g.canPair() && !this.g.pairs().length && this.shuffles > 0 ? ('shuffle' as const) : null;
+  }
+
+  /** Nothing to do but wait: no free pair, and no shuffle left that could make one. */
+  private noMove() {
+    return !this.g.pairs().length && !(this.shuffles > 0 && this.g.canPair());
   }
 
   tick(dt: number) {
     if (this.ended) return;
     this.clock.tick(dt);
     if (!this.clock.paused) this.nextIn -= dt;
+    // With nothing to take the player would only wait: the next row comes in now, bringing partners.
+    const stuck = this.noMove();
+    if (stuck && this.nextIn > CALL_IN) {
+      this.nextIn = CALL_IN;
+      if (!this.waiting && this.g.count) this.host.toast(tr('No pair to take: the next row comes in now'), 'info');
+    }
+    this.waiting = stuck;
     if (this.combo && this.clock.elapsed - this.lastPair > 3) {
       this.combo = 0;
       this.host.setStat('combo', null);
@@ -296,7 +330,7 @@ class SurvivalSession implements MiniSession {
       this.host.toast(tr('The rows are at the line! Clear a row now.'), 'bad');
     }
     this.host.setStat('time', this.clock.text(), tr('Left'));
-    this.host.setStat('moves', String(Math.max(0, Math.ceil(this.nextIn))), tr('Next row'));
+    this.host.setStat('moves', this.waiting && this.g.count ? tr('Now') : String(Math.max(0, Math.ceil(this.nextIn))), tr('Next row'));
     if (this.clock.over) return this.win();
     if (this.nextIn <= 0) {
       this.nextIn = this.st.every;
@@ -330,6 +364,7 @@ class SurvivalSession implements MiniSession {
 
 registerMiniGame({
   id: 'survival',
+  timeRecord: false,
   title: tr('Mahjong Survival'),
   blurb: tr('Rows of tiles creep toward you. Match the free ends fast and hold the line.'),
   minutes: tr('2–3 min'),
