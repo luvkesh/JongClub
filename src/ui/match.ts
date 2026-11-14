@@ -11,6 +11,7 @@ import { SMALL_CARDS, cardSets, type SmallCard } from '../engine/rules/indiaCard
 import { NORTH, NUMBER_NAMES, northBig, northGoulash } from '../engine/rules/india';
 import { BIG_CARDS, type BigCard, type BigGroup } from '../engine/rules/indiaBig';
 import { likelyTargets, riskyTargetKinds, targetKit, type TargetKit, type TargetPlan } from '../ai/targets';
+import { callWord, planName, planNote } from '../ai/adviceText';
 import { bigCardView, smallCardView } from './smallCard';
 import { cardDistances } from '../ai/indiaCardPick';
 import { SPECIAL_ROUNDS, type SpecialRoundId } from '../engine/rules/windRounds';
@@ -67,7 +68,7 @@ import { handNowView, lineName, onShowView } from './handScoreView';
 import { fillEtiquetteBar, showSignal } from './etiquette';
 import { TeaService } from './tea';
 import { diceForVariation } from '../render/sideTables';
-import { andList, shownName, tr, trn } from '../i18n';
+import { andList, listSep, shownName, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { cardGrip, consoleWidth, dockButton, hudMode, moreSheet, restoreCard, type GridItem, type HudMode } from './matchControls';
 import { applyVolumes, setTableMuted, type MusicSettings } from './musicToggle';
@@ -789,7 +790,7 @@ export class MatchController {
               },
             },
             h('span', { class: 'poss-top' }, h('b', { class: 'poss-name' }, passportNames(p.names)), h('span', { class: 'poss-away' }, passportAway(p.missing - 1))),
-            p.note ? h('span', { class: 'poss-note' }, tr(p.note)) : null,
+            p.note ? h('span', { class: 'poss-note' }, planNote(p.note)) : null,
             p.pieces.length ? tiles : null,
           ),
         );
@@ -1061,7 +1062,7 @@ export class MatchController {
             type: 'button',
             class: `pp-chip${on ? ' on' : ''}`,
             'aria-pressed': String(on),
-            title: [passportNames(p.names), p.note ? tr(p.note) : '', tr(kit.chipTip)].filter(Boolean).join(' · '),
+            title: [passportNames(p.names), p.note ? planNote(p.note) : '', tr(kit.chipTip)].filter(Boolean).join(' · '),
             onclick: () => {
               this.ppChoice = p.key;
               this.pushLayout();
@@ -1445,9 +1446,9 @@ export class MatchController {
         h(
           'div',
           { class: 'seat-info' },
-          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, shownName(p.name)), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
+          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, shownName(p.name)), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, callWord(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
           h('div', { class: 'seat-sub' }, h('span', { class: 'wind', title: { E: tr('East seat'), S: tr('South seat'), W: tr('West seat'), N: tr('North seat') }[wind] }, wind), this.seats[s].kind === 'ai' ? PERSONALITIES[ai.personality].label : s === this.you ? tr('You') : tr('Club member')),
-          reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
+          reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, planName(reads.get(s)!.name))) : null,
         ),
         h('div', { class: 'seat-score', title: scoreTip(s) }, h('span', { class: 'pts-num' }, fmt(p.score)), h('span', { class: 'pts-cap' }, tr('pts'))),
         // Narrow upright screens: the side racks run off the screen's edges, so their claimed sets show here (CSS shows it there only).
@@ -2172,7 +2173,7 @@ export class MatchController {
       const list = h('div', { class: 'bot-pp' }, h('div', { class: 'bot-pp-title' }, tr(hint.targets.title)));
       for (const p of hint.targets.plans.slice(0, 3)) {
         const name = passportNames(p.names);
-        const extra = [p.sets ? trn(p.sets, '{n} more set', '{n} more sets') : '', p.pair ? tr('a pair') : '', p.note ? tr(p.note) : ''].filter(Boolean).join(', ');
+        const extra = [p.sets ? trn(p.sets, '{n} more set', '{n} more sets') : '', p.pair ? tr('a pair') : '', p.note ? planNote(p.note) : ''].filter(Boolean).join(listSep());
         const tiles = h('div', { class: 'bot-pp-tiles' });
         p.pieces.forEach((piece, i) => {
           const g = h('span', { class: 'bot-pp-piece' });
@@ -2264,7 +2265,7 @@ export class MatchController {
         if (e.riichi) {
           sound.play('riichi');
           if (e.seat === this.me) this.stats.riichis++;
-          this.toast(tr(this.game.profile.callNames.riichi ?? 'Riichi').toUpperCase(), e.seat === this.me ? tr('You declare a ready hand') : tr('{name} declares a ready hand', { name: name(e.seat) }));
+          this.toast(callWord(this.game.profile.callNames.riichi ?? 'Riichi').toUpperCase(), e.seat === this.me ? tr('You declare a ready hand') : tr('{name} declares a ready hand', { name: name(e.seat) }));
         }
         break;
       case 'dora':
@@ -2619,7 +2620,7 @@ export class MatchController {
       this.bubble(seat, tr('Joker swap!'));
       return { t: 'j', s: seat, o: d.swap!.owner, m: d.swap!.meld, id: d.swap!.tileId };
     }
-    if (d.riichi) this.bubble(seat, `${tr(g.profile.callNames.riichi ?? 'Riichi')}!`);
+    if (d.riichi) this.bubble(seat, `${callWord(g.profile.callNames.riichi ?? 'Riichi')}!`);
     else if (ai.personality === 'teacher' && Math.random() < 0.3) this.bubble(seat, this.teacherRemark(seat, d.kind!));
     return d.riichi ? { t: 'd', s: seat, id: d.tileId!, r: 1 } : { t: 'd', s: seat, id: d.tileId! };
   }
@@ -2939,7 +2940,7 @@ export class MatchController {
         // Out of time: JongBot's pick when hints are on, else the tile you just drew.
         const allowed = riichiMode ? new Set(opts.riichiDiscards) : new Set(opts.discards.map((x) => x.id));
         const hand = g.players[this.me].hand.filter((x) => allowed.has(x.id));
-        const byHint = this.hintsOn && hint.focusKind !== undefined && hint.action === 'discard' && !/^Swap\b/.test(hint.headline) ? hand.find((x) => x.kind === hint.focusKind) : undefined;
+        const byHint = this.hintsOn && hint.focusKind !== undefined && hint.action === 'discard' && !hint.swap ? hand.find((x) => x.kind === hint.focusKind) : undefined;
         const pick = byHint ?? (drawn && allowed.has(drawn.id) ? drawn : undefined) ?? hand[hand.length - 1] ?? opts.discards[0];
         return { kind: 'discard', id: pick.id, riichi: riichiMode };
       },
@@ -3989,7 +3990,7 @@ function instantLines(g: MahjongGame, r: HandResult): InstantLine[] {
 
 /** Passport names for the planner and the chips: "3 Knits in the same 2 suits ×2" when one repeats. */
 function passportNames(names: string[]): string {
-  return names.map((n, i) => (names.indexOf(n) < i ? null : names.filter((x) => x === n).length > 1 ? `${tr(n)} ×2` : tr(n))).filter(Boolean).join(' + ');
+  return names.map((n, i) => (names.indexOf(n) < i ? null : names.filter((x) => x === n).length > 1 ? `${planName(n)} ×2` : planName(n))).filter(Boolean).join(' + ');
 }
 
 /** How far a passport hand is, as JongBot says it everywhere else. */

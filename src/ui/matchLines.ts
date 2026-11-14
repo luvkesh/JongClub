@@ -87,11 +87,11 @@ export function hintSpoken(hint: Hint, call?: string): Spoken {
   if (hint.action === 'pass') return { parts: [line(LINES.hintPass)], text };
   if (hint.action === 'riichi' && k !== undefined) return { parts: [{ tile: k }, line(LINES.hintRiichi)], text };
   if (hint.action === 'discard' && k !== undefined) {
-    if (/^Swap\b/.test(hint.headline)) return { parts: [{ tile: k }, line(LINES.hintSwap)], text };
+    if (hint.swap) return { parts: [{ tile: k }, line(LINES.hintSwap)], text };
     return { parts: [{ tile: k }, line(LINES.hintDiscard)], text };
   }
   if (hint.action === 'pung' || hint.action === 'kong' || hint.action === 'chow') return { parts: [...(call ? [{ call } as SpeechPart] : []), line(LINES.hintClaim)], text };
-  if (/^Pass the /.test(hint.headline)) return { parts: [line(LINES.hintCharleston)], text };
+  if ('tiles' in hint) return { parts: [line(LINES.hintCharleston)], text };
   return { parts: [], text };
 }
 
