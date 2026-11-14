@@ -103,6 +103,7 @@
   box-shadow: var(--shadow-1); pointer-events: none;
 }
 .seat-0 .seat-river { top: auto; bottom: calc(100% + 8px); }
+.seat .seat-river.up { top: auto; bottom: calc(100% + 8px); }
 .seat-1 .seat-river { left: auto; right: 0; }
 .sr-head { font: 500 10.5px var(--ui); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--brass); margin-bottom: 8px; }
 .sr-tiles { display: flex; flex-wrap: wrap; gap: 3px; }
@@ -514,6 +515,10 @@
   .hud .seat-1 > .avatar, .hud .seat-3 > .avatar { width: 24px; height: 24px; font-size: 12px; }
   .hud .seat-1 .seat-name, .hud .seat-3 .seat-name { font-size: 10px; max-width: 46px; text-align: center; position: relative; }
   .hud .seat-1 .seat-nm, .hud .seat-3 .seat-nm { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* In the slim column the Dealer and flower badges stack under the name instead of floating over it and the score. */
+  .hud .seat-1 .seat-name, .hud .seat-3 .seat-name { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .hud .seat-1 .seat-name > *, .hud .seat-3 .seat-name > * { max-width: 100%; box-sizing: border-box; }
+  .hud .seat-1 .seat-name > .dealer, .hud .seat-3 .seat-name > .dealer, .hud .seat-1 .seat-name > .flower-pill, .hud .seat-3 .seat-name > .flower-pill { position: static; margin: 0; }
   .hud .seat-1 .pts-num, .hud .seat-3 .pts-num { font-size: 10.5px; }
   .hud .seat-1 > .seat-score, .hud .seat-3 > .seat-score { align-items: center; }
   /* Their sets run down the column, each tile turned toward the table at the legible floor size (style.css --tile-min),

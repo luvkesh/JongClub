@@ -41,6 +41,8 @@ const BEAT = 20_000;
 const STALE = 65_000;
 /** Leftovers from a tab that closed without cleaning up are ignored, and removed. */
 const ANCIENT = 6 * 3600_000;
+/** Wait this long before listening again after the store dropped the listener. */
+const RETRY = 5000;
 
 /** Plain JSON only: undefined fields dropped, nothing exotic. */
 export const plain = <T>(v: T): T => JSON.parse(JSON.stringify(v ?? null));
@@ -81,14 +83,7 @@ export class DbNamedRoom implements NamedRoom {
     readonly name: string,
     private uid: string | null,
   ) {
-    this.unsub = db.collection(`rooms/${name}/peers`).onSnapshot(
-      (s) => this.onSnap(s),
-      (e) => {
-        this.error = e.code;
-        this.live = false;
-        this.emit();
-      },
-    );
+    this.unsub = this.listen();
     this.timers.push(
       window.setInterval(() => {
         if (Object.keys(this.mine).length) void this.flush();
@@ -96,6 +91,33 @@ export class DbNamedRoom implements NamedRoom {
       window.setInterval(() => this.prune(), 4000),
     );
     window.addEventListener('pagehide', this.bye);
+  }
+
+  /** Watch the table's documents; a listener the store dropped (network, quota) is set up again a little later. */
+  private listen(): () => void {
+    let off = false;
+    let unsub: (() => void) | undefined = undefined;
+    unsub = this.db.collection(`rooms/${this.name}/peers`).onSnapshot(
+      (s) => void (!off && this.onSnap(s)),
+      (e) => {
+        if (off || this.left) return;
+        this.error = e?.code ?? 'error';
+        this.live = false;
+        this.emit();
+        off = true;
+        unsub?.();
+        const t = window.setTimeout(() => {
+          this.timers = this.timers.filter((x) => x !== t);
+          if (!this.left) this.unsub = this.listen();
+        }, RETRY);
+        this.timers.push(t);
+      },
+    );
+    if (off) unsub();
+    return () => {
+      off = true;
+      unsub?.();
+    };
   }
 
   private ref() {

@@ -137,6 +137,8 @@ const DIFFICULTY_PAUSE: Record<Difficulty, number> = { beginner: 150, casual: 50
 /** An AI turn takes about a second at the default speed (aiPause). */
 const AI_PAUSE_MIN = 800;
 const AI_PAUSE_MAX = 1250;
+/** Live tables: seconds the hand summary waits before moving on by itself. */
+const LIVE_SUMMARY_S = 25;
 
 export type SeatKind = 'local' | 'ai' | 'remote';
 
@@ -821,6 +823,17 @@ export class MatchController {
     if (!p.discards.length) box.append(h('div', { class: 'sr-empty' }, tr('Nothing discarded yet')));
     else box.append(h('div', { class: 'sr-tiles' }, ...p.discards.map((t) => tileImg(t.kind, 'mini', this.settings.labels, isRed(this.game.state, t.id)))));
     el.append(box);
+    // Upright screens put the side plates just above your hand: a card that would run down over your
+    // tiles, the hand tools or the dock opens above the plate instead (where there is more room).
+    const b = box.getBoundingClientRect();
+    const tops = [...this.root.querySelectorAll<HTMLElement>('.bottom > *, .dock-bar')]
+      .filter((e) => e.offsetParent !== null)
+      .map((e) => e.getBoundingClientRect())
+      .filter((r) => r.height > 0 && r.width > 0 && r.left < b.right && r.right > b.left && r.bottom > b.top)
+      .map((r) => r.top);
+    const floor = Math.min(window.innerHeight - 8, ...tops);
+    const plate = el.getBoundingClientRect();
+    if (b.bottom > floor && plate.top - b.height - 8 > (this.root.querySelector('.hud-top')?.getBoundingClientRect().bottom ?? 0)) box.classList.add('up');
   }
 
   /** What a seat's hand is worth now: your own in full, another player's only as far as it is on show. */
@@ -1300,6 +1313,8 @@ export class MatchController {
         { class: 'card confirm' },
         h('h3', {}, tr('Leave the table?')),
         h('p', {}, this.opts.ranked ? tr('Leaving a ranked game counts as finishing 4th.') : this.opts.tag === 'tournament' ? tr('Leaving counts as finishing last at this table.') : tr('This game will not be saved to your profile.')),
+        // Live tables: say what leaving does to everyone else.
+        this.opts.link && !this.spectator ? h('p', { class: 'muted' }, this.opts.link.isHost ? tr('You are the host: leaving ends this game for everyone at the table.') : tr('An AI player takes over your seat and the others play on.')) : null,
         h(
           'div',
           { class: 'btn-row' },
@@ -1314,8 +1329,13 @@ export class MatchController {
   /** Ends a running opening ceremony (set by runOpening while it runs). */
   private cancelOpening: (() => void) | null = null;
 
+  /** A limit hand's signature moment while it plays (winCinematic.ts): leaving the table ends it at once. */
+  private cinematic: { done: Promise<void>; skip(): void } | null = null;
+
   abort() {
     this.aborted = true;
+    this.cinematic?.skip();
+    this.cinematic = null;
     this.cancelOpening?.();
     this.cancelOpening = null;
     this.closeCallWarning(false);
@@ -1579,15 +1599,19 @@ export class MatchController {
       if (hud.style.getPropertyValue('--badge-end') !== end) hud.style.setProperty('--badge-end', end);
     }
     if (across && badge) {
-      across.style.top = across.style.left = across.style.transform = '';
+      across.style.top = across.style.left = across.style.transform = across.style.maxWidth = '';
       const t = across.getBoundingClientRect();
       const r = badge.getBoundingClientRect();
       if (across.offsetParent && t.left < r.right && r.left < t.right && t.top < r.bottom && r.top < t.bottom) {
         // Short screens: step right of the title, staying on the top edge, rather than down over the discards.
         const toolsLeft = hud.querySelector<HTMLElement>('.hud-tools')?.getBoundingClientRect().left ?? window.innerWidth;
-        if (window.innerHeight <= 500 && r.right + 8 + t.width <= toolsLeft - 8) {
+        // A plate a little too wide for that gap (a long "Likely" read) narrows into it, its read trimmed, rather than
+        // dropping below the title onto the left player's plate (667 x 375).
+        const room = toolsLeft - 8 - (r.right + 8);
+        if (window.innerHeight <= 500 && (t.width <= room || room >= 200)) {
           across.style.left = `${Math.round(r.right + 8 - hud.getBoundingClientRect().left)}px`;
           across.style.transform = 'none';
+          if (t.width > room) across.style.maxWidth = `${Math.floor(room)}px`;
         } else across.style.top = `${Math.round(r.bottom + 6 - hud.getBoundingClientRect().top)}px`;
       }
       // ...and below the menu buttons on the right where the screen is too narrow for both in one row.
@@ -1774,6 +1798,7 @@ export class MatchController {
       for (const [k, v] of Object.entries(vars)) hud.style.setProperty(k, v);
     }
     if (!upright && this.hudMode !== 'console') this.liftRightPlate();
+    if (!upright) this.keepSidePlatesAboveHand();
     this.levelSidePlates(upright);
     this.measureBottomClear();
   }
@@ -1824,6 +1849,38 @@ export class MatchController {
       }
       plate.dataset.level = '1';
       plate.style.top = `${Math.round(mid - plate.offsetHeight / 2)}px`;
+    }
+  }
+
+  /**
+   * Wide screens: the side players' plates stay above your hand (the 3D rack's top edge, or the top of
+   * Split View's hand strip), never across it. Runs after unstackPlates and liftRightPlate.
+   */
+  private keepSidePlatesAboveHand() {
+    const hud = this.root;
+    const plates = ['.seat-1', '.seat-3'].map((s) => hud.querySelector<HTMLElement>(s)).filter((p): p is HTMLElement => !!p);
+    // unstackPlates (left) and liftRightPlate (right, outside the console layout) set each plate's place
+    // afresh first; in the console layout the right plate's earlier lift is cleared here.
+    for (const p of plates) {
+      if (p.dataset.aboveHand && this.hudMode === 'console' && p.classList.contains('seat-1')) p.style.top = '';
+      delete p.dataset.aboveHand;
+    }
+    const clear = parseFloat(getComputedStyle(hud).getPropertyValue('--hand-clear'));
+    if (!hud.hasAttribute('data-hand-clear') || !(clear > 0)) return;
+    const box = hud.getBoundingClientRect();
+    // --hand-clear already keeps 8px clear of the hand.
+    const limit = box.bottom - clear;
+    for (const p of plates) {
+      // A left plate stepped beside your own plate (unstackPlates) is already level with it, above the hand.
+      if (!p.offsetParent || p.style.left) continue;
+      const r = p.getBoundingClientRect();
+      // Your own plate rides just above the hand on the left: a left plate lifted over the line stays above it too.
+      const mine = p.classList.contains('seat-3') ? hud.querySelector<HTMLElement>('.seat-0') : null;
+      const m = mine?.offsetParent ? mine.getBoundingClientRect() : null;
+      const lim = m && m.height && m.left < r.right && r.left < m.right ? Math.min(limit, m.top - 8) : limit;
+      if (r.height <= 0 || r.bottom <= limit) continue;
+      p.style.top = `${Math.round(Math.max(0, lim - r.height - box.top))}px`;
+      p.dataset.aboveHand = '1';
     }
   }
 
@@ -2311,7 +2368,27 @@ export class MatchController {
       this.game.state.riichiPot = resume.pot;
       if (resume.goulash) this.game.state.goulash = true;
     }
+    // A live player whose tab froze never runs out their own clock: well past their longest clock (with a
+    // wide margin for a slow device still catching up), the host hands the seat to an AI. Untimed tables wait.
+    if (this.opts.link && this.limits.turn > 0) this.opts.link.stallMs = Math.max(120, firstTurnLimit(this.limits.turn) * 2 + 60) * 1000;
     while (!this.aborted) {
+      const link = this.opts.link;
+      if (link) {
+        // Start each hand together with the host, so a seat given back to a returning player
+        // (and any other change of who sits where) applies on every client from the same hand.
+        if (!link.isHost) {
+          const slow = window.setTimeout(() => this.markWaiting(0), 1500);
+          await link.handReady(this.handNo);
+          window.clearTimeout(slow);
+          this.markWaiting(-1);
+          if (this.aborted) return;
+        }
+        for (const s of link.returning(this.handNo)) {
+          if (this.seats[s].kind !== 'ai') continue;
+          this.seats[s].kind = 'remote';
+          this.toast(tr('WELCOME BACK'), tr('{name} is back and takes their seat again', { name: this.game.players[s].name }));
+        }
+      }
       this.handLog = [];
       if (this.opts.link) {
         // Live tables reseed every AI per hand, so a spectator who joins at hand n
@@ -2625,8 +2702,9 @@ export class MatchController {
           if (st.done) {
             const v = onTimeout();
             this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
+            // "I discarded for you" only when a tile was discarded (not for a draw, a Charleston pass or an exchange).
             if (kind === 'claim') this.speak({ parts: [{ line: LINES.timeClaim }], text: LINES.timeClaim });
-            else this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
+            else if (!timeoutNote) this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
             return done(v);
           }
           if (!fromInterval) this.timerFrame = window.requestAnimationFrame(() => step());
@@ -2665,6 +2743,12 @@ export class MatchController {
     const turn = this.limits.turn;
     const me = this.me;
     return this.game.state.log.some((e) => e.type === 'discard' && e.seat === me) ? turn : firstTurnLimit(turn);
+  }
+
+  /** The limit for a choice before play (a Charleston pass, an exchange): your first decision of the hand gets the same extra time as a first turn. */
+  private get preDealLimit() {
+    const turn = this.limits.turn;
+    return this.handLog.some((a) => a.s === this.me) ? turn : firstTurnLimit(turn);
   }
 
   // ------------------------------------------------------------ drawing your tile
@@ -2965,8 +3049,9 @@ export class MatchController {
         };
       },
       () => advice.tiles,
-      this.limits.turn,
+      this.preDealLimit,
       'turn',
+      tr('JongBot’s choice was made for you'),
     );
     t.onTileClick = undefined;
     t.interactive.clear();
@@ -3006,8 +3091,9 @@ export class MatchController {
             bar.append(group(india ? tr('Tic-Tac-Toe') : tr('Between players'), 'passes'), group(tr('With the wall'), 'wall'), h('button', { class: 'btn primary', onclick: () => done(choice) }, tr('Start the exchanges')));
           },
           () => advice,
-          this.limits.turn,
+          this.preDealLimit,
           'turn',
+          tr('JongBot’s choice was made for you'),
         )) ?? advice;
       clear(this.els.actions);
       this.renderHint(null);
@@ -3062,8 +3148,9 @@ export class MatchController {
             bar.append(...values.map((v, i) => h('button', { class: `btn${v === advice ? ' primary' : ''}`, onclick: () => done(v) }, q[2 + i])));
           },
           () => advice,
-          this.limits.turn,
+          this.preDealLimit,
           'turn',
+          tr('JongBot’s choice was made for you'),
         )) ?? advice;
       clear(this.els.actions);
       this.renderHint(null);
@@ -3166,6 +3253,7 @@ export class MatchController {
           () => advice,
           limit,
           'turn',
+          tr('JongBot’s choice was made for you'),
         )) ?? advice;
       (panel as HTMLElement | null)?.remove();
     } else if (this.seats[seat].kind === 'remote') {
@@ -3220,6 +3308,7 @@ export class MatchController {
         () => advice,
         limit,
         'turn',
+        tr('JongBot’s choice was made for you'),
       );
       (panel as HTMLElement | null)?.remove();
       if (!this.aborted) this.shareEarly(this.handLog.length + this.me, { t: 'sc', s: this.me, c: picks[this.me]! });
@@ -3326,8 +3415,9 @@ export class MatchController {
         };
       },
       () => advice,
-      this.limits.turn,
+      this.preDealLimit,
       'turn',
+      tr('JongBot’s choice was made for you'),
     );
     t.onTileClick = undefined;
     t.interactive.clear();
@@ -3349,9 +3439,10 @@ export class MatchController {
           const bar = clear(this.els.actions);
           bar.append(h('button', { class: 'btn', onclick: () => done(true) }, tr('Pass again')), h('button', { class: 'btn primary', onclick: () => done(false) }, tr('Start play')));
         },
-        () => false,
+        () => this.ais[this.me].charlestonVote(g),
         this.limits.turn,
         'turn',
+        tr('JongBot’s choice was made for you'),
       );
       clear(this.els.actions);
       this.renderHint(null);
@@ -3460,7 +3551,11 @@ export class MatchController {
     }
     const sp = this.settings.speed;
     // A limit hand or yakuman gets its signature moment first (winCinematic.ts); a tap cuts it short.
-    if (winMoment && !this.catchingUp()) await startWinCinematic(t, this.root, winner!, r.score, winner === this.me)?.done;
+    if (winMoment && !this.catchingUp()) {
+      this.cinematic = startWinCinematic(t, this.root, winner!, r.score, winner === this.me);
+      await this.cinematic?.done;
+      this.cinematic = null;
+    }
     if (this.aborted) return;
     // A win is given time to be seen; a drawn hand moves on sooner.
     await this.skippableWait(winMoment ? (sp === 'minimal' ? 1400 : sp === 'cinematic' ? 4200 : 3200) : sp === 'minimal' ? 500 : sp === 'cinematic' ? 2600 : 1700);
@@ -3576,8 +3671,24 @@ export class MatchController {
       const row = (t: number) => h('div', { class: `delta-row team-row ${t === mineT && !this.spectator ? 'mine' : ''}` }, h('span', {}, team(t)), h('span', { class: `num ${totals[t] > totals[1 - t] ? 'up' : totals[t] < totals[1 - t] ? 'down' : ''}` }, fmt(totals[t])));
       card.append(h('h4', { class: 'instant-head' }, tr('Teams')), h('div', { class: 'deltas team-totals' }, row(mineT), row(1 - mineT)));
     }
+    let autoNext = 0;
+    // The summary's H key listener ends with the summary (the overlay element is reused every hand).
+    const summaryKeys = new AbortController();
     await new Promise<void>((resolve) => {
       const cont = h('button', { class: 'btn primary', onclick: () => resolve() }, over ? tr('See results') : tr('Next hand')) as HTMLButtonElement;
+      // Live tables: everyone else waits while you read, so the summary moves on by itself
+      // (a player who walked away would otherwise hold the whole table at the summary).
+      if (this.opts.link && !over) {
+        // Counted on the wall clock: a busy or backgrounded page runs its timers late.
+        const end = Date.now() + LIVE_SUMMARY_S * 1000;
+        const note = h('p', { class: 'muted small live-next', 'aria-live': 'off' }, tr('Next hand in {n}s', { n: LIVE_SUMMARY_S }));
+        card.append(note);
+        autoNext = window.setInterval(() => {
+          const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+          note.textContent = tr('Next hand in {n}s', { n: left });
+          if (left <= 0) resolve();
+        }, 500);
+      }
       // A win can fold its summary away to look at the hand on the table; the camera frames it.
       // The hand the table frames when the summary folds away: the winner's, or the one picked with View in All hands.
       let framed = winner ?? (this.spectator ? 0 : this.me);
@@ -3594,7 +3705,7 @@ export class MatchController {
         if (over > 0 && p.bottom > c.top && p.width) topPlate.style.translate = `${-Math.min(over, Math.max(0, p.left - 12))}px 0`;
       };
       const reframeAll = () => (reframe(), clearTopPlate());
-      const hide = summaryToggle(o, cont, { onHide: reframeAll, onShow: reframeAll, strip: card.querySelector('.win-hand')?.cloneNode(true) as HTMLElement | undefined });
+      const hide = summaryToggle(o, cont, { signal: summaryKeys.signal, onHide: reframeAll, onShow: reframeAll, strip: card.querySelector('.win-hand')?.cloneNode(true) as HTMLElement | undefined });
       // View (All hands): fold the summary away and frame that player's whole hand in 3D on the table.
       const viewSeat = (seat: number) => {
         framed = seat;
@@ -3639,6 +3750,8 @@ export class MatchController {
       requestAnimationFrame(clearTopPlate);
       this.resolveHuman = () => resolve();
     });
+    window.clearInterval(autoNext);
+    summaryKeys.abort();
     o.hidden = true;
     o.classList.remove('win-sheet', 'peek', 'free-cam');
     this.root.querySelector<HTMLElement>('.seat-2')?.style.removeProperty('translate');

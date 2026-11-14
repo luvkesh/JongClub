@@ -16,7 +16,7 @@ import { usesLadder, usesTeams, teamTotals } from '../../engine/rules/tableOptio
 import { keyMomentsSection } from '../keyMoments';
 import { recordGameSkills } from '../../progression/skills';
 import { saveProgressCard } from '../../auth/prompt';
-import { andList, tr } from '../../i18n';
+import { andList, shownName, tr } from '../../i18n';
 import type { App } from '../app';
 import { autostartLesson, nextAfter, nextLesson } from './learn';
 import { ICONS, LAUREL, SCENE } from '../resultsLook';
@@ -87,7 +87,7 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
   const title = matchTitle(summary);
   const o = app.modal;
   clear(o).hidden = false;
-  const top = topLine(standings, (s) => (s.seat === me ? app.profile.name : s.name));
+  const top = topLine(standings, (s) => (s.seat === me ? shownName(app.profile.name) : s.name));
   const tourney = tag === 'tournament' ? h('p', { class: 'tourney-line daily-line muted' }, tr('Playing out the other tables…')) : null;
   if (tourney) tournamentOnFinish(app.ctx(), standings.map((s) => ({ seat: s.seat, score: s.score })), (line) => {
     tourney.textContent = line;
@@ -101,7 +101,7 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
     h('div', { class: 'res-scene', 'aria-hidden': 'true', html: SCENE }),
     h('p', { class: 'eyebrow res-eyebrow' }, h('span', {}, title)),
     top,
-    h('ol', { class: 'standings' }, ...standings.map((s, i) => h('li', { class: s.seat === me ? 'me' : '' }, h('span', { class: 'pl' }, firstPlace(standings, i) ? h('span', { class: 'laurel', 'aria-hidden': 'true', html: LAUREL }) : '', placeLabel(standings, i)), h('span', { class: 'nm' }, s.seat === me ? tr('{name} (you)', { name: app.profile.name }) : s.name), h('span', { class: 'num' }, fmt(s.score)), uma ? placementCell(uma[s.seat]) : ''))),
+    h('ol', { class: 'standings' }, ...standings.map((s, i) => h('li', { class: s.seat === me ? 'me' : '' }, h('span', { class: 'pl' }, firstPlace(standings, i) ? h('span', { class: 'laurel', 'aria-hidden': 'true', html: LAUREL }) : '', placeLabel(standings, i)), h('span', { class: 'nm' }, s.seat === me ? tr('{name} (you)', { name: shownName(app.profile.name) }) : s.name), h('span', { class: 'num' }, fmt(s.score)), uma ? placementCell(uma[s.seat]) : ''))),
     standings.some((o) => o.seat !== me && o.score === standings.find((x) => x.seat === me)?.score) ? h('p', { class: 'muted small', style: { margin: '-8px 0 14px' } }, tr('A shared place earns the reward for the lower place.')) : '',
     uma ? h('p', { class: 'muted small' }, tr('Tournament scoring: placement points are the bonus for each place plus the score difference.')) : '',
     h(
@@ -144,9 +144,9 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
   renameOnCard = () => {
     if (o.hidden || !card.isConnected) return;
     if (me >= 0) replay.names[me] = app.profile.name;
-    card.querySelector('.results-title')?.replaceWith(topLine(standings, (s) => (s.seat === me ? app.profile.name : s.name)));
+    card.querySelector('.results-title')?.replaceWith(topLine(standings, (s) => (s.seat === me ? shownName(app.profile.name) : s.name)));
     const nm = card.querySelector('.standings li.me .nm');
-    if (nm) nm.textContent = tr('{name} (you)', { name: app.profile.name });
+    if (nm) nm.textContent = tr('{name} (you)', { name: shownName(app.profile.name) });
   };
 }
 
@@ -154,7 +154,7 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
 function shareResult(app: App, btn: HTMLButtonElement, summary: MatchSummary, standings: { name: string; score: number; seat: number }[], me: number) {
   const place = sharedPlace(standings, standings.findIndex((s) => s.seat === me));
   const v = getProfile(app.lastConfig.variation)?.name ?? tr('Mahjong');
-  const text = [`JongClub · ${v} · ${tr(summary.lengthLabel)}`, summary.bestHand ? tr('I finished {place} of {total}, best hand {n} pts.', { place: ordinal(place), total: standings.length, n: fmt(summary.bestHand.points) }) : tr('I finished {place} of {total}.', { place: ordinal(place), total: standings.length }), ...standings.map((s, i) => `${placeLabel(standings, i)} ${s.seat === me ? app.profile.name : s.name} ${fmt(s.score)}`), tr('The Table Awaits.')].join('\n');
+  const text = [`JongClub · ${v} · ${tr(summary.lengthLabel)}`, summary.bestHand ? tr('I finished {place} of {total}, best hand {n} pts.', { place: ordinal(place), total: standings.length, n: fmt(summary.bestHand.points) }) : tr('I finished {place} of {total}.', { place: ordinal(place), total: standings.length }), ...standings.map((s, i) => `${placeLabel(standings, i)} ${s.seat === me ? shownName(app.profile.name) : s.name} ${fmt(s.score)}`), tr('The Table Awaits.')].join('\n');
   void copyWithNote(btn, text, btn.textContent || tr('Share'));
 }
 

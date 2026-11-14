@@ -1688,7 +1688,8 @@ export class TableRenderer {
 
   /** The hand strip in canvas px: from `top` down to `bottom`, the full width. Above the bottom bar. */
   private stripRect(W = this.container.clientWidth || window.innerWidth, H = this.container.clientHeight || window.innerHeight) {
-    const bottom = H - Math.min(72, Math.max(52, H * 0.085));
+    // At least 66px: the action row's call buttons (about 46px plus their margin) sit below the strip, not across its edge.
+    const bottom = H - Math.min(72, Math.max(66, H * 0.085));
     // Sets or flowers on your ledge make the strip taller (LEDGE_STRIP), so your hand tiles keep their size.
     const h = THREE.MathUtils.clamp(H * 0.26, 110, 240) * (this.ledgeIds.length > 0 ? LEDGE_STRIP : 1);
     return { top: Math.round(bottom - h), bottom: Math.round(bottom), w: W, h: Math.round(h) };

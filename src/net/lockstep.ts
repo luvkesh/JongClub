@@ -29,6 +29,16 @@ export interface LockstepLink {
   onReaction(fn: (seat: number, emoji: string) => void): void;
   /** A hand began (the host publishes scores so late spectators can join). */
   handStarted(hand: number, g: MahjongGame): void;
+  /** This tab referees the table (its leaving ends the game for everyone). */
+  readonly isHost: boolean;
+  /** Host: hand a seat to an AI after this long without its player's decision (ms; 0 = never). */
+  stallMs?: number;
+  /** Seats a returning player takes again from the start of `hand` (they had been handed to an AI). */
+  returning(hand: number): number[];
+  /** Resolves once the host has started `hand` (or the link closed), so every client agrees who sits where. */
+  handReady(hand: number): Promise<void>;
+  /** Whether `seat` is played by an AI at (hand, index), after the host handed it over. */
+  aiAt(seat: number, hand: number, index: number): boolean;
   close(): void;
 }
 
@@ -151,6 +161,10 @@ export interface PlayPresence {
   re?: { e: string; n: number };
   /** Host: the game is over here (finished or abandoned); nothing more will be published. */
   over?: 1;
+  /** Host: a player who left came back as peer `p`; they take seat `s` again from the start of hand `h`. */
+  back?: { s: number; h: number; p: string }[];
+  /** A player back at the table (page reloaded) who waits to be given their seat again. */
+  rejoin?: 1;
 }
 
 interface Entry {
@@ -176,6 +190,17 @@ function entriesOf(p: PlayPresence): Entry[] {
   return out;
 }
 
+/**
+ * Whether a seat is played by an AI at (hand, index): the host's latest takeover at or before that
+ * point stands, unless the player came back at the start of a later hand.
+ */
+export function isAiAt(takeovers: readonly { s: number; h: number; i: number }[], backs: readonly { s: number; h: number }[], seat: number, hand: number, index: number): boolean {
+  let take: { h: number; i: number } | null = null;
+  for (const t of takeovers) if (t.s === seat && (t.h < hand || (t.h === hand && t.i <= index)) && (!take || t.h > take.h || (t.h === take.h && t.i > take.i))) take = t;
+  if (!take) return false;
+  return !backs.some((b) => b.s === seat && b.h > take!.h && b.h <= hand);
+}
+
 /** Bytes of `play` presence we allow ourselves (who + table use the rest of the 4 KiB). */
 const PLAY_BUDGET = 2600;
 
@@ -183,27 +208,41 @@ const PLAY_BUDGET = 2600;
 export class RoomLink implements LockstepLink {
   private mine: PlayPresence = {};
   private mirror = new Map<string, string>();
-  private waiters: { seat: number; hand: number; index: number; resolve: (a: Action | 'ai') => void }[] = [];
+  private waiters: { seat: number; hand: number; index: number; since: number; resolve: (a: Action | 'ai') => void }[] = [];
+  /**
+   * Host: hand a seat to an AI when its player is still at the table but has not decided for this long
+   * (their tab froze or slept, so their own clock never ran out). 0 = never.
+   */
+  stallMs = 0;
   private reactFns: ((seat: number, emoji: string) => void)[] = [];
   private seenReact = new Map<string, number>();
   private takeovers: { s: number; h: number; i: number }[] = [];
+  private backs: { s: number; h: number; p: string }[] = [];
+  private readyWaiters: { hand: number; resolve: () => void }[] = [];
   private goneSince = new Map<number, number>();
   private unsub: () => void;
   private tick: number;
   private closed = false;
   private hostEnded = false;
   onHostLost?: () => void;
+  /** Guests: the host handed this tab's own seat to an AI (we were cut off too long). Fired once. */
+  onSeatLost?: () => void;
+  private seatLost = false;
+  /** Guests: the hand this client took its seat at (a takeover from then on means we lost it). */
+  seatSince = 0;
 
   /**
    * @param seatPeers the room peer label sitting in each seat (null for AI seats)
    * @param hostPeer the host's peer label
    * @param iAmHost this tab is the host
+   * @param seatPids each human seat's rejoin key (kept by the player's tab across a reload), so the host can seat them again
    */
   constructor(
     private room: NamedRoom,
     private seatPeers: (string | null)[],
     private hostPeer: string,
     private iAmHost: boolean,
+    private seatPids: (string | null)[] = [],
   ) {
     this.unsub = room.onPeers(() => this.check());
     // A slow heartbeat notices departures even when nothing else changes.
@@ -250,7 +289,7 @@ export class RoomLink implements LockstepLink {
 
   next(seat: number, hand: number, index: number): Promise<Action | 'ai'> {
     return new Promise((resolve) => {
-      this.waiters.push({ seat, hand, index, resolve });
+      this.waiters.push({ seat, hand, index, since: Date.now(), resolve });
       this.check();
     });
   }
@@ -302,16 +341,101 @@ export class RoomLink implements LockstepLink {
     window.clearInterval(this.tick);
     for (const w of this.waiters) w.resolve('ai');
     this.waiters = [];
+    for (const r of this.readyWaiters) r.resolve();
+    this.readyWaiters = [];
     if (!this.iAmHost) void this.room.presence({ play: null }).catch(() => {});
+  }
+
+  get isHost() {
+    return this.iAmHost;
   }
 
   get isClosed() {
     return this.closed;
   }
 
-  private peerOf(seat: number): RoomPeer | undefined {
-    const label = this.seatPeers[seat];
+  returning(hand: number) {
+    this.readHost();
+    return [...new Set(this.backs.filter((b) => b.h === hand).map((b) => b.s))];
+  }
+
+  handReady(hand: number): Promise<void> {
+    if (this.iAmHost || this.closed) return Promise.resolve();
+    return new Promise((resolve) => {
+      this.readyWaiters.push({ hand, resolve });
+      this.check();
+    });
+  }
+
+  aiAt(seat: number, hand: number, index: number) {
+    this.readHost();
+    return isAiAt(this.takeovers, this.backs, seat, hand, index);
+  }
+
+  /** The peer label playing `seat` at `hand` (a returning player's new label from their hand on). */
+  private labelOf(seat: number, hand = Infinity): string | null {
+    let best: { h: number; p: string } | null = null;
+    for (const b of this.backs) if (b.s === seat && b.h <= hand && (!best || b.h >= best.h)) best = b;
+    return best ? best.p : this.seatPeers[seat];
+  }
+
+  private peerOf(seat: number, hand = Infinity): RoomPeer | undefined {
+    const label = this.labelOf(seat, hand);
     return label ? this.room.peers().find((p) => p.peer === label) : undefined;
+  }
+
+  /**
+   * The seat's player is back at the table after a reload and waiting to sit down again (they can't
+   * decide now, so the seat goes to an AI at once). A flag left over from a return already granted doesn't count.
+   */
+  private rejoining(seat: number, hand: number) {
+    const p = this.peerOf(seat, hand);
+    if (!(p?.presence?.play as PlayPresence | undefined)?.rejoin) return false;
+    return !this.backs.some((b) => b.s === seat && b.p === p!.peer && b.h <= hand);
+  }
+
+  /** Guests follow the host's takeovers and returns. */
+  private readHost() {
+    if (this.iAmHost) return;
+    const host = this.room.peers().find((p) => p.peer === this.hostPeer);
+    const hostPlay = (host?.presence?.play ?? {}) as PlayPresence;
+    if (Array.isArray(hostPlay.to)) this.takeovers = hostPlay.to.filter((t) => t && typeof t.s === 'number');
+    if (Array.isArray(hostPlay.back)) this.backs = hostPlay.back.filter((b) => b && typeof b.s === 'number' && typeof b.h === 'number' && typeof b.p === 'string');
+  }
+
+  /**
+   * Host: a player who left (their tab reloaded or reopened the invite) is back under a new
+   * peer label with the same rejoin key: give them their seat again from the next hand.
+   */
+  private seatReturners(peers: readonly RoomPeer[]) {
+    if (!this.iAmHost) return;
+    const next = (this.mine.h ?? -1) + 1;
+    let changed = false;
+    this.seatPids.forEach((pid, s) => {
+      if (!pid) return;
+      const cur = this.labelOf(s);
+      const here = peers.find((p) => p.peer === cur);
+      // Played by an AI since the player was last seated.
+      const lost = isAiAt(this.takeovers, this.backs, s, Infinity, Infinity);
+      let back: RoomPeer | undefined;
+      if (here) {
+        // The same tab, back after its connection dropped for too long.
+        if (!lost || here.isMe || here.presence?.role !== 'player') return;
+        back = here;
+      } else {
+        // The player's page reloaded (a new label, the same rejoin key).
+        const taken = new Set([...this.seatPeers, ...this.backs.map((b) => b.p)]);
+        back = peers.find((p) => !p.isMe && p.presence?.pid === pid && p.presence?.role === 'player' && !taken.has(p.peer));
+      }
+      if (!back) return;
+      this.backs = this.backs.filter((b) => !(b.s === s && b.h >= next));
+      this.backs.push({ s, h: next, p: back.peer });
+      changed = true;
+    });
+    if (changed) {
+      this.mine.back = this.backs.slice(-8);
+      this.push();
+    }
   }
 
   private check() {
@@ -320,10 +444,27 @@ export class RoomLink implements LockstepLink {
     const host = peers.find((p) => p.peer === this.hostPeer);
     const hostPlay = (host?.presence?.play ?? {}) as PlayPresence;
     if (hostPlay.over) this.hostEnded = true;
-    if (!this.iAmHost && Array.isArray(hostPlay.to)) this.takeovers = hostPlay.to.filter((t) => t && typeof t.s === 'number');
+    this.readHost();
+    this.seatReturners(peers);
+    if (!this.iAmHost && !this.seatLost && this.onSeatLost) {
+      const me = peers.find((p) => p.isMe && p.sameTab)?.peer;
+      const seat = this.seatPeers.findIndex((_, s) => !!me && this.labelOf(s) === me);
+      if (seat >= 0 && this.takeovers.some((t) => t.s === seat && t.h >= this.seatSince)) {
+        this.seatLost = true;
+        this.onSeatLost();
+        return;
+      }
+    }
+    for (const r of [...this.readyWaiters]) {
+      if (this.iAmHost || hostPlay.over || (typeof hostPlay.h === 'number' && hostPlay.h >= r.hand)) {
+        this.readyWaiters = this.readyWaiters.filter((x) => x !== r);
+        r.resolve();
+      }
+    }
 
     // Reactions.
-    this.seatPeers.forEach((label, seat) => {
+    this.seatPeers.forEach((_, seat) => {
+      const label = this.labelOf(seat);
       if (!label) return;
       const p = peers.find((x) => x.peer === label);
       const re = (p?.presence?.play as PlayPresence | undefined)?.re;
@@ -338,14 +479,13 @@ export class RoomLink implements LockstepLink {
 
     for (const w of [...this.waiters]) {
       // Handed to an AI at or before this point?
-      const to = this.takeovers.find((t) => t.s === w.seat && (t.h < w.hand || (t.h === w.hand && t.i <= w.index)));
-      if (to) {
+      if (isAiAt(this.takeovers, this.backs, w.seat, w.hand, w.index)) {
         this.resolve(w, 'ai');
         continue;
       }
       // The host reads each player's own presence; everyone else reads only
       // what the host has applied (its mirror), so all clients agree.
-      const sources = [this.iAmHost ? this.peerOf(w.seat) : host].filter(Boolean) as RoomPeer[];
+      const sources = [this.iAmHost ? this.peerOf(w.seat, w.hand) : host].filter(Boolean) as RoomPeer[];
       let found: Action | null = null;
       for (const src of sources) {
         const play = (src.presence?.play ?? {}) as PlayPresence;
@@ -363,11 +503,16 @@ export class RoomLink implements LockstepLink {
         this.resolve(w, found);
         continue;
       }
-      // Hosts hand a departed player's seat to an AI after a short grace period.
-      if (this.iAmHost && !this.peerOf(w.seat)) {
+      // Hosts hand a departed (or long-stalled) player's seat to an AI after a short grace period.
+      if (this.iAmHost && this.stallMs > 0 && Date.now() - w.since > this.stallMs) {
+        this.takeovers.push({ s: w.seat, h: w.hand, i: w.index });
+        this.mine.to = this.takeovers;
+        this.push();
+        this.resolve(w, 'ai');
+      } else if (this.iAmHost && (this.rejoining(w.seat, w.hand) || !this.peerOf(w.seat, w.hand))) {
         const since = this.goneSince.get(w.seat) ?? Date.now();
         this.goneSince.set(w.seat, since);
-        if (Date.now() - since > 6000) {
+        if (Date.now() - since > 6000 || this.rejoining(w.seat, w.hand)) {
           this.takeovers.push({ s: w.seat, h: w.hand, i: w.index });
           this.mine.to = this.takeovers;
           this.push();
