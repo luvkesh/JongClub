@@ -143,13 +143,18 @@ describe('RoomLink lockstep', () => {
     expect(await onG2).toBe('ai');
   });
 
-  it('tells guests the host left only while they still need the host', async () => {
+  it('tells watchers the host left when no player is left to take over hosting', async () => {
     vi.useFakeTimers();
-    const { hub, g1 } = table();
+    const hub = new FakeHub();
+    const seats = ['h', null, null, null];
+    const host = new RoomLink(hub.join('h'), seats, 'h', true);
+    const w = new RoomLink(hub.join('w'), seats, 'h', false);
+    links.push(host, w);
+    for (const l of [host, w]) l.handStarted(0, fakeGame);
     let lost = 0;
-    g1.onHostLost = () => lost++;
+    w.onHostLost = () => lost++;
     hub.leave('h');
-    void g1.next(0, 0, 3);
+    void w.next(0, 0, 3);
     await vi.advanceTimersByTimeAsync(9500);
     expect(lost).toBe(1);
   });
@@ -172,7 +177,7 @@ describe('RoomLink lockstep', () => {
     expect(host.aiAt(1, 0, 5)).toBe(true);
     // They come back under a new label with the same rejoin key.
     const back = hub.join('g1b');
-    await back.presence({ role: 'player', pid: 'pidg1' });
+    await back.presence({ role: 'player', pid: 'pidg1', play: { rejoin: 1, seat: 1, at: 1 } });
     await vi.advanceTimersByTimeAsync(1100);
     expect(host.returning(1)).toEqual([1]);
     expect(g2.returning(1)).toEqual([1]);
@@ -208,9 +213,15 @@ describe('RoomLink lockstep', () => {
     const g1 = new RoomLink(r, seats, 'h', false, pids);
     links.push(g1);
     let lost = 0;
-    g1.onSeatLost = () => lost++;
+    let why = '';
+    g1.onSeatLost = (w) => (lost++, (why = w));
     await vi.advanceTimersByTimeAsync(1100);
     expect(lost).toBe(1);
+    expect(why).toBe('ai');
+    // The page steps out and asks for the seat (Take my seat back).
+    g1.close();
+    await r.presence({ play: { rejoin: 1, seat: 1, at: 2 } });
+    await vi.advanceTimersByTimeAsync(1100);
     expect(host.returning(1)).toEqual([1]);
     await vi.advanceTimersByTimeAsync(3000);
     expect(lost).toBe(1);
@@ -240,7 +251,7 @@ describe('RoomLink lockstep', () => {
     links.push(host);
     host.handStarted(0, fakeGame);
     const g1room = hub.join('g1');
-    await g1room.presence({ role: 'player', pid: 'pidg1', play: { rejoin: 1 } });
+    await g1room.presence({ role: 'player', pid: 'pidg1', play: { rejoin: 1, seat: 1, at: 1 } });
     const onHost = host.next(1, 0, 2);
     await vi.advanceTimersByTimeAsync(1100);
     expect(await onHost).toBe('ai');

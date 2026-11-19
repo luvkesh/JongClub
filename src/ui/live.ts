@@ -286,10 +286,12 @@ export function waitingRoom(host: LiveHost, s: TableSession) {
 
 /** Start the match for everyone at the table: your seat is local, other people are remote. */
 function beginLive(host: LiveHost, s: TableSession, back?: { seat: number; hand: number }, late = false) {
-  // Arriving at a game under way: back at your own seat after a reload, or watching.
+  // Arriving at a game under way: back at your own seat (after a reload, from a new tab or another device), or watching.
+  let note = '';
   if (!back && late) {
     const seat = s.returnSeat();
     if (seat >= 0) return rejoinSeat(host, s, seat);
+    if (s.hostIsMe()) note = tr('You are already at this table in another tab, which hosts the game. This tab watches.');
   }
   const t = s.table()!;
   const start = t.start!;
@@ -308,14 +310,25 @@ function beginLive(host: LiveHost, s: TableSession, back?: { seat: number; hand:
     host.onSessionEnd();
     hostLeftNotice(host);
   };
+  // The host left mid-game and this page now runs the table.
+  link.onPromoted = () => flashNote(tr('The host left. You host this table now, so keep this page open.'));
   const mine = seats.findIndex((x) => x.kind === 'local');
-  // Cut off long enough that the host gave your seat to an AI: your table has gone its own way,
-  // so step out and take the seat again at the next hand, in step with everyone.
+  // Hosting moved to another player while this page was cut off: sit down again as a player.
+  link.onDeposed = () => {
+    host.suspendMatch();
+    s.stepDown();
+    if (mine >= 0) rejoinSeat(host, s, mine);
+    else beginLive(host, s, { seat: -1, hand: s.hostSnapshot()?.h ?? 0 });
+  };
+  // Cut off (or away) long enough that the host gave your seat to an AI: your table has gone its own way,
+  // so step out and take the seat again at the next hand, in step with everyone. Taken from another tab
+  // or device of yours: this tab watches.
   if (back) link.seatSince = back.hand;
   if (mine >= 0)
-    link.onSeatLost = () => {
+    link.onSeatLost = (why) => {
       host.suspendMatch();
-      rejoinSeat(host, s, mine);
+      if (why === 'moved') watchInstead(host, s);
+      else rejoinSeat(host, s, mine, true);
     };
   const seated = mine >= 0;
   const opts: MatchOptions = { seed: start.seed, seats, link, mode: t.ranked ? 'ranked' : 'multiplayer', ranked: t.ranked && seated };
@@ -329,17 +342,46 @@ function beginLive(host: LiveHost, s: TableSession, back?: { seat: number; hand:
   host.liveStarted(s);
   host.startMatch(t.cfg, opts);
   watcherBadge(s);
+  if (note) movedNotice(host, note);
+}
+
+/** This tab's seat went to the same player's newer tab or device: watch the game here instead. */
+function watchInstead(host: LiveHost, s: TableSession) {
+  s.watchHere();
+  const snap = s.hostSnapshot();
+  beginLive(host, s, { seat: -1, hand: snap?.h ?? 0 });
+  movedNotice(host, tr('You opened this table in another tab or on another device, so your seat is played there now. This tab watches.'));
+}
+
+/** Why this tab watches instead of playing. */
+function movedNotice(host: LiveHost, text: string) {
+  const o = host.modal;
+  clear(o).hidden = false;
+  const ok = h('button', { class: 'btn primary', onclick: () => (o.hidden = true) }, tr('Watch here'));
+  o.append(
+    h(
+      'div',
+      { class: 'card waiting-room', role: 'alertdialog', 'aria-labelledby': 'moved-title' },
+      h('h3', { id: 'moved-title' }, tr('Playing in another tab')),
+      h('p', { class: 'muted' }, text),
+      h('div', { class: 'btn-row' }, h('button', { class: 'btn ghost', onclick: () => ((o.hidden = true), host.onSessionEnd()) }, tr('Leave')), ok),
+    ),
+  );
+  ok.focus({ preventScroll: true });
 }
 
 /**
- * Back at a table whose game went on without you (the page reloaded, or the invite was opened
- * again in the same tab): an AI kept your seat warm, and the host gives it back at the next hand.
+ * Back at a table whose game went on without you (the page reloaded, or you opened the table again
+ * in a new tab or on another device): an AI keeps your seat warm, and the host gives it back at the
+ * next hand. `ask`: the seat went to an AI while this page was open (cut off, or away too long), so
+ * the player says when they want it back.
  */
-function rejoinSeat(host: LiveHost, s: TableSession, seat: number) {
+function rejoinSeat(host: LiveHost, s: TableSession, seat: number, ask = false) {
   const o = host.modal;
   clear(o).hidden = false;
   let done = false;
   let hostGoneSince = 0;
+  let asked = !ask;
   const stop = () => {
     done = true;
     off();
@@ -352,23 +394,33 @@ function rejoinSeat(host: LiveHost, s: TableSession, seat: number) {
     void s.leave();
     host.onSessionEnd();
   };
+  const text = h('p', { class: 'muted' }, ask ? tr('An AI player took over your seat while you were away or cut off. Take it back when the next hand starts?') : tr('An AI player kept your seat while you were away. You take it again when the next hand starts.'));
+  const takeBack = h('button', { class: 'btn primary', onclick: () => claim() }, tr('Take my seat back'));
+  const claim = () => {
+    asked = true;
+    takeBack.remove();
+    text.textContent = tr('An AI player kept your seat while you were away. You take it again when the next hand starts.');
+    s.markRejoining(seat);
+    check();
+  };
   o.append(
     h(
       'div',
       { class: 'card waiting-room', role: 'dialog', 'aria-labelledby': 'rejoin-title' },
       h('p', { class: 'eyebrow' }, tr('Table {code}', { code: s.code.toUpperCase() })),
       h('h3', { id: 'rejoin-title' }, tr('Welcome back')),
-      h('p', { class: 'muted' }, tr('An AI player kept your seat while you were away. You take it again when the next hand starts.')),
-      h('div', { class: 'btn-row' }, h('button', { class: 'btn ghost', onclick: leave }, tr('Leave'))),
+      text,
+      h('div', { class: 'btn-row' }, h('button', { class: 'btn ghost', onclick: leave }, tr('Leave')), ask ? takeBack : ''),
     ),
   );
-  s.markRejoining();
+  if (!ask) s.markRejoining(seat);
   const check = () => {
     if (done) return;
     const snap = s.hostSnapshot();
     if (!s.hostPresent() || s.hostOver()) {
       hostGoneSince ||= Date.now();
-      if (Date.now() - hostGoneSince > 10000) {
+      // Hosting may be moving to another player (lockstep.ts promote): give it time.
+      if (Date.now() - hostGoneSince > (s.hostPresent() ? 5000 : 25000)) {
         // A host still at the table whose game is over finished it; one who is gone left it.
         const finished = s.hostPresent();
         stop();
@@ -379,6 +431,14 @@ function rejoinSeat(host: LiveHost, s: TableSession, seat: number) {
       return;
     }
     hostGoneSince = 0;
+    if (!asked) return;
+    // Taken by a newer tab or device of the same player: watch here.
+    if (s.seatMovedOn(seat)) {
+      stop();
+      o.hidden = true;
+      watchInstead(host, s);
+      return;
+    }
     const hand = s.rejoinHand(seat);
     if (hand === null || !snap || snap.h < hand) return;
     stop();
