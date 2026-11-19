@@ -11,6 +11,7 @@ import type { JokerSwap } from '../engine/game';
 import { distance as cardDistance } from '../engine/rules/american';
 import type { Tile } from '../engine/tiles';
 import { americanPlan, bestSwap, charlestonPick, missingAfterCall } from './american';
+import { inSpecialSuit } from '../engine/rules/specialSuit';
 import { currentShanten, dominantSuit, exchangePick, evaluateDiscards, handWilds, isValueHonor, openHandHasYakuPath, shantenAfterBuy, shantenAfterCall, shantenWith } from './evaluate';
 import { CLEAN_BIAS, offCleanSuit, openValuePath, planClaim, planDiscard, riichiAdvice, tileForKind, type ClaimStyle, type PlanOptions } from './strategy';
 import { tr } from '../i18n';
@@ -330,6 +331,8 @@ export class AiPlayer {
       let gain = before - after;
       const value = o.type !== 'chow' && (isDragon(discardKind) || isValueHonor(game, this.seat, discardKind));
       if (value) gain += 0.6;
+      // Special suit house rule (Classic): its pungs score 1 faan each.
+      if (o.type !== 'chow' && inSpecialSuit(game.profile.houseChoices, discardKind)) gain += 0.4;
       if (o.type === 'chow') gain -= 0.3;
       gain += this.style.callEagerness * 0.5;
       if (this.style.flushBias && o.type === 'chow' && suitOf(discardKind) !== dominantSuit(game, this.seat)) gain -= 1;

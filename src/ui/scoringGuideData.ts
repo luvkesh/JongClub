@@ -5,6 +5,7 @@
 // house rules (seven pairs, mixed hands, Lì Gǔ Lì Gǔ, minimums, caps) are
 // read from the profile, so the guide always matches the game being played.
 
+import { SPECIAL_SUIT_NAMES, specialSuitOf } from '../engine/rules/specialSuit';
 import { MIXED_FAAN, MIXED_NAMES, MIXED_TAI, type MixedValues } from '../engine/rules/mixed';
 import { LI_GU_NAME } from '../engine/rules/taiwanese';
 import { BIG_CARD, SMALL_CARD } from '../engine/rules/special';
@@ -182,6 +183,14 @@ function classicGuide(p: RuleProfile, unit: string): Guide {
     { title: tr('Honours'), lines: honourLines(1, 1, 1, hk ? 5 : 3, 6) },
   ];
   if (mixed) sections.push(mixedSection(MIXED_FAAN, p.shapes.sevenPairs));
+  const special = family(p) === 'classic' ? specialSuitOf(p.houseChoices) : null;
+  if (special) {
+    const suit = tr(SPECIAL_SUIT_NAMES[special]);
+    sections.push({
+      title: tr('Special suit: {suit}', { suit }),
+      lines: [L('Special suit pung', 1, tr('Each pung or kong of {suit}', { suit })), L('Special suit hand', 1, tr('Mixed or Pure One Suit made in {suit}, on top of its own faan', { suit }))],
+    });
+  }
   if (p.shapes.special?.some((x) => x.name === 'Mixed sets')) sections.push(mixedSetsSection());
   if (p.windRounds) sections.push(roundsSection());
   if (flowers)

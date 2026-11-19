@@ -13,6 +13,7 @@ import type { HandScore } from '../engine/rules/types';
 import type { ClaimOption, ClaimResponse } from '../engine/state';
 import { KIND_COUNT, WINDS, flowerNumber, isAnimal, isDragon, isFlower, isHonor, isRed, windKind, type Tile } from '../engine/tiles';
 import { dangerMap, mainThreat, ordinaryPoints, type DangerMap, type OpponentRead, type ReadDepth } from './danger';
+import { inSpecialSuit } from '../engine/rules/specialSuit';
 import { callMeld, cardUses, currentShanten, dominantSuit, evaluateDiscards, handWilds, isValueHonor, openHandHasYakuPath, shantenAfterBuy, shantenAfterCall, shantenWith, unseenCounts, voidSuit, type DiscardEval } from './evaluate';
 
 export interface PlanOptions {
@@ -653,6 +654,8 @@ export function planClaim(game: MahjongGame, seat: number, options: ClaimOption[
       if ((s === 'man' ? 0 : s === 'pin' ? 1 : 2) !== Math.floor(kind / 9)) gain -= 1;
     }
     if (isDragon(kind) && o.type !== 'chow') gain += 0.1;
+    // Special suit house rule (Classic): its pungs score 1 faan each.
+    if (o.type !== 'chow' && inSpecialSuit(game.profile.houseChoices, kind)) gain += 0.4;
     gain += style.eagerness * 0.5;
     if (!best || gain > best.gain) best = { o, gain, after, value };
   }
