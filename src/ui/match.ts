@@ -139,6 +139,14 @@ const AI_PAUSE_MIN = 800;
 const AI_PAUSE_MAX = 1250;
 /** Live tables: seconds the hand summary waits before moving on by itself. */
 const LIVE_SUMMARY_S = 25;
+/**
+ * Untimed live tables: a player who hasn't moved for this long seems to be away, and their move is
+ * made for them (as when a clock runs out); after that they get AWAY_STEP_S per move until they make
+ * one themselves. The last AWAY_WARN_S show a countdown. Nobody can stall a table forever.
+ */
+export const AWAY_S = 180;
+export const AWAY_STEP_S = 15;
+export const AWAY_WARN_S = 60;
 
 export type SeatKind = 'local' | 'ai' | 'remote';
 
@@ -1314,7 +1322,17 @@ export class MatchController {
         h('h3', {}, tr('Leave the table?')),
         h('p', {}, this.opts.ranked ? tr('Leaving a ranked game counts as finishing 4th.') : this.opts.tag === 'tournament' ? tr('Leaving counts as finishing last at this table.') : tr('This game will not be saved to your profile.')),
         // Live tables: say what leaving does to everyone else.
-        this.opts.link && !this.spectator ? h('p', { class: 'muted' }, this.opts.link.isHost ? tr('You are the host: leaving ends this game for everyone at the table.') : tr('An AI player takes over your seat and the others play on.')) : null,
+        this.opts.link && !this.spectator
+          ? h(
+              'p',
+              { class: 'muted' },
+              this.opts.link.isHost
+                ? this.opts.link.canHandOver?.()
+                  ? tr('You are the host: another player takes over hosting, an AI plays your seat and the others play on.')
+                  : tr('You are the host: leaving ends this game for everyone at the table.')
+                : tr('An AI player takes over your seat and the others play on.'),
+            )
+          : null,
         h(
           'div',
           { class: 'btn-row' },
@@ -2371,6 +2389,8 @@ export class MatchController {
     // A live player whose tab froze never runs out their own clock: well past their longest clock (with a
     // wide margin for a slow device still catching up), the host hands the seat to an AI. Untimed tables wait.
     if (this.opts.link && this.limits.turn > 0) this.opts.link.stallMs = Math.max(120, firstTurnLimit(this.limits.turn) * 2 + 60) * 1000;
+    // Untimed: each page makes an away player's moves itself (waitHuman); the host's stall only catches a frozen page.
+    else if (this.opts.link) this.opts.link.stallMs = (AWAY_S + 90) * 1000;
     while (!this.aborted) {
       const link = this.opts.link;
       if (link) {
@@ -2530,7 +2550,13 @@ export class MatchController {
   private async remote<T extends Action>(seat: number, index = this.handLog.length): Promise<T | null> {
     const link = this.opts.link;
     if (!link) return null;
+    // Untimed tables: say when someone seems away and when their move will be made for them.
+    const hint =
+      this.limits.turn > 0
+        ? 0
+        : window.setTimeout(() => this.toast(tr('WAITING'), tr('{name} seems to be away. Their move is made for them in {n}s.', { name: this.game.players[seat].name, n: AWAY_WARN_S })), (AWAY_S - AWAY_WARN_S) * 1000);
     const got = await link.next(seat, this.handNo, index);
+    window.clearTimeout(hint);
     if (this.aborted) return null;
     if (got === 'ai') {
       this.seats[seat].kind = 'ai';
@@ -2662,13 +2688,20 @@ export class MatchController {
    * live tables never pause (everyone else is waiting too).
    */
   private waitHuman<T>(setup: (done: (v: T) => void) => void, onTimeout: () => T, limit = 0, kind: 'claim' | 'turn' = 'turn', timeoutNote?: string): Promise<T> {
+    // Untimed live table: a long wait means the player is away (AWAY_S).
+    const idle = limit <= 0 && !!this.opts.link && !this.spectator;
+    if (idle) limit = this.away ? AWAY_STEP_S : AWAY_S;
     return new Promise<T>((resolve) => {
       let finished = false;
+      let timedOut = false;
+      let warned = false;
       let cd: Countdown | null = null;
       const ring = this.els.timer;
       const done = (v: T) => {
         if (finished) return;
         finished = true;
+        // A move of their own: they're back.
+        if (idle && !timedOut) this.away = false;
         this.waitSpentMs = cd?.spentMs ?? 0;
         window.clearInterval(this.timerHandle);
         window.cancelAnimationFrame(this.timerFrame);
@@ -2682,7 +2715,7 @@ export class MatchController {
       if (!this.catchingUp()) haptic(kind);
       if (limit > 0 && !this.catchingUp()) {
         cd = new Countdown(limit * 1000, performance.now());
-        ring.hidden = false;
+        ring.hidden = idle && limit > AWAY_WARN_S;
         ring.dataset.kind = kind;
         const n = Math.ceil(limit);
         ring.setAttribute('aria-label', kind === 'claim' ? tr('Time to claim: {n} seconds', { n }) : tr('Time for your turn: {n} seconds', { n }));
@@ -2697,11 +2730,20 @@ export class MatchController {
             shown = st.left;
             num.textContent = String(st.left);
             ring.classList.toggle('low', st.low);
+            if (idle && st.left <= AWAY_WARN_S) {
+              ring.hidden = false;
+              if (!warned && !this.away) this.toast(tr('STILL THERE?'), tr('Everyone is waiting for you. Your move is made for you in {n}s.', { n: st.left }));
+              warned = true;
+            }
           }
           if (st.tick) sound.play('click');
           if (st.done) {
+            timedOut = true;
             const v = onTimeout();
-            this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
+            if (idle) {
+              this.away = true;
+              this.toast(tr('AWAY'), tr('Your moves are made for you while you are away. Make a move yourself to play on.'));
+            } else this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
             // "I discarded for you" only when a tile was discarded (not for a draw, a Charleston pass or an exchange).
             if (kind === 'claim') this.speak({ parts: [{ line: LINES.timeClaim }], text: LINES.timeClaim });
             else if (!timeoutNote) this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
@@ -2717,6 +2759,8 @@ export class MatchController {
   }
 
   private timerFrame = 0;
+  /** Untimed live table: this player let a move go by (AWAY_S); their moves are made quickly for them until they move. */
+  private away = false;
   /** How long the last timed wait ran (pauses excluded); the draw's share comes off the discard's clock. */
   private waitSpentMs = 0;
   /** Your turn's time already used on drawing, in seconds. */
@@ -3887,7 +3931,7 @@ export class MatchController {
       placement,
       mode: this.opts.mode ?? 'ai',
     };
-    this.opts.link?.close();
+    this.opts.link?.close(true);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
     this.releaseStage();
