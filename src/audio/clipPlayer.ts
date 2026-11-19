@@ -43,8 +43,8 @@ function wire() {
     const c = sound.context;
     if (c && c.state !== 'running') void c.resume().catch(() => {});
   };
-  window.addEventListener('pointerdown', resume, true);
-  window.addEventListener('keydown', resume, true);
+  // iOS Safari resumes audio only from touchend or click, not from a touch's pointerdown.
+  for (const t of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(t, resume, true);
   // iOS 17+: let voices play even with the ring/silent switch on, like <audio> does.
   const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
   if (session) {

@@ -1,4 +1,4 @@
-.cs-sheet { width: min(980px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; box-sizing: border-box; }
+.cs-sheet { width: min(980px, 100%); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; box-sizing: border-box; }
 .cs-grid { columns: 2 300px; column-gap: 18px; margin: 12px 0; }
 .cs-sec { break-inside: avoid; margin: 0 0 14px; border: 1px solid var(--line-strong, rgba(232, 203, 146, 0.25)); border-radius: var(--r-sm, 6px); overflow: hidden; }
 .cs-title { display: grid; grid-template-columns: 44px 1fr; margin: 0; padding: 6px 8px; font: 500 11px var(--ui, sans-serif); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi, #e8cb92); background: rgba(232, 203, 146, 0.08); }
