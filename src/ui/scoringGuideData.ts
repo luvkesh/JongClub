@@ -61,11 +61,11 @@ function mixedSetsSection(): GuideSection {
   return {
     title: tr('Mixed sets and knits'),
     lines: [
-      L('Mixed pung', 1, tr('Crochet: the same number once in each suit, like 5 Characters, 5 Dots, 5 Bamboo. Concealed, each one')),
-      L('Mixed chow', 0, tr('Three numbers in a row, one in each suit, like 3 Characters, 4 Dots, 5 Bamboo. Concealed; counts as a set')),
+      L('Mixed pung', 1, tr('Crochet: the same number once in each suit, like 5 Characters, 5 Dots, 5 Bamboo. Never claimed, but the winning tile may finish one')),
+      L('Mixed chow', 0, tr('Three numbers in a row, one in each suit, like 3 Characters, 4 Dots, 5 Bamboo. Never claimed, but the winning tile may finish one; counts as a set')),
       L('Knit pair', 0, tr('The same number in two suits, used as the pair')),
       L('Crochet', 6, tr('Four mixed pungs and a knit')),
-      L('Knitting', 4, tr('Seven knits from two suits, nothing claimed')),
+      L('Knitting', 4, tr('Seven knits from two suits; only the winning tile may be claimed')),
     ],
   };
 }
@@ -87,7 +87,7 @@ function specialRoundGuide(p: RuleProfile, unit: string): Guide {
   const id = p.specialRound as SpecialRoundId;
   const extras: GuideSection = {
     title: tr('How you won'),
-    lines: [L('Self-drawn', 1, tr('You drew the winning tile yourself')), ...(id === 'passport' ? [L('Concealed hand', 1, tr('You claimed nothing all hand'))] : []), ...(p.flowers ? [L('Seat flower', 1, tr('The flower or season numbered for your seat (East 1, South 2, West 3, North 4)')), L('All four plants', 2, tr('All four flowers of one set'))] : [])],
+    lines: [L('Self-drawn', 1, tr('You drew the winning tile yourself')), ...(id === 'passport' ? [L('Concealed hand', 1, tr('No sets claimed; the winning tile may be a discard'))] : []), ...(p.flowers ? [L('Seat flower', 1, tr('The flower or season numbered for your seat (East 1, South 2, West 3, North 4)')), L('All four plants', 2, tr('All four flowers of one set'))] : [])],
   };
   const nine = p.houseChoices?.passportNine ?? 'straight';
   const nineHow = nine === 'knitted' ? tr('1-4-7, 2-5-8 and 3-6-9, each in a different suit') : nine === 'orphans' ? tr('Nine different ones, nines, winds and dragons') : tr('1 to 9 of one suit');
@@ -109,6 +109,7 @@ function specialRoundGuide(p: RuleProfile, unit: string): Guide {
   } else if (id === 'smallCard' || id === 'bigCard') {
     // The club's cards (the Mahjong Calling rulebook): each card names its hand and its own calling rules.
     win.push(tr('Each card names one hand and its own calling rules: some take no discard at all, not even to win.'));
+    if (id === 'smallCard') win.push(tr('Concealed on a card means no set claimed. You may still win on a discard, unless the card says not.'));
     if (id === 'smallCard') sections.push({ title: tr('The Small Cards'), closed: true, lines: SMALL_CARDS.map((c) => L(`${c.n}. ${c.name}`, typeof c.value === 'string' ? CARD_FAAN[c.value] : '', c.how)) });
     else if (p.big) sections.push({ title: tr('This hand’s Big Card'), lines: [L(p.big.name, `${CARD_FAAN.limit} / ${CARD_FAAN.double}`, p.big.how), L(tr('Jokers'), '', p.big.jokersText), L(tr('Concealed hand'), CARD_FAAN.double, tr('Nothing claimed: the last tile may be a discard'))] });
     else sections.push({ title: tr('The Big Cards'), closed: true, lines: BIG_CARDS.map((c) => L(`${c.n}. ${c.name}`, `${CARD_FAAN.limit} / ${CARD_FAAN.double}`, c.how)) });
@@ -139,10 +140,11 @@ function winLines(p: RuleProfile, unit: string): string[] {
     else if (sp.name === 'Lesser Honours and Knitted Tiles') special.push(tr('honours and knitted tiles'));
     else if (sp.name === 'Knitting') special.push(tr('knitting (seven knits)'));
   }
-  if (special.length) out.push(tr('Special hands that also win, fully concealed: {list}.', { list: [...new Set(special)].join(' · ') }));
+  if (special.length) out.push(tr('Special hands that also win with no sets claimed (the winning tile may be a discard): {list}.', { list: [...new Set(special)].join(' · ') }));
   else out.push(tr('No special shapes here: every win is sets and a pair.'));
   if (p.missingSuit) out.push(tr('Your winning hand must be missing one suit entirely.'));
   if (p.yakuRequired) out.push(tr('You also need at least one yaku (a scoring pattern). Riichi, a concealed self-draw or all simples are the easiest.'));
+  if (p.yakuRequired) out.push(tr('Closed means no sets claimed. A closed hand may still win on a discard (ron).'));
   if (p.wilds) out.push(tr('Jokers can stand in for tiles in sets. A hand won without any scores a bonus.'));
   if (p.yakuRequired || family(p) === 'mcr') {
     // The yaku line (Riichi) or the payment line (MCR's 8 fan) says what a win needs.
@@ -166,14 +168,14 @@ function classicGuide(p: RuleProfile, unit: string): Guide {
   const sections: GuideSection[] = [
     {
       title: tr('How you won'),
-      lines: [L('Self-drawn', 1, tr('You drew the winning tile yourself')), L('Concealed hand', 1, tr('You claimed nothing all hand')), L('Win after Kong', 1, tr('Won on the replacement tile after a kong')), L('Robbing the Kong', 1, tr('Won on a tile another player added to a pung')), L('Last tile', 1, tr('Won on the very last tile'))],
+      lines: [L('Self-drawn', 1, tr('You drew the winning tile yourself')), L('Concealed hand', 1, tr('No sets claimed; the winning tile may be a discard')), L('Win after Kong', 1, tr('Won on the replacement tile after a kong')), L('Robbing the Kong', 1, tr('Won on a tile another player added to a pung')), L('Last tile', 1, tr('Won on the very last tile'))],
     },
     {
       title: tr('Hand shape'),
       lines: [
         L('All Chows', 1, tr('Every set is a chow, and the pair is not a dragon or a lucky wind')),
         L('All Pungs', 3, tr('Every set is a pung or kong')),
-        ...(p.shapes.sevenPairs ? [L('Seven Pairs', 4, tr('Seven different pairs, nothing claimed'))] : []),
+        ...(p.shapes.sevenPairs ? [L('Seven Pairs', 4, tr('Seven different pairs; only the winning tile may be claimed'))] : []),
         L(hk ? 'Half Flush' : 'Mixed One Suit', 3, tr('One suit plus honours')),
         L(hk ? 'Full Flush' : 'Pure One Suit', 7, tr('One suit only, no honours')),
         ...(hk ? [L('Mixed Terminals', 1, tr('Only ones, nines and honours'))] : []),
@@ -199,8 +201,8 @@ function classicGuide(p: RuleProfile, unit: string): Guide {
       L('All Honours', tr('Limit'), tr('Only winds and dragons')),
       L(hk ? 'Great Three Dragons' : 'Big Three Dragons', hk ? 8 : tr('Limit'), tr('Pungs of all three dragons')),
       L(hk ? 'Great Four Winds' : 'Big Four Winds', tr('Limit'), tr('Pungs of all four winds')),
-      L('Four Concealed Pungs', tr('Limit'), tr('Four pungs, none of them claimed')),
-      ...(hk ? [L('All Terminals', tr('Limit'), tr('Only ones and nines')), L('Four Kongs', tr('Limit'), tr('Four kongs')), L('Nine Gates', tr('Limit'), tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, concealed, plus any tile of that suit'))] : []),
+      L('Four Concealed Pungs', tr('Limit'), tr('Four pungs from your own draws, none finished on a discard')),
+      ...(hk ? [L('All Terminals', tr('Limit'), tr('Only ones and nines')), L('Four Kongs', tr('Limit'), tr('Four kongs')), L('Nine Gates', tr('Limit'), tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, nothing claimed, plus any tile of that suit, even a discard'))] : []),
     ],
   });
   return {
@@ -239,12 +241,12 @@ function riichiGuide(p: RuleProfile, unit: string): Guide {
         title: tr('Two han and more'),
         lines: [
           L('Double Riichi', 2, tr('Riichi on your very first discard')),
-          L('Chiitoitsu', 2, tr('Seven different pairs, closed')),
+          L('Chiitoitsu', 2, tr('Seven different pairs; only the winning tile may be claimed')),
           L('Sanshoku Doujun', v(2, 1), tr('The same run in all three suits')),
           L('Sanshoku Doukou', 2, tr('A pung of the same number in all three suits')),
           L('Ittsu', v(2, 1), tr('1-2-3, 4-5-6 and 7-8-9 of one suit')),
           L('Toitoi', 2, tr('Every set is a pung or kong')),
-          L('Sanankou', 2, tr('Three pungs, none of them claimed')),
+          L('Sanankou', 2, tr('Three pungs from your own draws, none finished on a discard')),
           L('Sankantsu', 2, tr('Three kongs')),
           L('Shousangen', 2, tr('Two dragon pungs and a pair of the third dragon')),
           L('Honroutou', 2, tr('Only ones, nines and honours')),
@@ -260,14 +262,14 @@ function riichiGuide(p: RuleProfile, unit: string): Guide {
         closed: true,
         lines: [
           L('Kokushi Musou', tr('Yakuman'), tr('One of each one, nine, wind and dragon, plus any one of them again')),
-          L('Suuankou', tr('Yakuman'), tr('Four pungs, none of them claimed')),
+          L('Suuankou', tr('Yakuman'), tr('Four pungs from your own draws, none finished on a discard')),
           L('Daisangen', tr('Yakuman'), tr('Pungs of all three dragons')),
           L('Shousuushii', tr('Yakuman'), tr('Three wind pungs and a pair of the fourth wind')),
           L('Daisuushii', tr('Yakuman'), tr('Pungs of all four winds')),
           L('Tsuuiisou', tr('Yakuman'), tr('Only winds and dragons')),
           L('Chinroutou', tr('Yakuman'), tr('Only ones and nines')),
           L('Ryuuiisou', tr('Yakuman'), tr('Only green tiles: 2, 3, 4, 6, 8 Bamboo and the green dragon')),
-          L('Chuuren Poutou', tr('Yakuman'), tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, concealed, plus any tile of that suit')),
+          L('Chuuren Poutou', tr('Yakuman'), tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, nothing claimed, plus any tile of that suit, even a discard')),
           L('Suukantsu', tr('Yakuman'), tr('Four kongs')),
           L('Tenhou', tr('Yakuman'), tr('The dealer wins on the deal')),
           L('Chiihou', tr('Yakuman'), tr('Self-drawn on your first draw, before anyone calls')),
@@ -284,7 +286,7 @@ function taiwaneseGuide(p: RuleProfile, unit: string): Guide {
       lines: [
         L('Dealer', 1, tr('You are the dealer, plus 2 for each deal you have kept')),
         L('Concealed self-draw', 3, tr('Nothing claimed and you drew the winning tile')),
-        L('Concealed hand', 1, tr('You claimed nothing all hand')),
+        L('Concealed hand', 1, tr('Nothing claimed, won on a discard')),
         L('Self-draw', 1, tr('You drew the winning tile yourself')),
         L('All melded', 2, tr('Every set claimed, won on a discard')),
         L('Single wait', 1, tr('Only one tile could finish your hand')),
@@ -298,14 +300,14 @@ function taiwaneseGuide(p: RuleProfile, unit: string): Guide {
       lines: [
         L('Ping Hu', 2, tr('All chows, no honours or flowers, an open wait, won on a discard')),
         L('All pungs', 4, tr('Every set is a pung or kong')),
-        L('Three concealed pungs', 2, tr('Three pungs, none of them claimed (4 is 5 tai, 5 is 8 tai)')),
+        L('Three concealed pungs', 2, tr('Three pungs from your own draws, none finished on a discard (4 is 5 tai, 5 is 8 tai)')),
         L('Half flush', 4, tr('One suit plus honours')),
         L('Full flush', 8, tr('One suit only, no honours')),
         L('All honours', 16, tr('Only winds and dragons')),
       ],
     },
   ];
-  if (p.shapes.special?.some((s) => s.name === 'liGu')) sections.push({ title: tr('All-pairs hands'), lines: [L(LI_GU_NAME, 8, tr('Seven pairs and one pung, all concealed (includes the concealed hand)'))] });
+  if (p.shapes.special?.some((s) => s.name === 'liGu')) sections.push({ title: tr('All-pairs hands'), lines: [L(LI_GU_NAME, 8, tr('Seven pairs and one pung; only the winning tile may be claimed (includes the concealed hand)'))] });
   sections.push({
     title: tr('Honours'),
     lines: [
@@ -334,7 +336,7 @@ function singaporeGuide(p: RuleProfile, unit: string): Guide {
       lines: [
         L('Ping Hu', 4, tr('All chows, no bonus tiles, a pair that scores nothing, an open wait')),
         L('Pong Pong', 2, tr('Every set is a pung or kong')),
-        ...(p.shapes.sevenPairs ? [L('Seven Pairs', 3, tr('Seven different pairs, nothing claimed'))] : []),
+        ...(p.shapes.sevenPairs ? [L('Seven Pairs', 3, tr('Seven different pairs; only the winning tile may be claimed'))] : []),
         L('Half colour', 2, tr('One suit plus honours')),
         L('Full colour', 4, tr('One suit only, no honours')),
       ],
@@ -366,7 +368,7 @@ function vietnameseGuide(p: RuleProfile, unit: string): Guide {
     win: winLines(p, unit),
     pay: tr('Phán are added, not doubled: each payment is one stake plus one more for every phán.'),
     sections: [
-      { title: tr('How you won'), lines: [L('Self-drawn (Tự bốc)', 1, tr('You drew the winning tile yourself')), L('Concealed hand (Bất cầu)', 1, tr('You claimed nothing all hand')), L('Last tile', 2, tr('Won on the very last tile')), L('Win after kong', 1, tr('Won on the replacement tile after a kong')), L('Robbing the kong', 1, tr('Won on a tile another player added to a pung'))] },
+      { title: tr('How you won'), lines: [L('Self-drawn (Tự bốc)', 1, tr('You drew the winning tile yourself')), L('Concealed hand (Bất cầu)', 1, tr('No sets claimed; the winning tile may be a discard')), L('Last tile', 2, tr('Won on the very last tile')), L('Win after kong', 1, tr('Won on the replacement tile after a kong')), L('Robbing the kong', 1, tr('Won on a tile another player added to a pung'))] },
       {
         title: tr('Hand shape'),
         lines: [
@@ -407,7 +409,7 @@ function mcrGuide(p: RuleProfile, unit: string): Guide {
       },
       {
         title: tr('All-pairs hands'),
-        lines: [L('Seven Pairs', 24, tr('Seven pairs, nothing claimed')), L('Seven Shifted Pairs', 88, tr('Seven pairs in one suit with consecutive numbers, like 1 to 7'))],
+        lines: [L('Seven Pairs', 24, tr('Seven pairs; only the winning tile may be claimed')), L('Seven Shifted Pairs', 88, tr('Seven pairs in one suit with consecutive numbers, like 1 to 7'))],
       },
       {
         title: tr('Common fan'),
@@ -435,11 +437,11 @@ function mcrGuide(p: RuleProfile, unit: string): Guide {
           L('Pure Shifted Chows', 16, tr('Three runs in one suit, each one or two steps up')),
           L('Pure Triple Chow', 24, tr('Three identical runs in one suit')),
           L('Pure Shifted Pungs', 24, tr('Three pungs in one suit, one number apart')),
-          L('Four Concealed Pungs', 64, tr('Four pungs, none of them claimed')),
+          L('Four Concealed Pungs', 64, tr('Four pungs from your own draws, none finished on a discard')),
           L('Thirteen Orphans', 88, tr('One of each one, nine, wind and dragon, plus any one of them again')),
           L('Big Three Dragons', 88, tr('Pungs of all three dragons')),
           L('Big Four Winds', 88, tr('Pungs of all four winds')),
-          L('Nine Gates', 88, tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, concealed, plus any tile of that suit')),
+          L('Nine Gates', 88, tr('1-1-1-2-3-4-5-6-7-8-9-9-9 of one suit, nothing claimed, plus any tile of that suit, even a discard')),
         ],
       },
     ],
@@ -463,7 +465,7 @@ function sichuanGuide(p: RuleProfile, unit: string): Guide {
           L('All Simples', 1, tr('No ones or nines')),
           L('Root (four of a kind)', 1, tr('All four of one tile in your hand, each time')),
           L('Golden Hook', 1, tr('Four sets claimed, waiting on the pair')),
-          L('Seven Pairs', 2, tr('Seven pairs, nothing claimed')),
+          L('Seven Pairs', 2, tr('Seven pairs; only the winning tile may be claimed')),
           L('Pure Suit', 2, tr('One suit only')),
           L('Pure 2-5-8', 2, tr('Every set and the pair are twos, fives or eights')),
           L('Terminals in every set', 2, tr('Every set and the pair hold a one or nine')),
@@ -486,14 +488,14 @@ function koreanGuide(p: RuleProfile, unit: string): Guide {
         title: tr('Hand patterns'),
         lines: [
           L('Self-drawn', 1, tr('You drew the winning tile yourself')),
-          L('Concealed hand', 1, tr('You claimed nothing all hand')),
+          L('Concealed hand', 1, tr('No sets claimed; the winning tile may be a discard')),
           L('Riichi', 1, tr('Declared ready with a concealed hand')),
-          ...(p.shapes.sevenPairs ? [L('Seven Pairs', 2, tr('Seven different pairs, nothing claimed'))] : []),
+          ...(p.shapes.sevenPairs ? [L('Seven Pairs', 2, tr('Seven different pairs; only the winning tile may be claimed'))] : []),
           L('Dragon pung', 1, tr('A pung or kong of any dragon, each one')),
           L('Seat wind pung', 1, tr('A pung of your own seat’s wind')),
           L('Round wind pung', 1, tr('A pung of the wind of the round')),
           L('All Pungs', 2, tr('Every set is a pung or kong')),
-          L('Three Concealed Pungs', 2, tr('Three pungs, none of them claimed')),
+          L('Three Concealed Pungs', 2, tr('Three pungs from your own draws, none finished on a discard')),
           L('Small Three Dragons', 2, tr('Two dragon pungs and a pair of the third dragon')),
           L('All Simples', 1, tr('No ones, nines or honours')),
           L('Terminals and Honours', 2, tr('Only ones, nines and honours')),
@@ -514,7 +516,7 @@ function koreanGuide(p: RuleProfile, unit: string): Guide {
           L('Big Three Dragons', 10, tr('Pungs of all three dragons')),
           L('Small Four Winds', 10, tr('Three wind pungs and a pair of the fourth wind')),
           L('Big Four Winds', 10, tr('Pungs of all four winds')),
-          L('Four Concealed Pungs', 10, tr('Four pungs, none of them claimed')),
+          L('Four Concealed Pungs', 10, tr('Four pungs from your own draws, none finished on a discard')),
           L('Four Kongs', 10, tr('Four kongs')),
         ],
       },

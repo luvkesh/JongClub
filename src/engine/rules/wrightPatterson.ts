@@ -101,13 +101,13 @@ export const wrightPattersonProfile: RuleProfile = {
     },
   ],
   guide: {
-    win: ['Four sets and a pair, or one of the special hands. Special hands are concealed.', 'Add up the points first, then double the total once for every double. Before each hand comes a Charleston.'],
+    win: ['Four sets and a pair, or one of the special hands. Special hands claim no sets; the winning tile may be a discard.', 'Add up the points first, then double the total once for every double. Before each hand comes a Charleston.'],
     pay: 'Everyone pays the winner the score, up to the limit. East pays double, and when East wins everyone pays East double.',
     sections: [
       {
         title: 'Special hands',
         lines: [
-          ['Heavenly Twins', 'Half limit', 'Seven pairs, concealed'],
+          ['Heavenly Twins', 'Half limit', 'Seven pairs; only the winning tile may be claimed'],
           ['Knitting', 'Half limit', 'Seven knits: the same number in two suits, two suits only'],
           ['Triple Knitting', 'Limit', 'Four mixed pungs (one number in all three suits) and a knit pair'],
           ['Wriggling Snake', 'Limit', '1 to 9 of one suit, one of each wind, and one of them paired'],

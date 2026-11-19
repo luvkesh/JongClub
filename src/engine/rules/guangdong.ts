@@ -162,7 +162,7 @@ export const guangdongProfile: RuleProfile = {
           ['Big Three Dragons', 'Limit', 'Pungs of all three dragons'],
           ['Big Four Winds', 'Limit', 'Pungs of all four winds'],
           ['Four Kongs', 'Limit', 'Four kongs and a pair'],
-          ['Nine Gates', 'Limit', '1112345678999 of one suit, concealed, plus any tile of that suit'],
+          ['Nine Gates', 'Limit', '1112345678999 of one suit, nothing claimed, plus any tile of that suit, even a discard'],
         ],
       },
     ],

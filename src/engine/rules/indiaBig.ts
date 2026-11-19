@@ -882,5 +882,5 @@ export function bigCallKinds(card: BigCard, ctx: BigCtx): { pung: Set<number>; c
 export const BIG_PAY = { normal: 1000, concealed: 2000 };
 export function bigScore(card: BigCard, concealed: boolean): HandScore {
   const value = concealed ? BIG_PAY.concealed : BIG_PAY.normal;
-  return { value, unit: 'pts', items: [{ name: card.name, value, note: concealed ? 'Concealed: nothing claimed' : 'Normal hand' }], points: value, limit: false };
+  return { value, unit: 'pts', items: [{ name: card.name, value, note: concealed ? 'Concealed: no sets claimed' : 'Normal hand' }], points: value, limit: false };
 }
