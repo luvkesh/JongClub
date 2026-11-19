@@ -85,11 +85,15 @@ class Sound {
   /** Must be called from a user gesture. */
   unlock() {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // Safari also reports 'interrupted' (a call, the app sent to the background).
+      if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') void this.ctx.resume().catch(() => {});
       return;
     }
     try {
-      this.ctx = new AudioContext();
+      // Safari before 14.1 has only the prefixed constructor.
+      const AC = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
     } catch {
       return;
     }
@@ -121,7 +125,8 @@ class Sound {
           try {
             const b64 = url.slice(url.indexOf(',') + 1);
             const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
-            return trimLead(c, await c.decodeAudioData(bytes.buffer));
+            // The callback form: older Safari has no promise form of decodeAudioData.
+            return trimLead(c, await new Promise<AudioBuffer>((res, rej) => c.decodeAudioData(bytes.buffer, res, rej)));
           } catch {
             return undefined;
           }

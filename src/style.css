@@ -93,6 +93,8 @@
 
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
+/* iPhone Safari enlarges text when the phone is turned sideways unless told not to. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   background: var(--ink);
   color: var(--ivory);
@@ -861,7 +863,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px va
 
 /* American card sheet */
 .card-btn { width: auto; padding: 0 12px; border-radius: 999px; font: 500 11.5px var(--ui); letter-spacing: 0.14em; text-transform: uppercase; }
-.card-sheet { width: min(620px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; box-sizing: border-box; }
+.card-sheet { width: min(620px, 100%); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; box-sizing: border-box; }
 .card-list { display: flex; flex-direction: column; gap: 2px; margin: 12px 0; }
 .card-section { margin: 14px 0 4px; font: 500 11px var(--ui); letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass-hi); }
 .card-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: var(--r-sm); border: 1px solid transparent; }
