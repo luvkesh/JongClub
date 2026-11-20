@@ -678,6 +678,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px va
 .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .actions .btn { min-width: 96px; }
 .actions .btn:disabled { opacity: 0.8; }
+/* Big Cards: up to six "Lay down a kong" choices. They stay on one row that scrolls sideways, rather than
+   stacking into a column over the table and your rack. */
+.action-row:has(> .actions > .group-btn) { max-width: 100%; min-width: 0; }
+.actions:has(> .group-btn) { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-width: 100%; min-width: 0; scrollbar-width: thin; padding-bottom: 2px; }
+.actions > .group-btn, .actions:has(> .group-btn) > .btn { flex: none; }
+.actions > .group-btn { display: inline-flex; align-items: center; gap: 3px; }
+.actions > .group-btn .tile2d.mini { width: 24px; }
 .actions .btn.ghost { background: rgba(9, 13, 11, 0.8); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .timer {
   width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
