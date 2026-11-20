@@ -94,7 +94,13 @@ const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 // Seat heights: the table top is at y = 0 and the floor at -1.6.
 const FLOOR = -1.6;
 /** How far from the table's centre each chair stands: the seated figure (table3d placeAvatars, 5.62 out) sits on its cushion, its back near the chair's. */
-export const CHAIR_R = 5.78;
+export const CHAIR_R = 5.74;
+/**
+ * The chairs are drawn life size for the table, but the seated figures are smaller than life
+ * (0.68, beside the oversized tiles). Scaled from the floor to match them: the seat lands where the
+ * figure's body meets it and the back reaches its shoulder blades, as a real chair does.
+ */
+export const CHAIR_SCALE = 0.8;
 
 // ------------------------------------------------------------ the chairs
 
@@ -387,8 +393,8 @@ export class ChairSet {
     const cushion = merge(parts.cushion);
     const trim = merge(parts.trim);
     this.geos = [frame, cushion, trim].filter((g): g is THREE.BufferGeometry => !!g);
-    // The throne stands a little larger than the rest.
-    const scale = kind === 'throne' ? 1.06 : 1;
+    // The throne's crest would hide its sitter from behind at full size: a touch smaller than the rest.
+    const scale = (kind === 'throne' ? 0.95 : 1) * CHAIR_SCALE;
     for (let i = 0; i < 4; i++) {
       const g = new THREE.Group();
       if (frame) {

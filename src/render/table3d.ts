@@ -1632,7 +1632,8 @@ export class TableRenderer {
       // Frame the whole board and your full hand for this screen's shape, then apply the player's zoom.
       // Where that leaves your tiles small (tablets, wide windows), split: the board above, your hand close up below.
       let fit = this.fitBoard(s.phi, s.theta, look, false);
-      const split = !this.splitPaused && (this.splitPref === 'on' || (this.splitPref === 'auto' && fit.tilePx < SPLIT_BELOW_PX));
+      // While the player roams with the free camera after a hand, the strip would only repeat your rack: it steps aside.
+      const split = !this.splitPaused && !this.freeCur && (this.splitPref === 'on' || (this.splitPref === 'auto' && fit.tilePx < SPLIT_BELOW_PX));
       if (split !== this.splitOn) this.setSplitOn(split);
       if (split) fit = this.fitBoard(s.phi, s.theta, look, true);
       s.radius += (fit.radius - s.radius) * w;
