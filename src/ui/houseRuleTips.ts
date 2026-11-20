@@ -11,7 +11,6 @@ const TIPS: Record<string, () => string> = {
   flowers: () => tr('Adds the eight flowers and seasons. A flower is set aside when drawn and replaced from the wall, and your own flower and season score.'),
   mixedSets: () => tr('Whether a set may mix suits. Allowed adds mixed pungs (crochet), mixed chows and knitted sets, in a concealed hand only.'),
   mixedHands: () => tr('Extra points for hands built from matching or stepped sets across the three suits.'),
-  specialSuit: () => tr('Pick one suit for the match. Every pung or kong in that suit scores 1 faan, and a one-suit hand in it scores 1 faan more.'),
   specialRounds: () => tr('Gives each wind round its own hands: passports in East, the Small Card in South, goulash in West and the Big Card in North. The rules explain each one.'),
   goulashExchange: () => tr('Before a goulash hand, everyone passes three tiles: right, then across, then left.'),
   goulashJokers: () => tr('Adds eight jokers to goulash hands. A joker can stand in for a tile in a set, never in the pair.'),

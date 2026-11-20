@@ -2,14 +2,6 @@
 import type { Row } from './types';
 
 export const TIPS: Row[] = [
-  [
-    'Pick one suit for the match. Every pung or kong in that suit scores 1 faan, and a one-suit hand in it scores 1 faan more.',
-    '为整场比赛选一种花色。这种花色的每个刻子或杠子算 1 番，全手只用这种花色再加 1 番。',
-    '為整場比賽選一種花色。這種花色的每個刻子或槓子算 1 番，全手只用這種花色再加 1 番。',
-    '対局全体で一つの色を選びます。その色の刻子・槓子は一つにつき1翻、その色だけの一色手はさらに1翻。',
-    'اختر نوعًا واحدًا للمباراة كلها. كل بونغ أو كونغ من هذا النوع يحسب 1 فان، واليد المصنوعة من هذا النوع وحده تحسب 1 فان إضافيًا.',
-    'पूरे मैच के लिए एक सूट चुनें। उस सूट का हर पुंग या कॉन्ग 1 फ़ान देता है, और पूरा हाथ उसी सूट में हो तो 1 फ़ान और।',
-  ],
   // Settings: General
   [
     'Changes every menu, button and message. Lessons and Mei’s voice stay in English. The club reloads to switch; at a table, the change waits until you leave.',

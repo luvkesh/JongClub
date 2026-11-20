@@ -20,7 +20,6 @@ import { flowerItems } from './flowerFaan';
 import { goulashRules } from './goulash';
 import { MIXED_FAAN, mixedHandsRule, mixedPairItems, mixedSetItems } from './mixed';
 import { KNITTING, MIXED_SETS, bestMixedReading } from './special';
-import { SPECIAL_SUIT_RULE, specialSuitItems } from './specialSuit';
 import { SPECIAL_ROUND_ORDER, SPECIAL_ROUND_RULES } from './windRounds';
 import type { HandScore, Payment, RuleProfile, ScoreItem, ScoringContext } from './types';
 
@@ -89,9 +88,6 @@ export function classicScore(ctx: ScoringContext): HandScore {
 
   if (suits.size === 1 && !hasHonor) add('Pure One Suit', 7);
   else if (suits.size === 1 && hasHonor) add('Mixed One Suit', 3);
-  // Special suit house rule: its pungs and kongs, and a one-suit hand in it (specialSuit.ts).
-  const pungKinds = d.shape === 'standard' ? pungs.map((p) => p.kind) : [];
-  items.push(...specialSuitItems(ctx.house, pungKinds, suits.size === 1 ? [...suits][0] : null));
 
   if (ctx.afterKong) add('Win after Kong', 1);
   if (ctx.robbedKong) add('Robbing the Kong', 1);
@@ -237,7 +233,6 @@ export const classicProfile: RuleProfile = {
       default: 'on',
     },
     mixedHandsRule('on'),
-    SPECIAL_SUIT_RULE,
     ...SPECIAL_ROUND_RULES,
     ...goulashRules(true),
   ],

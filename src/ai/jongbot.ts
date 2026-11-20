@@ -12,7 +12,6 @@ import { tileLabel } from '../i18n/tiles';
 import { charlestonDirName, CHARLESTON } from '../engine/game';
 import { distance as cardDistance, progress } from '../engine/rules/american';
 import { bestSwap, charlestonPick, describeTarget, exposureDanger, kindLabel, missingAfterCall, rankDiscards } from './american';
-import { SPECIAL_SUIT_NAMES, inSpecialSuit, specialSuitOf } from '../engine/rules/specialSuit';
 import { safetySentence, threatSentence, riskLabelFor } from './danger';
 import { cardUses, currentShanten, currentWaits, exchangePick, handWilds, shantenWith, openHandHasYakuPath, unseenCounts, waitingView, winningWaits } from './evaluate';
 import { shantenAfterKong } from './players';
@@ -309,11 +308,9 @@ function baseClaimHint(game: MahjongGame, seat: number, options: ClaimOption[], 
     const joker = called.using?.some((k) => game.isWild(k)) ? ' It uses up one of your jokers.' : '';
     // More than one chow on offer: say which (the others may fit no winning hand at all).
     const which = called.type === 'chow' && options.filter((o) => o.type === 'chow').length > 1 ? ` with the ${called.using!.map(tileName).join(' and ')}` : '';
-    const special = called.type !== 'chow' ? specialSuitOf(game.profile.houseChoices) : null;
-    const bonus = special && inSpecialSuit(game.profile.houseChoices, discardKind) ? ` A ${called.type === 'kong' ? 'kong' : 'pung'} in the special suit, ${SPECIAL_SUIT_NAMES[special]}, scores 1 faan.` : '';
     return {
       headline: `${verb} the ${name}${which}.`,
-      why: why(`${moves}. Calling shows your set to the table, so your hand is no longer concealed.${joker}${bonus}`),
+      why: why(`${moves}. Calling shows your set to the table, so your hand is no longer concealed.${joker}`),
       action: called.type,
       focusKind: discardKind,
     };

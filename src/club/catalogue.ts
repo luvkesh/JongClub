@@ -208,7 +208,6 @@ export const HOUSE_RULE_GROUPS: { id: HouseRuleGroup; name: string; items: { nam
       { name: tr('Nagashi mangan'), status: 'playable', where: tr('Riichi, Sanma') },
       { name: tr('Placement points (uma)'), status: 'playable', where: tr('Table option, tournaments') },
       { name: tr('Winner takes all'), status: 'playable', where: tr('Table option, every rule set') },
-      { name: tr('Special suit'), status: 'playable', where: tr('Classic') },
     ],
   },
   { id: 'dealer', name: tr('Dealer'), items: [{ name: tr('Dealer keeps the deal'), status: 'playable' }, { name: tr('Dealer streak bonus'), status: 'playable', where: tr('Riichi, Taiwanese') }] },
