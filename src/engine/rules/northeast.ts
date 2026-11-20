@@ -99,7 +99,7 @@ export const northeastProfile: RuleProfile = {
     },
   ],
   guide: {
-    win: ['Four sets and a pair that pass the checklist: all three suits, a one, nine or honour, a pung or kong, a chow, and at least one claimed set.', 'There is no seven pairs.'],
+    win: ['Four sets and a pair that pass the checklist: all three suits, a one, nine or honour, a pung or kong, a chow, and at least one set claimed before the winning tile.', 'There is no seven pairs.'],
     pay: 'A hand is worth 1 point, doubled by each double, up to 4. Everyone pays; the discarder pays double, and so does the dealer.',
     sections: [
       {
@@ -109,7 +109,7 @@ export const northeastProfile: RuleProfile = {
           ['A one, nine or honour', '✓', 'Somewhere in your sets or pair'],
           ['A pung or kong', '✓', 'At least one'],
           ['A chow', '✓', 'At least one run'],
-          ['An open hand', '✓', 'At least one claimed set'],
+          ['An open hand', '✓', 'At least one set claimed before the winning tile'],
         ],
       },
       {

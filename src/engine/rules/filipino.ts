@@ -71,7 +71,7 @@ export const filipinoProfile: RuleProfile = {
   },
   houseRules: [],
   guide: {
-    win: ['Five sets and a pair from sixteen tiles plus the winning tile, or Siete Pares: seven pairs and a pung, concealed.', 'Any complete hand wins. There is no minimum.'],
+    win: ['Five sets and a pair from sixteen tiles plus the winning tile, or Siete Pares: seven pairs and a pung, with only the winning tile claimed.', 'Any complete hand wins. There is no minimum.'],
     pay: 'Points add up, ten to the point. On a self-draw everyone pays; on a discard the discarder alone pays.',
     sections: [
       {
@@ -84,7 +84,7 @@ export const filipinoProfile: RuleProfile = {
           ['Escalera (1 to 9)', 2, '1 to 9 of one suit as three runs'],
           ['All pungs (todo pong)', 2, 'Five pungs or kongs and a pair'],
           ['One suit', 3, 'One suit, with or without honours'],
-          ['Siete Pares', 3, 'Seven pairs and a pung, concealed'],
+          ['Siete Pares', 3, 'Seven pairs and a pung; only the winning tile may be claimed'],
           ['Robbing a kong (agaw)', 1, 'Win on the tile someone adds to a pung'],
         ],
       },

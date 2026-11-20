@@ -101,7 +101,7 @@ export function roundOverlay(base: RuleProfile, id: string): RuleProfile {
         specialRound: 'bigCard',
         chosenGame: undefined,
         bigWinScore: (w) => {
-          const items: ScoreItem[] = [{ name: card.name, value: w.concealed ? CARD_FAAN.double : CARD_FAAN.limit, note: w.concealed ? 'Concealed: nothing claimed' : 'Normal hand' }];
+          const items: ScoreItem[] = [{ name: card.name, value: w.concealed ? CARD_FAAN.double : CARD_FAAN.limit, note: w.concealed ? 'Concealed: no sets claimed' : 'Normal hand' }];
           if (w.selfDrawn) items.push({ name: 'Self-drawn', value: 1 });
           if (card.flowers === 'bonus') items.push(...flowerItems({ flowers: w.flowers, seatWind: w.seatWind, house: w.house } as ScoringContext));
           return total(items);
