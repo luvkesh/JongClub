@@ -13,11 +13,12 @@ import { FLOWER_BASE, WINDS, isDragon, isFlower, isHonor, isTerminal, isTerminal
 import { decompose } from './targetBlocks';
 import { handWilds, unseenCounts } from './evaluate';
 import type { TargetPlan } from './targets';
+import { tr } from '../i18n';
+import { callWord, fromReady, planName, planNote, sentences } from './adviceText';
 
 const SUIT_NAMES = ['Characters', 'Dots', 'Bamboos'];
 const inSuit = (s: number) => (k: number) => k < 27 && Math.floor(k / 9) === s;
 const meldKinds = (m: MeldShape) => (m.type === 'chow' ? [m.kind, m.kind + 1, m.kind + 2] : [m.kind]);
-const fromReady = (n: number) => (n >= 99 ? 'no win possible with these sets' : n <= 0 ? 'ready' : n === 1 ? '1 tile from ready' : `${n} tiles from ready`);
 
 /** One route: the kinds it may hold, whether runs count, and a set it must have. */
 interface Route {
@@ -115,14 +116,14 @@ function rank(plans: Ranked[], limit: number, slack = 3): TargetPlan[] {
 }
 
 /** What a call does to the routes: plans before and after a hypothetical meld. */
-function callLine(label: string, verb: string, before: TargetPlan | undefined, after: TargetPlan | undefined, none: string): string {
+function callLine(check: string, verb: string, before: TargetPlan | undefined, after: TargetPlan | undefined, none: string): string {
   const b = before ? before.missing - 1 : 99;
   const a = after ? after.missing - 1 : 99;
-  if (!after) return `${label}: ${none}`;
-  const name = after.names.join(' + ');
-  if (a < b) return `${label}: this ${verb} keeps ${name} open and leaves you ${fromReady(a)} (now ${fromReady(b)}).`;
-  if (a === b) return `${label}: this ${verb} doesn't bring you closer. You stay ${fromReady(a)}, aiming for ${name}.`;
-  return `${label}: this ${verb} sets you back. The best left would be ${name}, ${fromReady(a)} instead of ${fromReady(b)}.`;
+  if (!after) return tr('{check}: {text}', { check, text: none });
+  const p = { check, call: callWord(verb), hand: after.names.map(planName).join(' + '), after: fromReady(a), before: fromReady(b) };
+  if (a < b) return tr('{check}: this {call} keeps {hand} open and leaves you {after} (now {before}).', p);
+  if (a === b) return tr("{check}: this {call} doesn't bring you closer. You stay {after}, aiming for {hand}.", p);
+  return tr('{check}: this {call} sets you back. The best left would be {hand}, {after} instead of {before}.', p);
 }
 
 /** The hand after calling `kind` with `o` (concealed tiles out, a meld in), or null. */
@@ -200,9 +201,10 @@ export function goulashCall(g: MahjongGame, s: number, o: ClaimOption, kind: num
   if (!h) return null;
   const before = goulashFor(g, s, handOf(g, s, undefined, 4), 1)[0];
   const after = goulashFor(g, s, h, 1)[0];
-  const lost = g.isConcealed(s) ? ' Exposing a pung gives up Concealed Mahjong (3 doubles).' : '';
-  const line = callLine('Doubles check', o.type, before, after && !after.note?.includes('of 3') ? after : undefined, `after this ${o.type} no clean hand would reach 3 doubles. Pass.`);
-  return line + (after && !after.note?.includes('of 3') ? ` ${after.names[0]} counts ${after.note}.` : '') + lost;
+  const lost = g.isConcealed(s) ? tr('Exposing a pung gives up Concealed Mahjong (3 doubles).') : '';
+  const reaches = after && !after.note?.includes('of 3') ? after : undefined;
+  const line = callLine(tr('Doubles check'), o.type, before, reaches, tr('after this {call} no clean hand would reach 3 doubles. Pass.', { call: callWord(o.type) }));
+  return sentences(line, reaches ? tr('{hand} counts {note}.', { hand: planName(reaches.names[0]), note: planNote(reaches.note ?? '') }) : '', lost);
 }
 
 // ------------------------------------------------------------------ Riichi yaku
@@ -258,7 +260,7 @@ export function yakuCall(g: MahjongGame, s: number, o: ClaimOption, kind: number
   const before = yakuFor(g, s, handOf(g, s), 1)[0];
   const after = yakuFor(g, s, h, 1)[0];
   const verb = o.type === 'chow' ? (g.profile.callNames.chow ?? 'chow').toLowerCase() : o.type === 'kong' ? (g.profile.callNames.kong ?? 'kong').toLowerCase() : (g.profile.callNames.pung ?? 'pung').toLowerCase();
-  return callLine('Yaku check', verb, before, after, `after this ${verb} your open hand would have no yaku, so it could never win. Pass.`);
+  return callLine(tr('Yaku check'), verb, before, after, tr('after this {call} your open hand would have no yaku, so it could never win. Pass.', { call: callWord(verb) }));
 }
 
 // ------------------------------------------------------------------ minimum-score rulesets
@@ -330,5 +332,5 @@ export function valueCall(g: MahjongGame, s: number, o: ClaimOption, kind: numbe
   if (!h) return null;
   const before = valueFor(g, s, handOf(g, s), 1)[0];
   const after = valueFor(g, s, h, 1)[0];
-  return callLine('Score check', o.type, before, after, `after this ${o.type} no scoring hand would be left. Pass.`);
+  return callLine(tr('Score check'), o.type, before, after, tr('after this {call} no scoring hand would be left. Pass.', { call: callWord(o.type) }));
 }

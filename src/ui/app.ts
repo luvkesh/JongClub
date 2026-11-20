@@ -129,12 +129,15 @@ export class App {
     this.table.onAmbient = (w) => this.screen === 'home' && !this.match && sound.play(w === 'shuffle' ? 'shuffle' : 'slide');
     applyVolumes(this.settings);
 
-    // Audio needs a gesture; the first tap anywhere unlocks it.
+    // Audio needs a gesture; the first tap anywhere unlocks it. iOS Safari only lets audio start
+    // on touchend or click (a touch's pointerdown is not a user activation there), so listen for
+    // those too and stop once the context is running.
+    const UNLOCK = ['pointerdown', 'touchend', 'click', 'keydown'] as const;
     const unlock = () => {
       sound.unlock();
-      window.removeEventListener('pointerdown', unlock);
+      if (sound.context?.state === 'running') for (const t of UNLOCK) window.removeEventListener(t, unlock, true);
     };
-    window.addEventListener('pointerdown', unlock);
+    for (const t of UNLOCK) window.addEventListener(t, unlock, true);
 
     const hash = location.hash.slice(1) as Screen;
     // A table from an invite link (?table=CODE) or the older #join=CODE; else the table this tab sat at before a reload.
