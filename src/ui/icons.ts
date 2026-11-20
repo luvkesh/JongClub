@@ -53,6 +53,8 @@ const P: Record<string, string> = {
   bolt: '<path d="M13 2.5 5 13.5h6.5L10.5 21.5 19 10h-6.5z"/>',
   coins: '<ellipse cx="12" cy="6.5" rx="7" ry="2.8"/><path d="M5 6.5v4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-4M5 10.5v4c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-4M5 14.5v3c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-3"/>',
   gamepad: '<path d="M7.5 7.5h9a5 5 0 0 1 4.8 6.3l-.9 3.4a2.3 2.3 0 0 1-3.9 1l-2.3-2.4H9.8l-2.3 2.4a2.3 2.3 0 0 1-3.9-1l-.9-3.4a5 5 0 0 1 4.8-6.3z"/><path d="M8 10.5v3M6.5 12h3M15.5 11.2h.01M17.3 13h.01"/>',
+  hand: '<rect x="2.5" y="7" width="6" height="10.5" rx="1.2" transform="rotate(-12 5.5 12)"/><rect x="9" y="5.5" width="6" height="10.5" rx="1.2"/><rect x="15.5" y="7" width="6" height="10.5" rx="1.2" transform="rotate(12 18.5 12)"/>',
+  wall: '<rect x="3" y="5" width="6" height="6" rx="1"/><rect x="9" y="5" width="6" height="6" rx="1"/><rect x="15" y="5" width="6" height="6" rx="1"/><rect x="3" y="13" width="6" height="6" rx="1"/><rect x="9" y="13" width="6" height="6" rx="1"/><rect x="15" y="13" width="6" height="6" rx="1"/>',
   door: '<path d="M5 21V4.5A1.5 1.5 0 0 1 6.5 3h11A1.5 1.5 0 0 1 19 4.5V21M3 21h18M14.5 12.5h.01"/>',
 };
 

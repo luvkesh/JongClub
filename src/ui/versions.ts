@@ -19,6 +19,7 @@ import { icon } from './icons';
 import type { AppCtx } from './ctx';
 import { clear, h, tileImg } from './dom';
 import { tr, trn } from '../i18n';
+import { variationVisuals } from './variationCard';
 
 const LAST_KEY = 'jongclub.versions.last.v1';
 
@@ -552,24 +553,31 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
   o.addEventListener('click', onBackdrop);
   o.addEventListener('keydown', onKey);
 
-  const caption = h('p', { class: 'vp-say', lang: 'en' }, v.mei);
-  const mei = h('div', { class: 'vp-mei' }, h('div', { class: 'vp-avatar', 'aria-hidden': 'true' }, 'M'));
+  // Mei speaks her full introduction; on screen she says one line, with her words a tap away.
+  const caption = h('p', { class: 'vp-say', lang: 'en', hidden: true, id: 'vp-say' }, v.mei);
+  const mei = h('div', { class: 'vp-mei' }, h('div', { class: 'vp-avatar', 'aria-hidden': 'true' }));
   const speak = () => {
     if (!narrator.enabled) return;
     mei.classList.add('speaking');
     void narrator.say(v.mei).then(() => !closed && mei.classList.remove('speaking'));
   };
-  const replay = h('button', { class: 'btn sm ghost', 'aria-label': tr('Hear Mei again'), disabled: !narrator.enabled, onclick: () => speak() }, tr('↻ Replay'));
-  const voice = h('button', { class: 'btn sm ghost', 'aria-pressed': String(narrator.enabled), title: tr('Turns Mei’s spoken voice on or off. The choice is remembered on this device.') }, narrator.enabled ? tr('🔊 Voice on') : tr('🔇 Voice off'));
+  const replay = h('button', { class: 'vp-round', 'aria-label': tr('Hear Mei again'), title: tr('Hear Mei again'), disabled: !narrator.enabled, onclick: () => speak(), html: icon('replay') });
+  const voice = h('button', { class: 'vp-round', 'aria-pressed': String(narrator.enabled), 'aria-label': tr('Mei’s voice'), title: tr('Turns Mei’s spoken voice on or off. The choice is remembered on this device.'), html: icon(narrator.enabled ? 'speaker' : 'speakerOff') });
   voice.onclick = () => {
     narrator.setEnabled(!narrator.enabled);
-    voice.textContent = narrator.enabled ? tr('🔊 Voice on') : tr('🔇 Voice off');
+    voice.innerHTML = icon(narrator.enabled ? 'speaker' : 'speakerOff');
     voice.setAttribute('aria-pressed', String(narrator.enabled));
     (replay as HTMLButtonElement).disabled = !narrator.enabled;
     if (narrator.enabled) speak();
     else mei.classList.remove('speaking');
   };
-  mei.append(h('div', { class: 'vp-mei-body' }, h('p', { class: 'eyebrow' }, tr('Mei introduces')), caption, h('div', { class: 'vp-voice' }, replay, voice)));
+  const read = h('button', { class: 'vp-read', 'aria-expanded': 'false', 'aria-controls': 'vp-say', html: `${icon('book')}<span>${tr('Read along')}</span>${icon('chevronDown')}` });
+  read.onclick = () => {
+    const open = caption.hidden;
+    caption.hidden = !open;
+    read.setAttribute('aria-expanded', String(open));
+  };
+  mei.append(h('div', { class: 'vp-mei-body' }, h('p', { class: 'eyebrow' }, tr('Mei introduces')), h('p', { class: 'vp-hook' }, v.hook), caption, h('div', { class: 'vp-voice' }, replay, voice, read)));
 
   const i = VERSIONS.indexOf(v);
   const prev = VERSIONS[(i + VERSIONS.length - 1) % VERSIONS.length];
@@ -581,7 +589,9 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
     openVersion(ctx, to.id, document.querySelector<HTMLElement>(`.vt-node[data-version="${to.id}"]`) ?? from);
   };
 
-  const action = (cls: string, title: string, note: string, run: () => void) => h('button', { class: `vp-action ${cls}`, onclick: leave(run) }, h('span', { class: 'vp-action-t' }, title), h('span', { class: 'vp-action-d' }, note));
+  const action = (cls: string, ico: string, title: string, note: string, run: () => void, tip = '') =>
+    h('button', { class: `vp-action ${cls}`, title: tip || null, onclick: leave(run) }, h('span', { class: `vp-action-ico${ico === 'mei' ? ' mei' : ''}`, 'aria-hidden': 'true', html: ico === 'mei' ? '' : icon(ico) }), h('span', { class: 'vp-action-w' }, h('span', { class: 'vp-action-t' }, title), note ? h('span', { class: 'vp-action-d' }, note) : null));
+  const profile = known?.profile;
 
   const card = h(
     'div',
@@ -590,11 +600,16 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
       'header',
       { class: 'vp-head' },
       h('span', { class: 'vp-flag', 'aria-hidden': 'true' }, vi.flag),
-      h('div', { class: 'vp-title' }, h('p', { class: 'eyebrow' }, `${tr(vi.region)} · ${entry ? STANDARDISATION[entry.standardisation].label : v.id === 'american' ? tr('Western family') : tr('Asian family')}`), h('h3', { id: 'vp-title' }, tr(vi.name)), known ? levelPips(vi.level) : null),
+      h(
+        'div',
+        { class: 'vp-title' },
+        h('p', { class: 'eyebrow' }, `${tr(vi.region)} · ${entry ? STANDARDISATION[entry.standardisation].label : v.id === 'american' ? tr('Western family') : tr('Asian family')}`),
+        h('h3', { id: 'vp-title' }, tr(vi.name)),
+        h('div', { class: 'vp-tags' }, known ? levelPips(vi.level) : null, v.club ? h('span', { class: 'vp-tag', title: tr('There is no single official ruleset: rules vary from club to club, and at JongClub the table host sets the house rules.'), html: `${icon('sliders')}<span>${tr('House rules vary')}</span>` }) : null),
+      ),
       h('button', { class: 'icon-btn vp-close', 'aria-label': tr('Close'), onclick: close, html: icon('close') }),
     ),
     v.mei ? mei : null,
-    v.club ? h('p', { class: 'vp-club' }, h('strong', {}, tr('Club play. ')), tr('There is no single official ruleset: rules vary from club to club, and at JongClub the table host sets the house rules.')) : null,
     id === UAE_PROFILE.id
       ? h(
           'div',
@@ -611,22 +626,29 @@ function openVersion(ctx: AppCtx, id: string, from: HTMLElement | null) {
           ),
         )
       : null,
+    profile ? variationVisuals(v.id, profile) : null,
     h(
-      'dl',
-      { class: 'vp-facts' },
-      h('div', { class: 'wide' }, h('dt', {}, tr('Who plays it')), h('dd', {}, v.who)),
-      // An odd fact out takes the full row, so the grid never shows an empty cell.
-      ...v.facts.map(([k, d], i) => h('div', { class: v.facts.length % 2 && i === v.facts.length - 1 ? 'wide' : '' }, h('dt', {}, k), h('dd', {}, d))),
-      h('div', { class: 'wide' }, h('dt', {}, tr('How to win')), h('dd', {}, v.win)),
+      'details',
+      { class: 'vp-more', open: profile ? null : '' },
+      h('summary', { html: `${icon('info')}<span>${tr('All the details')}</span>${icon('chevronDown', 'vp-more-chev')}` }),
+      v.club ? h('p', { class: 'vp-club' }, h('strong', {}, tr('Club play. ')), tr('There is no single official ruleset: rules vary from club to club, and at JongClub the table host sets the house rules.')) : null,
+      h(
+        'dl',
+        { class: 'vp-facts' },
+        h('div', { class: 'wide' }, h('dt', {}, tr('Who plays it')), h('dd', {}, v.who)),
+        // An odd fact out takes the full row, so the grid never shows an empty cell.
+        ...v.facts.map(([k, d], i) => h('div', { class: v.facts.length % 2 && i === v.facts.length - 1 ? 'wide' : '' }, h('dt', {}, k), h('dd', {}, d))),
+        h('div', { class: 'wide' }, h('dt', {}, tr('How to win')), h('dd', {}, v.win)),
+      ),
     ),
     h(
       'div',
       { class: 'vp-actions' },
       v.sharedLesson
-        ? action('learn', v.lesson === 'basics' ? tr('Learn the basics') : tr('Learn {name}', { name: tr(info(v.lesson).short) }), v.lesson === 'basics' ? tr('No lesson of its own yet. The beginners’ lesson covers most of it') : tr('No lesson of its own yet. The {name} lesson covers most of it', { name: tr(info(v.lesson).short) }), () => ctx.openLesson(v.lesson))
-        : action('learn', learned ? tr('✓ Review the lesson') : tr('Learn it'), learned ? tr('Lesson and test passed') : tr('A short story lesson with Mei, then a quick test'), () => ctx.openLesson(v.lesson)),
-      playable && action('guided', tr('Play with Mei'), tr('One gentle hand. Mei talks you through every move'), () => ctx.startGuided(v.id)),
-      playable && action('play primary', tr('Play'), tr('Sit down at the {table} with three AI players', { table: ctx.tableFor(v.id).name }), () => ctx.startMatch(ctx.tableFor(v.id))),
+        ? action('learn', 'lesson', v.lesson === 'basics' ? tr('Learn the basics') : tr('Learn {name}', { name: tr(info(v.lesson).short) }), v.lesson === 'basics' ? tr('No lesson of its own yet. The beginners’ lesson covers most of it') : tr('No lesson of its own yet. The {name} lesson covers most of it', { name: tr(info(v.lesson).short) }), () => ctx.openLesson(v.lesson))
+        : action('learn', learned ? 'check' : 'lesson', learned ? tr('Review the lesson') : tr('Learn it'), learned ? tr('Lesson and test passed') : tr('Lesson and quick test'), () => ctx.openLesson(v.lesson), tr('A short story lesson with Mei, then a quick test')),
+      playable && action('guided', 'mei', tr('Play with Mei'), tr('A guided hand'), () => ctx.startGuided(v.id), tr('One gentle hand. Mei talks you through every move')),
+      playable && action('play primary', 'play', tr('Play'), ctx.tableFor(v.id).name, () => ctx.startMatch(ctx.tableFor(v.id)), tr('Sit down at the {table} with three AI players', { table: ctx.tableFor(v.id).name })),
     ),
     h(
       'footer',
