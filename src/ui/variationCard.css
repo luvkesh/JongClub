@@ -1,0 +1,145 @@
+/* A variation at a glance (variationCard.ts): engraved numbers, a real winning hand, special tiles,
+   call chips and the who-pays table, in the lux card's jade-black glass with fine gold edges. */
+
+.vc { display: flex; flex-direction: column; gap: 14px; }
+
+/* Engraved panels: glass, a fine gold edge, a soft top light and a drop shadow for depth. */
+.vc-stat, .vc-sec {
+  border: 1px solid rgba(201, 165, 107, 0.34); border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 210, 0.06), rgba(255, 240, 210, 0) 40%),
+    linear-gradient(180deg, rgba(16, 34, 28, 0.82), rgba(6, 12, 10, 0.88));
+  box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.1), 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+/* ---- the four numbers */
+.vc-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.vc-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px 11px; text-align: center; min-width: 0; }
+.vc-stat-ico {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: var(--brass-hi);
+  background: radial-gradient(circle at 35% 30%, rgba(234, 208, 154, 0.22), rgba(234, 208, 154, 0.04) 70%);
+  box-shadow: inset 0 0 0 1px rgba(234, 208, 154, 0.45), inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+}
+.vc-stat-ico .ico { width: 18px; height: 18px; }
+.vc-stat-v { font: 400 26px/1.05 var(--inscr); color: var(--ivory); letter-spacing: 0.04em; display: flex; align-items: baseline; gap: 5px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.vc-stat-v small { font: 500 12px var(--ui); letter-spacing: 0.06em; color: var(--brass-hi); text-transform: none; }
+.vc-stat-l { font: 500 10.5px/1.25 var(--ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); overflow-wrap: anywhere; }
+
+/* ---- sections */
+.vc-sec { padding: 12px 14px 14px; min-width: 0; display: flex; flex-direction: column; }
+.vc-h { margin: 0; display: flex; align-items: center; gap: 8px; font: 400 13px/1.2 var(--inscr); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); }
+.vc-h-ico { display: grid; place-items: center; }
+.vc-h-ico .ico { width: 16px; height: 16px; }
+.vc-rule { display: block; width: 44px; height: 1px; margin: 8px 0 12px; background: linear-gradient(90deg, var(--brass-hi), transparent); }
+[dir='rtl'] .vc-rule { background: linear-gradient(270deg, var(--brass-hi), transparent); }
+.vc-pair-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+
+/* ---- tiles: the shared rendering, with studio light and a contact shadow */
+.vc-tile { width: 38px; height: auto; display: block; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)) drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35)); }
+.vc-tile.sm { width: 34px; }
+.vc-glow { display: inline-block; border-radius: 6px; box-shadow: 0 0 0 2px var(--brass-hi), 0 0 14px rgba(234, 190, 110, 0.55); }
+
+.vc-hand { display: flex; flex-wrap: wrap; gap: 12px 14px; justify-content: center; }
+.vc-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.vc-group-tiles { display: flex; gap: 2px; }
+.vc-group-l { font: 400 11.5px var(--inscr); letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+
+.vc-special { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 12px 16px; }
+.vc-special li { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.vc-special-tiles { display: flex; align-items: center; gap: 3px; }
+.vc-special-l { font: 500 12.5px var(--ui); color: var(--ivory); }
+.vc-arrow-ico { color: var(--brass-hi); display: grid; place-items: center; }
+.vc-arrow-ico .ico { width: 16px; height: 16px; }
+/* Tiles always read left to right, as on a real rack, even in Arabic. */
+.vc-hand, .vc-group-tiles, .vc-call-tiles, .vc-special-tiles { direction: ltr; }
+.vc-none { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ivory); }
+.vc-none .ico { width: 18px; height: 18px; color: var(--brass-hi); }
+
+/* ---- who pays */
+.vc-pays { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; align-items: center; }
+.vc-pay { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.vc-pay-pic { width: 100%; max-width: 128px; }
+.vc-pay-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.vc-pay figcaption { font: 500 12px/1.3 var(--ui); color: var(--muted); text-align: center; }
+.vc-felt { fill: url(#vc-felt); stroke: rgba(201, 165, 107, 0.55); stroke-width: 1.2; }
+.vc-seat { fill: #141c18; stroke: rgba(201, 165, 107, 0.45); stroke-width: 1.2; }
+.vc-seat.pays { stroke: var(--ivory); }
+.vc-seat.disc { fill: #3a1d17; stroke: #e0806a; }
+.vc-seat.win { fill: #c9a56b; stroke: #f3dcaa; stroke-width: 1.6; }
+.vc-star { fill: #1d150a; }
+.vc-disc-tile { fill: #f7f3ea; stroke: rgba(0, 0, 0, 0.4); stroke-width: 0.6; }
+.vc-arrow { stroke: var(--brass-hi); stroke-linecap: round; }
+.vc-head { fill: var(--brass-hi); }
+.vc-share { font: 600 9px var(--ui); fill: var(--ivory); text-anchor: middle; paint-order: stroke; stroke: #0b110e; stroke-width: 2.4px; }
+
+/* ---- calls */
+.vc-calls { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.vc-call {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 9px 10px 8px; border-radius: 12px;
+  border: 1px solid rgba(201, 165, 107, 0.28); background: rgba(5, 9, 7, 0.45); box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.06);
+}
+.vc-call-tiles { display: flex; align-items: center; gap: 2px; min-height: 46px; }
+.vc-call-ico { display: grid; place-items: center; color: var(--brass-hi); padding-inline: 3px; }
+.vc-call-ico .ico { width: 20px; height: 20px; }
+.vc-stick { width: 12px; height: 46px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.vc-call-n { font: 400 13.5px var(--inscr); letter-spacing: 0.1em; color: var(--ivory); }
+.vc-call.off { opacity: 0.5; }
+.vc-call.off .vc-call-tiles { filter: grayscale(0.7); }
+.vc-call.off .vc-call-n { text-decoration: line-through; text-decoration-color: #e0806a; text-decoration-thickness: 1.5px; }
+
+/* ---- the panel around it: Mei's short line, icon controls, details and actions */
+.vp-hook { margin: 2px 0 0; font: 600 19px/1.35 var(--display); color: var(--ivory); }
+.vp-voice .vp-round { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong); background: rgba(5, 9, 7, 0.5); color: var(--brass-hi); cursor: pointer; }
+.vp-voice .vp-round:hover:not(:disabled) { border-color: var(--brass-hi); background: rgba(234, 208, 154, 0.1); }
+.vp-voice .vp-round:disabled { opacity: 0.45; cursor: default; }
+.vp-voice .vp-round .ico { width: 19px; height: 19px; }
+.vp-voice .vp-read { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(5, 9, 7, 0.5); color: var(--ivory); font: 500 13px var(--ui); cursor: pointer; }
+.vp-voice .vp-read .ico { width: 17px; height: 17px; color: var(--brass-hi); transition: transform 0.2s; }
+.vp-voice .vp-read[aria-expanded='true'] .ico:last-child { transform: rotate(180deg); }
+.vp-voice { align-items: center; }
+.vp-mei .vp-say { margin-top: 10px; font-size: 14.5px; color: var(--muted); }
+.vp-mei .vp-say[hidden] { display: none; }
+
+.vp-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.vp-tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font: 500 12px var(--ui); color: var(--brass-hi); }
+.vp-tag .ico { width: 14px; height: 14px; }
+
+.vp-more { border: 1px solid var(--line); border-radius: 12px; background: rgba(5, 9, 7, 0.35); }
+.vp-more > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 11px 14px; cursor: pointer; font: 500 13.5px var(--ui); letter-spacing: 0.04em; text-transform: none; color: var(--ivory); min-height: 0; display: flex; }
+.vp-more > summary::-webkit-details-marker { display: none; }
+.vp-more > summary::before { content: none; }
+.vp-sheet:has(.vc) { width: min(780px, 100%); }
+.vp-more > summary .ico { width: 17px; height: 17px; color: var(--brass-hi); }
+.vp-more > summary .vp-more-chev { margin-inline-start: auto; transition: transform 0.2s; }
+.vp-more[open] > summary .vp-more-chev { transform: rotate(180deg); }
+.vp-more > .vp-facts, .vp-more > .vp-club { margin: 0 12px 12px; }
+
+.vp-action { flex-direction: row; align-items: center; gap: 12px; min-height: 64px; }
+.vp-action-ico {
+  flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--brass-hi);
+  box-shadow: inset 0 0 0 1px rgba(234, 208, 154, 0.5); background: radial-gradient(circle at 35% 30%, rgba(234, 208, 154, 0.2), transparent 70%);
+}
+.vp-action-ico .ico { width: 19px; height: 19px; }
+.vp-action-ico.mei { background: var(--mei-face, none) center 30% / cover, radial-gradient(circle at 35% 30%, #f6e2b8, var(--brass)); }
+.vp-action.primary .vp-action-ico { color: #1a130b; box-shadow: inset 0 0 0 1.4px rgba(26, 19, 11, 0.6); background: rgba(255, 255, 255, 0.18); }
+.vp-action-w { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+@media (max-width: 760px) {
+  .vc-pair-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .vc-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .vc-stat { flex-direction: row; justify-content: flex-start; flex-wrap: wrap; text-align: start; padding: 9px 10px; column-gap: 9px; row-gap: 0; }
+  .vc-stat-ico { width: 30px; height: 30px; grid-row: span 2; }
+  .vc-stat-v { font-size: 22px; }
+  .vc-stat-l { flex-basis: 100%; padding-inline-start: 39px; font-size: 10px; letter-spacing: 0.1em; }
+  .vc-sec { padding: 11px 11px 12px; }
+  .vc-hand { gap: 10px 10px; }
+  .vc-tile { width: max(var(--tile-min, 30px), 30px); }
+  .vc-tile.sm { width: var(--tile-min, 30px); }
+  .vc-call { padding: 8px 8px 7px; }
+  .vp-hook { font-size: 17px; }
+  .vp-action { min-height: 0; }
+  .vc { order: 3; }
+  .vp-more { order: 4; }
+}
