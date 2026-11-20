@@ -680,6 +680,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px va
 .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .actions .btn { min-width: 96px; }
 .actions .btn:disabled { opacity: 0.8; }
+/* Big Cards: up to six "Lay down a kong" choices. They stay on one row that scrolls sideways, rather than
+   stacking into a column over the table and your rack. */
+.action-row:has(> .actions > .group-btn) { max-width: 100%; min-width: 0; }
+.actions:has(> .group-btn) { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-width: 100%; min-width: 0; scrollbar-width: thin; padding-bottom: 2px; }
+.actions > .group-btn, .actions:has(> .group-btn) > .btn { flex: none; }
+.actions > .group-btn { display: inline-flex; align-items: center; gap: 3px; }
+.actions > .group-btn .tile2d.mini { width: 24px; }
 .actions .btn.ghost { background: rgba(9, 13, 11, 0.8); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .timer {
   width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
@@ -1199,6 +1206,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px va
 /* Goulash and on-the-spot payments (Singapore bites, kong money) */
 .goulash-pill, .instant-pill { white-space: nowrap; font: 600 10px/1 var(--ui); letter-spacing: 0.08em; padding: 3px 8px; border-radius: 2px; cursor: help; }
 .goulash-pill { background: rgba(122, 31, 43, 0.55); color: #f2cf7a; border: 1px solid rgba(242, 207, 122, 0.45); text-transform: uppercase; }
+/* A long round or card name ("Your card: Western Command") wraps inside the round card rather than running off its edge. */
+.round-extra > .round-pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; text-align: start; }
 .instant-pill { background: rgba(94, 125, 58, 0.3); color: #cfe3b0; border: 1px solid rgba(207, 227, 176, 0.3); }
 .hand-result .instant-head { margin: 12px 0 4px; font: 500 11px var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); }
 .instant-items { list-style: none; margin: 0 0 6px; padding: 0; }
