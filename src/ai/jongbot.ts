@@ -57,7 +57,7 @@ const hintPlans = (plans: TargetPlan[], unseen: number[]): HintPlan[] =>
 function aimLine(kit: TargetKit, aim: TargetPlan): string {
   if (kit.id === 'passport') return `Aim for ${namesSentence(aim.names)}${aim.sets ? ` with ${aim.sets} more set${aim.sets > 1 ? 's' : ''}` : ''}${aim.pair ? ' and a pair' : ''}. `;
   if (kit.id === 'smallCard') return aim.note ? `Fill your card ${aim.note}. ` : '';
-  if (kit.id === 'card') return '';
+  if (kit.id === 'card' || kit.id === 'shape') return '';
   return `Aim for ${namesSentence(aim.names)}${aim.note ? ` (${aim.note})` : ''}. `;
 }
 

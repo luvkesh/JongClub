@@ -719,7 +719,7 @@ export class MatchController {
       { label: this.muted ? tr('Unmute') : tr('Mute'), icon: this.muted ? 'speakerOff' : 'speaker', on: this.muted, act: () => this.setMuted(!this.muted) },
       music ? { label: tr('Music'), icon: music.classList.contains('off') ? 'musicOff' : 'music', on: !music.classList.contains('off'), act: () => music.click() } : null,
       this.hudMode === 'console' ? null : { label: this.customOrder ? tr('Sort: your order ↺') : tr('Sort: {by}', { by }), icon: 'sort', act: () => this.els.sort.click() },
-      kit ? null : { label: this.settings.groupSets ? tr('Sets grouped ✓') : tr('Group sets'), icon: 'group', on: !!this.settings.groupSets, act: () => this.els.group.click() },
+      kit && kit.id !== 'shape' ? null : { label: this.settings.groupSets ? tr('Sets grouped ✓') : tr('Group sets'), icon: 'group', on: !!this.settings.groupSets, act: () => this.els.group.click() },
       this.hooks.openLabs && dev.enabled ? { label: tr('Labs'), icon: 'labs', act: () => this.hooks.openLabs!() } : null,
       { label: tr('Settings'), icon: 'settings', act: () => this.hooks.openSettings() },
       { label: tr('Close game'), icon: 'close', act: () => this.confirmLeave() },
@@ -1033,7 +1033,7 @@ export class MatchController {
   private renderTargetPick() {
     const row = clear(this.els.pp);
     const kit = this.kit();
-    const plans = kit && this.settings.groupSets && this.game.state.phase.kind !== 'handOver' ? this.targetPlansNow().filter((p) => p.pieces.length) : [];
+    const plans = kit && this.settings.groupSets && this.game.state.phase.kind !== 'handOver' ? this.targetPlansNow().filter((p) => p.pieces.length || kit.id === 'shape') : [];
     row.hidden = !plans.length;
     // The phone pill: the target you're aiming for; it opens every possibility.
     const pill = this.ctl?.ppBtn;
