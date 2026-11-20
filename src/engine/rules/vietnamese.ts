@@ -35,7 +35,7 @@ export function vietnameseScore(ctx: ScoringContext): HandScore {
 
   // How the hand was won
   if (ctx.selfDrawn) add('Self-drawn (Tự bốc)', 1);
-  if (!exposed) add('Concealed hand (Bất cầu)', 1, 'No calls');
+  if (!exposed) add('Concealed hand (Bất cầu)', 1, 'No sets claimed');
   if (ctx.lastTileOfWall) add('Last tile', 2);
   if (ctx.afterKong) add('Win after kong', 1);
   if (ctx.robbedKong) add('Robbing the kong', 1);

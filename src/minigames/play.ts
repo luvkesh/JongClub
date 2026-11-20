@@ -246,11 +246,7 @@ export class MiniPlay {
   private toast(text: string, tone: 'good' | 'bad' | 'info' = 'info') {
     const el = this.toastEl;
     // Stats come and go, so the top bar's foot is measured afresh for each toast.
-    const tb = this.root.querySelector('.mini-top')?.getBoundingClientRect();
-    if (tb) {
-      this.root.style.setProperty('--mini-top-end', `${Math.round(tb.bottom)}px`);
-      el.style.top = `${Math.max(tb.bottom + 10, window.innerHeight * 0.22)}px`;
-    }
+    this.placeToast();
     el.textContent = text;
     el.className = `mini-toast on ${tone}`;
     window.clearTimeout(this.toastTimer);
@@ -298,11 +294,35 @@ export class MiniPlay {
       hud.classList.remove('hud-side');
       this.cam.insets = this.measureInsets();
     }
-    const tb = this.root.querySelector('.mini-top')?.getBoundingClientRect();
-    if (tb) this.root.style.setProperty('--mini-top-end', `${Math.round(tb.bottom)}px`);
-    // Toasts sit just under the top bar (whose stats can wrap to two rows on phones), never over it.
-    this.toastEl.style.top = `${Math.max(this.cam.insets.top + 4, H * 0.22)}px`;
+    this.placeToast();
     if (refit) this.fit();
+  }
+
+  /**
+   * Toasts sit just under the top bar (whose stats can wrap to two rows on phones), never over it,
+   * centred over the board. When the top bar or tool bar stands as a column (phones held sideways)
+   * the toast sits beside it instead: under a full-height column it would fall off the screen.
+   */
+  private placeToast() {
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    const el = this.toastEl;
+    const tb = this.root.querySelector('.mini-top')?.getBoundingClientRect();
+    const bb = this.root.querySelector('.mini-tools')?.getBoundingClientRect();
+    let left = 8,
+      right = 8,
+      top = H * 0.22;
+    const topColumn = !!tb && this.root.classList.contains('hud-side');
+    for (const r of [topColumn ? tb : undefined, bb]) {
+      if (!r || r.height <= r.width) continue;
+      if (r.left + r.right < W) left = Math.max(left, r.right + 8);
+      else right = Math.max(right, W - r.left + 8);
+    }
+    if (tb && !topColumn) top = Math.max(tb.bottom + 10, top);
+    this.root.style.setProperty('--mini-top-end', `${tb && !topColumn ? Math.round(tb.bottom) : 0}px`);
+    el.style.top = `${Math.round(Math.min(top, H - 60))}px`;
+    el.style.left = `${Math.round((left + W - right) / 2)}px`;
+    el.style.maxWidth = `${Math.round(Math.max(160, Math.min(460, W - left - right)))}px`;
   }
 
   /** The space the HUD covers as it stands now. */
