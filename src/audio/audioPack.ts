@@ -55,9 +55,24 @@ function embeddedPitch(): Promise<Record<string, string>> {
   return pitchP;
 }
 
+/** Bytes already on the device for one part: the whole part, or a window fetched with a Range request. */
+interface Chunk {
+  start: number;
+  buf: ArrayBuffer;
+}
+
 interface Pack {
+  name: string;
   index: Record<string, [number, number, number]>;
-  bufs: ArrayBuffer[];
+  /** Each part's length in bytes, worked out from the index. */
+  sizes: number[];
+  /** Whole parts held in memory. */
+  bufs: (ArrayBuffer | undefined)[];
+  wholeP: (Promise<ArrayBuffer | null> | undefined)[];
+  /** Windows of a part fetched by byte range, newest last. */
+  chunks: Chunk[][];
+  /** Whether the host answers Range requests: null until the first try. */
+  ranged: boolean | null;
   urls: Map<string, string>;
 }
 
@@ -73,10 +88,10 @@ function packUrl(file: string): string {
 }
 
 /** Fetch a pack file; a failed request (a dropped connection, a cold CDN) is retried once. */
-async function fetchPack(file: string): Promise<Response> {
+async function fetchPack(file: string, range?: string): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
     try {
-      const r = await fetch(packUrl(file));
+      const r = await fetch(packUrl(file), range ? { headers: { Range: range } } : undefined);
       if (r.ok) return r;
       if (attempt >= 1) throw new Error(`audio/${file}: ${r.status}`);
     } catch (e) {
@@ -86,16 +101,20 @@ async function fetchPack(file: string): Promise<Response> {
   }
 }
 
+/**
+ * A pack's index (a few kilobytes). The audio itself is not fetched here: Mei's narration is close
+ * to 90 MB, far too much to pull down on a first visit just to show the Home screen.
+ */
 function load(name: string): Promise<Pack | null> {
   let p = packs.get(name);
   if (!p) {
     p = fetchPack(`${name}.json`)
       .then((r) => r.json() as Promise<{ parts: number; index: Pack['index'] }>)
-      .then(async ({ parts, index }) => ({
-        index,
-        bufs: await Promise.all(Array.from({ length: parts }, (_, i) => fetchPack(`${name}-${i}.mp3`).then((r) => r.arrayBuffer()))),
-        urls: new Map(),
-      }))
+      .then(({ parts, index }): Pack => {
+        const sizes = new Array<number>(parts).fill(0);
+        for (const [part, at, len] of Object.values(index)) sizes[part] = Math.max(sizes[part], at + len);
+        return { name, index, sizes, bufs: new Array(parts), wholeP: new Array(parts), chunks: sizes.map(() => []), ranged: null, urls: new Map() };
+      })
       .catch(() => {
         // Forget the failure after a while, so a later line can try the network again.
         setTimeout(() => packs.get(name) === p && packs.delete(name), 15000);
@@ -106,42 +125,115 @@ function load(name: string): Promise<Pack | null> {
   return p;
 }
 
-const loaded = new Map<string, Pack | null>();
+/** One whole part, fetched once. A failed fetch can be tried again by a later line. */
+function wholePart(pack: Pack, part: number): Promise<ArrayBuffer | null> {
+  return (pack.wholeP[part] ??= fetchPack(`${pack.name}-${part}.mp3`)
+    .then((r) => r.arrayBuffer())
+    .then((buf) => {
+      pack.chunks[part] = [];
+      return (pack.bufs[part] = buf);
+    })
+    .catch(() => {
+      pack.wholeP[part] = undefined;
+      return null;
+    }));
+}
 
-function clipUrl(pack: Pack | null | undefined, key: string): string | undefined {
+/** Every part, one after another (for hosts that cannot serve a byte range, and the small callers pack). */
+async function wholePack(pack: Pack): Promise<boolean> {
+  for (let i = 0; i < pack.sizes.length; i++) if (!(await wholePart(pack, i))) return false;
+  return true;
+}
+
+/** How far past the asked-for clip a Range request reads: the next few lines of the same lesson come with it. */
+const AHEAD = 640 * 1024;
+
+const mp3Url = (bytes: ArrayBuffer) => URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }));
+
+/** A clip cut from bytes already in memory, if they cover it. */
+function clipNow(pack: Pack | null | undefined, key: string): string | undefined {
   if (!pack) return undefined;
   let u = pack.urls.get(key);
-  if (!u) {
-    const at = pack.index[key];
-    if (!at) return undefined;
-    u = URL.createObjectURL(new Blob([pack.bufs[at[0]].slice(at[1], at[1] + at[2])], { type: 'audio/mpeg' }));
-    pack.urls.set(key, u);
+  if (u) return u;
+  const at = pack.index[key];
+  if (!at) return undefined;
+  const [part, off, len] = at;
+  const whole = pack.bufs[part];
+  if (whole) u = mp3Url(whole.slice(off, off + len));
+  else {
+    const c = pack.chunks[part].find((c) => c.start <= off && off + len <= c.start + c.buf.byteLength);
+    if (c) u = mp3Url(c.buf.slice(off - c.start, off - c.start + len));
   }
+  if (u) pack.urls.set(key, u);
   return u;
 }
 
+/**
+ * A clip, fetching only the bytes it needs: a Range request for the clip and the lines after it.
+ * Where the host ignores Range and sends the whole part, that part is kept and the rest follow in
+ * the background (unless the connection is metered), so later lines play at once.
+ */
+async function clipUrl(pack: Pack | null, key: string): Promise<string | undefined> {
+  const have = clipNow(pack, key);
+  if (have || !pack) return have;
+  const at = pack.index[key];
+  if (!at) return undefined;
+  const [part, off, len] = at;
+  if (pack.ranged !== false && !pack.wholeP[part]) {
+    try {
+      const end = Math.min(pack.sizes[part], off + len + AHEAD) - 1;
+      const r = await fetchPack(`${pack.name}-${part}.mp3`, `bytes=${off}-${end}`);
+      const buf = await r.arrayBuffer();
+      if (r.status === 206 && buf.byteLength >= len && buf.byteLength < pack.sizes[part]) {
+        pack.ranged = true;
+        const chunks = pack.chunks[part];
+        chunks.push({ start: off, buf });
+        if (chunks.length > 6) chunks.shift();
+      } else if (buf.byteLength >= pack.sizes[part]) {
+        pack.ranged = false;
+        pack.bufs[part] = buf;
+        pack.wholeP[part] = Promise.resolve(buf);
+        if (!frugal()) void wholePack(pack);
+      } else pack.ranged = false;
+    } catch {
+      /* fall through to the whole part */
+    }
+    const got = clipNow(pack, key);
+    if (got) return got;
+  }
+  await wholePart(pack, part);
+  return clipNow(pack, key);
+}
+
+const loaded = new Map<string, Pack | null>();
+
+/** Bring a whole (small) pack into memory, so its clips can be handed out without waiting. */
 function preload(name: string) {
-  void load(name).then((p) => {
-    if (p) loaded.set(name, p);
+  void load(name).then(async (p) => {
+    if (p && (await wholePack(p))) loaded.set(name, p);
   });
 }
 
+/** A metered or very slow connection: fetch nothing until a line actually needs it. */
+function frugal(): boolean {
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  return !!conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType ?? ''));
+}
+
 /**
- * Start loading the recorded voices without blocking anything: the callers
- * (small, needed at the table) first, then Mei's narration. On a metered or
- * very slow connection the narration waits until a line actually needs it.
+ * Start loading the recorded voices without blocking anything. Embedded builds load the callers
+ * (small, needed at the table) first, then Mei's narration. The preview build fetches the callers
+ * and only the index of Mei's narration: her clips are fetched line by line as they are spoken.
  */
 export function preloadAudio() {
-  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-  const frugal = !!conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType ?? ''));
   if (!SIDECAR) {
     void embeddedVoices().then(() => {
-      if (!frugal) void embeddedClips();
+      if (!frugal()) void embeddedClips();
     });
     return;
   }
   preload('callers');
-  if (!frugal) preload('narration');
+  if (!frugal()) void load('narration');
 }
 
 /** Whether Mei's recorded clips exist in this build (the generator always writes them). */
@@ -184,13 +276,11 @@ export function callerClip(voice: string, phrase: string): string | undefined {
     return voicesNow?.find((v) => v.id === voice)?.clips[phrase];
   }
   if (!loaded.has('callers')) preload('callers');
-  return clipUrl(loaded.get('callers'), `${voice}|${phrase}`);
+  return clipNow(loaded.get('callers'), `${voice}|${phrase}`);
 }
 
 /** A caller's clip for a phrase, waiting for the pack if it is still loading (Mei's composed lines). */
 export async function callerClipAsync(voice: string, phrase: string): Promise<string | undefined> {
   if (!SIDECAR) return (await embeddedVoices()).find((v) => v.id === voice)?.clips[phrase];
-  const pack = await load('callers');
-  if (pack) loaded.set('callers', pack);
-  return clipUrl(pack, `${voice}|${phrase}`);
+  return clipUrl(await load('callers'), `${voice}|${phrase}`);
 }
