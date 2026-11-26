@@ -298,3 +298,19 @@ body.with-console #hud { right: var(--console-w, 0px); }
   /* The score calculator's Use my hand and Clear. */
   .sc-tools .btn { min-height: 40px; }
 }
+
+/* ---- Ruleset and round game, told apart (2026-11-26): "RULES  India Rules" above the round, "THIS ROUND  Passport" on the pill. */
+.round-var { display: flex; align-items: baseline; gap: 6px; }
+.round-var .rv-k { flex: none; font-weight: 500; letter-spacing: 0.16em; color: var(--muted, rgba(240, 232, 214, 0.6)); }
+.round-var .rv-v { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--brass-hi); }
+.round-pill .rp-k { margin-inline-end: 6px; padding-inline-end: 6px; border-inline-end: 1px solid rgba(242, 207, 122, 0.45); font-weight: 500; opacity: 0.8; }
+
+/* ---- Auto-draw: the state is written on the button and the two states look different. */
+.autodraw-btn .ad-state {
+  flex: none; min-width: 30px; padding: 3px 7px; border-radius: 999px; text-align: center;
+  font: 700 10px/1 var(--ui); letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(240, 232, 214, 0.62); background: transparent; border: 1px solid rgba(240, 232, 214, 0.3);
+}
+.autodraw-btn:not(.on) .ad-name, .autodraw-btn:not(.on) .ico { opacity: 0.72; }
+.autodraw-btn.on { border-color: var(--brass-hi) !important; color: var(--brass-hi); background: linear-gradient(180deg, rgba(234, 208, 154, 0.2), rgba(234, 208, 154, 0.07)), rgba(9, 13, 11, 0.88) !important; }
+.autodraw-btn.on .ad-state { color: #1a140a; background: linear-gradient(180deg, #f0d9a0, #c9a35a); border-color: transparent; box-shadow: 0 0 8px rgba(234, 208, 154, 0.35); }

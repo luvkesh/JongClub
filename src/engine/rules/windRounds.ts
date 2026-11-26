@@ -30,16 +30,17 @@ export type SpecialRoundId = 'passport' | 'smallCard' | 'goulash' | 'bigCard' | 
 /** The usual order: East passports, South small card, West goulash, North big card. */
 export const SPECIAL_ROUND_ORDER: Record<Wind, SpecialRoundId> = { E: 'passport', S: 'smallCard', W: 'goulash', N: 'bigCard' };
 
-export const SPECIAL_ROUNDS: Record<SpecialRoundId, { name: string; rule: string }> = {
-  passport: { name: 'Passport round', rule: 'Every win needs a passport: 5 or 6 different winds and dragons, or 1 to 9 of one suit. Two passports (5 + 6, 6 + 6, 9 + 5) score more.' },
-  smallCard: { name: 'Small Card round', rule: 'Each player keeps one of three secret Small Cards from the club’s deck and wins only with the hand it names.' },
-  goulash: { name: 'Goulash round', rule: 'East chooses 1 or 3 exchanges between players, then 1 or 3 exchanges with the wall. No chows, and you need at least 3 doubles to win.' },
-  bigCard: { name: 'Big Card round', rule: 'Before the deal East picks one of the club’s Big Cards, and everyone plays to it.' },
+/** `game` is the round's own game on its own, for the table header's "This round" line beside the ruleset. */
+export const SPECIAL_ROUNDS: Record<SpecialRoundId, { name: string; game: string; rule: string }> = {
+  passport: { name: 'Passport round', game: 'Passport', rule: 'Every win needs a passport: 5 or 6 different winds and dragons, or 1 to 9 of one suit. Two passports (5 + 6, 6 + 6, 9 + 5) score more.' },
+  smallCard: { name: 'Small Card round', game: 'Small Card', rule: 'Each player keeps one of three secret Small Cards from the club’s deck and wins only with the hand it names.' },
+  goulash: { name: 'Goulash round', game: 'Goulash', rule: 'East chooses 1 or 3 exchanges between players, then 1 or 3 exchanges with the wall. No chows, and you need at least 3 doubles to win.' },
+  bigCard: { name: 'Big Card round', game: 'Big Card', rule: 'Before the deal East picks one of the club’s Big Cards, and everyone plays to it.' },
   // India Rules' own rounds (india.ts builds them; these are their names and one-line rules).
-  indiaEast: { name: 'East round: Passport', rule: 'Four sets and a pair, where a set may be a mixed chow or a crochet, or a passport with sets and a pair.' },
-  indiaSouth: { name: 'South round: Small Cards', rule: 'Each player draws a secret Small Card and wins only with the hand it names. East pays and receives double.' },
-  indiaWest: { name: 'West round: Goulash', rule: 'Pungs, kongs and one pair only. A clean hand with at least 3 doubles wins: its points are doubled once for each double.' },
-  indiaNorth: { name: 'North round: East’s choice', rule: 'Before each deal East chooses the game: the East round, Small Cards with jokers, Goulash with jokers, or a Big Card.' },
+  indiaEast: { name: 'East round: Passport', game: 'Passport', rule: 'Four sets and a pair, where a set may be a mixed chow or a crochet, or a passport with sets and a pair.' },
+  indiaSouth: { name: 'South round: Small Cards', game: 'Small Cards', rule: 'Each player draws a secret Small Card and wins only with the hand it names. East pays and receives double.' },
+  indiaWest: { name: 'West round: Goulash', game: 'Goulash', rule: 'Pungs, kongs and one pair only. A clean hand with at least 3 doubles wins: its points are doubled once for each double.' },
+  indiaNorth: { name: 'North round: East’s choice', game: 'East’s choice', rule: 'Before each deal East chooses the game: the East round, Small Cards with jokers, Goulash with jokers, or a Big Card.' },
 };
 
 /** Doubles needed to win a goulash round hand. */

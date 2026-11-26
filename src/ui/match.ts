@@ -485,7 +485,7 @@ export class MatchController {
     fillEtiquetteBar(reactBar, (code) => (this.sendReaction(code), (reactBar.hidden = true)));
     reactBar.prepend(this.tea.row);
     // The variation always heads the title, so you know which rules this table plays.
-    const badge = h('div', { class: 'round-badge' }, h('span', { class: 'round-emblem', html: icon('turn') }), h('div', { class: 'round-text' }, h('div', { class: 'round-var' }, tr(VARIATIONS.find((v) => v.id === this.config.variation)?.short ?? this.game.profile.name)), els.round, h('div', { class: 'round-meta' }, els.hand, h('span', { class: 'dot' }, '·'), els.wall), els.extra));
+    const badge = h('div', { class: 'round-badge' }, h('span', { class: 'round-emblem', html: icon('turn') }), h('div', { class: 'round-text' }, h('div', { class: 'round-var' }, h('span', { class: 'rv-k' }, tr('Rules')), h('span', { class: 'rv-v' }, tr(VARIATIONS.find((v) => v.id === this.config.variation)?.name ?? this.game.profile.name))), els.round, h('div', { class: 'round-meta' }, els.hand, h('span', { class: 'dot' }, '·'), els.wall), els.extra));
     const more = h('button', { class: 'icon-btn more-btn', 'aria-label': tr('More options'), 'aria-expanded': 'false', title: tr('More options: rule book, possibilities, score calculator, reactions and settings'), onclick: () => this.toggleMore(reactBar), html: icon('more') });
     const tools = h(
       'div',
@@ -1321,6 +1321,8 @@ export class MatchController {
         'div',
         { class: 'card confirm' },
         h('h3', {}, tr('Leave the table?')),
+        // What happens to the hand on the table, then what leaving costs: one question covers both.
+        !this.spectator && !(this.opts.link && !this.opts.link.isHost) && this.game.state.phase.kind !== 'handOver' ? h('p', {}, tr('The hand in progress stops here and is not scored.')) : null,
         h('p', {}, this.opts.ranked ? tr('Leaving a ranked game counts as finishing 4th.') : this.opts.tag === 'tournament' ? tr('Leaving counts as finishing last at this table.') : tr('This game will not be saved to your profile.')),
         // Live tables: say what leaving does to everyone else.
         this.opts.link && !this.spectator
@@ -1338,7 +1340,7 @@ export class MatchController {
           'div',
           { class: 'btn-row' },
           h('button', { class: 'btn ghost', onclick: () => (o.hidden = true) }, tr('Keep playing')),
-          h('button', { class: 'btn', onclick: () => this.abort() }, tr('Leave table')),
+          h('button', { class: 'btn leave-btn', onclick: () => this.abort() }, tr('Leave table')),
         ),
       ),
     );
@@ -1417,7 +1419,8 @@ export class MatchController {
     const chosen = g.profile.chosenGame;
     // India Rules North: the game East chose this hand.
     if (chosen) extra.append(h('button', { class: 'goulash-pill round-pill', title: tr(SPECIAL_ROUNDS.indiaNorth.rule), onclick: () => this.guide.toggle(true) }, tr('North: {game}', { game: tr(chosen) })));
-    else if (special) extra.append(h('button', { class: 'goulash-pill round-pill', title: tr(SPECIAL_ROUNDS[special].rule), onclick: () => this.guide.toggle(true) }, tr(SPECIAL_ROUNDS[special].name)));
+    // The round's own game, labelled apart from the ruleset above it ("Rules: India Rules", "This round: Passport").
+    else if (special) extra.append(h('button', { class: 'goulash-pill round-pill', title: tr(SPECIAL_ROUNDS[special].rule), 'aria-label': `${tr('This round')}: ${tr(SPECIAL_ROUNDS[special].game)}`, onclick: () => this.guide.toggle(true) }, h('span', { class: 'rp-k' }, tr('This round')), tr(SPECIAL_ROUNDS[special].game)));
     // North round jokers: a number in each suit (one of each per player), or the flowers and seasons.
     if (g.profile.fixedWilds && g.state.wildKinds?.length) {
       const flowers = !!g.profile.flowersWild;
@@ -2848,8 +2851,11 @@ export class MatchController {
   private refreshAutoDraw() {
     const b = this.els.autoDraw;
     b.innerHTML = icon('auto');
-    b.append(this.settings.autoDraw ? tr('Auto-draw: on') : tr('Auto-draw'));
-    b.classList.toggle('on', !!this.settings.autoDraw);
+    const on = !!this.settings.autoDraw;
+    // The state is spelled out on the button: a filled gold "On" chip, or a quiet outlined "Off".
+    b.append(h('span', { class: 'ad-name' }, tr('Auto-draw')), h('span', { class: 'ad-state' }, on ? tr('On') : tr('Off')));
+    b.setAttribute('aria-label', on ? tr('Auto-draw: on') : tr('Auto-draw: off'));
+    b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(!!this.settings.autoDraw));
     b.title = tr('Take each tile from the wall for you, or tap Draw yourself on your turn');
     b.hidden = this.spectator;
