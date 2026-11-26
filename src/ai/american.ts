@@ -6,6 +6,7 @@ import type { JokerSwap, MahjongGame } from '../engine/game';
 import { FLOWER, distance, meldKind, progress, type Progress } from '../engine/rules/american';
 import type { Meld } from '../engine/state';
 import { FLOWER_BASE, JOKER_KIND, Tile, isFlower, isJoker, tileName } from '../engine/tiles';
+import { tr } from '../i18n';
 
 const norm = (k: number) => (isFlower(k) ? FLOWER : k);
 export const kindLabel = (k: number) => (k === FLOWER ? 'Flower' : tileName(k));
@@ -140,7 +141,7 @@ export function swapHelps(hand: Tile[], melds: Meld[], tileId: number): boolean 
 /** Plain-language description of a target hand. */
 export function describeTarget(p: Progress) {
   const h = p.instance.hand;
-  return `${h.section} · ${h.pattern} (${h.value}${h.concealed ? ', concealed' : ''})`;
+  return `${h.section} · ${h.pattern} (${h.concealed ? tr('{n}, concealed', { n: h.value }) : h.value})`;
 }
 
 export const flowerKind = FLOWER_BASE;

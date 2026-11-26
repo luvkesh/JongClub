@@ -5,19 +5,20 @@
 
 import type { MahjongGame } from '../engine/game';
 import type { ClaimOption } from '../engine/state';
-import { tileName } from '../engine/tiles';
 import { sevenPairsShanten, standardShanten, wildWaits } from '../engine/hand';
-import { andList, tr, trn } from '../i18n';
+import { andList, lang, listSep, scoreLine, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
+import { FLOWER } from '../engine/rules/american';
+import { andJoin, callWord, fromReady, namesText, planName, planNote, riskWord, sentences, tileList } from './adviceText';
 import { charlestonDirName, CHARLESTON } from '../engine/game';
 import { distance as cardDistance, progress } from '../engine/rules/american';
-import { bestSwap, charlestonPick, describeTarget, exposureDanger, kindLabel, missingAfterCall, rankDiscards } from './american';
+import { bestSwap, charlestonPick, describeTarget, exposureDanger, missingAfterCall, rankDiscards } from './american';
 import { safetySentence, threatSentence, riskLabelFor } from './danger';
 import { cardUses, currentShanten, currentWaits, exchangePick, handWilds, shantenWith, openHandHasYakuPath, unseenCounts, waitingView, winningWaits } from './evaluate';
 import { shantenAfterKong } from './players';
 import { ADVISOR, ADVISOR_CLAIMS, planClaim, planDiscard, riichiAdvice } from './strategy';
 import { isPassportRound, passportThreats, threatsOn } from './passportAdvice';
-import { namesSentence, targetKit, targetReads, type TargetKit, type TargetPlan } from './targets';
+import { targetKit, targetReads, type TargetKit, type TargetPlan } from './targets';
 
 export type HintDepth = 'beginner' | 'learning' | 'advanced';
 
@@ -36,6 +37,8 @@ export interface Hint {
   keepBack?: string[];
   /** On a discard you could call: what the call does to your target hands. */
   callCheck?: string;
+  /** American: the advice is a joker swap (the action is still 'discard'). */
+  swap?: boolean;
 }
 
 export interface HintPlan {
@@ -55,10 +58,15 @@ const hintPlans = (plans: TargetPlan[], unseen: number[]): HintPlan[] =>
 
 /** "Aim for ..." at the head of JongBot's reason, in the words of the round. */
 function aimLine(kit: TargetKit, aim: TargetPlan): string {
-  if (kit.id === 'passport') return `Aim for ${namesSentence(aim.names)}${aim.sets ? ` with ${aim.sets} more set${aim.sets > 1 ? 's' : ''}` : ''}${aim.pair ? ' and a pair' : ''}. `;
-  if (kit.id === 'smallCard') return aim.note ? `Fill your card ${aim.note}. ` : '';
+  const name = namesText(aim.names);
+  if (kit.id === 'passport') {
+    if (aim.sets && aim.pair) return trn(aim.sets, 'Aim for {name} with {n} more set and a pair.', 'Aim for {name} with {n} more sets and a pair.', { name });
+    if (aim.sets) return trn(aim.sets, 'Aim for {name} with {n} more set.', 'Aim for {name} with {n} more sets.', { name });
+    return aim.pair ? tr('Aim for {name} and a pair.', { name }) : tr('Aim for {name}.', { name });
+  }
+  if (kit.id === 'smallCard') return aim.note ? tr('Fill your card {note}.', { note: planNote(aim.note) }) : '';
   if (kit.id === 'card' || kit.id === 'shape') return '';
-  return `Aim for ${namesSentence(aim.names)}${aim.note ? ` (${aim.note})` : ''}. `;
+  return aim.note ? tr('Aim for {name} ({note}).', { name, note: planNote(aim.note) }) : tr('Aim for {name}.', { name });
 }
 
 /** Is setting a North aside (sanma kita) at least as good as keeping it? */
@@ -111,12 +119,21 @@ export function cardHint(game: MahjongGame, seat: number, kind: number): string 
   const uses = cardUses(rules);
   const own = rules.special?.find((sp) => sp.ai && sp.how);
   if (!uses || !own) return null;
-  const need = own.how!.charAt(0).toLowerCase() + own.how!.slice(1);
-  return uses(kind) ? `Your card, ${own.name}, needs ${need}. This tile is the one it can spare most.` : `Your card, ${own.name}, needs ${need}. The ${tileName(kind)} has no place in it.`;
+  const card = tr(own.name);
+  const tile = tileLabel(kind);
+  // A card whose description has no translation yet is named without it.
+  const how = tr(own.how!);
+  if (lang() !== 'en' && how === own.how) return uses(kind) ? tr('Your card, {card}, can spare this tile most.', { card }) : tr('Your card, {card}, has no place for the {tile}.', { card, tile });
+  const need = lang() === 'en' ? how.charAt(0).toLowerCase() + how.slice(1) : how;
+  return uses(kind) ? tr('Your card, {card}, needs {need}. This tile is the one it can spare most.', { card, need }) : tr('Your card, {card}, needs {need}. The {tile} has no place in it.', { card, need, tile });
 }
 
-const away = (s: number) => (s >= 99 ? 'no win possible with these sets' : s <= 0 ? 'ready' : s === 1 ? '1 tile from ready' : `${s} tiles from ready`);
-const riskLabel = (d: number) => (d < 0.2 ? 'Safe' : d < 0.6 ? 'Low' : d < 1.2 ? 'Medium' : 'High');
+const away = fromReady;
+const riskLabel = (d: number) => riskWord(d < 0.2 ? 'Safe' : d < 0.6 ? 'Low' : d < 1.2 ? 'Medium' : 'High');
+/** The words for "the 5 Dot" in a sentence. */
+const tileT = (k: number) => tileLabel(k);
+/** A call name as the buttons show it (Pung, ポン, 碰...). */
+const callT = callWord;
 
 export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hint {
   const opts = game.turnOptions(seat);
@@ -124,25 +141,25 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
   if (opts.canWin) {
     const s = opts.winScore!;
     return {
-      headline: names.selfDraw === 'Mahjong' ? 'Declare Mahjong! Your hand is complete.' : `Declare ${names.selfDraw}! Your hand is complete.`,
-      why: `Worth ${s.value} ${s.unit}${s.fu ? ` ${s.fu} fu` : ''}: ${s.items.map((i) => i.name).join(', ')}.`,
+      headline: tr('Declare {call}! Your hand is complete.', { call: callT(names.selfDraw) }),
+      why: tr('Worth {value}: {items}.', { value: `${s.value} ${tr(s.unit)}${s.fu ? ` ${s.fu} ${tr('fu')}` : ''}`, items: s.items.map((i) => scoreLine(i.name)).join(listSep()) }),
       action: 'win',
     };
   }
   if (game.profile.card) return americanTurnHint(game, seat, depth, opts.jokerSwaps.length > 0);
   if (opts.kita && kitaHelps(game, seat))
     return {
-      headline: 'Set the North aside (kita).',
-      why: depth === 'beginner' ? undefined : 'In three-player Riichi a North is a bonus dora when set aside, and you draw a replacement. Your hand does not need it.',
+      headline: tr('Set the North aside (kita).'),
+      why: depth === 'beginner' ? undefined : tr('In three-player Riichi a North is a bonus dora when set aside, and you draw a replacement. Your hand does not need it.'),
       action: 'kita',
       focusKind: game.profile.nukiDora,
     };
   const me = game.players[seat];
   if (me.riichi) {
     return {
-      headline: `You're in ${names.riichi ?? 'riichi'}. Your drawn tile goes back out automatically.`,
+      headline: tr("You're in {riichi}. Your drawn tile goes back out automatically.", { riichi: callT(names.riichi ?? 'riichi') }),
       // The drawn tile goes back out: the waits are those of the hand without it.
-      why: `Waiting on ${winningWaits(game, seat, opts.discards[0]?.kind ?? -1).map(tileName).join(', ')}. You can still win on any of them.`,
+      why: tr('Waiting on {tiles}. You can still win on any of them.', { tiles: tileList(winningWaits(game, seat, opts.discards[0]?.kind ?? -1)) }),
     };
   }
   const plan = planDiscard(game, seat, ADVISOR);
@@ -153,8 +170,8 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
     if (k !== undefined) {
       const added = me.melds.some((m) => m.type === 'pung' && m.tiles[0].kind === k);
       return {
-        headline: `Declare a ${names.kong} of the ${tileName(k)}.`,
-        why: depth === 'beginner' ? undefined : `${added ? 'Adding it to your exposed set' : 'Four of a kind'} doesn't slow your hand, and you draw a replacement tile.`,
+        headline: tr('Declare a {kong} of the {tile}.', { kong: callT(names.kong), tile: tileT(k) }),
+        why: depth === 'beginner' ? undefined : added ? tr("Adding it to your exposed set doesn't slow your hand, and you draw a replacement tile.") : tr("Four of a kind doesn't slow your hand, and you draw a replacement tile."),
         action: 'kong',
         focusKind: k,
       };
@@ -170,8 +187,8 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
     if (alt) best = alt;
   }
   const pl = game.players[seat];
-  const name = tileName(best.kind);
-  const hint: Hint = { headline: `Discard the ${name}.`, focusKind: best.kind, action: 'discard' };
+  const name = tileT(best.kind);
+  const hint: Hint = { headline: tr('Discard the {tile}.', { tile: name }), focusKind: best.kind, action: 'discard' };
 
   // Find a tile we'd naturally want to keep, for "keep X" phrasing.
   const keep = best.improvers.length
@@ -179,59 +196,72 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
     : undefined;
 
   if (plan.mode === 'fold') {
-    hint.why = `Play it safe this turn. You're ${away(best.shanten)}, and winning from here isn't worth the risk of feeding a ready hand.`;
+    hint.why = tr("Play it safe this turn. You're {away}, and winning from here isn't worth the risk of feeding a ready hand.", { away: away(best.shanten) });
   } else if (best.shanten === 0) {
     const unseen = unseenCounts(game, seat);
-    const w = best.improvers.map((k) => `${tileName(k)} (${unseen[k]} left)`);
-    hint.why = `You'll be ready to win. Waiting on ${w.join(', ') || 'nothing live, consider another discard'}.`;
+    const w = best.improvers.map((k) => `${tileT(k)} (${tr('{n} left', { n: unseen[k] })})`);
+    hint.why = w.length ? tr("You'll be ready to win. Waiting on {tiles}.", { tiles: w.join(listSep()) }) : tr("You'll be ready to win. Waiting on nothing live, consider another discard.");
   } else {
     const second = ranked.find((r) => r.kind !== best.kind);
-    hint.why = `It keeps you ${away(best.shanten)}, with ${best.ukeire} tiles still out there that improve your hand.`;
+    hint.why = tr('It keeps you {away}, with {n} tiles still out there that improve your hand.', { away: away(best.shanten), n: best.ukeire });
     const card = cardHint(game, seat, best.kind);
     const route = card ? null : pairsRoute(game, seat, best.kind);
-    if (card) hint.why = card + ' ' + hint.why;
-    else if (route) hint.why = `Go for ${route}: your pairs make it the shortest road to a win. ` + hint.why;
-    else if (keep) hint.why = `Keep the ${tileName(keep.kind)}: it keeps your hand flexible. ` + hint.why;
+    if (card) hint.why = sentences(card, hint.why);
+    else if (route) hint.why = sentences(tr('Go for {hand}: your pairs make it the shortest road to a win.', { hand: planName(route) }), hint.why);
+    else if (keep) hint.why = sentences(tr('Keep the {tile}: it keeps your hand flexible.', { tile: tileT(keep.kind) }), hint.why);
     if (second && second.ukeire < best.ukeire && second.shanten === best.shanten)
-      hint.why += ` The ${tileName(second.kind)} is the next choice but leaves ${second.ukeire}.`;
+      hint.why = sentences(hint.why, tr('The {tile} is the next choice but leaves {n}.', { tile: tileT(second.kind), n: second.ukeire }));
   }
   const kit = targetKit(game);
   if (kit) {
     const plans = kit.plans(game, seat, best.kind);
     hint.targets = { title: kit.list, plans: hintPlans(plans, unseenCounts(game, seat)) };
     const aim = plans[0];
-    if (aim && plan.mode !== 'fold' && best.shanten > 0) hint.why = aimLine(kit, aim) + (hint.why ?? '');
+    if (aim && plan.mode !== 'fold' && best.shanten > 0) hint.why = sentences(aimLine(kit, aim), hint.why);
   }
   const reads = passport ? threats : targetReads(game, seat);
   if (reads.length) hint.keepBack = reads.map((t) => t.line);
   if (passport) {
     const fed = threatsOn(threats, best.kind);
-    if (fed.length) hint.warning = `${fed[0].line} Every other discard slows your hand, so this is the best of the risks.`;
+    if (fed.length) hint.warning = sentences(fed[0].line, tr('Every other discard slows your hand, so this is the best of the risks.'));
   }
   const threat = plan.threat;
   if (threat && !(passport && hint.warning)) {
     const i = plan.danger.reads.indexOf(threat);
     const d = plan.danger.detail[best.kind][i];
-    let line = `${threatSentence(game, threat)} ${d.reason === 'none' && plan.mode === 'fold' ? `The ${name} is the safest tile you have.` : safetySentence(best.kind, d)}`;
-    if (plan.mode === 'push' && d.hit > 0.05) line = `${threatSentence(game, threat)} The ${name} carries some risk, but your hand is worth pushing.`;
+    let line = sentences(threatSentence(game, threat), d.reason === 'none' && plan.mode === 'fold' ? tr('The {tile} is the safest tile you have.', { tile: name }) : safetySentence(best.kind, d));
+    if (plan.mode === 'push' && d.hit > 0.05) line = sentences(threatSentence(game, threat), tr('The {tile} carries some risk, but your hand is worth pushing.', { tile: name }));
     hint.warning = line;
   }
   // Riichi: declare when this discard leaves a ready closed hand (unless it's better to stay quiet).
   const riichiOk = opts.riichiDiscards.some((id) => pl.hand.find((t) => t.id === id)?.kind === best.kind);
   if (riichiOk) {
     const advice = riichiAdvice(game, seat, best.kind);
+    const riichi = callT(names.riichi ?? 'riichi');
     if (advice.riichi) {
-      hint.headline = `Declare ${names.riichi} and discard the ${name}.`;
+      hint.headline = tr('Declare {riichi} and discard the {tile}.', { riichi, tile: name });
       hint.action = 'riichi';
-      hint.why =
-        (game.profile.yakuRequired
-          ? `Your closed hand will be ready. ${names.riichi} adds 1 han (more with ippatsu and ura dora) and makes any win legal, but your hand is locked afterwards. `
-          : `Your closed hand will be ready. Declaring ${names.riichi} adds to what your win pays, but your hand is locked afterwards. `) + (hint.why ?? '');
+      hint.why = sentences(
+        game.profile.yakuRequired
+          ? tr('Your closed hand will be ready. {riichi} adds 1 han (more with ippatsu and ura dora) and makes any win legal, but your hand is locked afterwards.', { riichi })
+          : tr('Your closed hand will be ready. Declaring {riichi} adds to what your win pays, but your hand is locked afterwards.', { riichi }),
+        hint.why,
+      );
     } else if (advice.reason === 'valuable') {
-      hint.headline = `Discard the ${name} and stay quiet.`;
-      hint.why = `Your hand is ready and already worth about ${(Math.round(advice.wait.damaPoints / 100) * 100).toLocaleString('en-US')} points without declaring. Staying quiet keeps the others from playing safe against you, and you can still fold if you need to. ` + (hint.why ?? '');
+      hint.headline = tr('Discard the {tile} and stay quiet.', { tile: name });
+      hint.why = sentences(
+        tr('Your hand is ready and already worth about {points} points without declaring. Staying quiet keeps the others from playing safe against you, and you can still fold if you need to.', {
+          points: (Math.round(advice.wait.damaPoints / 100) * 100).toLocaleString('en-US'),
+        }),
+        hint.why,
+      );
     } else if (advice.reason === 'noTiles') {
-      hint.why = `You'll be ready, but every tile you'd wait on is already showing, so declaring ${names.riichi} isn't worth ${game.profile.riichi?.cost ? 'the deposit' : 'locking your hand'}. ` + (hint.why ?? '');
+      hint.why = sentences(
+        game.profile.riichi?.cost
+          ? tr("You'll be ready, but every tile you'd wait on is already showing, so declaring {riichi} isn't worth the deposit.", { riichi })
+          : tr("You'll be ready, but every tile you'd wait on is already showing, so declaring {riichi} isn't worth locking your hand.", { riichi }),
+        hint.why,
+      );
     }
   }
   // Furiten: a wait you've already discarded means no winning on discards.
@@ -241,15 +271,15 @@ export function turnHint(game: MahjongGame, seat: number, depth: HintDepth): Hin
     // Every wait counts, even one with no copies left to draw.
     const ws = wildWaits(after, handWilds(game, seat), pl.melds.length, game.shapesFor(seat), game.profile.wilds ?? { inPair: false, inChow: false });
     const gone = ws.filter((k) => pl.discardKinds.includes(k) || k === best.kind);
-    if (gone.length) hint.warning = `Furiten: you've discarded ${gone.map(tileName).join(', ')}, which you'd be waiting on. You could only win by self-draw.`;
+    if (gone.length) hint.warning = tr("Furiten: you've discarded {tiles}, which you'd be waiting on. You could only win by self-draw.", { tiles: tileList(gone) });
   }
   // Yaku: open hands in yaku-required rules need a way to score.
   if (game.profile.yakuRequired && !game.isConcealed(seat) && !openHandHasYakuPath(game, seat, -1, [])) {
-    hint.warning = 'Your open hand has no yaku yet. You need a dragon or value-wind set, or all simples, before you can win.';
+    hint.warning = tr('Your open hand has no yaku yet. You need a dragon or value-wind set, or all simples, before you can win.');
   }
   if (depth === 'beginner') delete hint.why;
   if (depth === 'advanced')
-    hint.table = ranked.slice(0, 4).map((e) => ({ tile: tileName(e.kind), away: away(e.shanten), helpful: e.ukeire, risk: riskLabelFor(e.loss) }));
+    hint.table = ranked.slice(0, 4).map((e) => ({ tile: tileT(e.kind), away: away(e.shanten), helpful: e.ukeire, risk: riskWord(riskLabelFor(e.loss)) }));
   return hint;
 }
 
@@ -268,7 +298,11 @@ export function claimHint(game: MahjongGame, seat: number, options: ClaimOption[
 function baseClaimHint(game: MahjongGame, seat: number, options: ClaimOption[], discardKind: number, depth: HintDepth): Hint {
   const names = game.profile.callNames;
   if (options.some((o) => o.type === 'win'))
-    return { headline: `${names.win === 'Mahjong' ? 'Win' : names.win} on the ${tileName(discardKind)}!`, why: 'That discard completes your hand.', action: 'win' };
+    return {
+      headline: names.win === 'Mahjong' ? tr('Win on the {tile}!', { tile: tileT(discardKind) }) : tr('{call} on the {tile}!', { call: callT(names.win), tile: tileT(discardKind) }),
+      why: tr('That discard completes your hand.'),
+      action: 'win',
+    };
   if (game.profile.card) {
     const pl = game.players[seat];
     const now = cardDistance(pl.hand, pl.melds);
@@ -280,106 +314,135 @@ function baseClaimHint(game: MahjongGame, seat: number, options: ClaimOption[], 
     }
     if (best && best.after < now)
       return {
-        headline: `${best.o.type === 'kong' ? names.kong : names.pung} the ${tileName(discardKind)}.`,
-        why: depth === 'beginner' ? undefined : `It fits a hand on the card and leaves you ${cardAway(best.after)}. Exposed sets can hold jokers, which others may swap for.`,
+        headline: tr('{call} the {tile}.', { call: callT(best.o.type === 'kong' ? names.kong : names.pung), tile: tileT(discardKind) }),
+        why: depth === 'beginner' ? undefined : tr('It fits a hand on the card and leaves you {away}. Exposed sets can hold jokers, which others may swap for.', { away: cardAway(best.after) }),
         action: best.o.type,
         focusKind: discardKind,
       };
-    return { headline: 'Pass.', why: depth === 'beginner' ? undefined : `The ${tileName(discardKind)} doesn't bring your nearest card hand closer. In American Mahjong you can only call for a set of three or more, or for Mah Jongg.`, action: 'pass' };
+    return {
+      headline: tr('Pass.'),
+      why: depth === 'beginner' ? undefined : tr("The {tile} doesn't bring your nearest card hand closer. In American Mahjong you can only call for a set of three or more, or for Mah Jongg.", { tile: tileT(discardKind) }),
+      action: 'pass',
+    };
   }
   const plan = planClaim(game, seat, options, discardKind, ADVISOR_CLAIMS);
-  const name = tileName(discardKind);
+  const name = tileT(discardKind);
   const why = (text: string) => (depth === 'beginner' ? undefined : text);
   const unit = game.profile.scoreUnit ?? (game.profile.yakuRequired ? 'han' : (game.profile.base ?? game.profile.id) === 'taiwanese' ? 'tai' : 'faan');
   const called = plan.best;
   if (called.type === 'buy') {
     const price = game.profile.buyFromLeft ?? 0;
     const own = game.shapesFor(seat).special?.find((sp) => sp.ai && sp.how);
+    const p = { card: own ? tr(own.name) : '', before: away(plan.before), after: away(plan.after), n: price };
     return {
-      headline: `Buy the ${name} for ${price}.`,
-      why: why(`${own ? `It fits your card, ${own.name}, and moves` : 'It moves'} you from ${away(plan.before)} to ${away(plan.after)}. A bought tile stays concealed in your hand, and the ${price} goes to the bank for the next winner.`),
+      headline: tr('Buy the {tile} for {n}.', { tile: name, n: price }),
+      why: why(
+        own
+          ? tr('It fits your card, {card}, and moves you from {before} to {after}. A bought tile stays concealed in your hand, and the {n} goes to the bank for the next winner.', p)
+          : tr('It moves you from {before} to {after}. A bought tile stays concealed in your hand, and the {n} goes to the bank for the next winner.', p),
+      ),
       action: 'buy',
       focusKind: discardKind,
     };
   }
   if (called.type !== 'pass') {
-    const verb = called.type === 'chow' ? names.chow : called.type === 'kong' ? names.kong : names.pung;
-    const moves = plan.after < plan.before ? `It moves you from ${away(plan.before)} to ${away(plan.after)}` : `It keeps you ${away(plan.after)}`;
-    const joker = called.using?.some((k) => game.isWild(k)) ? ' It uses up one of your jokers.' : '';
+    const verb = callT(called.type === 'chow' ? names.chow : called.type === 'kong' ? names.kong : names.pung);
+    const moves = plan.after < plan.before ? tr('It moves you from {before} to {after}.', { before: away(plan.before), after: away(plan.after) }) : tr('It keeps you {away}.', { away: away(plan.after) });
+    const joker = called.using?.some((k) => game.isWild(k)) ? tr('It uses up one of your jokers.') : '';
     // More than one chow on offer: say which (the others may fit no winning hand at all).
-    const which = called.type === 'chow' && options.filter((o) => o.type === 'chow').length > 1 ? ` with the ${called.using!.map(tileName).join(' and ')}` : '';
+    const which = called.type === 'chow' && options.filter((o) => o.type === 'chow').length > 1;
     return {
-      headline: `${verb} the ${name}${which}.`,
-      why: why(`${moves}. Calling shows your set to the table, so your hand is no longer concealed.${joker}`),
+      headline: which ? tr('{call} the {tile} with the {tiles}.', { call: verb, tile: name, tiles: andJoin(called.using!.map(tileT)) }) : tr('{call} the {tile}.', { call: verb, tile: name }),
+      why: why(sentences(moves, tr('Calling shows your set to the table, so your hand is no longer concealed.'), joker)),
       action: called.type,
       focusKind: discardKind,
     };
   }
-  const reasons: Record<string, string> = {
-    noYaku: 'Calling would leave your hand open with no yaku, so it could never win. Stay closed and aim for riichi.',
-    noValue: `An open hand here couldn't reach the ${game.profile.minValue} ${unit} you need to win. Stay concealed or wait for a scoring set.`,
-    defend: `You're ${away(plan.before)} and someone looks ready. Calling would use up tiles you can safely discard, so stay patient and play safe.`,
-    noGainBuy: `Buying the ${name} wouldn't bring your hand closer${plan.before === 0 ? ': you are ready, and a bought tile can never make Mahjong' : ''}. Keep your ${game.profile.buyFromLeft ?? ''} and draw from the wall.`,
-    staysClosed: `Calling the ${name} would speed you up a little, but your concealed hand is worth more${game.profile.riichi ? ': you can still declare riichi' : ''}.`,
-  };
-  return {
-    headline: 'Pass.',
-    why: why(reasons[plan.reason === 'noGain' && options.every((o) => o.type === 'buy') ? 'noGainBuy' : plan.reason] ?? `Calling the ${name} doesn't bring you closer to winning, and keeping your hand concealed keeps your options open.`),
-    action: 'pass',
-  };
+  const reason = plan.reason === 'noGain' && options.every((o) => o.type === 'buy') ? 'noGainBuy' : plan.reason;
+  const keep = `${game.profile.buyFromLeft ?? ''}`;
+  const text =
+    reason === 'noYaku'
+      ? tr('Calling would leave your hand open with no yaku, so it could never win. Stay closed and aim for riichi.')
+      : reason === 'noValue'
+        ? tr("An open hand here couldn't reach the {n} {unit} you need to win. Stay concealed or wait for a scoring set.", { n: game.profile.minValue, unit: tr(unit) })
+        : reason === 'defend'
+          ? tr("You're {away} and someone looks ready. Calling would use up tiles you can safely discard, so stay patient and play safe.", { away: away(plan.before) })
+          : reason === 'noGainBuy'
+            ? plan.before === 0
+              ? tr("Buying the {tile} wouldn't bring your hand closer: you are ready, and a bought tile can never make Mahjong. Keep your {n} and draw from the wall.", { tile: name, n: keep })
+              : tr("Buying the {tile} wouldn't bring your hand closer. Keep your {n} and draw from the wall.", { tile: name, n: keep })
+            : reason === 'staysClosed'
+              ? game.profile.riichi
+                ? tr('Calling the {tile} would speed you up a little, but your concealed hand is worth more: you can still declare riichi.', { tile: name })
+                : tr('Calling the {tile} would speed you up a little, but your concealed hand is worth more.', { tile: name })
+              : tr("Calling the {tile} doesn't bring you closer to winning, and keeping your hand concealed keeps your options open.", { tile: name });
+  return { headline: tr('Pass.'), why: why(text), action: 'pass' };
 }
 
-const cardAway = (n: number) => (!Number.isFinite(n) ? 'no card hand fits your exposures (dead hand)' : n <= 0 ? 'complete' : n === 1 ? 'one tile from Mah Jongg' : `${n} tiles from a card hand`);
+const cardAway = (n: number) => (!Number.isFinite(n) ? tr('no card hand fits your exposures (dead hand)') : n <= 0 ? tr('complete') : n === 1 ? tr('one tile from Mah Jongg') : tr('{n} tiles from a card hand', { n }));
+
+/** A tile or the Flower (American flowers are one kind), in a sentence. */
+const kindT = (k: number) => (k === FLOWER ? tr('Flower') : tileT(k));
 
 function americanTurnHint(game: MahjongGame, seat: number, depth: HintDepth, canSwap: boolean): Hint {
   const pl = game.players[seat];
   const sw = canSwap ? bestSwap(game.turnOptions(seat).jokerSwaps, pl.hand, pl.melds) : undefined;
   if (sw) {
-    const owner = sw.owner === seat ? 'your' : `${game.players[sw.owner].name}'s`;
     const t = pl.hand.find((x) => x.id === sw.tileId)!;
     return {
-      headline: `Swap your ${tileName(t.kind)} for the joker in ${owner} exposure.`,
-      why: depth === 'beginner' ? undefined : 'A joker can stand in for any tile in a set of three or more, so it is worth more than the tile you give up.',
+      headline: sw.owner === seat ? tr('Swap your {tile} for the joker in your exposure.', { tile: tileT(t.kind) }) : tr("Swap your {tile} for the joker in {name}'s exposure.", { tile: tileT(t.kind), name: game.players[sw.owner].name }),
+      why: depth === 'beginner' ? undefined : tr('A joker can stand in for any tile in a set of three or more, so it is worth more than the tile you give up.'),
       action: 'discard',
       focusKind: t.kind,
+      swap: true,
     };
   }
   const danger = exposureDanger(game, seat);
   const ranked = rankDiscards(pl.hand, pl.melds, (k) => danger(k) * 0.3);
   const best = ranked[0];
   const target = progress(pl.hand.filter((t) => t !== best.tile), pl.melds, 1)[0];
-  const hint: Hint = { headline: `Discard the ${tileName(best.tile.kind)}.`, focusKind: best.tile.kind, action: 'discard' };
+  const hint: Hint = { headline: tr('Discard the {tile}.', { tile: tileT(best.tile.kind) }), focusKind: best.tile.kind, action: 'discard' };
   const rest = pl.hand.filter((t) => t !== best.tile);
   if (!Number.isFinite(cardDistance(rest, pl.melds))) {
-    hint.why = 'No hand on the card fits your exposures any more: your hand is dead and can’t win. Discard safely for the rest of the hand.';
+    hint.why = tr('No hand on the card fits your exposures any more: your hand is dead and can’t win. Discard safely for the rest of the hand.');
   } else if (depth !== 'beginner' && target) {
-    hint.why = `Your closest hand on the card is ${describeTarget(target)}. That leaves you ${cardAway(target.missing)}.`;
+    hint.why = tr('Your closest hand on the card is {hand}. That leaves you {away}.', { hand: describeTarget(target), away: cardAway(target.missing) });
     // One away, but every tile that would finish it is already showing.
     if (target.missing === 1) {
       const unseen = unseenCounts(game, seat);
       const waits = game.profile.tileKinds.filter((k) => cardDistance([...rest, { id: -8, kind: k }], pl.melds) <= 0);
-      if (waits.length && waits.every((k) => k < unseen.length && unseen[k] === 0)) hint.why = `Your closest hand on the card is ${describeTarget(target)}, but every tile that would finish it is already showing. Look for another hand on the card.`;
+      if (waits.length && waits.every((k) => k < unseen.length && unseen[k] === 0))
+        hint.why = tr('Your closest hand on the card is {hand}, but every tile that would finish it is already showing. Look for another hand on the card.', { hand: describeTarget(target) });
     }
   }
   if (depth === 'advanced')
-    hint.table = ranked.slice(0, 4).map((r) => ({ tile: tileName(r.tile.kind), away: cardAway(r.missing), helpful: Math.round(r.keep), risk: riskLabel(danger(r.tile.kind) * 0.3) }));
+    hint.table = ranked.slice(0, 4).map((r) => ({ tile: tileT(r.tile.kind), away: cardAway(r.missing), helpful: Math.round(r.keep), risk: riskLabel(danger(r.tile.kind) * 0.3) }));
   const kit = targetKit(game);
   if (kit) hint.targets = { title: kit.list, plans: hintPlans(kit.plans(game, seat, best.tile.kind), unseenCounts(game, seat)) };
   const reads = targetReads(game, seat);
   if (reads.length) hint.keepBack = reads.map((t) => t.line);
   const hot = game.players.find((p, s) => s !== seat && !game.sameTeam(seat, s) && p.melds.length >= 3);
-  if (hot) hint.warning = `${hot.name} has ${hot.melds.length} exposures and may be close to Mah Jongg. Avoid tiles that match them.`;
+  if (hot) hint.warning = tr('{name} has {n} exposures and may be close to Mah Jongg. Avoid tiles that match them.', { name: hot.name, n: hot.melds.length });
   return hint;
+}
+
+/** A card's description, or null when it has no translation yet (other languages then leave it out). */
+function cardHow(how: string): string | null {
+  const t = tr(how);
+  return lang() !== 'en' && t === how ? null : t;
 }
 
 /** Why the exchange pick makes sense, in the words of the round being played. */
 function exchangeWhy(game: MahjongGame, seat: number): string {
   const rules = game.shapesFor(seat);
   const own = cardUses(rules) && rules.special?.find((sp) => sp.ai && sp.how);
-  if (own) return `Your card is ${own.name}: ${own.how}. Give away the tiles it can't use first.`;
-  if (game.state.exchange && rules.chows === false) return 'Goulash round: no chows count here, so keep pairs and pungs. Give away lonely tiles and broken runs.';
-  if (game.state.goulash) return 'Goulash exchange: the last hand was a wall game, so everyone passes three tiles. Give away the tiles your sets need least, usually lonely honours and terminals.';
-  return 'Give away the tiles your hand needs least: usually lonely honours and terminals, and tiles that fit none of your sets.';
+  if (own) {
+    const how = cardHow(own.how!);
+    return how ? tr("Your card is {card}: {how}. Give away the tiles it can't use first.", { card: tr(own.name), how }) : tr("Your card is {card}. Give away the tiles it can't use first.", { card: tr(own.name) });
+  }
+  if (game.state.exchange && rules.chows === false) return tr('Goulash round: no chows count here, so keep pairs and pungs. Give away lonely tiles and broken runs.');
+  if (game.state.goulash) return tr('Goulash exchange: the last hand was a wall game, so everyone passes three tiles. Give away the tiles your sets need least, usually lonely honours and terminals.');
+  return tr('Give away the tiles your hand needs least: usually lonely honours and terminals, and tiles that fit none of your sets.');
 }
 
 /** Charleston advice: which three tiles to pass. */
@@ -387,11 +450,12 @@ export function charlestonHint(game: MahjongGame, seat: number, depth: HintDepth
   const ph = game.state.phase;
   // India Rules swaps in pairs, so the direction depends on the seat (the same reckoning as the action bar).
   const n = game.profile.players;
-  const dir = ph.kind === 'charleston' ? charlestonDirName((game.passTarget(seat, ph.stage) - seat + n) % n || CHARLESTON[ph.stage]) : 'right';
+  const dirName = ph.kind === 'charleston' ? charlestonDirName((game.passTarget(seat, ph.stage) - seat + n) % n || CHARLESTON[ph.stage]) : 'right';
+  const dir = tr(dirName);
   if (!game.profile.card) {
     const tiles = exchangePick(game, seat);
     return {
-      headline: `Pass the ${tiles.map((t) => kindLabel(t.kind)).join(', ')} to the ${dir}.`,
+      headline: tr('Pass the {tiles} to the {dir}.', { tiles: tiles.map((t) => kindT(t.kind)).join(listSep()), dir }),
       why: exchangeWhy(game, seat),
       tiles: tiles.map((t) => t.id),
     };
@@ -399,8 +463,13 @@ export function charlestonHint(game: MahjongGame, seat: number, depth: HintDepth
   const pass = charlestonPick(game.players[seat].hand);
   const target = progress(game.players[seat].hand.filter((t) => !pass.includes(t)), [], 1)[0];
   return {
-    headline: `Pass the ${pass.map((t) => kindLabel(t.kind)).join(', ')} to the ${dir}.`,
-    why: depth === 'beginner' ? (game.state.goulash ? 'Pick three tiles you don\'t need, then pass. This is a goulash, so jokers may be passed too, but you will usually want to keep them.' : 'Pick three tiles you don\'t need, then pass. Jokers can\'t be passed.') : `They don't fit your best card hands. Aim for ${target ? describeTarget(target) : 'a hand on the card'}.`,
+    headline: tr('Pass the {tiles} to the {dir}.', { tiles: pass.map((t) => kindT(t.kind)).join(listSep()), dir }),
+    why:
+      depth === 'beginner'
+        ? game.state.goulash
+          ? tr("Pick three tiles you don't need, then pass. This is a goulash, so jokers may be passed too, but you will usually want to keep them.")
+          : tr("Pick three tiles you don't need, then pass. Jokers can't be passed.")
+        : tr("They don't fit your best card hands. Aim for {hand}.", { hand: target ? describeTarget(target) : tr('a hand on the card') }),
     tiles: pass.map((t) => t.id),
   };
 }

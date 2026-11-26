@@ -27,11 +27,25 @@ function open(): Promise<IDBDatabase | null> {
   return dbP;
 }
 
+/** A stored PNG. Safari's private browsing (and WebKit's other ephemeral sessions) refuses Blobs in
+ * IndexedDB, so the bytes are kept as an ArrayBuffer; entries saved as Blobs still load. */
+export type StoredPng = Blob | ArrayBuffer;
+
 export interface StoredFace {
-  face: Blob;
-  foil?: Blob;
+  face: StoredPng;
+  foil?: StoredPng;
   /** The face's relief for the 3D bump map (tileFaces.ts). */
-  relief?: Blob;
+  relief?: StoredPng;
+}
+
+/** Blobs to ArrayBuffers for storing (left as Blobs where the browser cannot read them out). */
+export async function toStored(face: StoredFace): Promise<StoredFace> {
+  const buf = async (b: StoredPng | undefined) => (b instanceof Blob && typeof b.arrayBuffer === 'function' ? b.arrayBuffer() : b);
+  const [f, m, r] = await Promise.all([buf(face.face), buf(face.foil), buf(face.relief)]);
+  const out: StoredFace = { face: f! };
+  if (m) out.foil = m;
+  if (r) out.relief = r;
+  return out;
 }
 
 /** Every stored face under `prefix` (one set at one detail), keyed by the rest of its key. */
@@ -61,6 +75,8 @@ export async function loadFaces(prefix: string): Promise<Map<string, StoredFace>
 export async function saveFace(prefix: string, rest: string, face: StoredFace) {
   const db = await open();
   if (!db) return;
+  // Read the bytes out before the transaction starts: a transaction closes at the first await.
+  const stored = await toStored(face).catch(() => face);
   try {
     const tx = db.transaction(STORE, 'readwrite');
     const os = tx.objectStore(STORE);
@@ -76,7 +92,7 @@ export async function saveFace(prefix: string, rest: string, face: StoredFace) {
         cur.continue();
       };
     }
-    os.put(face, prefix + rest);
+    os.put(stored, prefix + rest);
   } catch {
     /* storage full or unavailable: faces are simply drawn next time */
   }
@@ -84,9 +100,9 @@ export async function saveFace(prefix: string, rest: string, face: StoredFace) {
 const kept = new Set<string>();
 
 /** Decode a stored image into a canvas (canvases, unlike bitmaps, upload the right way up in three.js). */
-export async function blobCanvas(b: Blob): Promise<HTMLCanvasElement | null> {
+export async function blobCanvas(b: StoredPng): Promise<HTMLCanvasElement | null> {
   try {
-    const bmp = await createImageBitmap(b);
+    const bmp = await createImageBitmap(b instanceof Blob ? b : new Blob([b], { type: 'image/png' }));
     const c = document.createElement('canvas');
     c.width = bmp.width;
     c.height = bmp.height;

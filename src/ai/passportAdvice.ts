@@ -8,8 +8,8 @@ import type { ClaimOption } from '../engine/state';
 import { passportPlans, type PassportPlan } from '../engine/rules/indiaPassport';
 import { seatLabel } from './danger';
 import { tr } from '../i18n';
+import { callWord, fromReady, namesText, sentences, suitName } from './adviceText';
 
-const SUIT_NAMES = ['Characters', 'Dots', 'Bamboos'];
 const suitOf = (k: number) => Math.floor(k / 9);
 
 /** Is this a passport round (the East round, or the North round played as one)? */
@@ -60,25 +60,30 @@ export function passportThreats(game: MahjongGame, seat: number): PassportThreat
     const ps = suitsOf(pungs);
     if (pungs.length >= 2 && ps.length === 2) {
       const third = [0, 1, 2].find((s) => !ps.includes(s))!;
-      add('3 Pungs in 3 different suits', suitKinds(third), `${who} has pungs in ${SUIT_NAMES[ps[0]]} and ${SUIT_NAMES[ps[1]]}: likely 3 Pungs in 3 different suits. Hold back ${SUIT_NAMES[third]} they could pung.`);
+      const passport = '3 Pungs in 3 different suits';
+      add(passport, suitKinds(third), tr('{who} has pungs in {a} and {b}: likely {passport}. Hold back {c} they could pung.', { who, a: suitName(ps[0]), b: suitName(ps[1]), c: suitName(third), passport: tr(passport) }));
     } else if (pungs.length >= 2 && ps.length === 1) {
       const used = pungs.map((m) => m.kind);
-      add('3 Pungs in the same suit', suitKinds(ps[0]).filter((k) => !used.includes(k)), `${who} has two pungs in ${SUIT_NAMES[ps[0]]}: likely 3 Pungs in the same suit. Hold back ${SUIT_NAMES[ps[0]]}.`);
+      const passport = '3 Pungs in the same suit';
+      add(passport, suitKinds(ps[0]).filter((k) => !used.includes(k)), tr('{who} has two pungs in {a}: likely {passport}. Hold back {a}.', { who, a: suitName(ps[0]), passport: tr(passport) }));
     }
     // Two chows: a third, in the missing suit or the same suit. Only the player on your right can
     // chow your discard, but anyone can win on it.
     const cs = suitsOf(chows);
-    const feeds = o === right ? ' Your discards feed their chows.' : '';
+    const feeds = o === right ? tr('Your discards feed their chows.') : '';
     if (chows.length >= 2 && cs.length === 2) {
       const third = [0, 1, 2].find((s) => !cs.includes(s))!;
-      add('3 Chows in 3 different suits', suitKinds(third), `${who} has chows in ${SUIT_NAMES[cs[0]]} and ${SUIT_NAMES[cs[1]]}: likely 3 Chows in 3 different suits. Hold back ${SUIT_NAMES[third]}.${feeds}`);
+      const passport = '3 Chows in 3 different suits';
+      add(passport, suitKinds(third), sentences(tr('{who} has chows in {a} and {b}: likely {passport}. Hold back {c}.', { who, a: suitName(cs[0]), b: suitName(cs[1]), c: suitName(third), passport: tr(passport) }), feeds));
     } else if (chows.length >= 2 && cs.length === 1) {
-      add('3 Chows in the same suit', suitKinds(cs[0]), `${who} has two chows in ${SUIT_NAMES[cs[0]]}: likely 3 Chows in the same suit. Hold back ${SUIT_NAMES[cs[0]]}.${feeds}`);
+      const passport = '3 Chows in the same suit';
+      add(passport, suitKinds(cs[0]), sentences(tr('{who} has two chows in {a}: likely {passport}. Hold back {a}.', { who, a: suitName(cs[0]), passport: tr(passport) }), feeds));
     }
     // An honour pung: Honour Pung + Honour Pair wants an honour pair.
     if (honours.length) {
       const kinds = [27, 28, 29, 30, 31, 32, 33].filter((k) => !honours.some((m) => m.kind === k));
-      add('Honour Pung + Honour Pair', kinds, `${who} has an honour pung: likely Honour Pung + Honour Pair. Late in the hand, a single honour you throw can be their pair.`);
+      const passport = 'Honour Pung + Honour Pair';
+      add(passport, kinds, tr('{who} has an honour pung: likely {passport}. Late in the hand, a single honour you throw can be their pair.', { who, passport: tr(passport) }));
     }
   }
   return out;
@@ -111,8 +116,6 @@ export interface PassportCall {
   line: string;
 }
 
-const named = (names: string[]) => names.filter((n, i) => names.indexOf(n) === i).map((n) => (names.filter((x) => x === n).length > 1 ? `${n} twice` : n)).join(' + ');
-const fromReady = (n: number) => (n >= 99 ? 'no win possible with these sets' : n <= 0 ? 'ready' : n === 1 ? '1 tile from ready' : `${n} tiles from ready`);
 
 export function passportCall(game: MahjongGame, seat: number, o: ClaimOption, discardKind: number): PassportCall | null {
   if (o.type !== 'pung' && o.type !== 'kong' && o.type !== 'chow') return null;
@@ -127,15 +130,16 @@ export function passportCall(game: MahjongGame, seat: number, o: ClaimOption, di
   const before = now ? now.missing - 1 : 99;
   const after = plan ? plan.missing - 1 : 99;
   const inPassport = !!plan && plan.meldsUsed.includes(melds.length);
-  const verb = o.type === 'chow' ? 'chow' : o.type === 'kong' ? 'kong' : 'pung';
+  const call = callWord(o.type === 'chow' ? 'chow' : o.type === 'kong' ? 'kong' : 'pung');
+  const p = { call, passport: plan ? namesText(plan.names) : '', after: fromReady(after), before: fromReady(before) };
   let line: string;
-  if (!plan) line = `Passport check: after this ${verb} no passport hand would be left open to you. Pass.`;
+  if (!plan) line = tr('Passport check: after this {call} no passport hand would be left open to you. Pass.', p);
   else if (after < before)
     line = inPassport
-      ? `Passport check: this ${verb} makes part of ${named(plan.names)} and leaves you ${fromReady(after)} (now ${fromReady(before)}).`
-      : `Passport check: this ${verb} is a set beside ${named(plan.names)} and leaves you ${fromReady(after)} (now ${fromReady(before)}).`;
-  else if (after === before) line = `Passport check: this ${verb} doesn't bring a passport closer. You stay ${fromReady(after)}, aiming for ${named(plan.names)}.`;
-  else line = `Passport check: this ${verb} blocks your nearest passport. The best left would be ${named(plan.names)}, ${fromReady(after)} instead of ${fromReady(before)}.`;
+      ? tr('Passport check: this {call} makes part of {passport} and leaves you {after} (now {before}).', p)
+      : tr('Passport check: this {call} is a set beside {passport} and leaves you {after} (now {before}).', p);
+  else if (after === before) line = tr("Passport check: this {call} doesn't bring a passport closer. You stay {after}, aiming for {passport}.", p);
+  else line = tr('Passport check: this {call} blocks your nearest passport. The best left would be {passport}, {after} instead of {before}.', p);
   return { before, after, names: plan?.names ?? null, inPassport, line };
 }
 
