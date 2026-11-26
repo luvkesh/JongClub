@@ -30,6 +30,19 @@ export function andJoin(items: string[]): string {
   return items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
+/** "A, B or C": the tiles a hand waits on. */
+export function orJoin(items: string[]): string {
+  if (lang() !== 'en') {
+    try {
+      const LF = (Intl as unknown as { ListFormat: new (l: string, o: object) => { format(x: string[]): string } }).ListFormat;
+      return new LF(lang(), { type: 'disjunction' }).format(items);
+    } catch {
+      return items.join(listSep());
+    }
+  }
+  return items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} or ${items[items.length - 1]}`;
+}
+
 /**
  * A call word in a sentence ("this pung", "this pon"): English keeps the word it is given; other
  * languages say the call as the buttons do (碰, ポン...). The ruleset's "Riichi" is the word riichi,

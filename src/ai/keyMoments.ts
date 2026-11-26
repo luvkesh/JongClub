@@ -8,7 +8,8 @@ import type { ReplayRecord } from '../net/replay';
 import { readOpponent, threatSentence } from './danger';
 import { runAll, snapshot, walkMatch } from './matchWalk';
 import { reviewClaim, reviewDiscard, type DecisionReview, type Verdict } from './review';
-import { tr } from '../i18n';
+import { lang, tr } from '../i18n';
+import { sentences } from './adviceText';
 
 export type MomentKind = 'costly' | 'missedWin' | 'missedClaim' | 'dealIn' | 'good';
 
@@ -37,14 +38,20 @@ interface Seen {
   tile?: number;
 }
 
-/** Keep only the first two sentences, so a card stays short. */
+/** Keep only the first two sentences, so a card stays short (full stops of every UI language). */
 export function shortLine(text: string, max = 2): string {
-  let parts: string[] | null = text.match(/[^.!?]+[.!?]+["”’)]*\s*/g);
+  let parts: string[] | null = text.match(/[^.!?。！？।؟]+[.!?。！？।؟]+["”’」)）]*\s*/g);
   if (!parts) return text.trim();
   // "Nice." or "Well judged." on its own adds nothing on a card.
-  if (parts.length > 1 && parts[0].trim().split(/\s+/).length <= 2) parts = parts.slice(1);
+  if (lang() === 'en' && parts.length > 1 && parts[0].trim().split(/\s+/).length <= 2) parts = parts.slice(1);
   if (parts.length <= max) return parts.join('').trim();
   return parts.slice(0, max).join('').trim();
+}
+
+/** A review's words for a card: without its opening word of praise, and short. */
+function cardLine(r: DecisionReview): string {
+  const text = r.opener && r.explanation.startsWith(r.opener) ? r.explanation.slice(r.opener.length).trim() : r.explanation;
+  return shortLine(text);
 }
 
 /**
@@ -103,26 +110,26 @@ export function* keyMomentScan(rec: ReplayRecord): Generator<void, KeyMoment[] |
   // 1. The discard that cost the most.
   const costly = discards.filter((d) => BAD.includes(d.review.verdict)).sort((a, b) => b.review.weight - a.review.weight)[0];
   if (costly) {
-    out.push({ kind: 'costly', title: tr('The discard that cost the most'), line: shortLine(costly.review.explanation), verdict: costly.review.verdict, hand: costly.hand, step: costly.step, tile: costly.tile, better: costly.review.bestKind ?? undefined });
+    out.push({ kind: 'costly', title: tr('The discard that cost the most'), line: cardLine(costly.review), verdict: costly.review.verdict, hand: costly.hand, step: costly.step, tile: costly.tile, better: costly.review.bestKind ?? undefined });
   }
 
   // 2. A win you passed, else a deal-in, else a claim you let go.
-  const missedWin = claims.find((c) => c.review.verdict === 'blunder' && /winning tile/.test(c.review.explanation));
+  const missedWin = claims.find((c) => c.review.tag === 'missedWin');
   const dealIn = dealIns.sort((a, b) => b.points - a.points)[0];
-  const missedClaim = claims.filter((c) => BAD.includes(c.review.verdict) && /^You passed/.test(c.review.explanation)).sort((a, b) => b.review.weight - a.review.weight)[0];
+  const missedClaim = claims.filter((c) => BAD.includes(c.review.verdict) && !!c.review.tag).sort((a, b) => b.review.weight - a.review.weight)[0];
   if (missedWin) {
-    out.push({ kind: 'missedWin', title: tr('A win you let pass'), line: shortLine(missedWin.review.explanation), verdict: 'blunder', hand: missedWin.hand, step: missedWin.step, tile: missedWin.tile });
+    out.push({ kind: 'missedWin', title: tr('A win you let pass'), line: cardLine(missedWin.review), verdict: 'blunder', hand: missedWin.hand, step: missedWin.step, tile: missedWin.tile });
   } else if (dealIn) {
     const who = rec.names[dealIn.winner] ?? tr('An opponent');
-    const why = dealIn.threat ? ` ${dealIn.threat} ${tr('A tile they had already thrown would have been safer.')}` : ` ${tr('{name} didn’t look close yet, so that one was hard to see coming.', { name: who })}`;
-    out.push({ kind: 'dealIn', title: dealIn.threat ? tr('A dangerous deal-in') : tr('The tile that was won on'), line: `${tr('{name} won on your {tile}.', { name: who, tile: tileLabel(dealIn.tile) })}${why}`, verdict: dealIn.threat ? 'mistake' : 'inaccuracy', hand: dealIn.hand, step: dealIn.step, tile: dealIn.tile });
+    const why = dealIn.threat ? sentences(dealIn.threat, tr('A tile they had already thrown would have been safer.')) : tr('{name} didn’t look close yet, so that one was hard to see coming.', { name: who });
+    out.push({ kind: 'dealIn', title: dealIn.threat ? tr('A dangerous deal-in') : tr('The tile that was won on'), line: sentences(tr('{name} won on your {tile}.', { name: who, tile: tileLabel(dealIn.tile) }), why), verdict: dealIn.threat ? 'mistake' : 'inaccuracy', hand: dealIn.hand, step: dealIn.step, tile: dealIn.tile });
   } else if (missedClaim) {
-    out.push({ kind: 'missedClaim', title: tr('A call you missed'), line: shortLine(missedClaim.review.explanation), verdict: missedClaim.review.verdict, hand: missedClaim.hand, step: missedClaim.step, tile: missedClaim.tile });
+    out.push({ kind: 'missedClaim', title: tr('A call you missed'), line: cardLine(missedClaim.review), verdict: missedClaim.review.verdict, hand: missedClaim.hand, step: missedClaim.step, tile: missedClaim.tile });
   }
 
   // 3. One thing you did well: the best move that mattered most.
   const good = [...discards, ...claims].filter((d) => d.review.verdict === 'best' && d.review.weight > 0).sort((a, b) => b.review.weight - a.review.weight || b.hand - a.hand || b.step - a.step)[0];
-  if (good) out.push({ kind: 'good', title: tr('Something you did well'), line: shortLine(good.review.explanation), verdict: 'best', hand: good.hand, step: good.step, tile: good.tile });
+  if (good) out.push({ kind: 'good', title: tr('Something you did well'), line: cardLine(good.review), verdict: 'best', hand: good.hand, step: good.step, tile: good.tile });
   return out.length ? out : null;
 }
 

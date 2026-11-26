@@ -7,7 +7,7 @@
 // Nothing here is random, so it is safe for replays and lockstep play.
 
 import type { MahjongGame } from '../engine/game';
-import { KIND_COUNT, WIND_NAMES, isDragon, isHonor, tileName, windKind } from '../engine/tiles';
+import { KIND_COUNT, WIND_NAMES, isDragon, isHonor, windKind } from '../engine/tiles';
 import { dealerTai } from '../engine/rules/taiwanese';
 import { unseenCounts } from './evaluate';
 import { lang, tr, trn } from '../i18n';
@@ -362,18 +362,13 @@ export function riskLabelFor(loss: number): string {
 }
 
 
-const list = (ks: number[]) => {
-  const names = ks.map(tileName);
-  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-};
-
 /**
  * One plain sentence on why a tile is (or isn't) safe against one opponent, in the player's language.
- * `past` words it for a replay review ("was" instead of "is"), which stays English.
+ * `past` words it for a replay review ("was" instead of "is").
  */
 export function safetySentence(kind: number, d: TileDanger, past = false): string {
-  if (past) return pastSafety(kind, d);
   const p = { tile: tileLabel(kind), tiles: andJoin(d.via.map((k) => tileLabel(k))) };
+  if (past) return pastSafety(d, p);
   switch (d.reason) {
     case 'genbutsu':
       return d.hit === 0 ? tr('The {tile} is safe against them: they discarded it.', p) : tr('The {tile} is fairly safe against them: they discarded one earlier.', p);
@@ -396,45 +391,56 @@ export function safetySentence(kind: number, d: TileDanger, past = false): strin
   }
 }
 
-/** The replay review's wording (English). */
-function pastSafety(kind: number, d: TileDanger): string {
-  const Name = `The ${tileName(kind)}`;
+/** The replay review's wording: the same reads, looking back. */
+function pastSafety(d: TileDanger, p: { tile: string; tiles: string }): string {
   switch (d.reason) {
     case 'genbutsu':
-      return d.hit === 0 ? `${Name} was safe against them: they discarded it.` : `${Name} was fairly safe against them: they discarded one earlier.`;
+      return d.hit === 0 ? tr('The {tile} was safe against them: they discarded it.', p) : tr('The {tile} was fairly safe against them: they discarded one earlier.', p);
     case 'passedRiichi':
-      return `${Name} was safe against them: it was let go after their declaration and they didn't win on it.`;
+      return tr("The {tile} was safe against them: it was let go after their declaration and they didn't win on it.", p);
     case 'passed':
-      return `${Name} was safe against them for now: it was let go since their last turn and they didn't take it.`;
+      return tr("The {tile} was safe against them for now: it was let go since their last turn and they didn't take it.", p);
     case 'suji':
-      return `${Name} was fairly safe against them: they discarded the ${list(d.via)}, so it couldn't finish a two-sided wait.`;
+      return tr("The {tile} was fairly safe against them: they discarded the {tiles}, so it couldn't finish a two-sided wait.", p);
     case 'kabe':
-      return `${Name} was fairly safe: all four of the ${list(d.via)} were visible, so it couldn't finish a two-sided wait.`;
+      return tr("The {tile} was fairly safe: all four of the {tiles} were visible, so it couldn't finish a two-sided wait.", p);
     case 'honourDead':
-      return `${Name} was safe: every other copy was visible, so nobody could be waiting on it.`;
+      return tr('The {tile} was safe: every other copy was visible, so nobody could be waiting on it.', p);
     case 'honourSeen':
-      return `${Name} was fairly safe: the other copies were already showing, so only a single-tile wait could use it.`;
+      return tr('The {tile} was fairly safe: the other copies were already showing, so only a single-tile wait could use it.', p);
     case 'early':
-      return `${Name} was a little safer: they threw away tiles next to it early on.`;
+      return tr('The {tile} was a little safer: they threw away tiles next to it early on.', p);
     default:
-      return d.hit >= 0.08 ? `${Name} was risky against them.` : `${Name} was not a sure safe tile against them.`;
+      return d.hit >= 0.08 ? tr('The {tile} was risky against them.', p) : tr('The {tile} was not a sure safe tile against them.', p);
   }
 }
 
-/** Name and seat wind, e.g. "Mei (East)", in the player's language (`english` for the replay review). */
-export function seatLabel(game: MahjongGame, seat: number, english = false): string {
-  const wind = WIND_NAMES[game.state.seatWinds[seat]];
-  return english ? `${game.players[seat].name} (${wind})` : tr('{name} ({wind})', { name: game.players[seat].name, wind: tr(wind) });
+/** Name and seat wind, e.g. "Mei (East)", in the player's language. */
+export function seatLabel(game: MahjongGame, seat: number): string {
+  return tr('{name} ({wind})', { name: game.players[seat].name, wind: tr(WIND_NAMES[game.state.seatWinds[seat]]) });
 }
 
-/** Short description of why an opponent looks dangerous. `past` (the replay review) stays English. */
+/** Short description of why an opponent looks dangerous. `past` words it for a replay review. */
 export function threatSentence(game: MahjongGame, read: OpponentRead, past = false): string {
-  const who = seatLabel(game, read.seat, past);
+  const who = seatLabel(game, read.seat);
   const riichiName = game.profile.callNames.riichi ?? 'riichi';
   if (!past && read.riichi) return tr('{who} has declared {riichi}.', { who, riichi: callWord(riichiName) });
-  if (!past && lang() !== 'en') {
+  if (lang() !== 'en') {
     // One short sentence per fact, so each language keeps its own word order.
     const n = read.openMelds;
+    if (past) {
+      if (read.riichi) return tr('{who} had declared {riichi}.', { who, riichi: callWord(riichiName) });
+      const first =
+        read.flushSuit !== null
+          ? tr('{who} looked to be collecting {suit}.', { who, suit: suitName(read.flushSuit) })
+          : read.dragonPungs >= 2
+            ? tr('{who} had {n} dragon sets showing.', { who, n: read.dragonPungs })
+            : n
+              ? trn(n, '{who} had {n} set showing.', '{who} had {n} sets showing.', { who })
+              : tr('{who} might have been close to winning.', { who });
+      const also = read.flushSuit === null ? '' : read.dragonPungs >= 2 ? tr('They also had {n} dragon sets showing.', { n: read.dragonPungs }) : n ? trn(n, 'They also had {n} set showing.', 'They also had {n} sets showing.') : '';
+      return sentences(first, also, read.tenpai >= 0.6 ? tr('They might have been ready.') : '');
+    }
     const first =
       read.flushSuit !== null
         ? tr('{who} looks to be collecting {suit}.', { who, suit: suitName(read.flushSuit) })

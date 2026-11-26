@@ -55,7 +55,7 @@ function printedCard(kind: 'small' | 'big', n: number, name: string, picture: st
     class: `small-card cc cc-${pal.id} cc-${pal.metal} cc-e-${emblemOf(name)}${kind === 'big' ? ' big-card' : ''}${recommended ? ' recommended' : ''}`,
     style: `--cc-ink:${pal.ink};--cc-deep:${pal.deep};--cc-deep2:${pal.deep2}`,
     role: 'group',
-    'aria-label': `${kind === 'big' ? tr('Big Card') : tr('Small Card')} ${n}: ${name}`,
+    'aria-label': `${kind === 'big' ? tr('Big Card') : tr('Small Card')} ${n}: ${tr(name)}`,
   });
   card.insertAdjacentHTML('afterbegin', cardStockSvg(pal, n, kind === 'big'));
   card.append(
@@ -66,7 +66,7 @@ function printedCard(kind: 'small' | 'big', n: number, name: string, picture: st
       { class: 'cc-face' },
       h('div', { class: 'cc-kind' }, kind === 'big' ? tr('Big Card') : tr('Small Card')),
       h('div', { class: 'cc-medal', html: medallionSvg(name, n, pal) }),
-      h('div', { class: 'sc-head' }, h('span', { class: 'sc-name' }, name)),
+      h('div', { class: 'sc-head' }, h('span', { class: 'sc-name' }, tr(name))),
       h('div', { class: 'sc-value' }, ...value.filter((x) => x !== null)),
       h('div', { class: 'cc-panel' }, h('div', { class: 'sc-picture', 'aria-label': tr('One way to make it') }, ...parseKinds(picture).map((k) => tileImg(k, 'sc-tile'))), ...panel.filter((x): x is HTMLElement => !!x)),
       h('div', { class: 'cc-foot', 'aria-hidden': 'true' }, 'JongClub'),
