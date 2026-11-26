@@ -233,6 +233,9 @@ p { text-wrap: pretty; }
   background: linear-gradient(90deg, transparent, var(--line-strong) 30%, transparent 46%, transparent 54%, var(--line-strong) 70%, transparent);
   opacity: 0; transition: opacity 0.25s;
 }
+/* Laptop widths: ten tabs, the points pill and three round buttons share one row, so the tabs sit a little closer
+   rather than the last one (Profile) sliding under the fade. */
+@media (max-width: 1400px) { .nav-item { padding-inline: 8px; letter-spacing: 0.13em; } }
 .nav-item:hover { color: var(--ivory); }
 .nav-item.on { color: var(--brass-hi); }
 .nav-item.on::after { transform: translateX(-50%) rotate(45deg) scale(1); }

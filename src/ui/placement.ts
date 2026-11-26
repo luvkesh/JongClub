@@ -32,7 +32,7 @@ export function placementTable(ctx: AppCtx, r: PlacementResult | null = loadPlac
 function sitDown(ctx: AppCtx, r: PlacementResult) {
   const t = placementTable(ctx, r);
   if (t) ctx.startMatch(t);
-  else ctx.startGuided();
+  else ctx.startGuided('india');
 }
 
 /** Open the first lesson on the Academy path still to learn. */

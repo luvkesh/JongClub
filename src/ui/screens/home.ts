@@ -114,5 +114,5 @@ function sitDown(app: App) {
   if (app.profile.games > 0) return app.startMatch(lastTable());
   const t = placementTable(app.ctx());
   if (t) app.startMatch(t);
-  else app.startGuided();
+  else app.startGuided('india');
 }

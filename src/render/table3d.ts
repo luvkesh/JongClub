@@ -256,6 +256,10 @@ export function riverFit(n: number, side: boolean, along = side ? TH : TW, acros
   return best;
 }
 
+/** What a crawling device draws (TableRenderer.noteGap): about this many pixels, shadows and effects left alone. */
+const CRAWL_PIXELS = 160_000;
+const CRAWL_STEP: GovernorStep = { scale: 1, staticShadows: true, effects: false };
+
 /** The table's governor ladder: shadow refresh, then ambient effects; never resolution. */
 const TABLE_GOVERNOR_STEPS: GovernorStep[] = [
   { scale: 1, staticShadows: false, effects: true },
@@ -1438,6 +1442,8 @@ export class TableRenderer {
     // the canvas is magnified like a photo: draw it denser so the tiles stay sharp.
     const pageZoom = Math.min(4, Math.max(1, window.visualViewport?.scale ?? 1));
     if (pageZoom > 1.05 && !this.memTight) pr = Math.max(pr, Math.min(this.prMax * pageZoom, Math.sqrt(ZOOM_PIXELS[this.q.tier] / area)));
+    // A crawling device (noteGap) gets a small picture it can actually draw.
+    if (this.crawl.on) return Math.max(0.3, Math.min(pr * gs, Math.sqrt(CRAWL_PIXELS / area)));
     return Math.max(Math.min(floor, this.prMax), pr * gs);
   }
 
@@ -1465,7 +1471,10 @@ export class TableRenderer {
     const w = this.container.clientWidth || window.innerWidth;
     const h = this.container.clientHeight || window.innerHeight;
     const pr = this.pixelRatioFor(w, h);
-    if (Math.abs(pr - this.renderer.getPixelRatio()) > 0.01) this.renderer.setPixelRatio(pr);
+    if (Math.abs(pr - this.renderer.getPixelRatio()) < 0.01) return;
+    this.renderer.setPixelRatio(pr);
+    // Resizing clears the picture: draw the next frame at once, even where frames are spaced out.
+    this.lastRender = 0;
   }
 
   /** On phones the bottom of the screen holds your tiles, so lift the table into the space above. */
@@ -3501,16 +3510,19 @@ export class TableRenderer {
     // whole room twice as often for no visible gain, and a GPU kept that busy delays everything else
     // on the page: the hitch after each discard.
     const ms = performance.now();
+    this.noteGap(ms);
     const moving = this.moving(ms);
     const busy = moving || this.busy(ms);
     if (ms - this.lastRender < (busy ? 1000 / 75 : 1000 / 40)) return;
+    // A device that crawls (see noteGap) draws less often, so the page between frames stays free for taps.
+    if (this.crawl.on && ms - this.lastRender < Math.min(1200, this.crawl.cost * 3)) return;
     this.lastRender = ms;
     // Only full-rate frames say anything about whether the device keeps up.
     if (!moving) this.governor.pause();
     this.settleResolution(moving, ms);
     // Shadows follow moving tiles every frame; otherwise a few times a second is plenty (seated figures breathe).
     // When the governor asks, moving shadows update every third frame too.
-    const gov = this.governor.step;
+    const gov = this.crawl.on ? CRAWL_STEP : this.governor.step;
     this.shadowTick++;
     if (gov.staticShadows ? this.shadowTick % (moving ? 3 : 9) === 0 : moving || this.shadowTick % 3 === 0) this.renderer.shadowMap.needsUpdate = true;
     const calmFx = this.speed === 'minimal' || !gov.effects;
@@ -3591,7 +3603,46 @@ export class TableRenderer {
     this.renderer.render(this.scene, this.camera);
     if (this.splitOn) this.renderHandStrip();
     if (moving) this.governor.tick(performance.now());
+    this.crawl.drew = true;
     this.perfCount(ms, busy);
+  }
+
+  /** A device without a working graphics card: see noteGap(). `cost` is the smoothed wait after a drawn frame. */
+  private crawl = { on: false, n: 0, cost: 0, calmSince: 0, times: 0, last: 0, drew: false };
+
+  /**
+   * The governor ignores gaps between frames of over a quarter of a second (a hidden tab, a
+   * deliberate pause), so a device that needs that long for every frame never got any relief:
+   * software rendering, a remote desktop, a browser driven by a test tool. There the browser blocks
+   * the page after each frame while it draws, and the menus over the room stop answering taps. The
+   * drawing happens after our code returns, so time how long the browser takes to come back after
+   * a frame that drew. Several such waits in a row of over 140 ms: draw far fewer pixels, leave
+   * shadows and ambient effects alone, and space frames out (frame()). It lifts again if the waits
+   * turn short, though not a third time, so a borderline device settles instead of flipping.
+   */
+  private noteGap(ms: number) {
+    const c = this.crawl;
+    const gap = ms - c.last;
+    const drew = c.drew;
+    c.last = ms;
+    c.drew = false;
+    // Only the wait after a drawn frame says anything; a very long one is a tab that was hidden.
+    if (!drew || gap > 5000) return;
+    c.cost = c.cost ? c.cost * 0.7 + gap * 0.3 : gap;
+    if (!c.on) {
+      c.n = gap > 140 ? c.n + 1 : 0;
+      if (c.n < 6) return;
+      c.on = true;
+      c.times++;
+      c.calmSince = 0;
+      this.applyDensity();
+    } else if (c.times < 2 && c.cost < 30) {
+      c.calmSince ||= ms;
+      if (ms - c.calmSince < 10_000) return;
+      c.on = false;
+      c.n = 0;
+      this.applyDensity();
+    } else c.calmSince = 0;
   }
 
   /** The render quality tier in use (picked from the device; see quality.ts). */

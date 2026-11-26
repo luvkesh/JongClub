@@ -18,7 +18,7 @@ import { recordGameSkills } from '../../progression/skills';
 import { saveProgressCard } from '../../auth/prompt';
 import { andList, shownName, tr } from '../../i18n';
 import type { App } from '../app';
-import { autostartLesson, nextAfter, nextLesson } from './learn';
+import { nextAfter, nextLesson } from './learn';
 import { ICONS, LAUREL, SCENE } from '../resultsLook';
 
 let renameOnCard: (() => void) | null = null;
@@ -131,9 +131,9 @@ export function showResults(app: App, summary: MatchSummary, standings: { name: 
         ? h('button', { class: 'btn', onclick: () => ((o.hidden = true), narrator.stop(), app.closeMatchUi(), app.startGuided(app.guidedVariation, app.guidedTheme)) }, tr('Play another guided hand'))
         : tag === 'tournament' || tag?.startsWith('daily:') || wasLive ? '' : h('button', { class: 'btn', onclick: () => ((o.hidden = true), app.closeMatchUi(), app.startMatch(app.lastConfig, app.lastOpts)) }, tr('Rematch')),
       guided
-        ? h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), narrator.stop(), app.closeMatchUi(), (app.learnLesson = nextLesson(app)), autostartLesson(), app.go('learn')) }, tr('Continue the Academy'))
+        ? h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), narrator.stop(), app.closeMatchUi(), app.ctx().openLesson(nextLesson(app))) }, tr('Continue the Academy'))
         : afterLesson
-          ? h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), app.closeMatchUi(), (app.learnLesson = afterLesson), autostartLesson(), app.go('learn')) }, tr('Next lesson'))
+          ? h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), app.closeMatchUi(), app.ctx().openLesson(afterLesson)) }, tr('Next lesson'))
           : h('button', { class: 'btn primary', onclick: () => ((o.hidden = true), app.closeMatchUi(), app.go('play')) }, tr('Return to Lobby')),
     ),
     // A guest who has just earned something: offer, gently, to keep it (src/auth/prompt.ts).
