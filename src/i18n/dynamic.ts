@@ -23,5 +23,12 @@ export const DYNAMIC_KEYS = [
   'Counted Yakuman',
   'Limit hand',
   'Maximum tai',
+  // JongBot's target hands, named by the planners in English (ai/adviceText.ts planName and planNote).
+  'Tanyao (all simples)',
+  'Toitoi (all pungs)',
+  'Chiitoitsu (seven pairs)',
+  '1s and 9s',
+  'Three Dragons',
+  'Concealed Mahjong adds 3 doubles while nothing is exposed.',
 ];
 

@@ -11,6 +11,7 @@ import { SMALL_CARDS, cardSets, type SmallCard } from '../engine/rules/indiaCard
 import { NORTH, NUMBER_NAMES, northBig, northGoulash } from '../engine/rules/india';
 import { BIG_CARDS, type BigCard, type BigGroup } from '../engine/rules/indiaBig';
 import { likelyTargets, riskyTargetKinds, targetKit, type TargetKit, type TargetPlan } from '../ai/targets';
+import { callWord, planName, planNote } from '../ai/adviceText';
 import { bigCardView, smallCardView } from './smallCard';
 import { cardDistances } from '../ai/indiaCardPick';
 import { SPECIAL_ROUNDS, type SpecialRoundId } from '../engine/rules/windRounds';
@@ -67,7 +68,7 @@ import { handNowView, lineName, onShowView } from './handScoreView';
 import { fillEtiquetteBar, showSignal } from './etiquette';
 import { TeaService } from './tea';
 import { diceForVariation } from '../render/sideTables';
-import { andList, shownName, tr, trn } from '../i18n';
+import { andList, listSep, shownName, tr, trn } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { cardGrip, consoleWidth, dockButton, hudMode, moreSheet, restoreCard, type GridItem, type HudMode } from './matchControls';
 import { applyVolumes, setTableMuted, type MusicSettings } from './musicToggle';
@@ -139,6 +140,14 @@ const AI_PAUSE_MIN = 800;
 const AI_PAUSE_MAX = 1250;
 /** Live tables: seconds the hand summary waits before moving on by itself. */
 const LIVE_SUMMARY_S = 25;
+/**
+ * Untimed live tables: a player who hasn't moved for this long seems to be away, and their move is
+ * made for them (as when a clock runs out); after that they get AWAY_STEP_S per move until they make
+ * one themselves. The last AWAY_WARN_S show a countdown. Nobody can stall a table forever.
+ */
+export const AWAY_S = 180;
+export const AWAY_STEP_S = 15;
+export const AWAY_WARN_S = 60;
 
 export type SeatKind = 'local' | 'ai' | 'remote';
 
@@ -719,7 +728,7 @@ export class MatchController {
       { label: this.muted ? tr('Unmute') : tr('Mute'), icon: this.muted ? 'speakerOff' : 'speaker', on: this.muted, act: () => this.setMuted(!this.muted) },
       music ? { label: tr('Music'), icon: music.classList.contains('off') ? 'musicOff' : 'music', on: !music.classList.contains('off'), act: () => music.click() } : null,
       this.hudMode === 'console' ? null : { label: this.customOrder ? tr('Sort: your order ↺') : tr('Sort: {by}', { by }), icon: 'sort', act: () => this.els.sort.click() },
-      kit ? null : { label: this.settings.groupSets ? tr('Sets grouped ✓') : tr('Group sets'), icon: 'group', on: !!this.settings.groupSets, act: () => this.els.group.click() },
+      kit && kit.id !== 'shape' ? null : { label: this.settings.groupSets ? tr('Sets grouped ✓') : tr('Group sets'), icon: 'group', on: !!this.settings.groupSets, act: () => this.els.group.click() },
       this.hooks.openLabs && dev.enabled ? { label: tr('Labs'), icon: 'labs', act: () => this.hooks.openLabs!() } : null,
       { label: tr('Settings'), icon: 'settings', act: () => this.hooks.openSettings() },
       { label: tr('Close game'), icon: 'close', act: () => this.confirmLeave() },
@@ -789,7 +798,7 @@ export class MatchController {
               },
             },
             h('span', { class: 'poss-top' }, h('b', { class: 'poss-name' }, passportNames(p.names)), h('span', { class: 'poss-away' }, passportAway(p.missing - 1))),
-            p.note ? h('span', { class: 'poss-note' }, tr(p.note)) : null,
+            p.note ? h('span', { class: 'poss-note' }, planNote(p.note)) : null,
             p.pieces.length ? tiles : null,
           ),
         );
@@ -1033,7 +1042,7 @@ export class MatchController {
   private renderTargetPick() {
     const row = clear(this.els.pp);
     const kit = this.kit();
-    const plans = kit && this.settings.groupSets && this.game.state.phase.kind !== 'handOver' ? this.targetPlansNow().filter((p) => p.pieces.length) : [];
+    const plans = kit && this.settings.groupSets && this.game.state.phase.kind !== 'handOver' ? this.targetPlansNow().filter((p) => p.pieces.length || kit.id === 'shape') : [];
     row.hidden = !plans.length;
     // The phone pill: the target you're aiming for; it opens every possibility.
     const pill = this.ctl?.ppBtn;
@@ -1061,7 +1070,7 @@ export class MatchController {
             type: 'button',
             class: `pp-chip${on ? ' on' : ''}`,
             'aria-pressed': String(on),
-            title: [passportNames(p.names), p.note ? tr(p.note) : '', tr(kit.chipTip)].filter(Boolean).join(' · '),
+            title: [passportNames(p.names), p.note ? planNote(p.note) : '', tr(kit.chipTip)].filter(Boolean).join(' · '),
             onclick: () => {
               this.ppChoice = p.key;
               this.pushLayout();
@@ -1314,7 +1323,17 @@ export class MatchController {
         h('h3', {}, tr('Leave the table?')),
         h('p', {}, this.opts.ranked ? tr('Leaving a ranked game counts as finishing 4th.') : this.opts.tag === 'tournament' ? tr('Leaving counts as finishing last at this table.') : tr('This game will not be saved to your profile.')),
         // Live tables: say what leaving does to everyone else.
-        this.opts.link && !this.spectator ? h('p', { class: 'muted' }, this.opts.link.isHost ? tr('You are the host: leaving ends this game for everyone at the table.') : tr('An AI player takes over your seat and the others play on.')) : null,
+        this.opts.link && !this.spectator
+          ? h(
+              'p',
+              { class: 'muted' },
+              this.opts.link.isHost
+                ? this.opts.link.canHandOver?.()
+                  ? tr('You are the host: another player takes over hosting, an AI plays your seat and the others play on.')
+                  : tr('You are the host: leaving ends this game for everyone at the table.')
+                : tr('An AI player takes over your seat and the others play on.'),
+            )
+          : null,
         h(
           'div',
           { class: 'btn-row' },
@@ -1445,9 +1464,9 @@ export class MatchController {
         h(
           'div',
           { class: 'seat-info' },
-          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, shownName(p.name)), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, tr(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
+          h('div', { class: 'seat-name' }, h('span', { class: 'seat-nm' }, shownName(p.name)), g.teamOf(s) !== null && s !== this.you ? h('span', { class: `team-pill team-${g.teamOf(s)}`, title: g.sameTeam(s, this.you) ? tr('Team play: you and {name} score together', { name: p.name }) : tr('Team play: the other team') }, g.sameTeam(s, this.you) ? tr('Partner') : tr('Rival')) : null, s === g.dealer && eastKnown ? h('span', { class: 'dealer', title: tr('Dealer: this player starts the hand and makes the first discard') }, tr('Dealer')) : null, p.riichi ? h('span', { class: 'riichi-pill' }, callWord(g.profile.callNames.riichi ?? 'Riichi')) : null, p.flowers.length && !preDeal ? h('span', { class: 'flower-pill', title: g.profile.flowersHidden && s !== this.me && g.state.phase.kind !== 'handOver' ? tr('Face down until Mahjong') : p.flowers.map((f) => tileLabel(f.kind)).join(', ') }, `✿ ${p.flowers.length}`) : null),
           h('div', { class: 'seat-sub' }, h('span', { class: 'wind', title: { E: tr('East seat'), S: tr('South seat'), W: tr('West seat'), N: tr('North seat') }[wind] }, wind), this.seats[s].kind === 'ai' ? PERSONALITIES[ai.personality].label : s === this.you ? tr('You') : tr('Club member')),
-          reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, tr(reads.get(s)!.name))) : null,
+          reads.has(s) ? h('div', { class: 'seat-pp', title: reads.get(s)!.line }, h('span', { class: 'seat-pp-tag' }, reads.get(s)!.tag ?? tr('Likely')), h('span', { class: 'seat-pp-name' }, planName(reads.get(s)!.name))) : null,
         ),
         h('div', { class: 'seat-score', title: scoreTip(s) }, h('span', { class: 'pts-num' }, fmt(p.score)), h('span', { class: 'pts-cap' }, tr('pts'))),
         // Narrow upright screens: the side racks run off the screen's edges, so their claimed sets show here (CSS shows it there only).
@@ -2172,7 +2191,7 @@ export class MatchController {
       const list = h('div', { class: 'bot-pp' }, h('div', { class: 'bot-pp-title' }, tr(hint.targets.title)));
       for (const p of hint.targets.plans.slice(0, 3)) {
         const name = passportNames(p.names);
-        const extra = [p.sets ? trn(p.sets, '{n} more set', '{n} more sets') : '', p.pair ? tr('a pair') : '', p.note ? tr(p.note) : ''].filter(Boolean).join(', ');
+        const extra = [p.sets ? trn(p.sets, '{n} more set', '{n} more sets') : '', p.pair ? tr('a pair') : '', p.note ? planNote(p.note) : ''].filter(Boolean).join(listSep());
         const tiles = h('div', { class: 'bot-pp-tiles' });
         p.pieces.forEach((piece, i) => {
           const g = h('span', { class: 'bot-pp-piece' });
@@ -2264,7 +2283,7 @@ export class MatchController {
         if (e.riichi) {
           sound.play('riichi');
           if (e.seat === this.me) this.stats.riichis++;
-          this.toast(tr(this.game.profile.callNames.riichi ?? 'Riichi').toUpperCase(), e.seat === this.me ? tr('You declare a ready hand') : tr('{name} declares a ready hand', { name: name(e.seat) }));
+          this.toast(callWord(this.game.profile.callNames.riichi ?? 'Riichi').toUpperCase(), e.seat === this.me ? tr('You declare a ready hand') : tr('{name} declares a ready hand', { name: name(e.seat) }));
         }
         break;
       case 'dora':
@@ -2371,6 +2390,8 @@ export class MatchController {
     // A live player whose tab froze never runs out their own clock: well past their longest clock (with a
     // wide margin for a slow device still catching up), the host hands the seat to an AI. Untimed tables wait.
     if (this.opts.link && this.limits.turn > 0) this.opts.link.stallMs = Math.max(120, firstTurnLimit(this.limits.turn) * 2 + 60) * 1000;
+    // Untimed: each page makes an away player's moves itself (waitHuman); the host's stall only catches a frozen page.
+    else if (this.opts.link) this.opts.link.stallMs = (AWAY_S + 90) * 1000;
     while (!this.aborted) {
       const link = this.opts.link;
       if (link) {
@@ -2530,7 +2551,13 @@ export class MatchController {
   private async remote<T extends Action>(seat: number, index = this.handLog.length): Promise<T | null> {
     const link = this.opts.link;
     if (!link) return null;
+    // Untimed tables: say when someone seems away and when their move will be made for them.
+    const hint =
+      this.limits.turn > 0
+        ? 0
+        : window.setTimeout(() => this.toast(tr('WAITING'), tr('{name} seems to be away. Their move is made for them in {n}s.', { name: this.game.players[seat].name, n: AWAY_WARN_S })), (AWAY_S - AWAY_WARN_S) * 1000);
     const got = await link.next(seat, this.handNo, index);
+    window.clearTimeout(hint);
     if (this.aborted) return null;
     if (got === 'ai') {
       this.seats[seat].kind = 'ai';
@@ -2619,7 +2646,7 @@ export class MatchController {
       this.bubble(seat, tr('Joker swap!'));
       return { t: 'j', s: seat, o: d.swap!.owner, m: d.swap!.meld, id: d.swap!.tileId };
     }
-    if (d.riichi) this.bubble(seat, `${tr(g.profile.callNames.riichi ?? 'Riichi')}!`);
+    if (d.riichi) this.bubble(seat, `${callWord(g.profile.callNames.riichi ?? 'Riichi')}!`);
     else if (ai.personality === 'teacher' && Math.random() < 0.3) this.bubble(seat, this.teacherRemark(seat, d.kind!));
     return d.riichi ? { t: 'd', s: seat, id: d.tileId!, r: 1 } : { t: 'd', s: seat, id: d.tileId! };
   }
@@ -2662,13 +2689,20 @@ export class MatchController {
    * live tables never pause (everyone else is waiting too).
    */
   private waitHuman<T>(setup: (done: (v: T) => void) => void, onTimeout: () => T, limit = 0, kind: 'claim' | 'turn' = 'turn', timeoutNote?: string): Promise<T> {
+    // Untimed live table: a long wait means the player is away (AWAY_S).
+    const idle = limit <= 0 && !!this.opts.link && !this.spectator;
+    if (idle) limit = this.away ? AWAY_STEP_S : AWAY_S;
     return new Promise<T>((resolve) => {
       let finished = false;
+      let timedOut = false;
+      let warned = false;
       let cd: Countdown | null = null;
       const ring = this.els.timer;
       const done = (v: T) => {
         if (finished) return;
         finished = true;
+        // A move of their own: they're back.
+        if (idle && !timedOut) this.away = false;
         this.waitSpentMs = cd?.spentMs ?? 0;
         window.clearInterval(this.timerHandle);
         window.cancelAnimationFrame(this.timerFrame);
@@ -2682,7 +2716,7 @@ export class MatchController {
       if (!this.catchingUp()) haptic(kind);
       if (limit > 0 && !this.catchingUp()) {
         cd = new Countdown(limit * 1000, performance.now());
-        ring.hidden = false;
+        ring.hidden = idle && limit > AWAY_WARN_S;
         ring.dataset.kind = kind;
         const n = Math.ceil(limit);
         ring.setAttribute('aria-label', kind === 'claim' ? tr('Time to claim: {n} seconds', { n }) : tr('Time for your turn: {n} seconds', { n }));
@@ -2697,11 +2731,20 @@ export class MatchController {
             shown = st.left;
             num.textContent = String(st.left);
             ring.classList.toggle('low', st.low);
+            if (idle && st.left <= AWAY_WARN_S) {
+              ring.hidden = false;
+              if (!warned && !this.away) this.toast(tr('STILL THERE?'), tr('Everyone is waiting for you. Your move is made for you in {n}s.', { n: st.left }));
+              warned = true;
+            }
           }
           if (st.tick) sound.play('click');
           if (st.done) {
+            timedOut = true;
             const v = onTimeout();
-            this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
+            if (idle) {
+              this.away = true;
+              this.toast(tr('AWAY'), tr('Your moves are made for you while you are away. Make a move yourself to play on.'));
+            } else this.toast(tr('TIME'), timeoutNote ?? (kind === 'claim' ? tr('Passed for you') : tr('A tile was discarded for you')));
             // "I discarded for you" only when a tile was discarded (not for a draw, a Charleston pass or an exchange).
             if (kind === 'claim') this.speak({ parts: [{ line: LINES.timeClaim }], text: LINES.timeClaim });
             else if (!timeoutNote) this.speak({ parts: [{ line: LINES.timeTurn }], text: LINES.timeTurn });
@@ -2717,6 +2760,8 @@ export class MatchController {
   }
 
   private timerFrame = 0;
+  /** Untimed live table: this player let a move go by (AWAY_S); their moves are made quickly for them until they move. */
+  private away = false;
   /** How long the last timed wait ran (pauses excluded); the draw's share comes off the discard's clock. */
   private waitSpentMs = 0;
   /** Your turn's time already used on drawing, in seconds. */
@@ -2939,7 +2984,7 @@ export class MatchController {
         // Out of time: JongBot's pick when hints are on, else the tile you just drew.
         const allowed = riichiMode ? new Set(opts.riichiDiscards) : new Set(opts.discards.map((x) => x.id));
         const hand = g.players[this.me].hand.filter((x) => allowed.has(x.id));
-        const byHint = this.hintsOn && hint.focusKind !== undefined && hint.action === 'discard' && !/^Swap\b/.test(hint.headline) ? hand.find((x) => x.kind === hint.focusKind) : undefined;
+        const byHint = this.hintsOn && hint.focusKind !== undefined && hint.action === 'discard' && !hint.swap ? hand.find((x) => x.kind === hint.focusKind) : undefined;
         const pick = byHint ?? (drawn && allowed.has(drawn.id) ? drawn : undefined) ?? hand[hand.length - 1] ?? opts.discards[0];
         return { kind: 'discard', id: pick.id, riichi: riichiMode };
       },
@@ -3887,7 +3932,7 @@ export class MatchController {
       placement,
       mode: this.opts.mode ?? 'ai',
     };
-    this.opts.link?.close();
+    this.opts.link?.close(true);
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('keydown', this.onKey);
     this.releaseStage();
@@ -3989,7 +4034,7 @@ function instantLines(g: MahjongGame, r: HandResult): InstantLine[] {
 
 /** Passport names for the planner and the chips: "3 Knits in the same 2 suits ×2" when one repeats. */
 function passportNames(names: string[]): string {
-  return names.map((n, i) => (names.indexOf(n) < i ? null : names.filter((x) => x === n).length > 1 ? `${tr(n)} ×2` : tr(n))).filter(Boolean).join(' + ');
+  return names.map((n, i) => (names.indexOf(n) < i ? null : names.filter((x) => x === n).length > 1 ? `${planName(n)} ×2` : planName(n))).filter(Boolean).join(' + ');
 }
 
 /** How far a passport hand is, as JongBot says it everywhere else. */

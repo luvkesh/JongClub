@@ -10,7 +10,7 @@
 import type { AvatarSpec } from '../cosmetics/catalog';
 import type { TableConfig } from '../ui/match';
 import { seatsForVariation } from '../engine/rules';
-import { RoomLink } from './lockstep';
+import { RoomLink, keyOfPeer, samePlayer, type SeatKey } from './lockstep';
 import { DbNamedRoom, plain, type Db } from './dbroom';
 import { MeshRoom, type LinkStatus } from './mesh';
 import { liveDb, lobbyRoom, myPeer, newTableCode, userApi, type LobbyRoom, type RoomPeer } from './room';
@@ -39,8 +39,12 @@ export interface StartSeat {
   kind: 'human' | 'ai';
   name: string;
   peer?: string;
-  /** The player's rejoin key (their tab keeps it across a reload), so they can take the seat again. */
+  /** Who the player is, so they can take the seat again: their tab's rejoin key (kept across a reload), */
   pid?: string;
+  /** this browser's key (kept across tabs and restarts), */
+  dev?: string;
+  /** and their claude.ai user id (the same on every device). */
+  uid?: string;
   avatar?: AvatarSpec;
   personality?: string;
 }
@@ -97,9 +101,38 @@ export const tabPid = (() => {
   };
 })();
 
+/**
+ * This browser's key: kept across tabs and restarts, so a player who reopens the table in a new tab
+ * gets their seat back even where there is no claude.ai user id to recognise them by.
+ */
+export const deviceKey = (() => {
+  let id: string | null = null;
+  return () => {
+    if (id) return id;
+    const KEY = 'jongclub.live.dev.v1';
+    try {
+      id = globalThis.localStorage?.getItem(KEY) ?? null;
+    } catch {
+      /* no storage */
+    }
+    if (!id || !/^[a-z0-9]{12}$/.test(id)) {
+      const a = 'abcdefghjkmnpqrstuvwxyz23456789';
+      const b = new Uint8Array(12);
+      globalThis.crypto.getRandomValues(b);
+      id = Array.from(b, (x) => a[x % a.length]).join('');
+      try {
+        globalThis.localStorage?.setItem(KEY, id);
+      } catch {
+        /* ignore */
+      }
+    }
+    return id;
+  };
+})();
+
 const REJOIN_KEY = 'jongclub.live.table.v1';
 
-/** Remember (or forget) the table this tab sits at as a guest, so a reload takes it back there. */
+/** Remember (or forget) the table this tab sits at, so a reload takes it back there. */
 function rememberTable(code: string | null, spectate = false) {
   try {
     if (code) globalThis.sessionStorage?.setItem(REJOIN_KEY, JSON.stringify({ code, spectate, at: Date.now() }));
@@ -155,7 +188,7 @@ export class Club {
   private constructor(
     readonly lobby: LobbyRoom | null,
     private db: Db | null,
-    private uid: string | null,
+    readonly uid: string | null,
   ) {
     lobby?.onPeers(() => this.emit());
     db?.collection('tables').onSnapshot(
@@ -171,7 +204,11 @@ export class Club {
   static async connect(who: Who): Promise<Club | null> {
     const [lobby, db] = await Promise.all([lobbyRoom(), liveDb()]);
     if (!lobby && !db) return null;
-    const uid = db ? await userApi().then((u) => (u ? u.id() : null)).catch(() => null) : null;
+    // The viewer's claude.ai user id recognises a returning player on any tab or device.
+    const uid = await userApi()
+      .then((u) => (u ? u.id() : null))
+      .then((id) => (typeof id === 'string' && id ? id : null))
+      .catch(() => null);
     const c = new Club(lobby, db, uid);
     await lobby?.presence({ who }).catch(() => {});
     return c;
@@ -273,23 +310,44 @@ export class TableSession {
   private info: TableInfo | null = null;
   private left = false;
   private lastLink: RoomLink | null = null;
+  /** This tab hosts the table (it opened it, or took over when the host left mid-game). */
+  private hosting: boolean;
+  /** How many times hosting has moved at this table (the host's `he`). */
+  private epoch = 0;
+  /** The table as last described by its host (kept while hosting moves). */
+  private lastTable: TableInfo | null = null;
+  /** This tab gave up its seat to the same player's newer tab and now watches. */
+  private watchOnly = false;
+  /** Who played the seat when this tab asked for it back. */
+  private claimFrom: string | null | undefined;
 
   constructor(
     private club: Club,
     readonly room: MeshRoom,
     readonly code: string,
-    readonly isHost: boolean,
+    isHost: boolean,
     private who: Who,
     private isPrivate: boolean,
     readonly spectating = false,
   ) {
+    this.hosting = isHost;
     this.unsub = room.onPeers(() => this.update());
+  }
+
+  get isHost() {
+    return this.hosting;
+  }
+
+  /** Who this tab's player is (StartSeat pid / dev / uid). */
+  myKey(): SeatKey {
+    return { pid: tabPid(), dev: deviceKey(), uid: this.club.uid ?? undefined };
   }
 
   async init(info: TableInfo | null) {
     this.info = info;
+    const k = this.myKey();
     await this.room
-      .presence({ who: this.who, role: this.isHost ? 'host' : this.spectating ? 'spectator' : 'player', pid: tabPid(), table: info as unknown as Record<string, unknown> })
+      .presence({ who: this.who, role: this.isHost ? 'host' : this.spectating ? 'spectator' : 'player', pid: k.pid, dev: k.dev, uid: k.uid ?? null, table: info as unknown as Record<string, unknown> })
       .catch(() => {});
     this.update();
   }
@@ -303,15 +361,22 @@ export class TableSession {
     return myPeer(this.room);
   }
 
+  /** The host: the newest of the tabs saying so (hosting can move mid-game; `he` counts the moves). */
   private hostPeer(): RoomPeer | undefined {
-    return this.room.peers().find((p) => p.presence?.role === 'host');
+    let best: RoomPeer | undefined;
+    for (const p of this.room.peers()) {
+      if (p.presence?.role !== 'host') continue;
+      if (this.hosting ? p.isMe && p.sameTab : !best || (Number(p.presence?.he) || 0) > (Number(best.presence?.he) || 0)) best = p;
+    }
+    return best;
   }
 
-  /** The table as the host describes it. */
+  /** The table as the host describes it (while hosting moves to another player, as last seen). */
   table(): TableInfo | null {
     if (this.isHost) return this.info;
     const t = this.hostPeer()?.presence?.table as TableInfo | undefined;
-    return t && Array.isArray(t.seats) && t.cfg ? t : null;
+    if (t && Array.isArray(t.seats) && t.cfg) return (this.lastTable = t);
+    return this.lastTable?.start ? this.lastTable : null;
   }
 
   hostName() {
@@ -333,27 +398,73 @@ export class TableSession {
     // Watchers, and anyone who arrived after the seats were filled and the game began
     // (a player coming back to their own seat is not watching).
     const t = this.table();
-    const pids = new Set((t?.start?.seats ?? []).map((x) => x.pid).filter(Boolean));
+    const seats = t?.start?.seats ?? [];
     return this.room
       .peers()
-      .filter((p) => p.presence?.role === 'spectator' || (!!t?.start && p.presence?.role === 'player' && !t.seats.includes(p.peer) && !pids.has(p.presence?.pid as string)))
+      .filter((p) => p.presence?.role === 'spectator' || (!!t?.start && p.presence?.role === 'player' && !t.seats.includes(p.peer) && !seats.some((x) => x.kind === 'human' && samePlayer(x, keyOfPeer(p)))))
       .map(whoOf);
   }
 
+  /** The label playing seat `s` now: the latest player the host gave it back to, else who sat down at the start. */
+  private seatLabel(s: number): string | null {
+    const play = this.hostPeer()?.presence?.play as { back?: { s: number; h: number; p: string }[] } | undefined;
+    let best: { h: number; p: string } | null = null;
+    for (const b of Array.isArray(play?.back) ? play.back : []) if (b && b.s === s && typeof b.p === 'string' && (!best || b.h >= best.h)) best = b;
+    return best?.p ?? this.table()?.start?.seats[s]?.peer ?? null;
+  }
+
   /**
-   * Arriving at a game already under way: the seat this tab held before its page reloaded
-   * (the same rejoin key, or the same label where the link keeps it), else -1. The host's seat never comes back.
+   * Arriving at a game under way: the seat this player held (this tab before a reload, or the same
+   * person from a new tab, after closing the browser, or from another device), else -1. A seat whose
+   * player is away comes first; a seat still played from another tab is taken over from it (the newer
+   * tab wins). The seat the host plays is never taken from the host's page.
    */
   returnSeat(): number {
     const start = this.table()?.start;
-    if (!start || this.isHost || this.spectating) return -1;
+    if (!start || this.isHost || this.spectating || this.watchOnly) return -1;
     const me = this.myPeer;
-    return start.seats.findIndex((x, i) => i > 0 && x.kind === 'human' && (x.pid === tabPid() || (!!me && x.peer === me)));
+    const key = this.myKey();
+    const peers = this.room.peers();
+    const host = this.hostPeer()?.peer;
+    let best = -1;
+    let bestRank = 0;
+    start.seats.forEach((x, i) => {
+      if (x.kind !== 'human') return;
+      const label = this.seatLabel(i);
+      const sure = !!me && label === me ? 3 : samePlayer(x, key);
+      if (!sure || (label && label === host)) return;
+      const away = !label || !peers.some((p) => p.peer === label);
+      const rank = sure * 2 + (away ? 1 : 0);
+      if (rank > bestRank) {
+        best = i;
+        bestRank = rank;
+      }
+    });
+    return best;
   }
 
-  /** Tell the host this tab is back and waiting for its seat (the host hands it to an AI at once, and back at the next hand). */
-  markRejoining() {
-    void this.room.presence({ play: { rejoin: 1 } }).catch(() => {});
+  /** The same player is at this table in another tab that hosts it (that seat is never taken from the host's page). */
+  hostIsMe(): boolean {
+    const host = this.hostPeer();
+    return !this.isHost && !!host && !(host.isMe && host.sameTab) && samePlayer(keyOfPeer(host), this.myKey()) > 0;
+  }
+
+  /** Tell the host this tab is back and claims `seat` (the host hands it to an AI at once, and back at the next hand). */
+  markRejoining(seat: number) {
+    this.claimFrom = this.seatLabel(seat);
+    void this.room.presence({ role: 'player', play: { rejoin: 1, seat, at: Date.now() } }).catch(() => {});
+  }
+
+  /** The same player took this tab's seat from a newer tab: from now on this tab only watches. */
+  watchHere() {
+    this.watchOnly = true;
+    void this.room.presence({ role: 'spectator', play: null }).catch(() => {});
+  }
+
+  /** The seat went to another tab of the same player that asked after this one did (the newer claim won). */
+  seatMovedOn(seat: number): boolean {
+    const label = this.seatLabel(seat);
+    return this.claimFrom !== undefined && !!label && label !== this.myPeer && label !== this.claimFrom;
   }
 
   /** The hand from which the host gives this tab its seat back, once the host has noticed it (only a return after the seat's last takeover counts). */
@@ -374,6 +485,28 @@ export class TableSession {
 
   hostPresent() {
     return this.isHost || !!this.hostPeer();
+  }
+
+  /** The host left mid-game and this tab's link took over hosting. */
+  private promote(epoch: number) {
+    if (this.left) return;
+    const t = this.table();
+    if (!t) return;
+    this.hosting = true;
+    this.epoch = epoch;
+    this.info = t;
+    void this.room.presence({ role: 'host', he: epoch, table: t as unknown as Record<string, unknown> }).catch(() => {});
+    this.update();
+  }
+
+  /** Another tab hosts now (this one was cut off while hosting moved): sit at the table as a player again. */
+  stepDown() {
+    if (!this.hosting) return;
+    this.lastTable = this.info;
+    this.hosting = false;
+    this.club.advertise(null);
+    void this.room.presence({ role: 'player', he: null, table: null, play: null }).catch(() => {});
+    this.update();
   }
 
   private update() {
@@ -424,8 +557,9 @@ export class TableSession {
     let ai = 0;
     const seats: StartSeat[] = seating.map((s, i) => {
       if (s) {
-        const pid = this.room.peers().find((p) => p.peer === s.peer)?.presence?.pid;
-        return { kind: 'human', name: s.who.name, peer: s.peer, avatar: s.who.avatar, pid: typeof pid === 'string' ? pid : undefined };
+        const p = this.room.peers().find((x) => x.peer === s.peer);
+        const k = p ? keyOfPeer(p) : {};
+        return { kind: 'human', name: s.who.name, peer: s.peer, avatar: s.who.avatar, pid: k.pid, dev: k.dev, uid: k.uid };
       }
       const personality = this.info!.cfg.personalities[ai % this.info!.cfg.personalities.length];
       const name = aiNames[ai++] ?? `Player ${i + 1}`;
@@ -441,6 +575,8 @@ export class TableSession {
       seen.add(n);
     }
     this.info = { ...this.info, start: { seed, seats } };
+    // A reload brings the host back to the table (as a player: hosting has moved on by then).
+    rememberTable(this.code);
     await this.room.presence({ table: this.info as unknown as Record<string, unknown> }).catch(() => {});
     this.advertise();
     this.update();
@@ -449,16 +585,20 @@ export class TableSession {
   /** The lockstep link for a started game. */
   link(): RoomLink | null {
     const t = this.table();
-    const host = this.hostPeer()?.peer ?? (this.isHost ? this.myPeer : null);
+    const hp = this.hostPeer();
+    const host = this.isHost ? this.myPeer : hp?.peer;
     if (!t?.start || !host) return null;
     this.lastLink?.close();
-    return (this.lastLink = new RoomLink(
+    const link = new RoomLink(
       this.room,
       t.start.seats.map((s) => (s.kind === 'human' ? s.peer ?? null : null)),
       host,
       this.isHost,
-      t.start.seats.map((s) => (s.kind === 'human' ? s.pid ?? null : null)),
-    ));
+      t.start.seats.map((s) => (s.kind === 'human' ? { pid: s.pid, dev: s.dev, uid: s.uid } : null)),
+      this.isHost ? this.epoch : Number(hp?.presence?.he) || 0,
+    );
+    link.onPromote = (epoch) => this.promote(epoch);
+    return (this.lastLink = link);
   }
 
   /** The host has ended the game (finished or left). */
@@ -475,11 +615,11 @@ export class TableSession {
   async leave() {
     if (this.left) return;
     this.left = true;
-    if (!this.isHost) rememberTable(null);
+    rememberTable(null);
     this.unsub();
     this.lastLink?.close();
     if (this.isHost) this.club.advertise(null);
-    if (this.isHost && this.info?.start) {
+    if (this.isHost && this.info?.start && this.lastLink?.finished) {
       // Stay in the room a little while (play marked over) so players still
       // finishing the last hand can read the host's final decisions.
       await new Promise((r) => setTimeout(r, 15000));

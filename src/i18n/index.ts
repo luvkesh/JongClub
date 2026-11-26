@@ -159,9 +159,32 @@ export function listSep(): string {
 export function scoreLine(name: string): string {
   const p = /^Passport: (.+)$/.exec(name);
   if (p) return `${tr('Passport')}: ${tr(p[1])}`;
+  // The riichi yaku, not the variation called Riichi (日本立直麻将).
+  if (name === 'Riichi' && current !== 'en') return tr('riichi');
+  // India West: the base points and what the doubles multiply them by.
+  const px = /^(\d+) points x (\d+)$/.exec(name);
+  if (px) return tr('{n} points x {m}', { n: px[1], m: px[2] });
   const x = /^(.+) × (\d+)$/.exec(name);
   if (x && !dict.has(name)) return `${tr(x[1])} × ${x[2]}`;
   return tr(name);
+}
+
+/**
+ * Run `fn` with English text, then switch back: for lines that stay English in
+ * every language (Mei's spoken words, the lessons) but are built from shared
+ * sentences that otherwise follow the chosen language.
+ */
+export function inEnglish<T>(fn: () => T): T {
+  if (current === 'en') return fn();
+  const saved = { current, dict, rules };
+  current = 'en';
+  dict = new Map();
+  rules = new Intl.PluralRules('en');
+  try {
+    return fn();
+  } finally {
+    ({ current, dict, rules } = saved);
+  }
 }
 
 /** Join a short list the way the language does ("A, B and C"). */

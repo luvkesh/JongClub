@@ -1078,11 +1078,11 @@ export class TableRenderer {
 
   /**
    * The win moment on the table, for every win: a soft gold light sweeps along
-   * the winning hand (lifted by layout's winLift) and fine gold motes rise from
+   * the winning hand (presented on its rack by layout's winLift) and fine gold motes rise from
    * it, and the camera pushes slowly in. A self-drawn win's motes rise straight
    * from the hand; a win on a discard first draws a thin thread of light from
    * the discarder's river. Reduced motion or minimal animations: no particles
-   * and no camera move, just the lifted hand and a still glow.
+   * and no camera move, just the presented hand and a still glow.
    */
   celebrateWin(winner: number, o: { selfDrawn: boolean; from?: number | null; camera?: boolean }) {
     const now = this.clock.getElapsedTime();
@@ -1230,14 +1230,40 @@ export class TableRenderer {
     for (let seat = 0; seat < 4; seat++) {
       const f = this.figures[seat];
       if (!f) continue;
-      const rel = this.quad(seat);
       // Smaller than life beside the oversized tiles, with forearms resting on the rim.
       f.group.position.copy(this.seatAnchor(seat, new THREE.Vector3(0, 0.04, 5.62)));
       f.group.quaternion.copy(this.seatQuat(seat)).multiply(TableRenderer.faceIn);
       f.group.scale.setScalar(0.68);
-      // A phone's top-down view frames only the felt, and an empty seat stays empty.
-      f.group.visible = rel !== 0 && !this.compact;
     }
+    this.chairKey = '';
+    this.seatChairs();
+  }
+
+  private chairKey = '';
+  private chairMask: boolean[] = [false, false, false, false];
+
+  /**
+   * Who is seated, by quadrant, so every player has a chair under them (room.ts, chairs.ts).
+   * A phone's top-down view frames only the felt, so its figures wait until the player takes
+   * the free camera after a hand; your own chair (you have no figure) shows only then too.
+   * An empty seat stays empty. Returns the same array while nothing changes.
+   */
+  private seatChairs(): boolean[] {
+    const roam = this.freeOn && !!this.freeCur;
+    const key = `${roam}|${this.compact}|${this.humanSeat}|${this.seatCount}|${this.figures.map((f) => (f ? 1 : 0)).join('')}`;
+    if (key === this.chairKey) return this.chairMask;
+    this.chairKey = key;
+    const mask = [false, false, false, false];
+    for (let seat = 0; seat < this.seatCount; seat++) {
+      const q = this.quad(seat);
+      const f = this.figures[seat];
+      if (f) {
+        f.group.visible = q !== 0 && (!this.compact || roam);
+        if (f.group.visible) mask[q] = true;
+      } else if (q === 0 && seat === this.humanSeat && roam) mask[0] = true;
+    }
+    this.chairMask = mask;
+    return mask;
   }
 
   private static box = new THREE.Box3();
@@ -1612,7 +1638,8 @@ export class TableRenderer {
       // Frame the whole board and your full hand for this screen's shape, then apply the player's zoom.
       // Where that leaves your tiles small (tablets, wide windows), split: the board above, your hand close up below.
       let fit = this.fitBoard(s.phi, s.theta, look, false);
-      const split = !this.splitPaused && (this.splitPref === 'on' || (this.splitPref === 'auto' && fit.tilePx < SPLIT_BELOW_PX));
+      // While the player roams with the free camera after a hand, the strip would only repeat your rack: it steps aside.
+      const split = !this.splitPaused && !this.freeCur && (this.splitPref === 'on' || (this.splitPref === 'auto' && fit.tilePx < SPLIT_BELOW_PX));
       if (split !== this.splitOn) this.setSplitOn(split);
       if (split) fit = this.fitBoard(s.phi, s.theta, look, true);
       s.radius += (fit.radius - s.radius) * w;
@@ -2836,17 +2863,22 @@ export class TableRenderer {
           }
           t.tipOk = !this.tray;
         } else if (shown) {
-          const lifted = opts.winner === seat && opts.winLift;
-          const rise = opts.winner === seat ? (lifted ? 0.34 : 0.12) : 0;
+          // A winning hand is presented on its owner's rack, never lifted off it: its sets part with gaps,
+          // turn up one by one and the gold light sweeps along them (celebrateWin).
+          const winning = opts.winner === seat && !!opts.winLift;
           if (rel === 0) {
-            // Your revealed hand stays on your rack, face up; the winning hand lifts and leans toward you.
-            pose = this.place(seat, new THREE.Vector3(x, (TH * scale) / 2 + 0.03 + HAND_RAISE + rise, HAND_Z + (lifted ? 0.1 : 0)), qFromEuler(-HAND_LEAN - (lifted ? 0.25 : 0), 0, 0), scale * (lifted ? 1.08 : 1));
+            // Your revealed hand stands on your rack, face toward you, as you held it.
+            pose = this.place(seat, new THREE.Vector3(x, (TH * scale) / 2 + 0.03 + HAND_RAISE, HAND_Z), qFromEuler(-HAND_LEAN, 0, 0), scale);
+          } else if (winning) {
+            // The winner stands their tiles on their rack's step, turned round so the faces look into the
+            // table and read left to right from the centre (the seat's -x), upright and easy to read.
+            pose = this.place(seat, new THREE.Vector3(-xs[i], OPP_RACK.stepY + TH / 2 + 0.004, OPP_RACK.handZ), qFromEuler(0, Math.PI, 0), 1);
           } else {
             // Set gaps carry over from the rack spacing (xs) to the flat row.
             // Each tile's top points to its owner and its face to the table, so every revealed hand reads in order toward the seat's -x.
             const fx = -xs[i] * (flatStep / step);
-            pose = this.place(seat, new THREE.Vector3(fx, OPP_RACK.stepY + TD / 2 + rise, (OPP_RACK.stepZ + OPP_RACK.z1) / 2 + (lifted ? 0.1 : 0)), new THREE.Quaternion(), lifted ? 1.08 : 1);
-            pose.quat = Racks.shelfQuat(rel, false, lifted ? 0.5 : 0.08);
+            pose = this.place(seat, new THREE.Vector3(fx, OPP_RACK.stepY + TD / 2, (OPP_RACK.stepZ + OPP_RACK.z1) / 2), new THREE.Quaternion(), 1);
+            pose.quat = Racks.shelfQuat(rel, false, 0.08);
           }
           t.tipOk = true;
         } else if (rel === 0) {
@@ -2861,7 +2893,9 @@ export class TableRenderer {
         const setDelay = winSets && opts.winLift && !quick && !this.reducedMotion && this.speed !== 'minimal' ? Math.max(0, sl.set) * 0.16 : 0;
         const delay = opts.dealing && fromWall ? Math.min(2.2, (state.wall.findIndex((w) => w.id === tile.id) / 4) * 0.06) : setDelay;
         const dur = tile.id === drag ? 0.05 : human && !shown && t.loc === 'hand' ? Math.min(base, 0.14) : shown && opts.winLift && opts.winner === seat ? Math.max(base, this.reducedMotion ? 0.2 : 1.1) : base;
-        this.moveTo(t, pose, 'hand', now + delay, dur, fromWall ? 0.2 : 0);
+        // A winner's tile is picked up a hand's breadth to turn it round, then set back down on the rack.
+        const turning = shown && rel !== 0 && opts.winLift && opts.winner === seat && t.loc === 'hand';
+        this.moveTo(t, pose, 'hand', now + delay, dur, fromWall ? 0.2 : turning ? 0.12 : 0);
         placed.add(tile.id);
       });
 
@@ -3545,7 +3579,7 @@ export class TableRenderer {
     this.updateWinLight(now);
 
     if (this.marker.visible) this.marker.position.y += Math.sin(now * 4) * 0.0015;
-    this.room.update(now, dt, this.camera, this.view === 'orbit', calmFx);
+    this.room.update(now, dt, this.camera, this.view === 'orbit', calmFx, this.seatChairs());
     this.backdrop.update(dt);
     const size = this.renderer.getDrawingBufferSize(TableRenderer.v2);
     this.pointScale = size.y * 0.5 * this.camera.projectionMatrix.elements[5];

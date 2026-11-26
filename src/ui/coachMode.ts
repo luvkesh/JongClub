@@ -19,7 +19,7 @@ import { SHARED, TutorialCoach, type ClaimKind, type TurnInfo } from './coach';
 import { h } from './dom';
 import type { MatchOptions, TableConfig } from './match';
 import './coachMode.css';
-import { tr } from '../i18n';
+import { inEnglish, tr } from '../i18n';
 
 const INTRO = 'Coach mode is on. I’ll speak up at the moments that matter: your first turn, a tile you can claim, being one tile from ready, and danger at the table. The rest is up to you.';
 
@@ -175,7 +175,7 @@ export class CoachMode extends TutorialCoach {
     const extra = this.safest();
     // Mei already said her recorded riichi warning when it was declared: just add the safe tiles.
     if (threat.riichi && this.script.moments?.otherRiichi) return { line: null, extra };
-    return { line: `Careful. ${threatSentence(g, threat)} Tiles they’ve already thrown are the safest.`, extra };
+    return { line: `Careful. ${inEnglish(() => threatSentence(g, threat))} Tiles they’ve already thrown are the safest.`, extra };
   }
 
   /** The safest tiles in your hand right now, when hints are allowed. */

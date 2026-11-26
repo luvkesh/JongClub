@@ -54,18 +54,19 @@
 .lx-row { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); box-shadow: var(--hi); transition: border-color 0.2s; }
 .lx-row:hover { border-color: var(--line-strong); }
 .lx-row.progress { border-color: var(--brass); }
-.lx-main { display: grid; grid-template-columns: 92px 44px minmax(0, 1fr) auto auto 36px; align-items: center; gap: var(--s3); padding: 12px 14px 12px 16px; }
+.lx-main { display: grid; grid-template-columns: 92px 48px minmax(0, 1fr) auto auto 36px; align-items: center; gap: var(--s3); padding: 12px 14px 12px 16px; }
 .lx-n {
   justify-self: start; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 4px;
   font: 500 11.5px/1 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); white-space: nowrap;
 }
-.lx-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); color: var(--brass-hi); background: radial-gradient(circle at 50% 35%, rgba(201, 165, 107, 0.16), transparent 70%); }
-.lx-ico .ico { width: 20px; height: 20px; }
+/* the lesson's icon, drawn large on its own (no ring), with a soft engraved shadow */
+.lx-ico { display: grid; place-items: center; width: 48px; height: 48px; color: var(--brass-hi); }
+.lx-ico .ico { width: 40px; height: 40px; stroke-width: 1.35; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
 /* a variation's own tile, standing a little tilted on the card */
-.lx-ico.tile { border: 0; background: none; }
-.lx-ico.tile img { display: block; width: 30px; height: auto; border-radius: 4px; transform: rotate(-6deg); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); }
-.lx-row.child .lx-ico { width: 32px; height: 32px; }
-.lx-row.child .lx-ico.tile img { width: 24px; }
+.lx-ico.tile img { display: block; width: 36px; height: auto; border-radius: 4px; transform: rotate(-6deg); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); }
+.lx-row.child .lx-ico { width: 40px; height: 40px; }
+.lx-row.child .lx-ico .ico { width: 34px; height: 34px; }
+.lx-row.child .lx-ico.tile img { width: 30px; }
 .lx-text { min-width: 0; }
 .lx-t { margin: 0; font: 600 20px/1.2 var(--display); color: var(--ivory); }
 .lx-d { margin: 3px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
@@ -92,7 +93,7 @@
 .lx-kids::before { content: ''; position: absolute; left: 36px; top: 0; bottom: 34px; border-left: 1px solid var(--line-strong); }
 .lx-row.child { position: relative; background: rgba(9, 13, 11, 0.4); box-shadow: none; border-radius: var(--r-sm); }
 .lx-row.child::before { content: ''; position: absolute; left: -20px; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: var(--brass); transform: translate(-50%, -50%); }
-.lx-row.child .lx-main { grid-template-columns: 56px 32px minmax(0, 1fr) auto auto 36px; padding: 10px 12px; }
+.lx-row.child .lx-main { grid-template-columns: 56px 40px minmax(0, 1fr) auto auto 36px; padding: 10px 12px; }
 .lx-row.child .lx-t { font-size: 18px; }
 .lx-more { display: flex; justify-content: center; }
 .lx-more .btn { gap: 8px; }
@@ -139,8 +140,8 @@
 .lx-group { display: flex; flex-direction: column; gap: var(--s2); }
 .lx-group-head { display: flex; align-items: center; gap: 12px; padding: 0 2px 10px; border-bottom: 1px solid var(--brass); margin-bottom: 4px; }
 .lx-group-head h3 { margin: 0; font: 600 23px/1.15 var(--display-clear); color: var(--ivory); }
-.lx-group-head .lx-ico { width: 34px; height: 34px; }
-.lx-group-head .lx-ico .ico { width: 17px; height: 17px; }
+.lx-group-head .lx-ico { width: 36px; height: 36px; }
+.lx-group-head .lx-ico .ico { width: 32px; height: 32px; }
 .lx-range { margin-left: auto; font: 500 11.5px/1 var(--ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass-hi); white-space: nowrap; }
 .lx-opt { display: inline-block; padding: 5px 9px; border: 1px solid var(--line-strong); border-radius: 999px; font: 500 10.5px/1 var(--ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--brass-hi); }
 @media (max-width: 640px) {

@@ -21,13 +21,17 @@ import type { MeldShape } from '../engine/hand';
 import type { ClaimOption, Meld } from '../engine/state';
 import { FLOWER, distance, missingFor, progress, type CardInstance } from '../engine/rules/american';
 import { SMALL_CARDS, cardSets, cardShape, type SmallCard } from '../engine/rules/indiaCards';
-import { FLOWER_BASE, JOKER_KIND, WINDS, isFlower, isJoker, isHonor, tileName, type Tile } from '../engine/tiles';
+import { FLOWER_BASE, JOKER_KIND, WINDS, isFlower, isJoker, isHonor, type Tile } from '../engine/tiles';
 import { fillComps } from './compPlan';
 import { dangerMap, mainThreat, readOpponents, seatLabel, suitLabel } from './danger';
 import { handWilds, unseenCounts } from './evaluate';
 import { isPassportRound, passportCall, passportThreats, planPassports, riskyKinds } from './passportAdvice';
 import { goulashCall, goulashPlans, isIndiaGoulash, valueCall, valuePlans, valueRoutesOn, yakuCall, yakuPlans } from './targetRoutes';
 import { tilesForCall } from './american';
+import { lang, listSep, tr } from '../i18n';
+import { tileLabel } from '../i18n/tiles';
+import { andJoin, callWord, fromReady, namesText, planName, planNote, sentences, suitName } from './adviceText';
+import { shapeKit, shapeKitOn } from './shapeKit';
 
 /** One target hand the player can still make. */
 export interface TargetPlan {
@@ -56,7 +60,7 @@ export interface TargetPlan {
 
 /** What each kind of round calls its targets, and how it finds them. */
 export interface TargetKit {
-  id: 'passport' | 'card' | 'smallCard' | 'special' | 'goulash' | 'yaku' | 'value';
+  id: 'passport' | 'card' | 'smallCard' | 'special' | 'goulash' | 'yaku' | 'value' | 'shape';
   /** The chip row's label and the planner's title. */
   chip: string;
   list: string;
@@ -81,10 +85,6 @@ export interface TargetRead {
 }
 
 const SUIT_NAMES = ['Characters', 'Dots', 'Bamboos'];
-
-/** "3 Knits in the same 2 suits twice", as JongBot says a plan's names in a sentence. */
-export const namesSentence = (names: string[]) => names.filter((n, i) => names.indexOf(n) === i).map((n) => (names.filter((x) => x === n).length > 1 ? `${n} twice` : n)).join(' + ');
-export const fromReady = (n: number) => (n >= 99 ? 'no win possible with these sets' : n <= 0 ? 'ready' : n === 1 ? '1 tile from ready' : `${n} tiles from ready`);
 
 // ------------------------------------------------------------------ passport (India East)
 
@@ -226,13 +226,14 @@ const cardKit: TargetKit = {
       const d = distance(rest.filter((x) => x !== t), melds);
       if (d < after) (after = d), (restBest = rest.filter((x) => x !== t));
     }
-    const verb = o.type === 'kong' ? 'kong' : 'pung';
+    const call = callWord(o.type === 'kong' ? 'kong' : 'pung');
     const aim = cardPlans(restBest, melds, 1)[0];
-    if (!aim || !Number.isFinite(after)) return `Card check: after this ${verb} no hand on the card would fit your exposures. Pass.`;
-    const left = (n: number) => (n <= 0 ? 'complete' : n === 1 ? '1 tile from Mah Jongg' : `${n} tiles from Mah Jongg`);
-    if (after < before) return `Card check: this ${verb} fits ${namesSentence(aim.names)} and leaves you ${left(after)} (now ${left(before)}).`;
-    if (after === before) return `Card check: this ${verb} doesn't bring a card hand closer. You stay ${left(after)}, aiming for ${namesSentence(aim.names)}.`;
-    return `Card check: this ${verb} pins you to ${namesSentence(aim.names)}, ${left(after)} instead of ${left(before)}.`;
+    if (!aim || !Number.isFinite(after)) return tr('Card check: after this {call} no hand on the card would fit your exposures. Pass.', { call });
+    const left = (n: number) => (n <= 0 ? tr('complete') : n === 1 ? tr('1 tile from Mah Jongg') : tr('{n} tiles from Mah Jongg', { n }));
+    const p = { call, hand: namesText(aim.names), after: left(after), before: left(before) };
+    if (after < before) return tr('Card check: this {call} fits {hand} and leaves you {after} (now {before}).', p);
+    if (after === before) return tr("Card check: this {call} doesn't bring a card hand closer. You stay {after}, aiming for {hand}.", p);
+    return tr('Card check: this {call} pins you to {hand}, {after} instead of {before}.', p);
   },
 };
 
@@ -254,9 +255,10 @@ function cardReads(game: MahjongGame, seat: number): TargetRead[] {
     const kinds = [...want].filter(([, n]) => n * 2 >= fits.length).map(([k]) => k).sort((a, b) => a - b);
     const name = lines.length === 1 ? cardName(fits[0]) : sections.length === 1 ? `${sections[0]} hand` : `${sections.slice(0, 2).join(' or ')} hand`;
     const who = seatLabel(game, o);
-    const hold = kinds.length ? ` Hold back ${kindList(kinds)}.` : '';
-    const close = p.melds.length >= 3 ? ' They may be close to Mah Jongg.' : '';
-    out.push({ seat: o, name, kinds, line: `${who}'s exposures fit ${lines.length === 1 ? namesSentence([name]) : `${lines.length} card hands (${sections.join(', ')})`}.${hold}${close}` });
+    const hold = kinds.length ? tr('Hold back {tiles}.', { tiles: kindList(kinds) }) : '';
+    const close = p.melds.length >= 3 ? tr('They may be close to Mah Jongg.') : '';
+    const fit = lines.length === 1 ? tr("{who}'s exposures fit {hand}.", { who, hand: namesText([name]) }) : tr("{who}'s exposures fit {n} card hands ({sections}).", { who, n: lines.length, sections: sections.join(listSep()) });
+    out.push({ seat: o, name, kinds, line: sentences(fit, hold, close) });
   });
   return out;
 }
@@ -341,14 +343,15 @@ const smallCardKit: TargetKit = {
       const meld: MeldShape = { type: o.type, kind: o.type === 'chow' ? Math.min(kind, ...used) : kind };
       after = smallCardPlans(card, c, [...melds, meld], sk, rk, jokers, 1)[0];
     }
-    const verb = o.type === 'buy' ? 'buy' : o.type;
+    const call = callWord(o.type === 'buy' ? 'buy' : o.type);
     const b = now ? now.missing - 1 : 99;
     const a = after ? after.missing - 1 : 99;
-    if (!after) return `Card check: ${card.name} has no place for this ${verb}. Pass.`;
-    const how = after.note ? `${card.name} ${after.note}` : card.name;
-    if (a < b) return `Card check: this ${verb} fills part of ${how} and leaves you ${fromReady(a)} (now ${fromReady(b)}).`;
-    if (a === b) return `Card check: this ${verb} doesn't bring ${card.name} closer. You stay ${fromReady(a)}.`;
-    return `Card check: this ${verb} sets ${card.name} back to ${fromReady(a)} (now ${fromReady(b)}).`;
+    const p = { call, card: tr(card.name), after: fromReady(a), before: fromReady(b), note: after?.note ? planNote(after.note) : '' };
+    if (!after) return tr('Card check: {card} has no place for this {call}. Pass.', p);
+    if (a < b)
+      return after.note ? tr('Card check: this {call} fills part of {card} {note} and leaves you {after} (now {before}).', p) : tr('Card check: this {call} fills part of {card} and leaves you {after} (now {before}).', p);
+    if (a === b) return tr("Card check: this {call} doesn't bring {card} closer. You stay {after}.", p);
+    return tr('Card check: this {call} sets {card} back to {after} (now {before}).', p);
   },
 };
 
@@ -384,8 +387,10 @@ function smallCardReads(game: MahjongGame, seat: number): TargetRead[] {
     const kinds = common.length <= 12 ? common : [];
     const names = fits.map((f) => f.card.name);
     const name = names.length === 1 ? names[0] : `${names[0]} or ${names.length - 1} more`;
-    const hold = kinds.length ? ` Hold back ${kindList(kinds)}.` : '';
-    out.push({ seat: o, name, kinds, line: `${seatLabel(game, o)}'s sets fit ${names.length === 1 ? names[0] : `only ${names.length} cards: ${names.join(', ')}`}.${hold}` });
+    const hold = kinds.length ? tr('Hold back {tiles}.', { tiles: kindList(kinds) }) : '';
+    const who = seatLabel(game, o);
+    const fit = names.length === 1 ? tr("{who}'s sets fit {card}.", { who, card: tr(names[0]) }) : tr("{who}'s sets fit only {n} cards: {cards}.", { who, n: names.length, cards: names.map((x) => tr(x)).join(listSep()) });
+    out.push({ seat: o, name, kinds, line: sentences(fit, hold) });
   });
   return out;
 }
@@ -469,6 +474,7 @@ export function targetKit(game: MahjongGame): TargetKit | null {
   if (p.shapes.standard === false && p.shapes.special?.length) return specialKit;
   if (p.yakuRequired) return yakuKit;
   if (valueRoutesOn(game)) return valueKit;
+  if (shapeKitOn(game)) return shapeKit;
   return null;
 }
 
@@ -479,11 +485,11 @@ const kindList = (kinds: number[]) => {
   const parts: string[] = [];
   for (let s = 0; s < 3; s++) {
     const ks = kinds.filter((k) => k < 27 && Math.floor(k / 9) === s);
-    if (ks.length === 9) parts.push(`all ${SUIT_NAMES[s]}`);
-    else if (ks.length) parts.push(`${SUIT_NAMES[s]} ${ks.map((k) => (k % 9) + 1).join(', ')}`);
+    if (ks.length === 9) parts.push(tr('all {suit}', { suit: suitName(s) }));
+    else if (ks.length) parts.push(tr('{suit} {ranks}', { suit: suitName(s), ranks: ks.map((k) => (k % 9) + 1).join(listSep()) }));
   }
-  for (const k of kinds.filter(isHonor)) parts.push(tileName(k));
-  return parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  for (const k of kinds.filter(isHonor)) parts.push(tileLabel(k));
+  return andJoin(parts);
 };
 
 /** Targets another player looks to be making, from what they show. */
@@ -507,20 +513,21 @@ function tableReads(game: MahjongGame, seat: number): TargetRead[] {
       const honours = p.melds.some((m) => !m.concealed && m.tiles[0].kind >= 27);
       const kinds = Array.from({ length: 9 }, (_, i) => s * 9 + i);
       const name = goulash ? (honours ? `${SUIT_NAMES[s]} with honours` : `Clean ${SUIT_NAMES[s]}`) : honours ? `${SUIT_NAMES[s]} half flush` : `${SUIT_NAMES[s]} flush`;
-      out.push({ seat: r.seat, name, kinds, line: `${who} looks to be collecting ${suitLabel(s)}: likely ${name}. Hold back ${SUIT_NAMES[s]}${honours ? ' and honours they could pung' : ''}.` });
+      const q = { who, suit: lang() === 'en' ? suitLabel(s) : suitName(s), hand: planName(name), suits: suitName(s) };
+      out.push({ seat: r.seat, name, kinds, line: honours ? tr('{who} looks to be collecting {suit}: likely {hand}. Hold back {suits} and honours they could pung.', q) : tr('{who} looks to be collecting {suit}: likely {hand}. Hold back {suits}.', q) });
       continue;
     }
     if (r.dragonPungs >= 2) {
       const shown = p.melds.filter((m) => !m.concealed && m.tiles[0].kind >= 31).map((m) => m.tiles[0].kind);
       const kinds = [31, 32, 33].filter((k) => !shown.includes(k));
-      out.push({ seat: r.seat, name: 'Three Dragons', kinds, line: `${who} has ${r.dragonPungs} dragon sets showing: likely Three Dragons. Hold back the ${kinds.map(tileName).join(' and ')}.` });
+      out.push({ seat: r.seat, name: 'Three Dragons', kinds, line: tr('{who} has {n} dragon sets showing: likely Three Dragons. Hold back the {tiles}.', { who, n: r.dragonPungs, tiles: andJoin(kinds.map((k) => tileLabel(k))) }) });
       continue;
     }
     if (r.riichi) {
-      out.push({ seat: r.seat, name: riichiName, kinds: [], line: `${who} has declared ${riichiName}. Tiles they discarded are safe against them.` });
+      out.push({ seat: r.seat, name: riichiName, kinds: [], line: tr('{who} has declared {riichi}. Tiles they discarded are safe against them.', { who, riichi: callWord(riichiName) }) });
       continue;
     }
-    if (r.pungHand && r.openMelds >= 3) out.push({ seat: r.seat, name: 'All Pungs', kinds: [], line: `${who} has only pungs showing: likely All Pungs. A pair you break up is safer than a single honour.` });
+    if (r.pungHand && r.openMelds >= 3) out.push({ seat: r.seat, name: 'All Pungs', kinds: [], line: tr('{who} has only pungs showing: likely All Pungs. A pair you break up is safer than a single honour.', { who }) });
   }
   return out;
 }
