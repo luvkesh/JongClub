@@ -1416,7 +1416,7 @@ export class MatchController {
     const special = g.profile.specialRound as SpecialRoundId | undefined;
     const chosen = g.profile.chosenGame;
     // India Rules North: the game East chose this hand.
-    if (chosen) extra.append(h('button', { class: 'goulash-pill round-pill', title: tr(SPECIAL_ROUNDS.indiaNorth.rule), onclick: () => this.guide.toggle(true) }, tr('North: {game}', { game: tr(chosen) })));
+    if (chosen) extra.append(h('button', { class: 'goulash-pill round-pill', title: tr(SPECIAL_ROUNDS.indiaNorth.rule), onclick: () => this.guide.toggle(true) }, tr('North: {game}', { game: chosenGameLabel(chosen) })));
     else if (special) extra.append(h('button', { class: 'goulash-pill round-pill', title: tr(SPECIAL_ROUNDS[special].rule), onclick: () => this.guide.toggle(true) }, tr(SPECIAL_ROUNDS[special].name)));
     // North round jokers: a number in each suit (one of each per player), or the flowers and seasons.
     if (g.profile.fixedWilds && g.state.wildKinds?.length) {
@@ -1428,10 +1428,10 @@ export class MatchController {
     }
     // India Rules South round: your secret Small Card.
     const card = !this.spectator && g.state.cards ? SMALL_CARDS[g.state.cards[this.me]] : undefined;
-    if (card) extra.append(h('button', { class: 'goulash-pill round-pill card-pill', title: card.how, onclick: () => this.showSmallCard(card) }, tr('Your card: {name}', { name: card.name })));
+    if (card) extra.append(h('button', { class: 'goulash-pill round-pill card-pill', title: card.how, onclick: () => this.showSmallCard(card) }, tr('Your card: {name}', { name: tr(card.name) })));
     // India Rules North round: the Big Card East chose for everyone.
     const big = g.profile.big;
-    if (big) extra.append(h('button', { class: 'goulash-pill round-pill card-pill', title: big.how, onclick: () => this.showBigCard(big) }, tr('Big Card: {name}', { name: big.name })));
+    if (big) extra.append(h('button', { class: 'goulash-pill round-pill card-pill', title: big.how, onclick: () => this.showBigCard(big) }, tr('Big Card: {name}', { name: tr(big.name) })));
     if (g.state.instant?.length && !this.spectator) {
       const net = netOf(g.state.instant, this.me);
       extra.append(h('span', { class: 'instant-pill', title: tr('Paid on the spot this hand (animal bites, kong money). Settled with the hand.') }, tr('On the spot {n}', { n: `${net > 0 ? '+' : net < 0 ? '−' : ''}${fmt(Math.abs(net))}` })));
@@ -3261,7 +3261,7 @@ export class MatchController {
         (await this.waitHuman<number | undefined>(
           (done) => {
             const opt = (title: string, line: string, ...body: HTMLElement[]) => h('div', { class: 'rc-option' }, h('div', { class: 'rc-title' }, title), h('div', { class: 'rc-line' }, line), ...body);
-            const btn = (c: number, label: string, ...kids: HTMLElement[]) => h('button', { class: `btn${c === advice ? ' primary' : ''}`, onclick: () => done(c), 'aria-label': tr(choices.find((x) => x.code === c)?.label ?? label) }, ...kids, label);
+            const btn = (c: number, label: string, ...kids: HTMLElement[]) => h('button', { class: `btn${c === advice ? ' primary' : ''}`, onclick: () => done(c), 'aria-label': chosenGameLabel(choices.find((x) => x.code === c)?.label ?? label) }, ...kids, label);
             const numbers = h('div', { class: 'rc-numbers' }, ...NUMBER_NAMES.map((_, i) => btn(northGoulash(i + 1), String(i + 1), tileImg(18 + i, 'mini', this.settings.labels))));
             panel = h(
               'div',
@@ -3320,7 +3320,7 @@ export class MatchController {
     this.sync({ dealing: true });
     if (!this.spectator) {
       const name = seat === this.me ? tr('You') : g.players[seat].name;
-      this.toast(tr('EAST CHOOSES'), tr('{name} chose {game}', { name, game: tr(g.profile.chosenGame ?? '') }));
+      this.toast(tr('EAST CHOOSES'), tr('{name} chose {game}', { name, game: chosenGameLabel(g.profile.chosenGame ?? '') }));
       await sleep(this.catchingUp() ? 0 : 2400);
     }
   }
@@ -4033,6 +4033,12 @@ function instantLines(g: MahjongGame, r: HandResult): InstantLine[] {
 }
 
 /** Passport names for the planner and the chips: "3 Knits in the same 2 suits ×2" when one repeats. */
+/** East's choice in the India North round, as shown: a Big Card is named in the player's language. */
+function chosenGameLabel(label: string): string {
+  const big = /^Big Card: (.+)$/.exec(label);
+  return big ? tr('Big Card: {name}', { name: tr(big[1]) }) : tr(label);
+}
+
 function passportNames(names: string[]): string {
   return names.map((n, i) => (names.indexOf(n) < i ? null : names.filter((x) => x === n).length > 1 ? `${planName(n)} ×2` : planName(n))).filter(Boolean).join(' + ');
 }

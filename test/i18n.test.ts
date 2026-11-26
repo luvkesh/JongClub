@@ -13,6 +13,8 @@ import { REGIONS } from '../src/club/roster';
 import { SPECIAL_ROUNDS } from '../src/engine/rules/windRounds';
 import { BIG_CARD, SMALL_CARD } from '../src/engine/rules/special';
 import { TABLE_OPTION_RULES } from '../src/engine/rules/tableOptions';
+import { SMALL_CARDS } from '../src/engine/rules/indiaCards';
+import { BIG_CARDS } from '../src/engine/rules/indiaBig';
 
 /**
  * Strings that may stay English in every language: brand names and symbols
@@ -61,6 +63,8 @@ function dataKeys(): Map<string, string> {
   for (const k of DYNAMIC_KEYS) add(k, 'i18n/dynamic');
   for (const r of Object.values(SPECIAL_ROUNDS)) add(r.name, 'SPECIAL_ROUNDS'), add(r.rule, 'SPECIAL_ROUNDS');
   for (const c of [...SMALL_CARD, ...BIG_CARD]) add(c.how, 'special.CARD');
+  // India Rules: the names of the 55 Small Cards and the 29 Big Cards.
+  for (const c of [...SMALL_CARDS, ...BIG_CARDS]) add(c.name, 'india.CARD.name');
   for (const r of TABLE_OPTION_RULES) {
     add(r.label, 'tableOptions');
     for (const o of r.options) add(o.label, `tableOptions.${r.id}`);
