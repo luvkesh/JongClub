@@ -93,6 +93,14 @@ const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
 // Seat heights: the table top is at y = 0 and the floor at -1.6.
 const FLOOR = -1.6;
+/** How far from the table's centre each chair stands: the seated figure (table3d placeAvatars, 5.62 out) sits on its cushion, its back near the chair's. */
+export const CHAIR_R = 5.74;
+/**
+ * The chairs are drawn life size for the table, but the seated figures are smaller than life
+ * (0.68, beside the oversized tiles). Scaled from the floor to match them: the seat lands where the
+ * figure's body meets it and the back reaches its shoulder blades, as a real chair does.
+ */
+export const CHAIR_SCALE = 0.8;
 
 // ------------------------------------------------------------ the chairs
 
@@ -385,8 +393,8 @@ export class ChairSet {
     const cushion = merge(parts.cushion);
     const trim = merge(parts.trim);
     this.geos = [frame, cushion, trim].filter((g): g is THREE.BufferGeometry => !!g);
-    // The throne stands a little larger than the rest.
-    const scale = kind === 'throne' ? 1.06 : 1;
+    // The throne's crest would hide its sitter from behind at full size: a touch smaller than the rest.
+    const scale = (kind === 'throne' ? 0.95 : 1) * CHAIR_SCALE;
     for (let i = 0; i < 4; i++) {
       const g = new THREE.Group();
       if (frame) {
@@ -397,10 +405,19 @@ export class ChairSet {
       if (cushion) g.add(new THREE.Mesh(cushion, this.cushionMat));
       if (trim) g.add(new THREE.Mesh(trim, this.trimMat));
       const a = (i * Math.PI) / 2;
-      g.position.set(Math.sin(a) * 5.9, (scale - 1) * -FLOOR, Math.cos(a) * 5.9);
+      g.position.set(Math.sin(a) * CHAIR_R, (scale - 1) * -FLOOR, Math.cos(a) * CHAIR_R);
       g.rotation.y = a;
       g.scale.setScalar(scale);
       this.group.add(g);
     }
+    this.show(this.shown);
+  }
+
+  private shown: boolean[] = [true, true, true, true];
+
+  /** Which of the four chairs stand (by quadrant: 0 bottom, 1 right, 2 top, 3 left); an empty side has none. */
+  show(mask: boolean[]) {
+    this.shown = mask;
+    this.group.children.forEach((c, i) => (c.visible = mask[i] ?? false));
   }
 }

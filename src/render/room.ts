@@ -645,6 +645,9 @@ void main() {
 
 // ------------------------------------------------------------ the room
 
+const ALL_CHAIRS = [true, true, true, true];
+const NO_CHAIRS = [false, false, false, false];
+
 /** The floor's painted canvas and how many times it tiles across the 60-unit floor (for shop previews). */
 export function floorCanvas(kind: EnvironmentStyle['floor']) {
   const t = floorTexture(kind);
@@ -912,6 +915,7 @@ export class Room {
   private dustSeed: Float32Array;
   private chairSet = new ChairSet();
   private chairs: THREE.Group;
+  private chairMask: boolean[] = [];
   private rug: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
   /** Daylight fill: a sky-and-ground light that only day rooms turn up. */
   private daylight: THREE.HemisphereLight;
@@ -998,7 +1002,7 @@ export class Room {
     this.group.add(this.dust);
     this.placeDust(0);
 
-    // Four chairs, finer as the room climbs (chairs.ts). Only in the establishing shot.
+    // Four chairs, finer as the room climbs (chairs.ts): every seated player has one; the rest show in the establishing shot.
     this.chairs = this.chairSet.group;
     this.group.add(this.chairs);
     this.venue = new VenueProps(q);
@@ -1096,13 +1100,16 @@ export class Room {
 
   /**
    * Per frame: drift the dust; show the lamp only when the camera is below it
-   * (a phone looks down through where it hangs); chairs only in the establishing shot.
+   * (a phone looks down through where it hangs); a chair under every seated
+   * player (`chairs`, by quadrant) and all four in the establishing shot.
    */
-  update(now: number, dt: number, camera: THREE.Camera, establishing: boolean, minimal: boolean) {
+  update(now: number, dt: number, camera: THREE.Camera, establishing: boolean, minimal: boolean, chairs?: boolean[]) {
     const below = camera.position.y < LAMP_Y - 0.4;
     this.lamp.visible = below;
     if (this.beam) this.beam.visible = below;
-    this.chairs.visible = establishing;
+    const mask = establishing ? ALL_CHAIRS : chairs ?? NO_CHAIRS;
+    this.chairs.visible = mask.some(Boolean);
+    if (mask !== this.chairMask) this.chairSet.show((this.chairMask = mask));
     if (!minimal) {
       const p = this.dust.geometry.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < p.count; i++) {

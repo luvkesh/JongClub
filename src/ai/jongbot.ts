@@ -65,7 +65,7 @@ function aimLine(kit: TargetKit, aim: TargetPlan): string {
     return aim.pair ? tr('Aim for {name} and a pair.', { name }) : tr('Aim for {name}.', { name });
   }
   if (kit.id === 'smallCard') return aim.note ? tr('Fill your card {note}.', { note: planNote(aim.note) }) : '';
-  if (kit.id === 'card') return '';
+  if (kit.id === 'card' || kit.id === 'shape') return '';
   return aim.note ? tr('Aim for {name} ({note}).', { name, note: planNote(aim.note) }) : tr('Aim for {name}.', { name });
 }
 
