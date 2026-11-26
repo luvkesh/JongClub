@@ -1471,7 +1471,10 @@ export class TableRenderer {
     const w = this.container.clientWidth || window.innerWidth;
     const h = this.container.clientHeight || window.innerHeight;
     const pr = this.pixelRatioFor(w, h);
-    if (Math.abs(pr - this.renderer.getPixelRatio()) > 0.01) this.renderer.setPixelRatio(pr);
+    if (Math.abs(pr - this.renderer.getPixelRatio()) < 0.01) return;
+    this.renderer.setPixelRatio(pr);
+    // Resizing clears the picture: draw the next frame at once, even where frames are spaced out.
+    this.lastRender = 0;
   }
 
   /** On phones the bottom of the screen holds your tiles, so lift the table into the space above. */
