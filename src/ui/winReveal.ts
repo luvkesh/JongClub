@@ -210,3 +210,16 @@ export function openArea(overlay: HTMLElement, card: HTMLElement): { left: numbe
   if (right - left < w * 0.3) left = 12;
   return { left, top, right, bottom: Math.max(bottom, top + 120) };
 }
+
+/**
+ * Where the win shot frames the winning hand (client px): the whole open
+ * table, below the win banner, so the tiles are as large as the screen allows
+ * while they turn up.
+ */
+export function winShotArea(overlay: HTMLElement, banner: HTMLElement | null): { left: number; top: number; right: number; bottom: number } {
+  const area = openArea(overlay, h('div'));
+  const b = banner && !banner.hidden ? banner.getBoundingClientRect() : null;
+  if (b && b.height) area.top = Math.max(area.top, Math.min(b.bottom + 6, window.innerHeight * 0.5));
+  area.bottom = Math.max(area.bottom, area.top + 120);
+  return area;
+}

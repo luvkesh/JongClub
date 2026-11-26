@@ -1,5 +1,6 @@
 // The signature moment: a brief cinematic for a limit hand, a yakuman or the
-// maximum tai. The camera glides low along the winning hand and rises away,
+// maximum tai. The camera holds still on the winning hand where the win shot
+// left it (only an upright phone, which has no win shot, glides along the hand),
 // a band of gold light sweeps across the tiles, a shaft of warm light falls
 // on them and fine gold motes drift up. Quiet and short: no coins, no
 // flashing, no fanfare. Skippable at any moment; with reduced motion (or the
@@ -50,6 +51,8 @@ export interface SignatureOptions {
   calm: boolean;
   /** Portrait phone: keep the camera further back. */
   compact: boolean;
+  /** Leave the camera where it is (the win shot already holds the hand): light and motes only. */
+  still?: boolean;
 }
 
 const smooth = (a: number, b: number, x: number) => {
@@ -142,13 +145,15 @@ export class SignatureShot {
       }
       this.motes = p;
       scene.add(p.points);
-      // The camera's path in the hand's own frame: low along one end, round the front, rising away.
-      const m = o.compact ? 1.6 : 1;
-      const at = (a: number, up: number, ou: number) => centre.clone().addScaledVector(along, a * m).addScaledVector(out, ou * m).add(new THREE.Vector3(0, up * m, 0));
-      this.path = {
-        pos: new THREE.CatmullRomCurve3([at(-span - 1.6, 0.75, 2.0), at(-span * 0.4, 1.1, 2.7), at(span * 0.5, 1.6, 3.0), at(span + 1.4, 2.6, 3.4)]),
-        look: new THREE.CatmullRomCurve3([centre.clone().addScaledVector(along, -span * 0.6), centre.clone().addScaledVector(along, -span * 0.1), centre.clone().addScaledVector(along, span * 0.2), centre.clone()]),
-      };
+      if (!o.still) {
+        // The camera's path in the hand's own frame: low along one end, round the front, rising away.
+        const m = o.compact ? 1.6 : 1;
+        const at = (a: number, up: number, ou: number) => centre.clone().addScaledVector(along, a * m).addScaledVector(out, ou * m).add(new THREE.Vector3(0, up * m, 0));
+        this.path = {
+          pos: new THREE.CatmullRomCurve3([at(-span - 1.6, 0.75, 2.0), at(-span * 0.4, 1.1, 2.7), at(span * 0.5, 1.6, 3.0), at(span + 1.4, 2.6, 3.4)]),
+          look: new THREE.CatmullRomCurve3([centre.clone().addScaledVector(along, -span * 0.6), centre.clone().addScaledVector(along, -span * 0.1), centre.clone().addScaledVector(along, span * 0.2), centre.clone()]),
+        };
+      }
     }
   }
 

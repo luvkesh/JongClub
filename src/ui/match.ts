@@ -46,7 +46,7 @@ import type { LockstepLink } from '../net/lockstep';
 import type { ReplayRecord } from '../net/replay';
 import type { ClaimKind, TutorialCoach } from './coach';
 import { clear, fmt, h, sleep, tileImg } from './dom';
-import { openArea, winTableSets, summaryToggle, winHandSection } from './winReveal';
+import { openArea, winShotArea, winTableSets, summaryToggle, winHandSection } from './winReveal';
 import { passportReviewSection } from './passportReview';
 import { aimingReads, isPassportRound } from '../ai/passportAdvice';
 import { ALL_HANDS_ICON, allHandsList } from './allHands';
@@ -3515,7 +3515,10 @@ export class MatchController {
     // In the summary's order: India Rules East round reads passports first, then the sets with them and the pair.
     const winHand = winner !== undefined ? r.revealedHand ?? g.players[winner].hand : [];
     const winSets = r.type === 'win' && winner !== undefined ? winTableSets(winHand, g.profile.passportView?.(winHand, r.revealedMelds ?? g.players[winner].melds)) : undefined;
-    t.layout(g.state, { reveal: seatList(this.n), winner, winLift: r.type === 'win', winSets, winTileId: r.winTile?.id });
+    // Every hand face up: at once for a drawn hand; after a win, once the winner's own reveal has played.
+    const allUp = (quick = false) => t.layout(g.state, { reveal: seatList(this.n), winner, winLift: r.type === 'win', winSets, winTileId: r.winTile?.id }, quick);
+    const sp = this.settings.speed;
+    if (r.type !== 'win' || winner === undefined) allUp();
     this.refreshHud();
     this.els.status.textContent = '';
     this.renderWaits();
@@ -3526,8 +3529,7 @@ export class MatchController {
       const name = winners.length > 1 ? andList(winners.map(nameOf)) : nameOf(winner);
       const from = r.discarder === this.me ? tr('your') : tr('{name}’s', { name: g.players[r.discarder ?? 0].name });
       const how = r.robbedKong ? tr('by robbing {whose} kong', { whose: from }) : r.discarder === null ? tr('by self-draw') : tr('on {whose} discard', { whose: from });
-      // The win moment: the hand lifts into a sweep of gold light, the camera leans in, and a calligraphy banner names the win.
-      t.celebrateWin(winner, { selfDrawn: r.discarder === null, from: r.discarder ?? null, camera: this.settings.speed !== 'minimal' });
+      // The win moment (played out below): a calligraphy banner names the win while the camera makes its one move.
       this.showWinBanner(r, winners.length > 1 ? tr('{name} win {how}', { name, how }) : winner === this.me ? tr('You win {how}', { how }) : tr('{name} wins {how}', { name, how }));
       winMoment = true;
       // Your own win: the first winner's score, or yours among several winners on one discard.
@@ -3549,16 +3551,40 @@ export class MatchController {
     } else {
       this.toast(tr('DRAWN HAND'), tr('The wall is empty'));
     }
-    const sp = this.settings.speed;
-    // A limit hand or yakuman gets its signature moment first (winCinematic.ts); a tap cuts it short.
-    if (winMoment && !this.catchingUp()) {
-      this.cinematic = startWinCinematic(t, this.root, winner!, r.score, winner === this.me);
-      await this.cinematic?.done;
-      this.cinematic = null;
+    if (winMoment && winner !== undefined) {
+      // One orchestrated sequence, each step waiting for the one before:
+      //   1. the camera glides, once, to the winner's hand and comes to rest (table.winShot);
+      //   2. with the camera still, the winner's tiles part into their sets and turn round where they stand;
+      //   3. a sweep of gold light follows along the hand (a limit hand's signature moment after it), and the shot holds.
+      // Skip (or a live table catching up) jumps straight to the finished picture.
+      let skip = this.catchingUp();
+      const wait = async (ms: number) => {
+        if (!skip && ms > 0) skip = await this.skippableWait(ms);
+        return !this.aborted;
+      };
+      const glide = skip ? 0 : t.winShot(winner, winShotArea(this.els.overlay, this.els.win), winSets);
+      if (!(await wait(glide * 1000 + (glide ? 150 : 0)))) return;
+      const staged = glide > 0 && !skip;
+      t.layout(g.state, { reveal: staged ? [winner] : seatList(this.n), winner, winLift: true, winSets, winTileId: r.winTile?.id }, skip);
+      // The light sets off as the last tiles come round.
+      if (!(await wait(t.winRevealLeft * 1000 - 450))) return;
+      t.celebrateWin(winner, { selfDrawn: r.discarder === null, from: r.discarder ?? null });
+      // A limit hand or yakuman gets its signature moment (winCinematic.ts); a tap cuts it short.
+      if (!skip) {
+        this.cinematic = startWinCinematic(t, this.root, winner, r.score, winner === this.me);
+        await this.cinematic?.done;
+        this.cinematic = null;
+        if (this.aborted) return;
+      }
+      // The finished hand is given time to be seen.
+      if (!(await wait(sp === 'minimal' ? 1400 : sp === 'cinematic' ? 3400 : 2600))) return;
+      // The other hands turn up as the summary arrives.
+      allUp(skip);
+    } else {
+      if (this.aborted) return;
+      // A drawn hand moves on sooner.
+      await this.skippableWait(sp === 'minimal' ? 500 : sp === 'cinematic' ? 2600 : 1700);
     }
-    if (this.aborted) return;
-    // A win is given time to be seen; a drawn hand moves on sooner.
-    await this.skippableWait(winMoment ? (sp === 'minimal' ? 1400 : sp === 'cinematic' ? 4200 : 3200) : sp === 'minimal' ? 500 : sp === 'cinematic' ? 2600 : 1700);
     this.hideWinBanner();
     if (this.aborted) return;
     sound.play('score');
@@ -3746,6 +3772,7 @@ export class MatchController {
       o.append(card);
       cont.focus({ preventScroll: true });
       // Beside a panel docked at the side (wide screens), the camera frames the winning hand in the open space.
+      // (After a win it keeps the win shot's angle and only steps back to make room, as the panel comes in.)
       if (hide && o.classList.contains('win-sheet') && card.getBoundingClientRect().left > window.innerWidth * 0.35) requestAnimationFrame(reframe);
       requestAnimationFrame(clearTopPlate);
       this.resolveHuman = () => resolve();
@@ -3805,18 +3832,19 @@ export class MatchController {
     }, 380);
   }
 
+  /** Wait `ms` with a Skip button up; resolves true if the wait was cut short. */
   private skippableWait(ms: number) {
-    return new Promise<void>((resolve) => {
+    return new Promise<boolean>((resolve) => {
       const skip = h('button', { class: 'skip' }, tr('Skip ›'));
-      const done = () => {
+      const done = (cut: boolean) => {
         clearTimeout(tm);
         skip.remove();
-        resolve();
+        resolve(cut);
       };
-      skip.onclick = done;
+      skip.onclick = () => done(true);
       this.root.append(skip);
-      const tm = setTimeout(done, ms);
-      this.resolveHuman = () => done();
+      const tm = setTimeout(() => done(false), ms);
+      this.resolveHuman = () => done(true);
     });
   }
 

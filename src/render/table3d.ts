@@ -53,6 +53,8 @@ interface Tween {
   t0: number;
   dur: number;
   arc: number;
+  /** Ease in and out (a tile turned in the hand); otherwise the leg starts at full speed and settles. */
+  soft?: boolean;
   /** The next leg, run when this one ends (the shuffling machine's gather, sink and rise). */
   next?: Tween;
 }
@@ -276,6 +278,13 @@ const HAND_DETAIL = { high: 6, medium: 4.5, low: 3.25 } as const;
 /** How many hand-detail faces may be kept at once before older ones are scaled back down. */
 const HAND_DETAIL_KEEP = 14;
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+/**
+ * The winner's reveal, in seconds: the row parts into its sets (`part`), a beat, then each tile turns
+ * round where it stands (`turn`), each starting `step` after its neighbour and each set `set` after the last.
+ */
+const WIN_TURN = { part: 0.45, beat: 0.15, turn: 0.72, step: 0.034, set: 0.11 };
+/** Starts and ends at rest, with no jolt at either end (the win shot, tiles turned in the hand). */
+const glide = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 const qFromEuler = (x: number, y: number, z: number) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, 'YXZ'));
 
 export class TableRenderer {
@@ -295,6 +304,8 @@ export class TableRenderer {
   private camTo = { pos: new THREE.Vector3(0, 6, 8), look: new THREE.Vector3(0, 0, 0.8) };
   private camLook = new THREE.Vector3(0, 0, 0.8);
   private camT = 1;
+  /** The move under way eases in as well as out (framing a hand); otherwise it starts at speed and settles. */
+  private camSoft = false;
   private camDur = 1;
   private camStart = 0;
   private view: 'orbit' | 'seat' | 'focus' = 'orbit';
@@ -891,7 +902,7 @@ export class TableRenderer {
     const now = performance.now();
     let calmOnly = false;
     if (this.moving(now)) {
-      const calm = hand.has(this.faceUpgrades[0] ?? '') && !this.gesture && !this.cine && this.camT >= 1 && this.view !== 'orbit' && ![...this.tiles.values()].some((t) => t.tween);
+      const calm = hand.has(this.faceUpgrades[0] ?? '') && !this.gesture && !this.cine && !this.shot && this.camT >= 1 && this.view !== 'orbit' && ![...this.tiles.values()].some((t) => t.tween);
       if (!calm) {
         this.faceUpgradeTimer = window.setTimeout(() => this.runFaceUpgrades(), 400);
         return;
@@ -1075,18 +1086,20 @@ export class TableRenderer {
   /**
    * The win moment on the table, for every win: a soft gold light sweeps along
    * the winning hand (presented on its rack by layout's winLift) and fine gold motes rise from
-   * it, and the camera pushes slowly in. A self-drawn win's motes rise straight
+   * it; the camera is already there and stays still (winShot). A self-drawn win's motes rise straight
    * from the hand; a win on a discard first draws a thin thread of light from
    * the discarder's river. Reduced motion or minimal animations: no particles
-   * and no camera move, just the presented hand and a still glow.
+   * just the presented hand and a still glow.
    */
-  celebrateWin(winner: number, o: { selfDrawn: boolean; from?: number | null; camera?: boolean }) {
+  celebrateWin(winner: number, o: { selfDrawn: boolean; from?: number | null }) {
     const now = this.clock.getElapsedTime();
     const calm = this.reducedMotion || this.speed === 'minimal';
     const q = this.seatQuat(winner);
     const span = this.lastState ? Math.max(1.2, (this.lastState.players[winner].hand.length * TW * 1.08) / 2 + 0.2) : 2.2;
-    const a = new THREE.Vector3(-span, 0.55, 3.75).applyQuaternion(q);
-    const b = new THREE.Vector3(span, 0.55, 3.75).applyQuaternion(q);
+    // The light runs the way the tiles turned up: left to right as the camera sees the hand.
+    const side = this.quad(winner) === 0 ? 1 : -1;
+    const a = new THREE.Vector3(-span * side, 0.55, 3.75).applyQuaternion(q);
+    const b = new THREE.Vector3(span * side, 0.55, 3.75).applyQuaternion(q);
     const dur = calm ? 2.4 : this.speed === 'cinematic' ? 2.4 : 1.8;
     if (this.winGlow) {
       this.winLight = { light: this.winGlow, from: a, to: b, t0: now + (calm ? 0 : 0.35), dur };
@@ -1096,13 +1109,117 @@ export class TableRenderer {
       const thread = !o.selfDrawn && o.from !== undefined && o.from !== null && o.from !== winner ? new THREE.Vector3(0, 0.12, 1.4).applyQuaternion(this.seatQuat(o.from)) : null;
       this.fx.winSweep(a, b, now, { selfDrawn: o.selfDrawn, from: thread, dur });
     }
-    // Portrait phones keep their whole-table view: every revealed hand is already in frame there.
-    if (o.camera !== false && !calm && !this.compact) {
-      const anchor = this.seatAnchor(winner);
-      this.setView('focus', this.speed === 'cinematic' ? 3.4 : 2.6, anchor);
-      // A slow push: settle a little closer than the usual focus shot.
-      this.camTo.pos.lerp(this.camTo.look, 0.12);
+  }
+
+  // ------------------------------------------------------------ the win shot
+
+  /** The one camera move of a win: from where the camera is to the winner's hand, then still. */
+  private shot: { p0: THREE.Vector3; l0: THREE.Vector3; p1: THREE.Vector3; l1: THREE.Vector3; t0: number; dur: number } | null = null;
+  /** The seat the win shot framed: its hand is looked at from the front (frameHand) until the next hand. */
+  private shotSeat = -1;
+  /** Split view's hand strip sliding away under the win shot, 0 (in place) to 1 (gone). */
+  private stripDrop = 0;
+
+  /**
+   * The win shot: one unbroken glide from wherever the camera is to the
+   * winner's hand, framed large inside `area` (client px), where it then stays
+   * for the whole reveal. Starts and ends at rest. Returns its length in
+   * seconds: 0 with reduced motion or Minimal speed, where the framing is
+   * simply set (or, on an upright phone, left as it is).
+   */
+  winShot(winner: number, area?: { left: number; top: number; right: number; bottom: number }, winSets?: number[][]): number {
+    const calm = this.reducedMotion || this.speed === 'minimal';
+    if (this.view === 'orbit' || !this.lastState) return 0;
+    const cam = this.camera;
+    const p0 = cam.position.clone();
+    const dir = cam.getWorldDirection(new THREE.Vector3());
+    // The point on the table the camera looks at now: the shot carries the eye from there to the hand.
+    const reach = dir.y < -0.05 ? THREE.MathUtils.clamp((0.3 - p0.y) / dir.y, 2, 30) : 10;
+    const l0 = p0.clone().addScaledVector(dir, reach);
+    this.freeCur = this.freeGoal = null;
+    this.shot = null;
+    this.shotSeat = winner;
+    if (!this.frameHand(winner, area, this.winRowEnds(winner, winSets))) {
+      this.shotSeat = -1;
+      return 0;
     }
+    // The table's own framing is already there underneath; the shot plays over it and hands over at its end.
+    this.camBase.copy(this.camTo.pos);
+    this.camLook.copy(this.camTo.look);
+    this.camT = 1;
+    if (calm) {
+      this.viewW = 0;
+      return 0;
+    }
+    const p1 = this.camTo.pos.clone();
+    const l1 = this.camTo.look.clone();
+    // Longer for a longer way round (a side seat), so the pace across the table feels the same.
+    const far = p0.distanceTo(p1) + l0.distanceTo(l1) * 0.6;
+    const dur = THREE.MathUtils.clamp(1.5 + far * 0.09, 1.7, 2.6) * (this.speed === 'cinematic' ? 1.25 : 1);
+    this.shot = { p0, l0, p1, l1, t0: this.clock.getElapsedTime(), dur };
+    this.stripDrop = 0;
+    this.wake(dur * 1000 + 400);
+    return dur;
+  }
+
+  private winTurnEnd = 0;
+  /** Seconds until the winner's tiles have all turned up (0 once they have, or with no staged reveal). */
+  get winRevealLeft() {
+    return Math.max(0, this.winTurnEnd - this.clock.getElapsedTime());
+  }
+
+  /** Where the two ends of a winning hand will stand on its rack once it has parted into its sets (world). */
+  private winRowEnds(seat: number, winSets?: number[][]): THREE.Vector3[] {
+    const pl = this.lastState!.players[seat];
+    const mine = this.quad(seat) === 0;
+    const human = seat === this.humanSeat && !this.watchOnly;
+    const scale = human ? (this.tray ? 1 : HAND_SCALE * handTileScale()) : 1;
+    const slots = winSets ? winHandSlots(pl.hand, winSets) : pl.hand.map(() => ({ gap: 0 }));
+    let len = 0;
+    slots.forEach((sl, i) => {
+      if (i > 0) len += TW * scale + 0.012 + (sl.gap === 2 ? 0.6 : sl.gap === 1 ? 0.35 : 0) * TW * scale;
+    });
+    const q = this.seatQuat(seat);
+    const y = mine ? (TH * scale) / 2 + 0.03 + HAND_RAISE : OPP_RACK.stepY + TH / 2 + 0.004;
+    const z = mine ? HAND_Z : OPP_RACK.handZ;
+    return [-1, 1].map((k) => new THREE.Vector3((k * len) / 2, y, z).applyQuaternion(q));
+  }
+
+  /** Per frame under a win shot: place the camera on its glide, and hand over to the table's framing on arrival. */
+  private applyShot(now: number) {
+    const s = this.shot;
+    if (!s) return;
+    const k = THREE.MathUtils.clamp((now - s.t0) / s.dur, 0, 1);
+    const e = glide(k);
+    // The hand strip of split view slides down and away as the camera sets off.
+    if (this.splitOn) {
+      this.stripDrop = glide(THREE.MathUtils.clamp((now - s.t0) / 0.55, 0, 1));
+      if (this.stripDrop >= 1) {
+        this.setSplitOn(false);
+        this.stripDrop = 0;
+      }
+    }
+    this.camera.position.lerpVectors(s.p0, s.p1, e);
+    // A little height through the middle of the move: the camera rises off its line and settles, never dips.
+    this.camera.position.y += Math.sin(Math.PI * e) * Math.min(0.9, s.p0.distanceTo(s.p1) * 0.07);
+    this.camera.lookAt(TableRenderer.v3.lerpVectors(s.l0, s.l1, e));
+    if (k >= 1) {
+      this.viewW = 0;
+      this.shot = null;
+    }
+  }
+
+  /** Stop a win shot where it is: the table's framing carries on from the camera's place (a new view, or the player takes the camera). */
+  private endShot() {
+    const s = this.shot;
+    if (!s) return;
+    const e = glide(THREE.MathUtils.clamp((this.clock.getElapsedTime() - s.t0) / s.dur, 0, 1));
+    this.camBase.copy(this.camera.position);
+    this.camLook.lerpVectors(s.l0, s.l1, e);
+    this.viewW = 0;
+    this.shot = null;
+    if (this.splitOn) this.setSplitOn(false);
+    this.stripDrop = 0;
   }
 
   /** The signature moment under way (cinematic.ts), if any. */
@@ -1134,6 +1251,7 @@ export class TableRenderer {
       dur,
       calm,
       compact: this.compact,
+      still: this.shotSeat === winner,
     });
     return dur;
   }
@@ -1482,6 +1600,10 @@ export class TableRenderer {
   setView(view: 'orbit' | 'seat' | 'focus', dur = 1.4, focus?: THREE.Vector3) {
     // A new framing takes the camera back from the player, gliding from wherever they left it.
     this.releaseFree();
+    this.endShot();
+    if (view !== 'focus') this.shotSeat = -1;
+    // Leaving a framed hand (back to your seat for the next deal) also starts gently.
+    this.camSoft = this.view === 'focus' && view === 'seat' && dur > 0.3;
     this.view = view;
     this.applyViewShift();
     this.camFrom.pos.copy(this.camBase);
@@ -1627,14 +1749,14 @@ export class TableRenderer {
     s.theta += yaw;
     const seat = w > 0.01 && !this.tray;
     // Leaving the seat view (the home room, menus) hides the hand strip and its rules too.
-    if (!seat && this.splitOn) this.setSplitOn(false);
+    if (!seat && this.splitOn && !this.shot) this.setSplitOn(false);
     if (seat) {
       // Frame the whole board and your full hand for this screen's shape, then apply the player's zoom.
       // Where that leaves your tiles small (tablets, wide windows), split: the board above, your hand close up below.
       let fit = this.fitBoard(s.phi, s.theta, look, false);
       // While the player roams with the free camera after a hand, the strip would only repeat your rack: it steps aside.
       const split = !this.splitPaused && !this.freeCur && (this.splitPref === 'on' || (this.splitPref === 'auto' && fit.tilePx < SPLIT_BELOW_PX));
-      if (split !== this.splitOn) this.setSplitOn(split);
+      if (split !== this.splitOn && !this.shot) this.setSplitOn(split);
       if (split) fit = this.fitBoard(s.phi, s.theta, look, true);
       s.radius += (fit.radius - s.radius) * w;
       look.z += fit.dz * w;
@@ -1758,6 +1880,10 @@ export class TableRenderer {
     const H = this.container.clientHeight || window.innerHeight;
     const r = this.stripRect(W, H);
     this.aimHandCam();
+    // Under the win shot the strip slides down off the screen.
+    const drop = Math.round(this.stripDrop * (H - r.top));
+    r.top += drop;
+    r.bottom += drop;
     if (this.stripEl) {
       this.stripEl.style.top = `${r.top}px`;
       this.stripEl.style.height = `${r.h}px`;
@@ -2187,6 +2313,7 @@ export class TableRenderer {
   /** Take the camera from the table's framing, starting exactly where it is now. */
   private takeFree(): FreePose {
     if (this.freeGoal) return this.freeGoal;
+    this.endShot();
     const pos = this.camera.position;
     const dir = this.camera.getWorldDirection(new THREE.Vector3());
     // Circle the point on the table the camera is looking at.
@@ -2842,6 +2969,8 @@ export class TableRenderer {
           dragXs[from] = this.dragX;
         }
       }
+      const turners: { t: TileObj; pose: Pose; i: number; set: number }[] = [];
+      let turnEnd = now;
       slots.forEach((sl, i) => {
         const tile = sl.tile;
         const t = this.tiles.get(tile.id)!;
@@ -2887,11 +3016,47 @@ export class TableRenderer {
         const setDelay = winSets && opts.winLift && !quick && !this.reducedMotion && this.speed !== 'minimal' ? Math.max(0, sl.set) * 0.16 : 0;
         const delay = opts.dealing && fromWall ? Math.min(2.2, (state.wall.findIndex((w) => w.id === tile.id) / 4) * 0.06) : setDelay;
         const dur = tile.id === drag ? 0.05 : human && !shown && t.loc === 'hand' ? Math.min(base, 0.14) : shown && opts.winLift && opts.winner === seat ? Math.max(base, this.reducedMotion ? 0.2 : 1.1) : base;
-        // A winner's tile is picked up a hand's breadth to turn it round, then set back down on the rack.
-        const turning = shown && rel !== 0 && opts.winLift && opts.winner === seat && t.loc === 'hand';
-        this.moveTo(t, pose, 'hand', now + delay, dur, fromWall ? 0.2 : turning ? 0.12 : 0);
+        const winning = shown && !!opts.winLift && opts.winner === seat;
+        const staged = winning && !!winSets && !quick && !this.reducedMotion && this.speed !== 'minimal';
+        // The winner's standing tiles turn round where they stand (below); the winning tile, coming from a
+        // river, lands in its place as the turn reaches it.
+        if (staged && t.loc === 'hand' && t.group.visible && t.group.quaternion.angleTo(pose.quat) > 1) {
+          turners.push({ t, pose, i, set: sl.set });
+        } else if (staged && t.loc !== 'hand') {
+          this.moveTo(t, pose, 'hand', now + WIN_TURN.part + WIN_TURN.beat + i * WIN_TURN.step + Math.max(0, sl.set) * WIN_TURN.set, WIN_TURN.turn, 0.22);
+          if (t.tween) t.tween.soft = true;
+          turnEnd = Math.max(turnEnd, (t.tween?.t0 ?? now) + WIN_TURN.turn);
+        } else {
+          this.moveTo(t, pose, 'hand', now + delay, staged ? 0.7 : dur, fromWall ? 0.2 : 0);
+          // Your own winning hand is already facing you: it parts into its sets in one soft slide.
+          if (staged && t.tween) {
+            t.tween.soft = true;
+            turnEnd = Math.max(turnEnd, t.tween.t0 + t.tween.dur);
+          }
+        }
         placed.add(tile.id);
       });
+      if (turners.length) {
+        // No one at the table can tell the standing backs apart, so each tile first takes, unseen, the
+        // place in the row that its place in the sets calls for. The row then parts into its sets, and
+        // the tiles turn round where they stand in one wave along the rack: nothing crosses or slides
+        // while a face is coming into view.
+        const along = new THREE.Vector3(1, 0, 0).applyQuaternion(this.seatQuat(seat));
+        const stood = turners.map((u) => ({ pos: u.t.group.position.clone(), quat: u.t.group.quaternion.clone(), scale: u.t.group.scale.x })).sort((a, b) => a.pos.dot(along) - b.pos.dot(along));
+        const order = [...turners].sort((a, b) => a.pose.pos.dot(along) - b.pose.pos.dot(along));
+        order.forEach((u, r) => {
+          const from = stood[r];
+          u.t.group.position.copy(from.pos);
+          u.t.group.quaternion.copy(from.quat);
+          const parted: Pose = { pos: u.pose.pos.clone(), quat: from.quat.clone(), scale: u.pose.scale };
+          const t0 = now + WIN_TURN.part + WIN_TURN.beat + u.i * WIN_TURN.step + Math.max(0, u.set) * WIN_TURN.set;
+          u.t.loc = 'hand';
+          u.t.target = u.pose;
+          u.t.tween = { from, to: parted, t0: now, dur: WIN_TURN.part, arc: 0, soft: true, next: { from: null, to: u.pose, t0, dur: WIN_TURN.turn, arc: 0.04, soft: true } };
+          turnEnd = Math.max(turnEnd, t0 + WIN_TURN.turn);
+        });
+      }
+      if (opts.winner === seat) this.winTurnEnd = turnEnd;
 
       // Melds and flowers sit on the racks' set ledges, level with the wall's
       // top so they are never hidden behind it. Yours lie on the ledge in front
@@ -3316,18 +3481,24 @@ export class TableRenderer {
    * the win summary (ui/winReveal.ts), which leaves the open part of the screen
    * beside a docked panel or above the summary bar.
    */
-  frameHand(seat: number, area?: { left: number; top: number; right: number; bottom: number }) {
+  frameHand(seat: number, area?: { left: number; top: number; right: number; bottom: number }, ends?: THREE.Vector3[]): boolean {
     const rel = this.quad(seat);
     // A portrait phone keeps its whole-table view (the summary bar carries the hand there).
-    if (this.compact) return;
+    if (this.compact) return false;
     const p = this.lastState?.players[seat];
-    if (!p) return;
+    if (!p) return false;
     const calm = this.reducedMotion || this.speed === 'minimal';
     const at = this.seatAnchor(seat, new THREE.Vector3(0, 0.37, 3.8));
+    // The winner's tiles stand on the rack facing the table: look at them from the front, over the centre.
+    const front = rel !== 0 && (seat === this.shotSeat || (this.lastOpts.winner === seat && !!this.lastOpts.winLift));
+    const keep = this.shotSeat;
     this.setView('focus', calm ? 0.01 : 1.1, at);
+    this.shotSeat = keep;
     const pos = this.camTo.pos,
       look = this.camTo.look;
-    if (rel === 2) {
+    if (front) {
+      pos.copy(this.seatAnchor(seat, new THREE.Vector3(0, 0.37 + 3.3, 3.8 - 5.4)));
+    } else if (rel === 2) {
       // Look over the centre at the far hand rather than from behind it.
       pos.set(at.x * 0.55, at.y + 5.2, at.z * 0.55 + 3.8);
     } else if (rel !== 0) {
@@ -3338,8 +3509,10 @@ export class TableRenderer {
       pos.set(at.x, at.y + 7.5, at.z + 3.6);
     }
     // Fit the hand's resting tiles inside the area: centre them, then step in or out until they fill it.
-    const pts = [...p.hand, ...p.melds.flatMap((m) => m.tiles)].map((t) => this.tiles.get(t.id)).filter((t): t is TileObj => !!t).map((t) => (t.target?.pos ?? t.group.position).clone());
-    if (!pts.length) return;
+    // (The win shot frames the hand before it is turned up: `ends` are where the row's two ends will stand.)
+    const pts = [...(ends ? [] : p.hand), ...p.melds.flatMap((m) => m.tiles)].map((t) => this.tiles.get(t.id)).filter((t): t is TileObj => !!t).map((t) => (t.target?.pos ?? t.group.position).clone());
+    if (ends) pts.push(...ends);
+    if (!pts.length) return false;
     const W = this.container.clientWidth || window.innerWidth,
       H = this.container.clientHeight || window.innerHeight;
     const r = this.container.getBoundingClientRect();
@@ -3375,6 +3548,9 @@ export class TableRenderer {
       const nd = THREE.MathUtils.clamp(d * THREE.MathUtils.clamp(k, 0.6, 1.8), 3.2, this.short ? 12 : 16);
       pos.sub(look).setLength(nd).add(look);
     }
+    // A framing of a hand sets off and arrives gently.
+    this.camSoft = true;
+    return true;
   }
 
   /** World position of a seat's hand centre (for focus shots and labels). */
@@ -3464,7 +3640,7 @@ export class TableRenderer {
 
   /** Whether anything on screen is in motion (tiles, camera, a gesture, the win moment); hover lifts don't count. */
   private moving(ms: number): boolean {
-    if (ms < this.activeUntil || this.view === 'orbit' || this.camT < 1 || this.cine || this.gesture || this.room.sides.busy || this.freeMoving()) return true;
+    if (ms < this.activeUntil || this.view === 'orbit' || this.camT < 1 || this.shot || this.cine || this.gesture || this.room.sides.busy || this.freeMoving()) return true;
     for (const t of this.tiles.values()) if (t.tween && !this.hoverTweens.has(t.id)) return true;
     const c = this.viewC,
       v = this.viewT;
@@ -3524,7 +3700,7 @@ export class TableRenderer {
       if (k < 0) continue;
       const g = t.group;
       if (!tw.from) tw.from = { pos: g.position.clone(), quat: g.quaternion.clone(), scale: g.scale.x };
-      const e = ease(Math.min(1, k));
+      const e = tw.soft ? glide(Math.min(1, k)) : ease(Math.min(1, k));
       g.position.lerpVectors(tw.from.pos, tw.to.pos, e);
       if (tw.arc) g.position.y += Math.sin(Math.PI * Math.min(1, k)) * tw.arc;
       g.quaternion.slerpQuaternions(tw.from.quat, tw.to.quat, e);
@@ -3544,7 +3720,7 @@ export class TableRenderer {
       this.camLook.set(0, 1.5, 0);
     } else if (this.camT < 1) {
       this.camT = Math.min(1, (now - this.camStart) / this.camDur);
-      const e = ease(this.camT);
+      const e = this.camSoft ? glide(this.camT) : ease(this.camT);
       this.camBase.lerpVectors(this.camFrom.pos, this.camTo.pos, e);
       this.camLook.lerpVectors(this.camFrom.look, this.camTo.look, e);
     }
@@ -3552,6 +3728,7 @@ export class TableRenderer {
     const cine = this.cine ? [this.camBase.clone(), this.camLook.clone()] : null;
     if (this.cine && !this.cine.update(now, this.camBase, this.camLook, this.pointScale)) this.cine = null;
     this.applyCamera(dt);
+    if (this.shot) this.applyShot(now);
     if (this.freeCur) this.applyFree(dt);
     this.updateFigures(now, dt);
     if (now - this.handTopAt > (busy ? 0.12 : 0.5)) {
