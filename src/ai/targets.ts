@@ -31,6 +31,7 @@ import { tilesForCall } from './american';
 import { lang, listSep, tr } from '../i18n';
 import { tileLabel } from '../i18n/tiles';
 import { andJoin, callWord, fromReady, namesText, planName, planNote, sentences, suitName } from './adviceText';
+import { shapeKit, shapeKitOn } from './shapeKit';
 
 /** One target hand the player can still make. */
 export interface TargetPlan {
@@ -59,7 +60,7 @@ export interface TargetPlan {
 
 /** What each kind of round calls its targets, and how it finds them. */
 export interface TargetKit {
-  id: 'passport' | 'card' | 'smallCard' | 'special' | 'goulash' | 'yaku' | 'value';
+  id: 'passport' | 'card' | 'smallCard' | 'special' | 'goulash' | 'yaku' | 'value' | 'shape';
   /** The chip row's label and the planner's title. */
   chip: string;
   list: string;
@@ -473,6 +474,7 @@ export function targetKit(game: MahjongGame): TargetKit | null {
   if (p.shapes.standard === false && p.shapes.special?.length) return specialKit;
   if (p.yakuRequired) return yakuKit;
   if (valueRoutesOn(game)) return valueKit;
+  if (shapeKitOn(game)) return shapeKit;
   return null;
 }
 
