@@ -28,6 +28,7 @@ import { handWilds, unseenCounts } from './evaluate';
 import { isPassportRound, passportCall, passportThreats, planPassports, riskyKinds } from './passportAdvice';
 import { goulashCall, goulashPlans, isIndiaGoulash, valueCall, valuePlans, valueRoutesOn, yakuCall, yakuPlans } from './targetRoutes';
 import { tilesForCall } from './american';
+import { shapeKit, shapeKitOn } from './shapeKit';
 
 /** One target hand the player can still make. */
 export interface TargetPlan {
@@ -56,7 +57,7 @@ export interface TargetPlan {
 
 /** What each kind of round calls its targets, and how it finds them. */
 export interface TargetKit {
-  id: 'passport' | 'card' | 'smallCard' | 'special' | 'goulash' | 'yaku' | 'value';
+  id: 'passport' | 'card' | 'smallCard' | 'special' | 'goulash' | 'yaku' | 'value' | 'shape';
   /** The chip row's label and the planner's title. */
   chip: string;
   list: string;
@@ -469,6 +470,7 @@ export function targetKit(game: MahjongGame): TargetKit | null {
   if (p.shapes.standard === false && p.shapes.special?.length) return specialKit;
   if (p.yakuRequired) return yakuKit;
   if (valueRoutesOn(game)) return valueKit;
+  if (shapeKitOn(game)) return shapeKit;
   return null;
 }
 

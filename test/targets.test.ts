@@ -36,8 +36,9 @@ describe('which rounds get target help', () => {
     expect(kit('sanma')).toBe('yaku');
     expect(kit('hongkong')).toBe('value');
     expect(kit('sichuan')).toBe('value');
+    // Chinese Classical: choose the hand your rack groups for (sets, Seven Pairs, Thirteen Orphans).
+    expect(kit('classic')).toBe('shape');
     // Plain rulesets with no target: reads and the risk tint only.
-    expect(kit('classic')).toBe(null);
     expect(kit('vietnamese')).toBe(null);
     expect(targetKit(americanTurn('2222m 4444m 666m 88m').g)?.id).toBe('card');
     const east = new MahjongGame(EAST, ['A', 'B', 'C', 'D'], 3);
