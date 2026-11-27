@@ -24,7 +24,8 @@ function plaque() {
   return el;
 }
 
-function place(x: number, y: number, below = false) {
+/** Puts the plaque by a screen point; false (and hidden) when it has nowhere to go. */
+function place(x: number, y: number, below = false): boolean {
   const p = plaque();
   const r = p.getBoundingClientRect();
   const pad = 8;
@@ -33,7 +34,26 @@ function place(x: number, y: number, below = false) {
   if (top < pad) top = y + 18;
   left = Math.max(pad, Math.min(window.innerWidth - r.width - pad, left));
   top = Math.max(pad, Math.min(window.innerHeight - r.height - pad, top));
+  // A plaque never covers a card that holds the one thing to read and press (data-tip-clear: the opening
+  // ceremony's Throw for East and Breaking the wall). It moves above or below the card, or waits.
+  for (const k of document.querySelectorAll('[data-tip-clear]')) {
+    const b = k.getBoundingClientRect();
+    if (!b.width || left >= b.right || left + r.width <= b.left || top >= b.bottom || top + r.height <= b.top) continue;
+    const up = b.top - r.height - pad;
+    const down = b.bottom + pad;
+    const fitsUp = up >= pad;
+    const fitsDown = down + r.height <= window.innerHeight - pad;
+    const preferUp = top + r.height / 2 <= b.top + b.height / 2;
+    if (fitsUp && (preferUp || !fitsDown)) top = up;
+    else if (fitsDown) top = down;
+    else {
+      p.classList.remove('on');
+      p.hidden = true;
+      return false;
+    }
+  }
   p.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+  return true;
 }
 
 /** Show a text plaque at a screen point (above it unless there is no room). */
@@ -42,8 +62,7 @@ export function showTip(text: string, x: number, y: number) {
   p.className = 'mj-tip';
   p.textContent = text;
   p.hidden = false;
-  place(x, y);
-  p.classList.add('on');
+  if (place(x, y)) p.classList.add('on');
 }
 
 /** Show a tile's face and name at a screen point. */
@@ -63,8 +82,7 @@ export function showTile(kind: number, x: number, y: number, opts: { red?: boole
     p.append(n);
   }
   p.hidden = false;
-  place(x, y);
-  p.classList.add('on');
+  if (place(x, y)) p.classList.add('on');
 }
 
 export function hideTip() {

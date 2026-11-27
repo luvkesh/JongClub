@@ -88,7 +88,8 @@ export async function runOpening(ctx: OpeningCtx, state: GameState): Promise<voi
   const skip = h('button', { class: 'op-skip', type: 'button', onclick: () => finish() });
   skip.innerHTML = `${icon('play')}<span>${tr('Skip')}</span>`;
   const act = h('div', { class: 'op-actions' });
-  const card = h('div', { class: 'opening', role: 'status' }, h('div', { class: 'op-head' }, title, skip), rows, line, act);
+  // data-tip-clear: hover plaques (a plate's points, a tile's name) keep clear of this card and its Roll.
+  const card = h('div', { class: 'opening', role: 'status', 'data-tip-clear': '' }, h('div', { class: 'op-head' }, title, skip), rows, line, act);
   const labels = h('div', { class: 'op-labels', 'aria-hidden': 'true' });
   ctx.root.append(card, labels);
   table.setOpeningWide(true);
