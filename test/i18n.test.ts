@@ -59,7 +59,7 @@ function dataKeys(): Map<string, string> {
   for (const w of Object.values(WIND_NAMES)) add(w, 'WIND_NAMES');
   for (const l of Object.values(LINES)) add(l, 'matchLines.LINES');
   for (const k of DYNAMIC_KEYS) add(k, 'i18n/dynamic');
-  for (const r of Object.values(SPECIAL_ROUNDS)) add(r.name, 'SPECIAL_ROUNDS'), add(r.rule, 'SPECIAL_ROUNDS');
+  for (const r of Object.values(SPECIAL_ROUNDS)) add(r.name, 'SPECIAL_ROUNDS'), add(r.game, 'SPECIAL_ROUNDS'), add(r.rule, 'SPECIAL_ROUNDS');
   for (const c of [...SMALL_CARD, ...BIG_CARD]) add(c.how, 'special.CARD');
   for (const r of TABLE_OPTION_RULES) {
     add(r.label, 'tableOptions');
